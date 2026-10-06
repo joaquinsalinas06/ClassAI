@@ -1,0 +1,28 @@
+name: Remove Integration label
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/remove-integration-label.yml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            try {
+              await github.rest.issues.deleteLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name: "Integration"
+              });
+            } catch (e) {
+              if (e.status !== 404) throw e;
+            }
