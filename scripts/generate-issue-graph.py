@@ -533,6 +533,44 @@ HTML_TEMPLATE = r"""<!doctype html>
     }
 
     .line.dashed { border-top-style: dashed; border-color: #66738c; }
+    .line.before { border-color: #60a5fa; }
+    .line.after { border-color: #f59e0b; }
+
+    .story-flow {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 7px;
+      margin: 14px 0 4px;
+    }
+
+    .story-step {
+      padding: 9px 10px;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      background: var(--surface-2);
+    }
+
+    .story-step strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .story-step span {
+      display: block;
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.4;
+    }
+
+    .story-step.before { border-color: rgba(96,165,250,.42); }
+    .story-step.before strong { color: #93c5fd; }
+    .story-step.current { border-color: rgba(248,250,252,.52); background: #1b2538; }
+    .story-step.current strong { color: #f8fafc; }
+    .story-step.after { border-color: rgba(245,158,11,.42); }
+    .story-step.after strong { color: #fbbf24; }
 
     .dot {
       width: 8px;
@@ -615,7 +653,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     <h2>Selecciona un issue</h2>
     <p class="empty">Al hacer clic se resalta su cadena completa de dependencias: qué necesita antes y qué trabajo desbloquea después.</p>
     <div class="legend">
-      <div class="legend-row"><span class="line"></span> dependencia</div>
+      <div class="legend-row"><span class="line before"></span> azul = lo que necesito antes</div>
+      <div class="legend-row"><span class="line after"></span> ámbar = lo que desbloqueo después</div>
       <div class="legend-row"><span class="line dashed"></span> parent / sub-issue</div>
       <div class="legend-row"><span class="dot ready"></span> listo para empezar</div>
       <div class="legend-row"><span class="dot blocked"></span> todavía bloqueado</div>
@@ -1021,6 +1060,41 @@ const cy = cytoscape({
       }
     },
     {
+      selector: "node.issue.prerequisite-path",
+      style: {
+        "opacity": 1,
+        "border-color": "#60a5fa",
+        "border-width": 3.5,
+        "background-color": "#101b2f",
+        "shadow-color": "#2563eb",
+        "shadow-opacity": 0.28
+      }
+    },
+    {
+      selector: "node.issue.downstream-path",
+      style: {
+        "opacity": 1,
+        "border-color": "#f59e0b",
+        "border-width": 3.5,
+        "background-color": "#241b0d",
+        "shadow-color": "#d97706",
+        "shadow-opacity": 0.28
+      }
+    },
+    {
+      selector: "node.issue.selected-issue",
+      style: {
+        "opacity": 1,
+        "border-color": "#f8fafc",
+        "border-width": 4.5,
+        "background-color": "#202b42",
+        "shadow-color": "#f8fafc",
+        "shadow-opacity": 0.34,
+        "shadow-blur": 22,
+        "z-index": 1000
+      }
+    },
+    {
       selector: "node.band",
       style: {
         "shape": "round-rectangle",
@@ -1108,6 +1182,26 @@ const cy = cytoscape({
       }
     },
     {
+      selector: "edge.prerequisite-path",
+      style: {
+        "line-color": "#60a5fa",
+        "target-arrow-color": "#60a5fa",
+        "width": 3.2,
+        "opacity": 1,
+        "z-index": 900
+      }
+    },
+    {
+      selector: "edge.downstream-path",
+      style: {
+        "line-color": "#f59e0b",
+        "target-arrow-color": "#f59e0b",
+        "width": 3.2,
+        "opacity": 1,
+        "z-index": 900
+      }
+    },
+    {
       selector: "edge.subissue",
       style: {
         "curve-style": "taxi",
@@ -1173,7 +1267,19 @@ function issueLink(number) {
     node.number + " · " + escapeHtml(node.title) + "</a>";
 }
 
-function renderDetails(number) {
+function directPrerequisites(number) {
+  return dependencyEdges
+    .filter(function(edge) { return edge.target === number; })
+    .map(function(edge) { return edge.source; });
+}
+
+function directDependents(number) {
+  return dependencyEdges
+    .filter(function(edge) { return edge.source === number; })
+    .map(function(edge) { return edge.target; });
+}
+
+function renderDetails(number, story) {
   const node = nodeByNumber.get(number);
   if (!node) return;
 
@@ -1183,13 +1289,16 @@ function renderDetails(number) {
       }).join("")
     : '<span class="empty">Sin labels.</span>';
 
-  const blockers = node.open_blockers.length
-    ? node.open_blockers.map(issueLink).join("")
-    : '<span class="empty">No tiene blockers abiertos.</span>';
+  const directBefore = directPrerequisites(number);
+  const directAfter = directDependents(number);
 
-  const blocking = node.blocking.length
-    ? node.blocking.map(issueLink).join("")
-    : '<span class="empty">No desbloquea trabajo directamente.</span>';
+  const blockers = directBefore.length
+    ? directBefore.map(issueLink).join("")
+    : '<span class="empty">No depende directamente de otro issue.</span>';
+
+  const blocking = directAfter.length
+    ? directAfter.map(issueLink).join("")
+    : '<span class="empty">No desbloquea otro issue directamente.</span>';
 
   const parents = node.parents.length
     ? node.parents.map(issueLink).join("")
@@ -1199,6 +1308,8 @@ function renderDetails(number) {
     ? node.children.map(issueLink).join("")
     : '<span class="empty">Sin sub-issues.</span>';
 
+  const beforeCount = story ? story.beforeNodes.length : 0;
+  const afterCount = story ? story.afterNodes.length : 0;
   const stateClass = node.state === "closed" ? "closed" : (node.is_blocked ? "blocked" : "ready");
   const stateLabel = node.state === "closed" ? "Cerrado" : (node.is_blocked ? "Bloqueado" : "Listo");
 
@@ -1206,7 +1317,18 @@ function renderDetails(number) {
     '<h2>#' + node.number + " · " + escapeHtml(node.title) + "</h2>" +
     '<div><span class="pill ' + stateClass + '">' + stateLabel + "</span>" +
     '<span class="pill">Nivel ' + (rankByNumber.get(node.number) || 0) + "</span></div>" +
+    '<div class="story-flow">' +
+      '<div class="story-step before"><strong>← Antes</strong><span>' +
+        beforeCount + ' issue' + (beforeCount === 1 ? '' : 's') +
+        ' forman la cadena que debe llegar hasta aquí.</span></div>' +
+      '<div class="story-step current"><strong>Issue seleccionado</strong><span>#' +
+        node.number + ' · ' + escapeHtml(node.title) + '</span></div>' +
+      '<div class="story-step after"><strong>Después →</strong><span>Al completarlo, queda en la ruta hacia ' +
+        afterCount + ' issue' + (afterCount === 1 ? '' : 's') + ' posteriores.</span></div>' +
+    "</div>" +
     '<a class="github-link" href="' + node.url + '" target="_blank" rel="noreferrer">Abrir en GitHub ↗</a>' +
+    "<h3>Necesita directamente</h3><div>" + blockers + "</div>" +
+    "<h3>Desbloquea directamente</h3><div>" + blocking + "</div>" +
     "<h3>Milestone</h3><div class=\"muted\">" +
       escapeHtml(node.milestone ? node.milestone.title : "Proyecto / sin milestone") +
       "<br>Cierra: " + escapeHtml(dueText(node)) + "</div>" +
@@ -1214,51 +1336,111 @@ function renderDetails(number) {
     "<h3>Capa</h3><div class=\"muted\">" +
       escapeHtml(WORKSTREAMS.find(function(row) { return row.key === workstreamFor(node); }).label) +
       "</div>" +
-    "<h3>Bloqueado por</h3><div>" + blockers + "</div>" +
-    "<h3>Desbloquea</h3><div>" + blocking + "</div>" +
     "<h3>Parent</h3><div>" + parents + "</div>" +
     "<h3>Sub-issues</h3><div>" + children + "</div>" +
     "<h3>Labels</h3><div>" + labels + "</div>" +
     '<div class="legend">' +
-      '<div class="legend-row"><span class="line"></span> dependencia</div>' +
+      '<div class="legend-row"><span class="line before"></span> azul: prerequisites → issue seleccionado</div>' +
+      '<div class="legend-row"><span class="line after"></span> ámbar: issue seleccionado → trabajo posterior</div>' +
       '<div class="legend-row"><span class="line dashed"></span> parent / sub-issue</div>' +
     "</div>";
 }
 
-function dependencyChain(nodeEle) {
-  let keep = cy.collection(nodeEle);
-  const seen = new Set([nodeEle.id()]);
-  const queue = [nodeEle];
+function directionalDependencyStory(nodeEle) {
+  let beforeNodes = cy.collection();
+  let beforeEdges = cy.collection();
+  let afterNodes = cy.collection();
+  let afterEdges = cy.collection();
 
-  while (queue.length) {
-    const current = queue.shift();
+  const seenBefore = new Set([nodeEle.id()]);
+  const beforeQueue = [nodeEle];
+  while (beforeQueue.length) {
+    const current = beforeQueue.shift();
     current.connectedEdges("edge.dependency").forEach(function(edge) {
-      const other = edge.source().id() === current.id() ? edge.target() : edge.source();
-      keep = keep.union(edge).union(other);
-      if (!seen.has(other.id())) {
-        seen.add(other.id());
-        queue.push(other);
+      if (edge.target().id() !== current.id()) return;
+      const prerequisite = edge.source();
+      beforeEdges = beforeEdges.union(edge);
+      beforeNodes = beforeNodes.union(prerequisite);
+      if (!seenBefore.has(prerequisite.id())) {
+        seenBefore.add(prerequisite.id());
+        beforeQueue.push(prerequisite);
       }
     });
   }
-  return keep;
+
+  const seenAfter = new Set([nodeEle.id()]);
+  const afterQueue = [nodeEle];
+  while (afterQueue.length) {
+    const current = afterQueue.shift();
+    current.connectedEdges("edge.dependency").forEach(function(edge) {
+      if (edge.source().id() !== current.id()) return;
+      const dependent = edge.target();
+      afterEdges = afterEdges.union(edge);
+      afterNodes = afterNodes.union(dependent);
+      if (!seenAfter.has(dependent.id())) {
+        seenAfter.add(dependent.id());
+        afterQueue.push(dependent);
+      }
+    });
+  }
+
+  return {
+    beforeNodes: beforeNodes,
+    beforeEdges: beforeEdges,
+    afterNodes: afterNodes,
+    afterEdges: afterEdges
+  };
 }
 
 function clearFocus() {
-  cy.elements().removeClass("dimmed focused");
+  cy.elements().removeClass(
+    "dimmed focused prerequisite-path downstream-path selected-issue"
+  );
 }
 
 cy.on("tap", "node.issue", function(event) {
-  const node = event.target;
-  renderDetails(node.data("number"));
-  const chain = dependencyChain(node);
-  cy.elements().addClass("dimmed").removeClass("focused");
-  chain.removeClass("dimmed").addClass("focused");
-  node.removeClass("dimmed").addClass("focused");
+  const selected = event.target;
+  const story = directionalDependencyStory(selected);
+
+  clearFocus();
+
+  cy.nodes("node.issue").addClass("dimmed");
+  cy.edges().addClass("dimmed");
+  cy.nodes(".decorative").removeClass("dimmed");
+
+  story.beforeNodes
+    .removeClass("dimmed")
+    .addClass("focused prerequisite-path");
+  story.beforeEdges
+    .removeClass("dimmed")
+    .addClass("focused prerequisite-path");
+
+  story.afterNodes
+    .removeClass("dimmed")
+    .addClass("focused downstream-path");
+  story.afterEdges
+    .removeClass("dimmed")
+    .addClass("focused downstream-path");
+
+  selected
+    .removeClass("dimmed prerequisite-path downstream-path")
+    .addClass("focused selected-issue");
+
+  renderDetails(selected.data("number"), story);
 });
 
 cy.on("tap", function(event) {
-  if (event.target === cy) clearFocus();
+  if (event.target === cy) {
+    clearFocus();
+    document.getElementById("details").innerHTML =
+      '<h2>Selecciona un issue</h2>' +
+      '<p class="empty">Azul muestra todo lo que debe ocurrir antes. Ámbar muestra todo lo que este issue ayuda a desbloquear después.</p>' +
+      '<div class="legend">' +
+        '<div class="legend-row"><span class="line before"></span> prerequisites → seleccionado</div>' +
+        '<div class="legend-row"><span class="line after"></span> seleccionado → downstream</div>' +
+        '<div class="legend-row"><span class="line dashed"></span> parent / sub-issue</div>' +
+      '</div>';
+  }
 });
 
 const milestoneSelect = document.getElementById("milestone");
