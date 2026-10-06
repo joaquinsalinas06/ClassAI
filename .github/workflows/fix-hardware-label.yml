@@ -1,0 +1,51 @@
+name: Fix Hardware label
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/fix-hardware-label.yml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner=context.repo.owner;
+            const repo=context.repo.repo;
+
+            let hardware;
+            try {
+              hardware=(await github.rest.issues.getLabel({owner,repo,name:"Hardware"})).data;
+            } catch(e) {
+              if(e.status!==404) throw e;
+              hardware=(await github.rest.issues.createLabel({
+                owner,repo,name:"Hardware",color:"D4A72C",
+                description:"Sensores, actuadores, cableado y alimentación"
+              })).data;
+            }
+
+            const issues=await github.paginate(github.rest.issues.listForRepo,{
+              owner,repo,state:"all",per_page:100,labels:"area:hardware"
+            });
+
+            for(const issue of issues){
+              if(issue.pull_request) continue;
+              const names=(issue.labels||[]).map(l=>typeof l==="string"?l:l.name);
+              const next=[...new Set(names.map(n=>n==="area:hardware"?"Hardware":n))];
+              await github.rest.issues.setLabels({
+                owner,repo,issue_number:issue.number,labels:next
+              });
+            }
+
+            try {
+              await github.rest.issues.deleteLabel({owner,repo,name:"area:hardware"});
+            } catch(e) {
+              if(e.status!==404) throw e;
+            }
