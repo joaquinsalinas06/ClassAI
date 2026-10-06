@@ -51,8 +51,6 @@ concurrency:
 jobs:
   build:
     runs-on: ubuntu-latest
-    outputs:
-      pages_enabled: ${{ steps.pages.outputs.enabled }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -75,33 +73,18 @@ jobs:
           retention-days: 30
           if-no-files-found: error
 
-      - name: Detect whether GitHub Pages is enabled
-        id: pages
-        shell: bash
-        run: |
-          status="$(curl -sS -o /dev/null -w "%{http_code}" \
-            -H "Accept: application/vnd.github+json" \
-            -H "X-GitHub-Api-Version: 2026-03-10" \
-            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages")"
-          if [ "$status" = "200" ]; then
-            echo "enabled=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "enabled=false" >> "$GITHUB_OUTPUT"
-            echo "GitHub Pages is not enabled yet (HTTP $status). The HTML is still available as an Actions artifact."
-          fi
-
-      - name: Configure Pages
-        if: steps.pages.outputs.enabled == 'true' && github.event_name != 'pull_request'
-        uses: actions/configure-pages@v5
+      - name: Configure GitHub Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v6
 
       - name: Upload Pages artifact
-        if: steps.pages.outputs.enabled == 'true' && github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: actions/upload-pages-artifact@v4
         with:
           path: _site
 
   deploy:
-    if: needs.build.outputs.pages_enabled == 'true' && github.event_name != 'pull_request'
+    if: github.event_name != 'pull_request'
     needs: build
     runs-on: ubuntu-latest
     environment:
