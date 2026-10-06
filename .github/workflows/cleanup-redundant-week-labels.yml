@@ -1,0 +1,34 @@
+name: Clean redundant week labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/cleanup-redundant-week-labels.yml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const issues = await github.paginate(github.rest.issues.listForRepo, {
+              owner, repo, state: "all", per_page: 100
+            });
+
+            for (const issue of issues) {
+              if (issue.pull_request) continue;
+              const labels = (issue.labels || []).map(l => typeof l === "string" ? l : l.name);
+              const cleaned = labels.filter(name => !name.startsWith("week:"));
+              if (cleaned.length === labels.length) continue;
+              await github.rest.issues.update({
+                owner, repo, issue_number: issue.number, labels: cleaned
+              });
+            }
