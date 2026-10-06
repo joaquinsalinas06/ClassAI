@@ -1,0 +1,113 @@
+name: Issue dependency graph
+
+on:
+  workflow_dispatch:
+  issues:
+    types:
+      - opened
+      - edited
+      - deleted
+      - transferred
+      - closed
+      - reopened
+      - assigned
+      - unassigned
+      - labeled
+      - unlabeled
+      - milestoned
+      - demilestoned
+      - field_added
+      - field_removed
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+      - closed
+  push:
+    branches:
+      - main
+    paths:
+      - "scripts/generate-issue-graph.py"
+      - ".github/workflows/issue-dependency-graph.yml"
+  # GitHub exposes dependency/sub-issue changes as webhook events, but they are
+  # not currently first-class GitHub Actions triggers. This hourly reconciliation
+  # keeps relation-only edits in sync without requiring a custom GitHub App.
+  schedule:
+    - cron: "17 * * * *"
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: read
+  actions: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: issue-dependency-graph
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    outputs:
+      pages_enabled: ${{ steps.pages.outputs.enabled }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Generate graph
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: python scripts/generate-issue-graph.py --output _site
+
+      - name: Upload graph artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: classai-issue-dependency-graph
+          path: _site
+          retention-days: 30
+          if-no-files-found: error
+
+      - name: Detect whether GitHub Pages is enabled
+        id: pages
+        shell: bash
+        run: |
+          status="$(curl -sS -o /dev/null -w "%{http_code}" \
+            -H "Accept: application/vnd.github+json" \
+            -H "X-GitHub-Api-Version: 2026-03-10" \
+            "https://api.github.com/repos/${GITHUB_REPOSITORY}/pages")"
+          if [ "$status" = "200" ]; then
+            echo "enabled=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo "GitHub Pages is not enabled yet (HTTP $status). The HTML is still available as an Actions artifact."
+          fi
+
+      - name: Configure Pages
+        if: steps.pages.outputs.enabled == 'true' && github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: steps.pages.outputs.enabled == 'true' && github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: _site
+
+  deploy:
+    if: needs.build.outputs.pages_enabled == 'true' && github.event_name != 'pull_request'
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy graph to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
