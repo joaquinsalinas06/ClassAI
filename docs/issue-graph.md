@@ -1,5 +1,34 @@
 # ClassAI issue dependency graph
 
+> **Important:** this Markdown file is documentation, **not the graph itself**.
+>
+> Right now the graph is generated successfully by GitHub Actions as an artifact. The permanent Pages URL will return 404 until GitHub Pages is enabled once in repository settings.
+
+## Where to see the graph right now
+
+1. Open the workflow: https://github.com/joaquinsalinas06/ClassAI/actions/workflows/issue-dependency-graph.yml
+2. Open the latest successful run.
+3. At the bottom, under **Artifacts**, download **`classai-issue-dependency-graph`**.
+4. Unzip it and open **`index.html`** in a browser.
+
+The latest tested run generated the HTML successfully.
+
+## Enable the permanent live URL
+
+Go to:
+
+**Repository Settings → Pages → Build and deployment → Source → GitHub Actions**
+
+After that, run **Issue dependency graph** once manually (or wait for the next automatic run).
+
+Then the graph will be published at:
+
+https://joaquinsalinas06.github.io/ClassAI/
+
+GitHub Pages requires this repository-level setting to be enabled before a custom Actions workflow can deploy the site.
+
+---
+
 ClassAI keeps its planning structure in native GitHub metadata:
 
 - Milestones define the delivery week.
@@ -39,20 +68,6 @@ The Action rebuilds on:
 GitHub exposes sub-issue and dependency changes as webhook events, but they are not currently first-class GitHub Actions workflow triggers. The hourly reconciliation is intentional: it guarantees that a relationship-only edit is eventually reflected without requiring a custom GitHub App.
 
 New issues require no graph configuration. Once they exist in GitHub, the next build discovers them automatically.
-
-## Viewing the result
-
-Every successful workflow run uploads `classai-issue-dependency-graph` as an Actions artifact.
-
-For a permanent live URL, enable:
-
-**Repository Settings → Pages → Build and deployment → Source → GitHub Actions**
-
-Once enabled, the same workflow deploys the graph to:
-
-https://joaquinsalinas06.github.io/ClassAI/
-
-No generated HTML needs to be committed back to `main`.
 
 ## Local/manual generation
 
