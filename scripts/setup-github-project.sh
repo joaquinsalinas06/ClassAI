@@ -27,7 +27,7 @@ else
   echo "==> Reutilizando Project existente #$PROJECT_NUMBER"
 fi
 
-gh project edit "$PROJECT_NUMBER"   --owner "$OWNER"   --description "Plan de entrega de ClassAI. Milestones nativos = semanas; Priority y Target date = campos del Project; labels = áreas/modos."   --visibility PUBLIC >/dev/null
+gh project edit "$PROJECT_NUMBER"   --owner "$OWNER"   --description "Plan de entrega de ClassAI. Milestone = semana; Priority, Target date y Status viven en el Project; labels = dominio/contexto."   --visibility PUBLIC >/dev/null
 
 gh project link "$PROJECT_NUMBER" --owner "$OWNER" --repo "$REPO" >/dev/null 2>&1 || true
 
@@ -37,14 +37,21 @@ field_exists() {
 }
 
 if ! field_exists "Priority"; then
-  echo "==> Creando campo Priority"
   gh project field-create "$PROJECT_NUMBER"     --owner "$OWNER"     --name "Priority"     --data-type SINGLE_SELECT     --single-select-options "P0 — Critical,P1 — Important,P2 — Nice to have" >/dev/null
 fi
 
 if ! field_exists "Target date"; then
-  echo "==> Creando campo Target date"
   gh project field-create "$PROJECT_NUMBER"     --owner "$OWNER"     --name "Target date"     --data-type DATE >/dev/null
 fi
+
+priority_for_issue() {
+  case "$1" in
+    3|5|7|10|15|16|20|32|41|46|47|48|52|53|55|56|57|76) echo "P1 — Important" ;;
+    59) echo "P2 — Nice to have" ;;
+    1|2|4|6|8|9|11|12|13|14|17|18|19|21|22|23|24|25|26|27|28|29|30|31|33|34|35|36|37|38|39|40|42|43|44|45|49|50|51|54|58|60|61|62|63|64|69|70|71|72|73|74|75) echo "P0 — Critical" ;;
+    *) echo "" ;;
+  esac
+}
 
 target_date_for_issue() {
   case "$1" in
@@ -64,26 +71,13 @@ target_date_for_issue() {
   esac
 }
 
-priority_from_labels() {
-  local labels="$1"
-  if [[ ",$labels," == *",priority:P0,"* ]]; then
-    echo "P0 — Critical"
-  elif [[ ",$labels," == *",priority:P1,"* ]]; then
-    echo "P1 — Important"
-  elif [[ ",$labels," == *",priority:P2,"* ]]; then
-    echo "P2 — Nice to have"
-  else
-    echo ""
-  fi
-}
-
-echo "==> Añadiendo issues abiertos y migrando metadata..."
-while IFS=$'\t' read -r number url labels; do
+echo "==> Añadiendo issues abiertos al Project..."
+while IFS=$'\t' read -r number url; do
   [ -z "$number" ] && continue
 
   gh project item-add "$PROJECT_NUMBER" --owner "$OWNER" --url "$url" >/dev/null 2>&1 || true
 
-  priority="$(priority_from_labels "$labels")"
+  priority="$(priority_for_issue "$number")"
   if [ -n "$priority" ]; then
     gh project item-edit "$PROJECT_NUMBER"       --owner "$OWNER"       --url "$url"       --field "Priority"       --value "$priority" >/dev/null
   fi
@@ -92,19 +86,8 @@ while IFS=$'\t' read -r number url labels; do
   if [ -n "$target_date" ]; then
     gh project item-edit "$PROJECT_NUMBER"       --owner "$OWNER"       --url "$url"       --field "Target date"       --date "$target_date" >/dev/null
   fi
-
-  if [[ ",$labels," == *",priority:P0,"* ]]; then
-    gh issue edit "$number" -R "$REPO_FULL" --remove-label "priority:P0" >/dev/null
-  fi
-  if [[ ",$labels," == *",priority:P1,"* ]]; then
-    gh issue edit "$number" -R "$REPO_FULL" --remove-label "priority:P1" >/dev/null
-  fi
-  if [[ ",$labels," == *",priority:P2,"* ]]; then
-    gh issue edit "$number" -R "$REPO_FULL" --remove-label "priority:P2" >/dev/null
-  fi
-
 done < <(
-  gh issue list -R "$REPO_FULL" --state open --limit 200     --json number,url,labels     --jq '.[] | [.number, .url, ([.labels[].name] | join(","))] | @tsv'
+  gh issue list -R "$REPO_FULL" --state open --limit 200     --json number,url     --jq '.[] | [.number, .url] | @tsv'
 )
 
 PROJECT_URL="$(gh project view "$PROJECT_NUMBER" --owner "$OWNER" --format json --jq '.url')"
@@ -113,14 +96,14 @@ echo
 echo "Migración terminada."
 echo "Project: $PROJECT_URL"
 echo
-echo "Metadata final:"
-echo "  - Milestone nativo: Semana 9 / 10 / 11 / 12"
-echo "  - Priority (Project): P0 / P1 / P2"
-echo "  - Target date (Project): deadline por clase/cierre semanal"
-echo "  - Status (Project): flujo de trabajo"
-echo "  - Labels: áreas, modos y clasificación útil"
-echo "  - Sub-issues/dependencies: relaciones nativas de GitHub"
+echo "Estructura final:"
+echo "  - Milestone: semana y fecha de cierre"
+echo "  - Priority: campo estructurado del Project"
+echo "  - Target date: fecha concreta por issue"
+echo "  - Status: campo nativo del Project"
+echo "  - Assignee: nativo del issue"
+echo "  - Parent/Sub-issues: nativo"
+echo "  - Blocked by/Blocking: nativo"
+echo "  - Labels: dominio y contexto de ejecución"
 echo
-echo "Los labels priority:* se retiraron después de migrar su valor."
-echo "Abriendo el Project..."
 gh project view "$PROJECT_NUMBER" --owner "$OWNER" --web
