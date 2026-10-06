@@ -1,0 +1,38 @@
+name: Color NFC and mobile labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/recolor-new-labels.yml"
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  recolor:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            const labels = {
+              "area:nfc": {
+                color: "7A5AF8",
+                description: "PN532, NFC físico, HCE y protocolo APDU"
+              },
+              "area:mobile": {
+                color: "DB61A2",
+                description: "Aplicación móvil Android/Kotlin y experiencia móvil"
+              }
+            };
+            for (const [name, cfg] of Object.entries(labels)) {
+              await github.rest.issues.updateLabel({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                name,
+                color: cfg.color,
+                description: cfg.description
+              });
+            }
