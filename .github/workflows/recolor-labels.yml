@@ -1,8 +1,10 @@
 name: Recolor ClassAI labels
 
 on:
-  issue_comment:
-    types: [created]
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/recolor-labels.yml"
 
 permissions:
   issues: write
@@ -10,7 +12,6 @@ permissions:
 
 jobs:
   recolor:
-    if: github.event.issue.number == 69 && contains(github.event.comment.body, '/recolor-labels-classai')
     runs-on: ubuntu-latest
     steps:
       - name: Apply coherent label palette
@@ -18,40 +19,37 @@ jobs:
         with:
           script: |
             const labels = {
-              "week:S9":        { color: "6F42C1", description: "Semana 9 — Bring-up y bases" },
-              "week:S10":       { color: "8250DF", description: "Semana 10 — Subsistemas conectados" },
-              "week:S11":       { color: "A475F9", description: "Semana 11 — Integración end-to-end" },
-              "week:S12":       { color: "BF8700", description: "Semana 12 — Validación y freeze" },
+              "week:S9":          { color: "6F42C1", description: "Semana 9 — Bring-up y bases" },
+              "week:S10":         { color: "8250DF", description: "Semana 10 — Subsistemas conectados" },
+              "week:S11":         { color: "A475F9", description: "Semana 11 — Integración end-to-end" },
+              "week:S12":         { color: "BF8700", description: "Semana 12 — Validación y freeze" },
 
-              "type:roadmap":    { color: "0969DA", description: "Roadmap general del proyecto" },
-              "type:milestone":  { color: "218BFF", description: "Tracker de milestone/semanal" },
-              "type:epic":       { color: "54AEFF", description: "Epic que agrupa trabajo relacionado" },
-              "type:task":       { color: "B6E3FF", description: "Tarea concreta y ejecutable" },
+              "type:roadmap":      { color: "0969DA", description: "Roadmap general del proyecto" },
+              "type:milestone":    { color: "218BFF", description: "Tracker de milestone/semanal" },
+              "type:epic":         { color: "54AEFF", description: "Epic que agrupa trabajo relacionado" },
+              "type:task":         { color: "B6E3FF", description: "Tarea concreta y ejecutable" },
 
-              "area:hardware":   { color: "D4A72C", description: "Sensores, actuadores, cableado y alimentación" },
-              "area:firmware":   { color: "FB8F44", description: "Firmware y lógica embebida del ESP32" },
+              "area:hardware":     { color: "D4A72C", description: "Sensores, actuadores, cableado y alimentación" },
+              "area:firmware":     { color: "FB8F44", description: "Firmware y lógica embebida del ESP32" },
               "area:connectivity": { color: "1F883D", description: "Wi-Fi, MQTT, broker y comunicaciones" },
-              "area:backend":    { color: "0E8A16", description: "Backend, ingestión y servicios" },
-              "area:platform":   { color: "00A6A6", description: "Dashboard y experiencia web" },
-              "area:data-ai":    { color: "8250DF", description: "Datos, analítica y asistente de IA" },
+              "area:backend":      { color: "0E8A16", description: "Backend, ingestión y servicios" },
+              "area:platform":     { color: "00A6A6", description: "Dashboard y experiencia web" },
+              "area:data-ai":      { color: "8250DF", description: "Datos, analítica y asistente de IA" },
 
-              "mode:in-class":   { color: "DDEEFF", description: "Trabajo pensado para realizarse en clase con hardware" },
-              "mode:parallel":   { color: "D4C5F9", description: "Trabajo que puede avanzar en paralelo fuera de clase" },
-              "mode:integration":{ color: "BFDADC", description: "Integración entre módulos o capas" },
-              "mode:testing":    { color: "C2E0C6", description: "Validación, pruebas y regresión" },
+              "mode:in-class":     { color: "DDEEFF", description: "Trabajo pensado para realizarse en clase con hardware" },
+              "mode:parallel":     { color: "D4C5F9", description: "Trabajo que puede avanzar en paralelo fuera de clase" },
+              "mode:integration":  { color: "BFDADC", description: "Integración entre módulos o capas" },
+              "mode:testing":      { color: "C2E0C6", description: "Validación, pruebas y regresión" },
 
-              "priority:P0":     { color: "B60205", description: "Crítico: bloquea flujo principal o entrega" },
-              "priority:P1":     { color: "D93F0B", description: "Importante: debe resolverse si es posible" },
-              "priority:P2":     { color: "FBCA04", description: "No bloqueante / mejora / trabajo futuro" }
+              "priority:P0":       { color: "B60205", description: "Crítico: bloquea flujo principal o entrega" },
+              "priority:P1":       { color: "D93F0B", description: "Importante: debe resolverse si es posible" },
+              "priority:P2":       { color: "FBCA04", description: "No bloqueante / mejora / trabajo futuro" }
             };
-
-            const owner = context.repo.owner;
-            const repo = context.repo.repo;
 
             for (const [name, cfg] of Object.entries(labels)) {
               await github.rest.issues.updateLabel({
-                owner,
-                repo,
+                owner: context.repo.owner,
+                repo: context.repo.repo,
                 name,
                 color: cfg.color,
                 description: cfg.description
