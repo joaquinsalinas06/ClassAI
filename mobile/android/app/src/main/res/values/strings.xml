@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClassAI</string>
+    <string name="service_description">Credencial de asistencia ClassAI</string>
+    <string name="aid_description">ClassAI asistencia</string>
+</resources>
