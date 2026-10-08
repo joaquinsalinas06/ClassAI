@@ -35,6 +35,63 @@ Los mensajes MQTT deben tener este formato:
 {"ambient": 28.31, "object": 27.85}
 ```
 
+## ClassAI v1: ingesta multi-sensor
+
+`backend.py` además del tópico legado (`MQTT_TOPIC`) se suscribe a `classai/v1/+/telemetry`, `classai/v1/+/events` y `classai/v1/+/status` (contrato en `docs/contracts.md`). Al arrancar aplica `schema.sql` (idempotente).
+
+- Telemetría → `readings_raw` (se purga lo de más de 7 días, cada hora) y resúmenes por minuto en formato largo en `sensor_minutes` (una fila por device, métrica y minuto; si el proceso se reinicia dentro de un minuto, se combina ponderando por muestras).
+- Legado `MLX90614/temperature` → sigue escribiendo `temperature_minutes` (dashboard y `/temperature/*`) y además `sensor_minutes` con `room = legacy`, `device = mlx90614-legacy`, métricas `temp_c` e `ir_object_c`.
+- Eventos → `events` (un `event_id` repetido se ignora). `SESSION_STARTED` crea la sesión y llama a `tuner.on_session_started` (si el tuner falla, la ingesta sigue). `ATTENDANCE_RECORDED` resuelve credencial → estudiante; lo rechazado va a `attendance_rejections` con su motivo. `SESSION_ENDED` cierra la sesión y materializa `session_summaries`.
+- Un payload inválido se registra en el log y se descarta; nunca detiene el proceso.
+
+Datos históricos del MLX90614 (una sola vez, idempotente; requiere haber arrancado `backend.py` antes):
+
+```bash
+python -c "import sqlite3; sqlite3.connect('data/mlx90614.db').executescript(open('migrate_legacy.sql').read())"
+```
+
+### Simulador
+
+`sim_publisher.py` imita un ESP32: status, `SESSION_STARTED` (CS5055), telemetría con ruido, 4 lecturas de asistencia (tarjeta, teléfono, el mismo estudiante con su otra credencial y un token desconocido) y `SESSION_ENDED`.
+
+```bash
+python sim_publisher.py --seed-students   # enrola las credenciales simuladas en DATABASE_PATH
+python sim_publisher.py --host 127.0.0.1 --port 1883 --room a101 --duration 120 --interval 5
+```
+
+Resultado esperado: 1 sesión, 2 asistencias, 1 rechazo `unknown_credential` y su fila en `session_summaries`.
+
+### Endpoints de clases y credenciales
+
+```bash
+curl "http://127.0.0.1:8000/classes/current?room=a101"
+curl "http://127.0.0.1:8000/sessions?room=a101&course=CS5055"
+curl "http://127.0.0.1:8000/sessions/<session_id>/summary"
+curl "http://127.0.0.1:8000/sessions/<session_id>/series?metric=temp_c&bucket_minutes=5"
+curl "http://127.0.0.1:8000/sessions/<session_id>/attendance"   # código y nombre, nunca tokens
+curl "http://127.0.0.1:8000/sessions/compare?ids=<id1>&ids=<id2>"
+```
+
+Enrolar y revocar credenciales requiere `ADMIN_API_KEY` en `.env` y el header `X-API-Key`:
+
+```bash
+curl -X POST http://127.0.0.1:8000/credentials -H "X-API-Key: $ADMIN_API_KEY" -H "Content-Type: application/json" \
+  -d '{"student_code":"20201001","full_name":"Ana Torres","type":"nfc_card_uid","token":"04A1B2C3D4E5F6"}'
+curl -X POST http://127.0.0.1:8000/credentials/1/revoke -H "X-API-Key: $ADMIN_API_KEY"
+```
+
+### Pruebas
+
+```bash
+python -m pytest tests
+```
+
+### Firmware (`firmware/classai_node`)
+
+Copia `secrets.example.h` a `secrets.h` (ignorado por git) con WiFi, broker y `ROOM_ID`. Los sensores se activan con los `#define USE_*` y todos los pines están en un solo bloque del `.ino`. Librerías: Adafruit MLX90614, PubSubClient, ArduinoJson 7, DHT sensor library, BH1750 (claws), Adafruit PN532, Adafruit BusIO.
+
+PubSubClient solo publica con QoS 0: los eventos esperan en una cola en RAM (32) y se envían cuando hay conexión; el backend deduplica por `event_id` (`{device}-{arranque}-{uptime_ms}`). El config de confort recibido se valida, se guarda en NVS y se usa sin red.
+
 ## Desarrollo local
 
 ```bash

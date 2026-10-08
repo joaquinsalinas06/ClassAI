@@ -125,3 +125,6 @@ Texto plano `online` (publicado al conectar, retenido) y `offline` (Last Will, r
 - SELECT: `00 A4 04 00 08 F0 43 4C 41 53 53 41 49 00` → `90 00`.
 - GET_CREDENTIAL: `80 CA 00 00 11` → `01 ‖ token[16] ‖ 90 00` (19 bytes).
 - Errores: `69 85` sin credencial, `67 00` longitud/formato, `6D 00` INS no soportado, `6A 82` AID desconocido.
+- El SELECT también se acepta sin el `Le` final (13 bytes). GET_CREDENTIAL sin SELECT previo → `69 85`.
+- Lector: si el SELECT responde algo distinto de `90 00`, un UID de 4 bytes se ignora (teléfono sin ClassAI); un UID de 7/10 bytes se trata como tarjeta física ISO-DEP (p.ej. DESFire) → `nfc_card_uid`.
+- Limitación Adafruit PN532 1.3.4: UIDs de 10 bytes llegan truncados; en la práctica las tarjetas del curso son de 4 o 7 bytes.
