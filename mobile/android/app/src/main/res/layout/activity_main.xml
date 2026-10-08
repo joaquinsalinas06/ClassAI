@@ -1,73 +1,68 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Una Activity, dos pantallas (login / carnet) para animar la transición entre ambas -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true">
+    android:background="?android:attr/colorBackground">
 
-    <LinearLayout
+    <include android:id="@+id/login" layout="@layout/screen_login" />
+
+    <include android:id="@+id/card" layout="@layout/screen_card" android:visibility="gone" />
+
+    <!-- Momento estrella: check animado sobre un velo -->
+    <FrameLayout
+        android:id="@+id/successOverlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="vertical"
-        android:padding="20dp">
-
-        <TextView
-            android:id="@+id/ready"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:textSize="22sp"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/status"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:textSize="16sp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Token para enrolar (no contiene datos personales):" />
-
-        <TextView
-            android:id="@+id/token"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textIsSelectable="true"
-            android:textSize="16sp" />
+        android:layout_height="match_parent"
+        android:background="@color/scrim"
+        android:clickable="true"
+        android:focusable="true"
+        android:visibility="gone">
 
         <LinearLayout
-            android:layout_width="match_parent"
+            android:id="@+id/successContent"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:layout_gravity="center"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
 
-            <Button
-                android:id="@+id/copy"
+            <ImageView
+                android:id="@+id/successCheck"
+                android:layout_width="132dp"
+                android:layout_height="132dp"
+                android:background="@drawable/bg_success_circle"
+                android:contentDescription="@string/cd_success"
+                android:elevation="12dp"
+                android:padding="18dp"
+                android:src="@drawable/avd_check" />
+
+            <TextView
+                android:id="@+id/successTitle"
+                android:accessibilityLiveRegion="assertive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Copiar token" />
+                android:layout_marginTop="24dp"
+                android:fontFamily="sans-serif-black"
+                android:text="@string/success_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="30sp" />
 
-            <Button
-                android:id="@+id/regenerate"
+            <TextView
+                android:id="@+id/successBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Regenerar" />
+                android:layout_marginTop="6dp"
+                android:text="@string/success_body"
+                android:textColor="#CCFFFFFF"
+                android:textSize="16sp" />
         </LinearLayout>
+    </FrameLayout>
 
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Últimos eventos"
-            android:textStyle="bold" />
-
-        <TextView
-            android:id="@+id/events"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:fontFamily="monospace"
-            android:textSize="12sp" />
-    </LinearLayout>
-</ScrollView>
+    <com.classai.mobile.CelebrationView
+        android:id="@+id/celebration"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

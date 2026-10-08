@@ -2,16 +2,25 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 
     <uses-permission android:name="android.permission.NFC" />
+    <!-- Solo para el enrolamiento (POST /mobile/enroll); el tap NFC nunca usa red -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.VIBRATE" />
     <!-- required=false para que instale en cualquier teléfono; la app muestra si hay HCE -->
     <uses-feature android:name="android.hardware.nfc.hce" android:required="false" />
 
     <!-- allowBackup=false: el token no debe clonarse a otro dispositivo vía backup -->
     <application
         android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@android:style/Theme.DeviceDefault.Light">
+        android:networkSecurityConfig="@xml/network_security_config"
+        android:theme="@style/Theme.ClassAI">
 
-        <activity android:name=".MainActivity" android:exported="true">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:windowSoftInputMode="adjustResize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
