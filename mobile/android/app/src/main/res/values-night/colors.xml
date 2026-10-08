@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="md_primary">#A5B4FC</color>
+    <color name="md_on_primary">#1E1B4B</color>
+    <color name="md_primary_container">#3730A3</color>
+    <color name="md_on_primary_container">#E0E7FF</color>
+    <color name="md_secondary">#5EEAD4</color>
+    <color name="md_on_secondary">#042F2E</color>
+    <color name="md_secondary_container">#115E59</color>
+    <color name="md_on_secondary_container">#CCFBF1</color>
+    <color name="md_tertiary">#F0ABFC</color>
+    <color name="md_background">#0F0F17</color>
+    <color name="md_on_surface">#E6E6F0</color>
+    <color name="md_on_surface_variant">#B4B4C6</color>
+    <color name="md_surface_container_lowest">#0A0A10</color>
+    <color name="md_surface_container_low">#16161F</color>
+    <color name="md_surface_container">#1A1A25</color>
+    <color name="md_surface_container_high">#23232F</color>
+    <color name="md_surface_container_highest">#2D2D3A</color>
+    <color name="md_outline">#8E8EA3</color>
+    <color name="md_outline_variant">#3F3F50</color>
+
+    <color name="blob_1">#4338CA</color>
+    <color name="blob_2">#0F766E</color>
+    <color name="blob_3">#86198F</color>
+    <color name="form_surface">#E61A1A25</color>
+    <color name="title_1">#A5B4FC</color>
+    <color name="title_2">#C4B5FD</color>
+    <color name="title_3">#5EEAD4</color>
+</resources>

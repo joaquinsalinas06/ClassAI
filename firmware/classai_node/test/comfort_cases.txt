@@ -1,0 +1,22 @@
+# Casos compartidos firmware/backend. set: 0 = fábrica, 1 = ejemplo del contrato
+# (temp [21.6, 26.6], noise_rel_max 0.42). nan = sensor inválido.
+# set temp_c rh_pct lux noise_rel comfort state
+0 22.5 50 400 0.3 100 OK
+0 25.2 50 400 0.3 86 OK
+0 27.0 50 400 0.3 65 REGULAR
+0 30.0 50 400 0.3 65 REGULAR
+0 18.0 50 400 0.3 65 REGULAR
+0 22.5 50 400 0.62 90 OK
+0 22.5 50 400 0.9 75 REGULAR
+0 22.5 50 200 0.3 90 OK
+0 22.5 50 1000 0.3 80 OK
+0 22.5 70 400 0.3 90 OK
+0 25.2 30 250 0.56 66 REGULAR
+0 30.0 80 400 0.3 45 ALERT
+0 nan 50 400 0.3 100 OK
+0 nan 50 400 0.9 62 REGULAR
+0 nan nan nan 0.62 60 REGULAR
+0 nan nan nan nan -1 REGULAR
+1 27.8 50 400 0.3 86 OK
+1 22.0 50 400 0.6 85 OK
+1 21.6 50 400 0.42 100 OK
