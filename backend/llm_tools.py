@@ -159,8 +159,9 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
     return _strip_hidden(_get(base_url, route, arguments))
 
 
-def answer_question(client, model: str, base_url: str, history: list[dict], question: str) -> str:
-    """Bucle de tool-calling con un cliente compatible con OpenAI."""
+def answer_question(client, model: str, base_url: str, history: list[dict], question: str,
+                    tools_used: Optional[list[str]] = None) -> str:
+    """Bucle de tool-calling con un cliente compatible con OpenAI; anota en tools_used las herramientas usadas."""
     messages: list[dict[str, Any]] = [{"role": "system", "content": build_system_prompt()}]
     messages.extend({"role": item["role"], "content": item["content"]} for item in history)
     messages.append({"role": "user", "content": question})
@@ -175,6 +176,8 @@ def answer_question(client, model: str, base_url: str, history: list[dict], ques
 
         messages.append(assistant_message.model_dump(exclude_none=True))
         for tool_call in assistant_message.tool_calls:
+            if tools_used is not None and tool_call.function.name in SCHEMAS and tool_call.function.name not in tools_used:
+                tools_used.append(tool_call.function.name)
             try:
                 arguments = json.loads(tool_call.function.arguments or "{}")
             except json.JSONDecodeError:
