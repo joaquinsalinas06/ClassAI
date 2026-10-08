@@ -1,0 +1,193 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+/* Tailwind reads only design tokens: the default palette is removed so no off-system color can slip in. */
+@theme inline {
+  --color-*: initial;
+  --color-transparent: transparent;
+  --color-current: currentColor;
+  --color-white: #ffffff;
+  --color-black: #000000;
+
+  --color-page: var(--ds-bg-page);
+  --color-surface: var(--ds-bg-surface);
+  --color-raised: var(--ds-bg-raised);
+  --color-sunken: var(--ds-bg-sunken);
+  --color-hover: var(--ds-bg-hover);
+  --color-selected: var(--ds-bg-selected);
+  --color-inverse: var(--ds-bg-inverse);
+
+  --color-line-subtle: var(--ds-border-subtle);
+  --color-line: var(--ds-border-default);
+  --color-line-strong: var(--ds-border-strong);
+  --color-focus: var(--ds-border-focus);
+
+  --color-fg: var(--ds-text-primary);
+  --color-fg-2: var(--ds-text-secondary);
+  --color-muted: var(--ds-text-muted);
+  --color-faint: var(--ds-text-faint);
+  --color-fg-inverse: var(--ds-text-inverse);
+  --color-link: var(--ds-text-link);
+
+  --color-ink: var(--ds-brand-ink);
+  --color-on-ink: var(--ds-brand-on-ink);
+
+  --color-ok: var(--ds-state-ok-solid);
+  --color-ok-text: var(--ds-state-ok-text);
+  --color-ok-subtle: var(--ds-state-ok-subtle);
+  --color-ok-border: var(--ds-state-ok-border);
+  --color-regular: var(--ds-state-regular-solid);
+  --color-regular-text: var(--ds-state-regular-text);
+  --color-regular-subtle: var(--ds-state-regular-subtle);
+  --color-regular-border: var(--ds-state-regular-border);
+  --color-alert: var(--ds-state-alert-solid);
+  --color-alert-text: var(--ds-state-alert-text);
+  --color-alert-subtle: var(--ds-state-alert-subtle);
+  --color-alert-border: var(--ds-state-alert-border);
+  --color-offline: var(--ds-state-offline-solid);
+  --color-offline-text: var(--ds-state-offline-text);
+  --color-offline-subtle: var(--ds-state-offline-subtle);
+  --color-offline-border: var(--ds-state-offline-border);
+  --color-info: var(--ds-intent-info);
+  --color-info-subtle: var(--ds-intent-info-subtle);
+
+  --color-temp: var(--ds-metric-temp);
+  --color-rh: var(--ds-metric-rh);
+  --color-lux: var(--ds-metric-lux);
+  --color-noise: var(--ds-metric-noise);
+  --color-presence: var(--ds-metric-presence);
+  --color-comfort: var(--ds-metric-comfort);
+
+  --font-sans: var(--ds-font-sans);
+  --font-mono: var(--ds-font-mono);
+
+  --text-display: var(--ds-type-display-size);
+  --text-display--line-height: var(--ds-type-display-line);
+  --text-display--letter-spacing: var(--ds-type-display-tracking);
+  --text-display--font-weight: var(--ds-type-display-weight);
+  --text-title: var(--ds-type-title-size);
+  --text-title--line-height: var(--ds-type-title-line);
+  --text-title--letter-spacing: var(--ds-type-title-tracking);
+  --text-title--font-weight: var(--ds-type-title-weight);
+  --text-heading: var(--ds-type-heading-size);
+  --text-heading--line-height: var(--ds-type-heading-line);
+  --text-heading--letter-spacing: var(--ds-type-heading-tracking);
+  --text-heading--font-weight: var(--ds-type-heading-weight);
+  --text-label: var(--ds-type-label-size);
+  --text-label--line-height: var(--ds-type-label-line);
+  --text-label--letter-spacing: var(--ds-type-label-tracking);
+  --text-label--font-weight: var(--ds-type-label-weight);
+  --text-body: var(--ds-type-body-size);
+  --text-body--line-height: var(--ds-type-body-line);
+  --text-body--letter-spacing: var(--ds-type-body-tracking);
+  --text-small: var(--ds-type-small-size);
+  --text-small--line-height: var(--ds-type-small-line);
+  --text-caption: var(--ds-type-caption-size);
+  --text-caption--line-height: var(--ds-type-caption-line);
+  --text-caption--letter-spacing: var(--ds-type-caption-tracking);
+  --text-micro: var(--ds-type-micro-size);
+  --text-micro--line-height: var(--ds-type-micro-line);
+  --text-micro--letter-spacing: var(--ds-type-micro-tracking);
+  --text-metric: var(--ds-type-metric-size);
+  --text-metric--line-height: var(--ds-type-metric-line);
+  --text-metric--letter-spacing: var(--ds-type-metric-tracking);
+  --text-metric--font-weight: var(--ds-type-metric-weight);
+  --text-hero: var(--ds-type-hero-size);
+  --text-hero--line-height: var(--ds-type-hero-line);
+  --text-hero--letter-spacing: var(--ds-type-hero-tracking);
+  --text-hero--font-weight: var(--ds-type-hero-weight);
+
+  --radius-xs: var(--ds-radius-xs);
+  --radius-sm: var(--ds-radius-sm);
+  --radius-md: var(--ds-radius-md);
+  --radius-lg: var(--ds-radius-lg);
+  --radius-xl: var(--ds-radius-xl);
+
+  --shadow-xs: var(--ds-shadow-xs);
+  --shadow-sm: var(--ds-shadow-sm);
+  --shadow-md: var(--ds-shadow-md);
+  --shadow-lg: var(--ds-shadow-lg);
+
+  --ease-standard: var(--ds-motion-easing-standard);
+  --ease-enter: var(--ds-motion-easing-enter);
+  --ease-exit: var(--ds-motion-easing-exit);
+
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+  --breakpoint-2xl: 1536px;
+}
+
+@layer base {
+  html {
+    background: var(--ds-bg-page);
+    color: var(--ds-text-primary);
+    font-family: var(--ds-font-sans);
+    font-size: var(--ds-type-body-size);
+    line-height: var(--ds-type-body-line);
+    letter-spacing: var(--ds-type-body-tracking);
+    font-weight: var(--ds-type-body-weight);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "ss01" off;
+  }
+  body {
+    background: var(--ds-bg-page);
+    min-height: 100dvh;
+  }
+  ::selection {
+    background: color-mix(in oklab, var(--ds-border-focus) 28%, transparent);
+  }
+  :focus-visible {
+    outline: var(--ds-border-focus) solid 2px;
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  button, [role="button"], a { -webkit-tap-highlight-color: transparent; }
+  button:not(:disabled), [role="button"] { cursor: pointer; }
+  * { scrollbar-width: thin; scrollbar-color: var(--ds-border-strong) transparent; }
+}
+
+@layer utilities {
+  .num { font-variant-numeric: tabular-nums; font-feature-settings: "tnum" 1; }
+  .hairline { border-color: var(--ds-border-default); }
+}
+
+@keyframes ds-spin { to { transform: rotate(360deg); } }
+@keyframes ds-pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+@keyframes ds-shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+.ds-spin { animation: ds-spin 1.6s linear infinite; }
+.ds-spin-fast { animation: ds-spin 0.7s linear infinite; }
+.ds-pulse::after {
+  content: ""; position: absolute; inset: 0; border-radius: 9999px; background: currentColor;
+  animation: ds-pulse-ring 2s var(--ds-motion-easing-enter) infinite;
+}
+.ds-skeleton {
+  background: linear-gradient(90deg, var(--ds-bg-sunken) 0, var(--ds-bg-hover) 40%, var(--ds-bg-sunken) 80%);
+  background-size: 800px 100%;
+  animation: ds-shimmer 1.6s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .ds-pulse::after { display: none; }
+}
+
+/* Lucide: one stroke weight everywhere (tokens: icon.stroke). CSS beats the SVG presentation attribute. */
+svg.lucide { stroke-width: var(--ds-icon-stroke); flex-shrink: 0; }
+@keyframes ds-tip { from { opacity: 0; transform: translateY(2px) scale(0.98); } }
+@keyframes ds-spark { from { transform: scale(1); opacity: 0.5; } to { transform: scale(3.4); opacity: 0; } }
+.ds-spark-pulse { transform-box: fill-box; transform-origin: center; animation: ds-spark 2s var(--ds-motion-easing-enter) infinite; }
+@keyframes ds-palette { from { opacity: 0; transform: scale(0.98) translateY(-6px); } }
