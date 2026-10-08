@@ -37,6 +37,20 @@ try:
 except Exception as error:  # la API sigue funcionando sin el tuner
     print(f"Tuner no disponible en la API: {error!r}")
 
+try:
+    import live
+
+    app.include_router(live.router)
+except Exception as error:  # la API sigue funcionando sin datos en vivo
+    print(f"Live no disponible en la API: {error!r}")
+
+try:
+    import assistant_api
+
+    app.include_router(assistant_api.router)
+except Exception as error:  # la API sigue funcionando sin el asistente
+    print(f"Asistente no disponible en la API: {error!r}")
+
 
 def get_service() -> TemperatureService:
     try:

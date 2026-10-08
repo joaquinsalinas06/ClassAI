@@ -61,6 +61,8 @@ python sim_publisher.py --host 127.0.0.1 --port 1883 --room a101 --duration 120 
 
 Resultado esperado: 1 sesión, 2 asistencias, 1 rechazo `unknown_credential` y su fila en `session_summaries`.
 
+Demo completa para el dashboard web (histórico sembrado + aula en vivo): ver [DEMO.md](DEMO.md).
+
 ### Endpoints de clases y credenciales
 
 ```bash
