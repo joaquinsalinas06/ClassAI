@@ -14,6 +14,7 @@ from temperature_service import (
     InvalidTimeRangeError,
     TemperatureService,
     enroll_credential,
+    normalize_credential,
     revoke_credential,
 )
 
@@ -204,6 +205,33 @@ def create_credential(
     return run_write(lambda connection: enroll_credential(
         connection, credential.student_code, credential.full_name, credential.type, credential.token
     ))
+
+
+class MobileEnrollIn(BaseModel):
+    student_code: str = Field(min_length=1, max_length=32)
+    full_name: str = Field(min_length=1, max_length=120)
+    token: str = Field(min_length=32, max_length=32)
+
+
+def enroll_mobile(connection: sqlite3.Connection, code: str, token: str) -> dict:
+    """Vincula el teléfono de un estudiante ya cargado por el docente; un solo teléfono activo."""
+    _, token = normalize_credential("android_hce", token)
+    student = connection.execute("SELECT id, full_name FROM students WHERE code = ?", (code,)).fetchone()
+    if student is None:
+        raise HTTPException(status_code=404, detail="Código no registrado en ninguna clase; pide al docente que te agregue")
+    active_phone = connection.execute(
+        "SELECT 1 FROM credentials WHERE student_id = ? AND type = 'android_hce' AND active = 1", (student[0],)
+    ).fetchone()
+    if active_phone is not None:
+        raise HTTPException(status_code=409, detail="Este estudiante ya tiene un teléfono activo; pide al docente que lo revoque")
+    # ponytail: sin login real, cualquiera que conozca un código libre puede vincularlo; el docente lo ve y revoca.
+    created = enroll_credential(connection, code, student[1], "android_hce", token)
+    return {"student_code": code, "full_name": student[1], "credential_id": created["credential_id"], "status": "active"}
+
+
+@app.post("/mobile/enroll", tags=["credentials"], summary="Vincular el teléfono (HCE) de un estudiante registrado")
+def mobile_enroll(body: MobileEnrollIn) -> dict:
+    return run_write(lambda connection: enroll_mobile(connection, body.student_code, body.token))
 
 
 @app.post("/credentials/{credential_id}/revoke", tags=["credentials"], summary="Revocar una credencial")
