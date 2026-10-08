@@ -286,6 +286,20 @@ class TemperatureService:
             }
         return result
 
+    def list_rooms(self) -> list[dict[str, Any]]:
+        """Tabla rooms ∪ aulas vistas en sesiones o sensor_minutes, con su sesión abierta."""
+        rows = self._fetch_all(
+            """
+            WITH ids AS (SELECT id FROM rooms UNION SELECT room FROM sessions UNION SELECT room FROM sensor_minutes)
+            SELECT ids.id, r.name, r.latitude, r.longitude,
+                   (SELECT s.id FROM sessions s WHERE s.room = ids.id AND s.ended_at IS NULL
+                    ORDER BY s.started_at DESC LIMIT 1) AS current_session_id
+            FROM ids LEFT JOIN rooms r ON r.id = ids.id
+            ORDER BY ids.id
+            """
+        )
+        return [dict(row) for row in rows]
+
     def get_session_summary(self, session_id: str) -> Optional[dict[str, Any]]:
         row = self._fetch_one("SELECT * FROM session_summaries WHERE session_id = ?", (session_id,))
         if row is not None:
