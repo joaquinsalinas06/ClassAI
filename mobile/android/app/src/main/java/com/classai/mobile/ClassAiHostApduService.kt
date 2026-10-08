@@ -12,7 +12,8 @@ class ClassAiHostApduService : HostApduService() {
         val response = handler.process(commandApdu, TokenStore(this).get())
         // se registra solo INS y SW, nunca el token
         val ins = if (commandApdu.size > 1) "%02X".format(commandApdu[1]) else "--"
-        EventLog.add("APDU INS $ins → SW ${response.takeLast(2).toByteArray().toHex()}")
+        val sw = response.takeLast(2).toByteArray().toHex()
+        if (ins == "CA" && sw == "9000") EventLog.credentialRead() else EventLog.add("APDU INS $ins → SW $sw")
         return response
     }
 
@@ -28,17 +29,30 @@ class ClassAiHostApduService : HostApduService() {
     }
 }
 
-// Últimos eventos en memoria del proceso. Todo ocurre en el main thread.
+// Eventos en memoria del proceso; la Activity se suscribe con listener. Todo en el main thread.
 object EventLog {
-    private val events = ArrayDeque<String>()
-    var listener: (() -> Unit)? = null
+    data class Entry(val time: Long, val text: String, val read: Boolean)
 
-    fun add(msg: String) {
+    private val entries = ArrayDeque<Entry>()
+    var listener: ((Entry) -> Unit)? = null
+
+    fun credentialRead() = add("GET_CREDENTIAL → 9000 (lector leyó la credencial)", read = true)
+
+    fun add(msg: String, read: Boolean = false) {
         Log.i("ClassAI", msg)
-        events.addFirst("${java.text.SimpleDateFormat("HH:mm:ss.SSS").format(java.util.Date())}  $msg")
-        while (events.size > 20) events.removeLast()
-        listener?.invoke()
+        val e = Entry(System.currentTimeMillis(), msg, read)
+        entries.addFirst(e)
+        while (entries.size > 40) entries.removeLast()
+        listener?.invoke(e)
     }
 
-    fun text(): String = events.joinToString("\n")
+    // al desvincular: las lecturas eran de la credencial anterior
+    fun clear() = entries.clear()
+
+    fun reads(): List<Entry> = entries.filter { it.read }
+
+    fun text(): String {
+        val f = java.text.SimpleDateFormat("HH:mm:ss.SSS", java.util.Locale.getDefault())
+        return entries.joinToString("\n") { "${f.format(java.util.Date(it.time))}  ${it.text}" }
+    }
 }
