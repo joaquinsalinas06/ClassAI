@@ -1,87 +1,23 @@
-"""Chatbot local Streamlit con DeepSeek y consultas seguras de temperatura."""
+"""Asistente ClassAI local en Streamlit: LLM compatible con OpenAI (DeepSeek por defecto)
+con herramientas de solo lectura sobre la API (llm_tools.py)."""
 
-import json
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any
 
-import requests
 import streamlit as st
 from dotenv import load_dotenv
 from openai import OpenAI
 
 from chat_store import ChatStore
-
-
-SYSTEM_PROMPT = """Eres un asistente de monitoreo para un sensor MLX90614.
-Los datos históricos son resúmenes por minuto UTC de la tabla temperature_minutes.
-Cada fila contiene samples y las estadísticas ambient_min, ambient_max, ambient_avg,
-object_min, object_max y object_avg. Los promedios de periodos deben estar ponderados
-por samples. Las preguntas sin zona horaria se interpretan en America/Lima.
-Usa las herramientas para obtener datos antes de afirmar cifras. No inventes mediciones.
-La clasificación frio/templado/calido/caluroso es una regla de aplicación, no una medida
-científica de sensación térmica. Responde de forma clara en español."""
-
-TOOLS = [
-    {
-        "type": "function",
-        "function": {
-            "name": "get_temperature_stats",
-            "description": "Obtiene min, max, promedio ponderado, muestras y clasificación para un periodo.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "start": {"type": "string", "description": "Inicio ISO 8601 en hora local de Lima si no incluye zona."},
-                    "end": {"type": "string", "description": "Fin ISO 8601 exclusivo en hora local de Lima si no incluye zona."},
-                },
-                "required": ["start", "end"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_latest_temperature",
-            "description": "Obtiene el último resumen por minuto disponible.",
-            "parameters": {"type": "object", "properties": {}},
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_temperature_history",
-            "description": "Obtiene filas históricas por minuto para un rango acotado.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "start": {"type": "string", "description": "Inicio ISO 8601."},
-                    "end": {"type": "string", "description": "Fin ISO 8601 exclusivo."},
-                    "limit": {"type": "integer", "minimum": 1, "maximum": 5000},
-                },
-                "required": ["start", "end"],
-            },
-        },
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "get_daily_summary",
-            "description": "Obtiene el resumen ponderado de un día local.",
-            "parameters": {
-                "type": "object",
-                "properties": {"date": {"type": "string", "description": "Fecha local YYYY-MM-DD."}},
-                "required": ["date"],
-            },
-        },
-    },
-]
+from llm_tools import answer_question
 
 
 @dataclass(frozen=True)
 class ChatbotSettings:
     deepseek_api_key: str
     deepseek_model: str
+    llm_base_url: str
     temperature_api_base_url: str
     chat_database_path: str
 
@@ -98,69 +34,11 @@ def load_settings() -> ChatbotSettings:
     return ChatbotSettings(
         deepseek_api_key=required_env("DEEPSEEK_API_KEY"),
         deepseek_model=required_env("DEEPSEEK_MODEL"),
+        # Cualquier proveedor compatible con OpenAI: cambia LLM_BASE_URL y DEEPSEEK_MODEL.
+        llm_base_url=os.getenv("LLM_BASE_URL") or "https://api.deepseek.com",
         temperature_api_base_url=required_env("TEMPERATURE_API_BASE_URL").rstrip("/"),
         chat_database_path=required_env("CHAT_DATABASE_PATH"),
     )
-
-
-def execute_temperature_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[str, Any]:
-    routes = {
-        "get_temperature_stats": "/temperature/stats",
-        "get_latest_temperature": "/temperature/latest",
-        "get_temperature_history": "/temperature/history",
-        "get_daily_summary": "/temperature/daily-summary",
-    }
-    route = routes.get(name)
-    if route is None:
-        return {"error": "Herramienta no permitida"}
-    try:
-        response = requests.get(f"{base_url}{route}", params=arguments, timeout=15)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as error:
-        return {"error": "No se pudo consultar la API de temperatura", "detail": str(error)}
-    except ValueError:
-        return {"error": "La API de temperatura devolvió una respuesta inválida"}
-
-
-def answer_question(settings: ChatbotSettings, history: list[dict], question: str) -> str:
-    client = OpenAI(api_key=settings.deepseek_api_key, base_url="https://api.deepseek.com")
-    messages: list[dict[str, Any]] = [{"role": "system", "content": SYSTEM_PROMPT}]
-    messages.extend({"role": item["role"], "content": item["content"]} for item in history)
-    messages.append({"role": "user", "content": question})
-
-    for _ in range(5):
-        response = client.chat.completions.create(
-            model=settings.deepseek_model,
-            messages=messages,
-            tools=TOOLS,
-            tool_choice="auto",
-            temperature=0.2,
-        )
-        assistant_message = response.choices[0].message
-        if not assistant_message.tool_calls:
-            return assistant_message.content or "No pude generar una respuesta."
-
-        messages.append(assistant_message.model_dump(exclude_none=True))
-        for tool_call in assistant_message.tool_calls:
-            try:
-                arguments = json.loads(tool_call.function.arguments)
-            except json.JSONDecodeError:
-                tool_result = {"error": "Argumentos de herramienta inválidos"}
-            else:
-                tool_result = execute_temperature_tool(
-                    settings.temperature_api_base_url,
-                    tool_call.function.name,
-                    arguments,
-                )
-            messages.append(
-                {
-                    "role": "tool",
-                    "tool_call_id": tool_call.id,
-                    "content": json.dumps(tool_result, ensure_ascii=False),
-                }
-            )
-    return "No pude completar la consulta de datos tras varios intentos."
 
 
 def select_conversation(store: ChatStore) -> int:
@@ -173,9 +51,9 @@ def select_conversation(store: ChatStore) -> int:
 
 
 def main() -> None:
-    st.set_page_config(page_title="MLX90614 Chat", page_icon="💬", layout="wide")
-    st.title("MLX90614 Chat")
-    st.caption("Consultas de temperatura con DeepSeek y la API histórica segura.")
+    st.set_page_config(page_title="ClassAI Asistente", page_icon="💬", layout="wide")
+    st.title("ClassAI Asistente")
+    st.caption("Clases, asistencia y confort del aula, solo con datos de la API de ClassAI.")
 
     try:
         settings = load_settings()
@@ -195,7 +73,7 @@ def main() -> None:
         with st.chat_message(item["role"]):
             st.markdown(item["content"])
 
-    question = st.chat_input("Pregunta sobre las temperaturas")
+    question = st.chat_input("Pregunta sobre clases, asistencia o confort")
     if not question:
         return
 
@@ -208,9 +86,12 @@ def main() -> None:
     with st.chat_message("assistant"):
         with st.spinner("Consultando datos..."):
             try:
-                answer = answer_question(settings, history, question)
+                client = OpenAI(api_key=settings.deepseek_api_key, base_url=settings.llm_base_url)
+                answer = answer_question(
+                    client, settings.deepseek_model, settings.temperature_api_base_url, history, question
+                )
             except Exception:
-                answer = "No se pudo consultar DeepSeek en este momento."
+                answer = "No se pudo consultar el modelo de lenguaje en este momento."
         st.markdown(answer)
     store.add_message(conversation_id, "assistant", answer)
 
