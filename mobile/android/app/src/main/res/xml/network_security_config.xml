@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ponytail: HTTP en claro permitido para cualquier host porque el backend del prototipo corre
+     en la LAN (IP variable) o en 10.0.2.2. Para producción: HTTPS y quitar este permiso. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true" />
+</network-security-config>

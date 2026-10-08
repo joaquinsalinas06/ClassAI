@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">ClassAI</string>
+    <string name="service_description">Credencial de asistencia ClassAI</string>
+    <string name="aid_description">ClassAI asistencia</string>
+
+    <string name="login_title">ClassAI</string>
+    <string name="login_subtitle">Tu carnet universitario, ahora en tu teléfono</string>
+    <string name="field_code">Código universitario</string>
+    <string name="field_code_helper">Ej. 202310123</string>
+    <string name="field_name">Nombre completo</string>
+    <string name="field_server">Servidor</string>
+    <string name="field_server_helper">Lo indica tu docente</string>
+    <string name="action_link">Vincular este teléfono</string>
+    <string name="login_privacy">Al acercarte al lector, el teléfono solo entrega un código anónimo. Tus datos personales no viajan por NFC.</string>
+
+    <string name="card_toolbar">Mi carnet</string>
+    <string name="card_brand">ClassAI · UTEC</string>
+    <string name="card_student">ESTUDIANTE</string>
+    <string name="action_retry">Reintentar vinculación</string>
+    <string name="action_nfc_settings">Abrir ajustes NFC</string>
+    <string name="reads_title">Últimas lecturas</string>
+    <string name="reads_empty_title">Aún no hay lecturas</string>
+    <string name="reads_empty_body">Acerca el teléfono al lector del aula y aparecerán aquí.</string>
+    <string name="read_ok">Lector leyó tu credencial ✓</string>
+    <string name="details_show">Ver detalles técnicos</string>
+    <string name="details_hide">Ocultar detalles técnicos</string>
+    <string name="details_token">Token de credencial</string>
+    <string name="action_copy">Copiar token</string>
+    <string name="success_title">¡Asistencia enviada!</string>
+    <string name="success_body">El lector recibió tu credencial</string>
+
+    <string name="action_save">Guardar</string>
+    <string name="menu_server">Cambiar servidor</string>
+    <string name="menu_unlink">Desvincular / regenerar credencial</string>
+    <string name="cd_logo">Logo de ClassAI</string>
+    <string name="cd_avatar">Avatar del estudiante</string>
+    <string name="cd_success">Lectura correcta</string>
+</resources>

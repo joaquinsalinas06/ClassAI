@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Marca ClassAI: índigo → violeta → teal -->
+    <color name="brand_indigo">#312E81</color>
+    <color name="brand_violet">#6D28D9</color>
+    <color name="brand_teal">#0F766E</color>
+    <color name="brand_teal_light">#2DD4BF</color>
+    <color name="brand_yellow">#FBBF24</color>
+
+    <!-- Chip de estado sobre la tarjeta (texto blanco, contraste ≥ 4.5:1) -->
+    <color name="chip_active">#047857</color>
+    <color name="chip_pending">#B45309</color>
+    <color name="chip_error">#B91C1C</color>
+    <color name="chip_neutral">#475569</color>
+    <color name="success">#059669</color>
+
+    <color name="md_primary">#4338CA</color>
+    <color name="md_on_primary">#FFFFFF</color>
+    <color name="md_primary_container">#E0E7FF</color>
+    <color name="md_on_primary_container">#1E1B4B</color>
+    <color name="md_secondary">#0F766E</color>
+    <color name="md_on_secondary">#FFFFFF</color>
+    <color name="md_secondary_container">#CCFBF1</color>
+    <color name="md_on_secondary_container">#042F2E</color>
+    <color name="md_tertiary">#A21CAF</color>
+    <color name="md_background">#F7F7FC</color>
+    <color name="md_on_surface">#17171F</color>
+    <color name="md_on_surface_variant">#4B4B5C</color>
+    <color name="md_surface_container_lowest">#FFFFFF</color>
+    <color name="md_surface_container_low">#F2F2FA</color>
+    <color name="md_surface_container">#EEEEF7</color>
+    <color name="md_surface_container_high">#E8E8F3</color>
+    <color name="md_surface_container_highest">#E2E2EE</color>
+    <color name="md_outline">#7A7A8C</color>
+    <color name="md_outline_variant">#C9C9D8</color>
+
+    <!-- Manchas del fondo animado del login -->
+    <color name="blob_1">#A5B4FC</color>
+    <color name="blob_2">#5EEAD4</color>
+    <color name="blob_3">#F0ABFC</color>
+    <color name="form_surface">#E6FFFFFF</color>
+    <color name="title_1">#4338CA</color>
+    <color name="title_2">#7C3AED</color>
+    <color name="title_3">#0D9488</color>
+    <color name="scrim">#E6101018</color>
+</resources>
