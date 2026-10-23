@@ -223,20 +223,23 @@ def create_credential(
 
 class MobileEnrollIn(BaseModel):
     student_code: str = Field(min_length=1, max_length=32)
-    full_name: str = Field(min_length=1, max_length=120)
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=120)
     token: str = Field(min_length=32, max_length=32)
 
 
 def enroll_mobile(connection: sqlite3.Connection, code: str, token: str) -> dict:
     """Vincula el teléfono de un estudiante ya cargado por el docente; un solo teléfono activo."""
     _, token = normalize_credential("android_hce", token)
+    connection.execute("BEGIN IMMEDIATE")  # serialize first enrollment and retries for this student
     student = connection.execute("SELECT id, full_name FROM students WHERE code = ?", (code,)).fetchone()
     if student is None:
         raise HTTPException(status_code=404, detail="Código no registrado en ninguna clase; pide al docente que te agregue")
     active_phone = connection.execute(
-        "SELECT 1 FROM credentials WHERE student_id = ? AND type = 'android_hce' AND active = 1", (student[0],)
+        "SELECT id, token FROM credentials WHERE student_id = ? AND type = 'android_hce' AND active = 1", (student[0],)
     ).fetchone()
     if active_phone is not None:
+        if active_phone[1] == token:
+            return {"student_code": code, "full_name": student[1], "credential_id": active_phone[0], "status": "active"}
         raise HTTPException(status_code=409, detail="Este estudiante ya tiene un teléfono activo; pide al docente que lo revoque")
     # ponytail: sin login real, cualquiera que conozca un código libre puede vincularlo; el docente lo ve y revoca.
     created = enroll_credential(connection, code, student[1], "android_hce", token)

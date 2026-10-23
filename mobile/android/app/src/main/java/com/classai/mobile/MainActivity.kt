@@ -3,8 +3,6 @@ package com.classai.mobile
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -15,6 +13,8 @@ import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
+import android.net.ConnectivityManager
+import android.net.Network
 import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
@@ -22,7 +22,7 @@ import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
 import android.provider.Settings
-import android.transition.TransitionManager
+import android.view.KeyEvent
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.view.ViewGroup
@@ -31,13 +31,12 @@ import android.view.inputmethod.InputMethodManager
 import android.view.animation.DecelerateInterpolator
 import android.view.animation.OvershootInterpolator
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.widget.doAfterTextChanged
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import com.classai.mobile.databinding.ActivityMainBinding
 import com.classai.mobile.databinding.ItemReadBinding
-import com.classai.mobile.databinding.SheetServerBinding
-import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.android.material.color.MaterialColors
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
@@ -65,8 +64,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var gy0 = 0f
     private var tiltX = 0f
     private var tiltY = 0f
-    private var bob: ObjectAnimator? = null
     private val hideSuccess = Runnable { hideSuccessOverlay() }
+    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
+        override fun onAvailable(network: Network) {
+            runOnUiThread { retryIfPending() }
+        }
+    }
+    private var foreground = false
+
+    private fun retryIfPending() {
+        if (foreground && profile.hasProfile && !profile.enrolled && !busy) retry()
+    }
 
     private val debuggable get() = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
     private fun dp(v: Float) = v * resources.displayMetrics.density
@@ -102,14 +110,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     override fun onResume() {
         super.onResume()
+        foreground = true
         EventLog.listener = ::onLogEntry
+        getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(networkCallback)
         if (b.card.root.visibility == View.VISIBLE) {
             renderCard()
             startTilt()
+            retryIfPending()
         }
     }
 
     override fun onPause() {
+        foreground = false
+        getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(networkCallback)
         EventLog.listener = null
         stopTilt()
         super.onPause()
@@ -150,40 +163,50 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun setupLogin(): Unit = with(b.login) {
         linkTint = link.backgroundTintList!!
         linkText = link.textColors
-        server.setText(profile.server)
+        code.doAfterTextChanged {
+            codeLayout.error = null
+            link.isEnabled = !busy && validateCode(it.toString()) == null
+        }
         link.setOnClickListener { submit() }
-        server.setOnEditorActionListener { _, id, _ -> (id == EditorInfo.IME_ACTION_DONE).also { if (it) submit() } }
+        code.setOnEditorActionListener { _, id, event ->
+            val done = id == EditorInfo.IME_ACTION_DONE ||
+                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
+            if (done) submit()
+            done
+        }
+        code.setOnFocusChangeListener { _, focused ->
+            if (motionEnabled) form.animate().scaleX(if (focused) 1.015f else 1f)
+                .scaleY(if (focused) 1.015f else 1f).setDuration(180).start()
+        }
     }
 
     private fun submit(): Unit = with(b.login) {
         if (busy) return
         val c = code.text.toString().trim()
-        val n = name.text.toString().trim().replace(Regex("\\s+"), " ")
-        val s = normalizeServer(server.text.toString())
         codeLayout.error = validateCode(c)
-        nameLayout.error = validateName(n)
-        serverLayout.error = if (s == null) "URL inválida (ej. http://192.168.1.10:8000)" else null
-        if (codeLayout.error != null || nameLayout.error != null || s == null) {
+        if (codeLayout.error != null) {
             reject(form)
             return
         }
         getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(root.windowToken, 0)
-        profile.server = s
+        // Save the pending code first: rotation/network loss must not lose this step.
+        profile.save(c, "Tu carnet", enrolled = false)
         setLinkLoading()
-        enroll(c, n, s) { outcome ->
+        enroll(c) { outcome ->
             when (outcome) {
-                EnrollOutcome.Linked -> {
-                    profile.save(c, n, enrolled = true)
-                    linkDone(true) { showCard(animate = true) }
+                is EnrollOutcome.Linked -> {
+                    profile.save(c, outcome.fullName, enrolled = true)
+                    linkDone(true) { busy = false; showCard(animate = true) }
                 }
                 EnrollOutcome.Pending -> {
-                    profile.save(c, n, enrolled = false)
                     linkDone(false) {
+                        busy = false
                         showCard(animate = true)
-                        snack("Sin conexión con el servidor: tu carnet quedó pendiente de vincular")
+                        snack("Guardamos tu código. Terminaremos de vincularlo al recuperar la conexión")
                     }
                 }
                 is EnrollOutcome.Rejected -> {
+                    profile.clear()
                     resetLinkButton()
                     codeLayout.error = outcome.message
                     reject(form)
@@ -192,16 +215,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun enroll(code: String, name: String, server: String, done: (EnrollOutcome) -> Unit) {
-        val json = enrollJson(code, name, tokens.getOrCreate().toHex())
+    private fun enroll(code: String, done: (EnrollOutcome) -> Unit) {
+        val token = tokens.getOrCreate().toHex()
+        val json = enrollJson(code, token)
         io.execute {
-            val outcome = enrollOutcome(postEnroll(server, json))
-            runOnUiThread { if (!isDestroyed) done(outcome) }
+            val outcome = postEnroll(BuildConfig.CLASSAI_API_URL, json)
+            runOnUiThread {
+                if (!isDestroyed && !isFinishing && profile.code == code && tokens.get()?.toHex() == token) done(outcome)
+            }
         }
     }
 
     private fun setLinkLoading(): Unit = with(b.login.link) {
         busy = true
+        isEnabled = false
+        b.login.code.isEnabled = false
         val spec = CircularProgressIndicatorSpec(context, null, 0,
             com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall)
         spec.indicatorColors = intArrayOf(currentTextColor)
@@ -227,15 +255,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
         performHapticFeedback(HapticFeedbackConstants.CONFIRM.takeIf { Build.VERSION.SDK_INT >= 30 }
             ?: HapticFeedbackConstants.LONG_PRESS)
-        ValueAnimator.ofArgb(linkTint.defaultColor, to).apply {
-            duration = 300
-            addUpdateListener { backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int) }
-        }.start()
-        postDelayed({ next() }, if (motionEnabled) 900 else 300)
+        backgroundTintList = ColorStateList.valueOf(to)
+        postDelayed({ next() }, if (motionEnabled) 500 else 0)
     }
 
     private fun resetLinkButton(): Unit = with(b.login.link) {
         busy = false
+        b.login.code.isEnabled = true
+        isEnabled = validateCode(b.login.code.text.toString()) == null
         backgroundTintList = linkTint
         setTextColor(linkText)
         iconTint = linkText
@@ -253,7 +280,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun showLogin(animate: Boolean) {
         resetLinkButton()
-        b.login.server.setText(profile.server)
         b.login.root.visibility = View.VISIBLE
         b.login.root.alpha = 1f
         b.login.root.translationY = 0f
@@ -269,15 +295,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun animateLoginIn(): Unit = with(b.login) {
         logo.apply {
-            scaleX = 0.3f; scaleY = 0.3f; alpha = 0f; rotation = -14f
+            scaleX = 0.7f; scaleY = 0.7f; alpha = 0f; rotation = -8f
             animate().scaleX(1f).scaleY(1f).alpha(1f).rotation(0f)
-                .setInterpolator(OvershootInterpolator(2.4f)).setDuration(750).start()
+                .setInterpolator(OvershootInterpolator(1.5f)).setDuration(500).start()
         }
-        val staggered = listOf<View>(title, subtitle, form) + (0 until fields.childCount).map { fields.getChildAt(it) } + privacy
-        staggered.forEachIndexed { i, v ->
+        listOf<View>(title, subtitle, form, privacy).forEachIndexed { i, v ->
             v.alpha = 0f
-            v.translationY = dp(36f)
-            v.animate().alpha(1f).translationY(0f).setStartDelay(180L + i * 70L).setDuration(480)
+            v.translationY = dp(20f)
+            v.animate().alpha(1f).translationY(0f).setStartDelay(80L + i * 65L).setDuration(320)
                 .setInterpolator(DecelerateInterpolator(2f)).start()
         }
     }
@@ -287,33 +312,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun setupCard(): Unit = with(b.card) {
         toolbar.setOnMenuItemClickListener {
             when (it.itemId) {
-                R.id.action_server -> showServerSheet()
                 R.id.action_unlink -> confirmUnlink()
             }
             true
         }
         refresh.setColorSchemeColors(attr(androidx.appcompat.R.attr.colorPrimary), getColor(R.color.ds_brand_air_to))
         refresh.setProgressBackgroundColorSchemeColor(attr(com.google.android.material.R.attr.colorSurfaceContainerHigh))
-        refresh.setOnRefreshListener { if (status == CardStatus.PENDING) retry() else { renderCard(); refresh.isRefreshing = false } }
+        refresh.setOnRefreshListener { if (!profile.enrolled) retry() else { renderCard(); refresh.isRefreshing = false } }
         retry.setOnClickListener { refresh.isRefreshing = true; retry() }
         nfcSettings.setOnClickListener {
             try { startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
             catch (e: ActivityNotFoundException) { startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }
         }
-        detailsToggle.setOnClickListener {
-            TransitionManager.beginDelayedTransition(details.parent as ViewGroup)
-            val open = details.visibility != View.VISIBLE
-            details.visibility = if (open) View.VISIBLE else View.GONE
-            detailsToggle.setText(if (open) R.string.details_hide else R.string.details_show)
-            if (open) cardScroll.postDelayed({ cardScroll.smoothScrollTo(0, details.bottom) }, 250)
-        }
-        copy.setOnClickListener {
-            getSystemService(ClipboardManager::class.java)
-                .setPrimaryClip(ClipData.newPlainText("ClassAI token", tokens.getOrCreate().toHex()))
-            snack("Token copiado")
-        }
         successOverlayClick()
-        if (debuggable) idCard.setOnLongClickListener { EventLog.credentialRead(); true }  // simular lectura
     }
 
     private fun successOverlayClick() = b.successOverlay.setOnClickListener { hideSuccessOverlay() }
@@ -356,14 +367,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val adapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
         val hce = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
         val s = cardStatus(adapter != null || demoNfc, hce || demoNfc, adapter?.isEnabled == true || demoNfc, profile.enrolled)
-        val n = profile.name.orEmpty()
+        val n = profile.name ?: "Tu carnet"
         cardName.text = n
         cardCode.text = "Código ${profile.code.orEmpty()}"
         avatar.initials = initials(n)
         setStatus(s)
         idCard.contentDescription = "Carnet de $n, código ${profile.code}. Estado: ${s.label}"
         renderReads(animateFirst = false)
-        renderDetails(adapter, hce)
     }
 
     private fun setStatus(s: CardStatus): Unit = with(b.card) {
@@ -391,7 +401,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         chipText.text = s.label
         chipIcon.setImageResource(icon)
         waves.active = s == CardStatus.ACTIVE
-        retry.visibility = if (s == CardStatus.PENDING) View.VISIBLE else View.GONE
+        retry.visibility = if (!profile.enrolled) View.VISIBLE else View.GONE
         nfcSettings.visibility = if (s == CardStatus.NFC_OFF) View.VISIBLE else View.GONE
         hint.setCompoundDrawablesRelativeWithIntrinsicBounds(if (s == CardStatus.ACTIVE) R.drawable.ic_contactless else icon, 0, 0, 0)
         hint.compoundDrawableTintList = ColorStateList.valueOf(attr(androidx.appcompat.R.attr.colorPrimary))
@@ -432,79 +442,42 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val empty = list.isEmpty()
         b.card.empty.visibility = if (empty) View.VISIBLE else View.GONE
         reads.visibility = if (empty) View.GONE else View.VISIBLE
-        // ilustración del estado vacío flotando suave
-        if (empty && motionEnabled && bob == null) {
-            bob = ObjectAnimator.ofFloat(emptyArt, View.TRANSLATION_Y, -dp(4f), dp(4f)).apply {
-                duration = 1600; repeatMode = ValueAnimator.REVERSE; repeatCount = ValueAnimator.INFINITE; start()
-            }
-        } else if (!empty) {
-            bob?.cancel(); bob = null; emptyArt.translationY = 0f
-        }
-    }
-
-    private fun renderDetails(adapter: NfcAdapter? = NfcAdapter.getDefaultAdapter(this),
-                              hce: Boolean = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) = with(b.card) {
-        token.text = tokens.getOrCreate().toHex().chunked(8).joinToString(" ")
-        tech.text = "AID: F0434C4153534149\n" +
-            "NFC: ${if (adapter == null) "no disponible" else if (adapter.isEnabled) "activo" else "apagado"}\n" +
-            "HCE: ${if (hce) "compatible" else "no compatible"}\n" +
-            "Servidor: ${profile.server}\n" +
-            "Vinculación: ${if (profile.enrolled) "activa" else "pendiente"}" +
-            if (demoNfc) "\nModo demo (debug): NFC simulado" else ""
-        log.text = EventLog.text().ifEmpty { "(sin eventos)" }
     }
 
     private fun retry() {
+        if (busy) return
         val code = profile.code ?: return
-        val name = profile.name ?: return
-        enroll(code, name, profile.server) { outcome ->
+        busy = true
+        b.card.retry.isEnabled = false
+        enroll(code) { outcome ->
+            busy = false
+            b.card.retry.isEnabled = true
             b.card.refresh.isRefreshing = false
             when (outcome) {
-                EnrollOutcome.Linked -> {
-                    profile.setEnrolled(true)
+                is EnrollOutcome.Linked -> {
+                    profile.save(code, outcome.fullName, enrolled = true)
                     renderCard()
                     b.card.idCard.sweepOnce()
-                    snack("¡Teléfono vinculado!")
+                    snack("Tu carnet está listo")
                 }
-                EnrollOutcome.Pending -> snack("Sigue sin conexión con ${profile.server}")
-                is EnrollOutcome.Rejected -> MaterialAlertDialogBuilder(this)
-                    .setIcon(R.drawable.ic_warning)
-                    .setTitle("No se pudo vincular")
-                    .setMessage(outcome.message)
-                    .setPositiveButton("Entendido", null)
-                    .show()
+                EnrollOutcome.Pending -> snack("Tu código está guardado. Seguimos sin conexión")
+                is EnrollOutcome.Rejected -> {
+                    profile.clear()
+                    showLogin(animate = true)
+                    b.login.code.setText(code)
+                    b.login.codeLayout.error = outcome.message
+                }
             }
         }
-    }
-
-    private fun showServerSheet() {
-        val sheet = BottomSheetDialog(this)
-        val v = SheetServerBinding.inflate(layoutInflater)
-        v.server.setText(profile.server)
-        v.save.setOnClickListener {
-            val s = normalizeServer(v.server.text.toString())
-            if (s == null) {
-                v.serverLayout.error = "URL inválida (ej. http://192.168.1.10:8000)"
-                reject(v.serverLayout)
-                return@setOnClickListener
-            }
-            profile.server = s
-            sheet.dismiss()
-            renderDetails()
-            snack("Servidor actualizado")
-        }
-        sheet.setContentView(v.root)
-        sheet.show()
     }
 
     private fun confirmUnlink() {
         MaterialAlertDialogBuilder(this)
             .setIcon(R.drawable.ic_logout)
-            .setTitle("¿Desvincular este teléfono?")
-            .setMessage("Se generará una credencial nueva y volverás al inicio. " +
-                "Si el teléfono ya estaba vinculado, pide al docente que revoque la credencial anterior.")
+            .setTitle("¿Cambiar de estudiante?")
+            .setMessage("Volverás al inicio. Si luego quieres vincular otra vez este carnet, tu docente deberá habilitarlo.")
             .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Desvincular") { _, _ ->
+            .setPositiveButton("Cambiar") { _, _ ->
                 tokens.regenerate()
                 profile.clear()
                 status = null
@@ -512,7 +485,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 EventLog.clear()
                 EventLog.add("Token regenerado")
                 b.login.code.text = null
-                b.login.name.text = null
                 showLogin(animate = true)
             }
             .show()
@@ -522,17 +494,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun onLogEntry(e: EventLog.Entry) {
         if (b.card.root.visibility != View.VISIBLE) return
-        if (!e.read) {
-            renderDetails()
-            return
-        }
-        celebrate()
+        if (e.read) celebrate()
     }
 
     private fun celebrate(): Unit = with(b.card) {
         vibrate()
         renderReads(animateFirst = true)
-        renderDetails()
         if (!motionEnabled) {
             showSuccessOverlay()
             return

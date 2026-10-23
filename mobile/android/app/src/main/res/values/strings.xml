@@ -5,13 +5,10 @@
     <string name="aid_description">ClassAI asistencia</string>
 
     <string name="login_title">ClassAI</string>
-    <string name="login_subtitle">Tu carnet universitario, ahora en tu teléfono</string>
+    <string name="login_subtitle">Tu código, una vez. Tu carnet, siempre contigo.</string>
     <string name="field_code">Código universitario</string>
-    <string name="field_code_helper">Ej. 202310123</string>
-    <string name="field_name">Nombre completo</string>
-    <string name="field_server">Servidor</string>
-    <string name="field_server_helper">Lo indica tu docente</string>
-    <string name="action_link">Vincular este teléfono</string>
+    <string name="field_code_helper">Usa el código con el que te registró tu docente</string>
+    <string name="action_link">Crear mi carnet</string>
     <string name="login_privacy">Al acercarte al lector, el teléfono solo entrega un código anónimo. Tus datos personales no viajan por NFC.</string>
 
     <string name="card_toolbar">Mi carnet</string>
@@ -21,18 +18,12 @@
     <string name="action_nfc_settings">Abrir ajustes NFC</string>
     <string name="reads_title">Últimas lecturas</string>
     <string name="reads_empty_title">Aún no hay lecturas</string>
-    <string name="reads_empty_body">Acerca el teléfono al lector del aula y aparecerán aquí.</string>
+    <string name="reads_empty_body">Las lecturas aparecerán aquí al acercar el teléfono al lector.</string>
     <string name="read_ok">Lector leyó tu credencial ✓</string>
-    <string name="details_show">Ver detalles técnicos</string>
-    <string name="details_hide">Ocultar detalles técnicos</string>
-    <string name="details_token">Token de credencial</string>
-    <string name="action_copy">Copiar token</string>
-    <string name="success_title">¡Asistencia enviada!</string>
-    <string name="success_body">El lector recibió tu credencial</string>
+    <string name="success_title">Credencial leída</string>
+    <string name="success_body">El lector recibió tu credencial. Tu asistencia se valida en clase.</string>
 
-    <string name="action_save">Guardar</string>
-    <string name="menu_server">Cambiar servidor</string>
-    <string name="menu_unlink">Desvincular / regenerar credencial</string>
+    <string name="menu_unlink">Cambiar de estudiante</string>
     <string name="cd_logo">Logo de ClassAI</string>
     <string name="cd_avatar">Avatar del estudiante</string>
     <string name="cd_success">Lectura correcta</string>

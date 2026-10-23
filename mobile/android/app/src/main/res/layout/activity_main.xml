@@ -22,6 +22,7 @@
 
         <LinearLayout
             android:id="@+id/successContent"
+            android:paddingHorizontal="@dimen/ds_space_6"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
@@ -52,6 +53,7 @@
 
             <TextView
                 android:id="@+id/successBody"
+                android:gravity="center"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ds_space_1_5"

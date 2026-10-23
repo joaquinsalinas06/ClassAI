@@ -305,3 +305,44 @@ class AvatarView(context: Context, attrs: AttributeSet? = null) : View(context, 
         canvas.drawText(initials, width / 2f, height / 2f - (text.ascent() + text.descent()) / 2, text)
     }
 }
+
+/** Live NFC signal: radiating arcs and small sparks, no stock card illustration. */
+class SignalView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    private val wave = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = dp(2.2f)
+        strokeCap = Paint.Cap.ROUND
+        color = context.getColor(R.color.ds_brand_air_from)
+    }
+    private val spark = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE
+        strokeWidth = dp(1.6f)
+        strokeCap = Paint.Cap.ROUND
+        color = context.getColor(R.color.ds_brand_air_to)
+    }
+    private val arc = RectF()
+    private val t0 = now()
+
+    override fun onDraw(canvas: Canvas) {
+        val t = if (motionEnabled) (now() - t0) / 1800f else 0.35f
+        val cx = width * 0.25f
+        val cy = height * 0.54f
+        for (i in 0..2) {
+            val phase = (t + i / 3f) % 1f
+            val radius = dp(8f + 34f * phase)
+            wave.alpha = (220 * (1 - phase)).toInt()
+            arc.set(cx - radius, cy - radius, cx + radius, cy + radius)
+            canvas.drawArc(arc, -48f, 96f, false, wave)
+        }
+        for (i in 0..3) {
+            val phase = t * 2 * PI.toFloat() + i * 1.6f
+            val x = width * (0.53f + i * 0.105f)
+            val y = height * (0.46f + 0.22f * sin(phase * 0.45f + i))
+            val size = dp(1.5f + 1.5f * (sin(phase) + 1f) / 2)
+            spark.alpha = (90 + 150 * (sin(phase) + 1f) / 2).toInt()
+            canvas.drawLine(x - size, y, x + size, y, spark)
+            canvas.drawLine(x, y - size, x, y + size, spark)
+        }
+        if (motionEnabled && isShown) postInvalidateDelayed(32)
+    }
+}
