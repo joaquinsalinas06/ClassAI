@@ -1,0 +1,170 @@
+name: Product CI
+
+on:
+  pull_request:
+    paths: &product-paths
+      - 'backend/**'
+      - 'web/**'
+      - 'firmware/**'
+      - 'mobile/android/**'
+      - 'design/**'
+      - '!**/*.md'
+      - 'docs/contracts.md'
+      - 'scripts/ci/**'
+      - '.github/workflows/product-ci.yml'
+  push:
+    branches: [main]
+    paths: *product-paths
+
+permissions:
+  contents: read
+
+concurrency:
+  group: product-ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  changes:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    outputs:
+      backend: ${{ steps.paths.outputs.backend }}
+      mqtt: ${{ steps.paths.outputs.mqtt }}
+      web: ${{ steps.paths.outputs.web }}
+      firmware: ${{ steps.paths.outputs.firmware }}
+      android: ${{ steps.paths.outputs.android }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - run: python -m unittest discover -s scripts/ci -p 'test_*.py'
+      - id: paths
+        env:
+          CI_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          CI_EVENT: ${{ github.event_name }}
+        run: python scripts/ci/changes.py
+
+  backend:
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: backend/requirements-ci.txt
+      - run: python -m pip install -r backend/requirements-ci.txt
+      - name: Lint (syntax and fatal Python errors)
+        run: ruff check backend scripts/ci --select E9,F63,F7,F82
+      - name: Unit tests (no physical devices or paid APIs)
+        env:
+          PYTHON_DOTENV_DISABLED: '1'
+        run: python -m pytest backend -q
+
+  mqtt:
+    needs: changes
+    if: needs.changes.outputs.mqtt == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+          cache: pip
+          cache-dependency-path: backend/requirements-ci.txt
+      - run: python -m pip install -r backend/requirements-ci.txt
+      - name: Install local ephemeral broker (no system daemon)
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y --no-install-recommends mosquitto
+          sudo systemctl stop mosquitto
+      - name: MQTT → real ingest → SQLite → FastAPI smoke
+        run: scripts/ci/smoke.sh
+
+  web:
+    needs: changes
+    if: needs.changes.outputs.web == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 6
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: '11.22.0'
+      - uses: actions/setup-node@v6
+        with:
+          node-version: '24'
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+
+  firmware-host:
+    needs: changes
+    if: needs.changes.outputs.firmware == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - run: scripts/ci/firmware-host.sh
+
+  firmware-build:
+    needs: changes
+    if: needs.changes.outputs.firmware == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: arduino/setup-arduino-cli@v2
+        with:
+          version: '1.5.1'
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.arduino15
+            ~/Arduino/libraries
+          key: arduino-${{ runner.os }}-${{ hashFiles('scripts/ci/arduino-install.sh') }}
+      - run: scripts/ci/arduino-install.sh
+      - run: scripts/ci/firmware-build.sh
+
+  android:
+    needs: changes
+    if: needs.changes.outputs.android == 'true'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 12
+    defaults:
+      run:
+        working-directory: mobile/android
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v4
+      # Hosted runners already provide Android SDK/cmdline-tools; no emulator/NDK.
+      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      - run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
