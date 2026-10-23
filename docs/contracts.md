@@ -16,7 +16,13 @@ Todo JSON es UTF-8, sin campos con `NaN`/`Infinity`; un valor inválido se enví
 
 Legado aceptado por el backend (solo lectura, sin cambios en firmware viejo): `MLX90614/temperature` con `{"ambient": float, "object": float}` se ingiere como `room = "legacy"`, métricas `temp_c` (ambient) e `ir_object_c` (object).
 
-QoS 0 en telemetría: una lectura perdida se reemplaza en 5 s. QoS 1 en eventos: la asistencia no se puede perder; el backend deduplica por `event_id`.
+QoS 0 en telemetría: una lectura perdida se reemplaza en 5 s. QoS 1 en eventos es el objetivo
+del contrato y lo usa `sim_publisher.py`; el backend deduplica por `event_id` y la asistencia
+por `(session_id, student_id)`. **El firmware actual usa PubSubClient, que publica con QoS 0**
+(también eventos/status). Su cola en RAM reduce pérdidas mientras no hay conexión, pero un corte
+tras publicar o un reinicio puede perder eventos. Ni QoS 1 por sí solo ni el smoke test prueban
+entrega garantizada: faltan validación física y una estrategia de persistencia/confirmación.
+La columna QoS de la tabla describe el objetivo, no una garantía del ESP32 actual.
 
 ## Telemetría
 
