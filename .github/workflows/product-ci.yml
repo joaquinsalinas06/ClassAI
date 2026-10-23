@@ -165,6 +165,9 @@ jobs:
           distribution: temurin
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
-      # Hosted runners already provide Android SDK/cmdline-tools; no emulator/NDK.
-      - run: sdkmanager 'platforms;android-36' 'build-tools;36.0.0'
+      # Use the SDK already on ubuntu-24.04; sdkmanager is not on its PATH.
+      - name: Verify preinstalled SDK 36 (no emulator/NDK downloads)
+        run: |
+          test -f "$ANDROID_HOME/platforms/android-36/android.jar"
+          test -x "$ANDROID_HOME/build-tools/36.0.0/aapt2"
       - run: ./gradlew --no-daemon testDebugUnitTest assembleDebug
