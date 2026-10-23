@@ -18,7 +18,7 @@
     <string name="action_nfc_settings">Abrir ajustes NFC</string>
     <string name="reads_title">Últimas lecturas</string>
     <string name="reads_empty_title">Aún no hay lecturas</string>
-    <string name="reads_empty_body">Las lecturas aparecerán aquí al acercar el teléfono al lector.</string>
+    <string name="reads_empty_body">Desbloquea el teléfono y acerca su parte trasera al lector NFC del aula. No necesitas pulsar el carnet.</string>
     <string name="read_ok">Lector leyó tu credencial ✓</string>
     <string name="success_title">Credencial leída</string>
     <string name="success_body">El lector recibió tu credencial. Tu asistencia se valida en clase.</string>
@@ -27,4 +27,8 @@
     <string name="cd_logo">Logo de ClassAI</string>
     <string name="cd_avatar">Avatar del estudiante</string>
     <string name="cd_success">Lectura correcta</string>
+    <string name="details_show">Ver detalles técnicos</string>
+    <string name="details_hide">Ocultar detalles técnicos</string>
+    <string name="details_token">Credencial privada · solo para diagnóstico</string>
+    <string name="action_copy">Copiar credencial</string>
 </resources>

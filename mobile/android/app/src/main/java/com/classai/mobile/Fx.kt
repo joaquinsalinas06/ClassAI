@@ -19,14 +19,11 @@ import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
 import androidx.core.graphics.ColorUtils
-import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
-import kotlin.math.exp
 import kotlin.math.max
 import kotlin.math.min
 import kotlin.math.sin
-import kotlin.random.Random
 
 // Efectos visuales en Canvas, sin librerías. Todos se quedan quietos si el sistema
 // desactiva animaciones (escala de animación 0 / "quitar animaciones").
@@ -140,7 +137,7 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
         super.dispatchDraw(canvas)
         val w = width.toFloat()
         // barrido periódico cada ~6 s; entre barridos, brillo tenue según inclinación
-        val period = 6000L
+        val period = 14000L
         val t = now()
         val sinceSweep = t - sweepStart
         val p = if (motionEnabled) {
@@ -193,91 +190,11 @@ class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, a
             canvas.drawCircle(cx, cy, (rMin + rMax) / 2, ring)
             return
         }
-        val t = (now() - t0) / 1800f
-        for (i in 0 until 3) {
-            val f = (t + i / 3f) % 1f
-            ring.alpha = (180 * (1 - f)).toInt()
-            canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
-        }
-        if (isShown) postInvalidateOnAnimation()
-    }
-}
-
-/** Capa de celebración: ondas que estallan desde un punto y confeti con física simple. */
-class CelebrationView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private class Bit(
-        val vx: Float, val vy: Float, val rot0: Float, val vrot: Float,
-        val wobble: Float, val color: Int, val size: Float, val round: Boolean,
-    )
-
-    private val palette = intArrayOf(
-        context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_ok_border),
-        context.getColor(R.color.ds_brand_air_from), context.getColor(R.color.ds_brand_air_to),
-    )
-    private val bits = ArrayList<Bit>()
-    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
-    private var ox = 0f
-    private var oy = 0f
-    private var t0 = -1L
-
-    init {
-        isClickable = false
-        importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
-    }
-
-    fun play(x: Float, y: Float) {
-        ox = x; oy = y
-        bits.clear()
-        repeat(150) {
-            val angle = -PI / 2 + (Random.nextDouble() - 0.5) * PI * 1.25  // abanico hacia arriba
-            val speed = dp(420f + Random.nextFloat() * 900f)
-            bits += Bit(
-                vx = (cos(angle) * speed).toFloat(), vy = (sin(angle) * speed).toFloat(),
-                rot0 = Random.nextFloat() * 360f, vrot = (Random.nextFloat() - 0.5f) * 720f,
-                wobble = 4f + Random.nextFloat() * 8f, color = palette[Random.nextInt(palette.size)],
-                size = dp(6f + Random.nextFloat() * 6f), round = Random.nextInt(4) == 0,
-            )
-        }
-        t0 = now()
-        invalidate()
-    }
-
-    override fun onDraw(canvas: Canvas) {
-        if (t0 < 0) return
-        val t = (now() - t0) / 1000f
-        if (t > 3f) { t0 = -1; return }
-        // 3 ondas expansivas desde el ícono NFC
-        for (k in 0 until 3) {
-            val tk = t - k * 0.14f
-            if (tk !in 0f..0.9f) continue
-            val f = tk / 0.9f
-            ringPaint.strokeWidth = dp(6f * (1 - f) + 1f)
-            ringPaint.color = context.getColor(R.color.ds_state_ok_solid)
-            ringPaint.alpha = (230 * (1 - f)).toInt()
-            canvas.drawCircle(ox, oy, dp(24f) + f * dp(260f), ringPaint)
-        }
-        // confeti: arrastre lineal + gravedad (forma cerrada, sin integrar)
-        val k = 1.3f
-        val g = dp(700f)
-        val decay = (1 - exp(-k * t)) / k
-        val fade = if (t > 2.2f) 1 - (t - 2.2f) / 0.8f else 1f
-        for (b in bits) {
-            val x = ox + b.vx * decay
-            val y = oy + g / k * t + (b.vy - g / k) * decay
-            paint.color = b.color
-            paint.alpha = (255 * fade).toInt().coerceIn(0, 255)
-            canvas.save()
-            canvas.translate(x, y)
-            canvas.rotate(b.rot0 + b.vrot * t)
-            if (b.round) canvas.drawCircle(0f, 0f, b.size / 2.6f, paint)
-            else {
-                val sw = b.size * abs(cos(t * b.wobble))  // aleteo
-                canvas.drawRect(-sw / 2, -b.size / 4, sw / 2, b.size / 4, paint)
-            }
-            canvas.restore()
-        }
-        postInvalidateOnAnimation()
+        val t = (now() - t0) / 3000f
+        val f = t % 1f
+        ring.alpha = (90 * (1 - f)).toInt()
+        canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
+        if (isShown) postInvalidateDelayed(48)
     }
 }
 
@@ -306,43 +223,81 @@ class AvatarView(context: Context, attrs: AttributeSet? = null) : View(context, 
     }
 }
 
-/** Live NFC signal: radiating arcs and small sparks, no stock card illustration. */
+/** Teléfono y lector del aula; ondas y dos destellos discretos. */
 class SignalView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val wave = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = dp(2.2f)
+    private val ink = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = context.getColor(R.color.ds_text_primary)
         strokeCap = Paint.Cap.ROUND
-        color = context.getColor(R.color.ds_brand_air_from)
+        strokeJoin = Paint.Join.ROUND
     }
-    private val spark = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE
-        strokeWidth = dp(1.6f)
-        strokeCap = Paint.Cap.ROUND
-        color = context.getColor(R.color.ds_brand_air_to)
+    private val label = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        color = context.getColor(R.color.ds_text_secondary)
+        textAlign = Paint.Align.CENTER
+        typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+        textSize = 10f
     }
-    private val arc = RectF()
+    private val shape = RectF()
+    private val star = android.graphics.Path()
     private val t0 = now()
 
+    private fun box(canvas: Canvas, x: Float, y: Float, w: Float, h: Float, radius: Float, fill: Boolean = false) {
+        ink.style = if (fill) Paint.Style.FILL else Paint.Style.STROKE
+        shape.set(x, y, x + w, y + h)
+        canvas.drawRoundRect(shape, radius, radius, ink)
+    }
+
     override fun onDraw(canvas: Canvas) {
-        val t = if (motionEnabled) (now() - t0) / 1800f else 0.35f
-        val cx = width * 0.25f
-        val cy = height * 0.54f
+        val t = if (motionEnabled) (now() - t0) / 1000f else 0f
+        canvas.save()
+        val scale = min(width / 240f, height / 136f)
+        canvas.translate((width - 240 * scale) / 2, (height - 136 * scale) / 2)
+        canvas.scale(scale, scale)
+        ink.strokeWidth = 3f
+        ink.alpha = 255
+        box(canvas, 47f, 10f, 54f, 88f, 9f)
+        box(canvas, 54f, 30f, 40f, 27f, 3f, true)
+        ink.color = context.getColor(R.color.ds_bg_surface)
+        box(canvas, 60f, 36f, 8f, 5f, 0f, true)
+        ink.color = context.getColor(R.color.ds_text_primary)
+        canvas.drawLine(69f, 87f, 79f, 87f, ink)
+        // Lector fijo: carcasa, pantalla NFC y base para reconocerlo fácilmente.
+        ink.alpha = 255
+        box(canvas, 163f, 29f, 51f, 58f, 7f)
+        box(canvas, 171f, 37f, 35f, 29f, 3f)
+        ink.style = Paint.Style.FILL
+        ink.textAlign = Paint.Align.CENTER
+        ink.textSize = 10f
+        canvas.drawText("NFC", 188.5f, 55f, ink)
+        ink.style = Paint.Style.STROKE
+        canvas.drawLine(188f, 88f, 188f, 96f, ink)
+        canvas.drawLine(173f, 96f, 203f, 96f, ink)
         for (i in 0..2) {
-            val phase = (t + i / 3f) % 1f
-            val radius = dp(8f + 34f * phase)
-            wave.alpha = (220 * (1 - phase)).toInt()
-            arc.set(cx - radius, cy - radius, cx + radius, cy + radius)
-            canvas.drawArc(arc, -48f, 96f, false, wave)
+            ink.alpha = if (motionEnabled) (115 + 100 * (0.5 + 0.5 * sin(t * 1.8 - i * 0.8))).toInt() else 190
+            val radius = 12f + i * 10f
+            shape.set(100 - radius, 54 - radius, 100 + radius, 54 + radius)
+            canvas.drawArc(shape, -45f, 90f, false, ink)
         }
-        for (i in 0..3) {
-            val phase = t * 2 * PI.toFloat() + i * 1.6f
-            val x = width * (0.53f + i * 0.105f)
-            val y = height * (0.46f + 0.22f * sin(phase * 0.45f + i))
-            val size = dp(1.5f + 1.5f * (sin(phase) + 1f) / 2)
-            spark.alpha = (90 + 150 * (sin(phase) + 1f) / 2).toInt()
-            canvas.drawLine(x - size, y, x + size, y, spark)
-            canvas.drawLine(x, y - size, x, y + size, spark)
+        for (i in 0..1) {
+            val x = if (i == 0) 35f else 222f
+            val y = if (i == 0) 26f else 85f
+            val size = 4f + if (motionEnabled) sin(t * 1.3 + i * 2).toFloat() else 0f
+            ink.alpha = if (motionEnabled) (155 + 70 * sin(t * 1.3 + i * 2)).toInt() else 200
+            ink.style = Paint.Style.FILL
+            star.reset()
+            star.moveTo(x, y - size * 1.5f)
+            star.lineTo(x + size * 0.4f, y - size * 0.4f)
+            star.lineTo(x + size, y)
+            star.lineTo(x + size * 0.4f, y + size * 0.4f)
+            star.lineTo(x, y + size * 1.5f)
+            star.lineTo(x - size * 0.4f, y + size * 0.4f)
+            star.lineTo(x - size, y)
+            star.lineTo(x - size * 0.4f, y - size * 0.4f)
+            star.close()
+            canvas.drawPath(star, ink)
         }
-        if (motionEnabled && isShown) postInvalidateDelayed(32)
+        canvas.drawText("Tu teléfono", 74f, 119f, label)
+        canvas.drawText("Lector del aula", 188f, 119f, label)
+        canvas.restore()
+        if (motionEnabled && isShown) postInvalidateDelayed(48)
     }
 }

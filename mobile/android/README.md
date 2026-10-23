@@ -37,15 +37,19 @@ con este build. AGP 9.1, Gradle wrapper 9.3.1, minSdk 26 y compile/target 36.
 3. Siguientes aperturas: se muestra el carnet guardado directamente. Una vinculación
    activa no necesita Internet durante el tap, ni la Activity abierta. Los estados
    NFC apagado, Sin NFC/Sin HCE y Pendiente siguen siendo explícitos.
-4. Tras leer la credencial: animación, vibración y hora en Últimas lecturas. La app
+4. Tras leer la credencial: confirmación breve, vibración y hora en Últimas lecturas (memoria del proceso). La app
    indica **Credencial leída**, no confirmación de asistencia en SQLite: el backend
    sigue validando sesión/estudiante y puede rechazar una lectura.
 5. Menú secundario: Cambiar de estudiante pide confirmación, regenera la credencial y
    vuelve al código. Para volver a vincular un teléfono distinto, el docente debe
-   revocar el anterior. No hay pantallas de servidor, token ni detalles técnicos.
+   revocar el anterior. **Ver detalles técnicos**, cerrado por defecto, muestra NFC/HCE reales,
+   vinculación, URL configurada, AID, credencial privada copiable y eventos APDU en memoria.
+   El botón de ajustes NFC permite configurar el teléfono. La URL sigue definiéndose
+   en `.env` al compilar; el alumno no necesita introducirla ni cambiarla.
 
-Ondas NFC, destellos y transiciones usan Canvas/animación nativa, sin ilustración
-estática de tarjeta en el estado vacío. Se detienen cuando la vista no es visible
+La ilustración identifica **Tu teléfono → Lector del aula** con una pantalla NFC
+y base. Dos destellos suaves y ondas secuenciales animan la escena; el carnet entra
+con un fundido corto y una sola onda tenue, sin giro 3D ni confeti. Todo usa Canvas/animación nativa. Se detienen cuando la vista no es visible
 y respetan la opción del sistema para reducir/desactivar animaciones. Login, carnet
 y confirmación usan los tokens de `design/tokens.json`; fuentes nativas como fallback
 sin descargas. Las credenciales y el perfil viven en SharedPreferences privadas con

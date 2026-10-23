@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Una Activity, dos pantallas (login / carnet) para animar la transición entre ambas -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/root"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -38,7 +39,7 @@
                 android:elevation="12dp"
                 android:padding="18dp"
                 android:src="@drawable/avd_check"
-                android:tint="@color/ds_state_ok_text" />
+                app:tint="@color/ds_state_ok_text" />
 
             <TextView
                 android:id="@+id/successTitle"
@@ -63,9 +64,4 @@
         </LinearLayout>
     </FrameLayout>
 
-    <com.classai.mobile.CelebrationView
-        android:id="@+id/celebration"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:importantForAccessibility="no" />
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

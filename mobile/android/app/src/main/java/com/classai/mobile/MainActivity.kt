@@ -3,6 +3,8 @@ package com.classai.mobile
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
 import android.content.ActivityNotFoundException
+import android.content.ClipData
+import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
@@ -25,7 +27,6 @@ import android.provider.Settings
 import android.view.KeyEvent
 import android.view.HapticFeedbackConstants
 import android.view.View
-import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
 import android.view.animation.DecelerateInterpolator
@@ -295,9 +296,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun animateLoginIn(): Unit = with(b.login) {
         logo.apply {
-            scaleX = 0.7f; scaleY = 0.7f; alpha = 0f; rotation = -8f
+            scaleX = 0.96f; scaleY = 0.96f; alpha = 0f; rotation = 0f
             animate().scaleX(1f).scaleY(1f).alpha(1f).rotation(0f)
-                .setInterpolator(OvershootInterpolator(1.5f)).setDuration(500).start()
+                .setInterpolator(DecelerateInterpolator()).setDuration(360).start()
         }
         listOf<View>(title, subtitle, form, privacy).forEachIndexed { i, v ->
             v.alpha = 0f
@@ -324,6 +325,25 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             try { startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
             catch (e: ActivityNotFoundException) { startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }
         }
+        technicalNfcSettings.setOnClickListener { nfcSettings.performClick() }
+        detailsToggle.setOnClickListener {
+            val open = details.visibility != View.VISIBLE
+            details.visibility = if (open) View.VISIBLE else View.GONE
+            detailsToggle.setText(if (open) R.string.details_hide else R.string.details_show)
+            if (open) {
+                renderDetails()
+                cardScroll.post { cardScroll.smoothScrollTo(0, details.bottom) }
+            }
+        }
+        copy.setOnClickListener {
+            getSystemService(ClipboardManager::class.java).setPrimaryClip(
+                ClipData.newPlainText("ClassAI credencial privada", tokens.getOrCreate().toHex()).apply {
+                    if (Build.VERSION.SDK_INT >= 33) description.extras = android.os.PersistableBundle().apply {
+                        putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+                    }
+                })
+            snack("Credencial copiada. No la compartas")
+        }
         successOverlayClick()
     }
 
@@ -344,23 +364,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (animate && motionEnabled) flipIn()
     }
 
-    // Entrada del carnet: giro 3D + el resto de la pantalla sube escalonado
+    // Entrada breve: aparece y se eleva suavemente.
     private fun flipIn(): Unit = with(b.card) {
         flipping = true
-        idCard.cameraDistance = 12000 * resources.displayMetrics.density
-        idCard.rotationY = -110f; idCard.rotationX = 0f; idCard.alpha = 0f
-        idCard.scaleX = 0.85f; idCard.scaleY = 0.85f
-        idCard.animate().rotationY(0f).alpha(1f).scaleX(1f).scaleY(1f)
-            .setStartDelay(150).setDuration(950).setInterpolator(OvershootInterpolator(1.1f))
-            .withEndAction { flipping = false; idCard.sweepOnce() }.start()
-        val parent = idCard.parent as ViewGroup
-        for (i in 1 until parent.childCount) {
-            val v = parent.getChildAt(i)
-            v.alpha = 0f
-            v.translationY = dp(30f)
-            v.animate().alpha(1f).translationY(0f).setStartDelay(450L + i * 60L).setDuration(450)
-                .setInterpolator(DecelerateInterpolator(2f)).start()
-        }
+        idCard.alpha = 0f
+        idCard.translationY = dp(12f)
+        idCard.animate().alpha(1f).translationY(0f).setDuration(360)
+            .setInterpolator(DecelerateInterpolator())
+            .withEndAction { flipping = false }.start()
     }
 
     private fun renderCard() = with(b.card) {
@@ -373,6 +384,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         avatar.initials = initials(n)
         setStatus(s)
         idCard.contentDescription = "Carnet de $n, código ${profile.code}. Estado: ${s.label}"
+        renderDetails()
         renderReads(animateFirst = false)
     }
 
@@ -414,8 +426,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 duration = 450
                 addUpdateListener { chip.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int) }
             }.start()
-            chip.scaleX = 0.8f; chip.scaleY = 0.8f
-            chip.animate().scaleX(1f).scaleY(1f).setInterpolator(OvershootInterpolator(3f)).setDuration(400).start()
+            chip.scaleX = 0.98f; chip.scaleY = 0.98f
+            chip.animate().scaleX(1f).scaleY(1f).setInterpolator(DecelerateInterpolator()).setDuration(240).start()
             hint.animate().alpha(0f).setDuration(120).withEndAction {
                 hint.text = s.hint
                 hint.animate().alpha(1f).setDuration(200).start()
@@ -492,8 +504,25 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // ---------------------------------------------------------------- momento estrella
 
+    private fun renderDetails() = with(b.card) {
+        if (details.visibility != View.VISIBLE) return@with
+        val adapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
+        val hce = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
+        token.text = tokens.getOrCreate().toHex().chunked(8).joinToString(" ")
+        tech.text = "NFC: ${if (adapter == null) "no disponible" else if (adapter.isEnabled) "activado" else "desactivado"}\n" +
+            "HCE: ${if (hce) "compatible" else "no disponible"}\n" +
+            "Vinculación: ${if (profile.enrolled) "confirmada por el servidor" else "pendiente"}\n" +
+            "Servidor (configurado en .env): ${BuildConfig.CLASSAI_API_URL}\n" +
+            "AID: F0434C4153534149 · protocolo v1\n" +
+            "El servicio responde SELECT → GET CREDENTIAL automáticamente, sin pulsar botones. Usa el teléfono desbloqueado.\n" +
+            "Una lectura confirma la entrega de la credencial; la asistencia la valida el backend." +
+            if (demoNfc) "\nVista de demostración: el estado del carnet simula NFC. El diagnóstico de arriba muestra el hardware real." else ""
+        log.text = EventLog.text().ifEmpty { "Sin eventos APDU en este proceso. Esperando al lector." }
+    }
+
     private fun onLogEntry(e: EventLog.Entry) {
         if (b.card.root.visibility != View.VISIBLE) return
+        renderDetails()
         if (e.read) celebrate()
     }
 
@@ -504,21 +533,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             showSuccessOverlay()
             return
         }
-        // ondas + confeti desde el ícono NFC
-        val icon = IntArray(2).also { nfcIcon.getLocationInWindow(it) }
-        val root = IntArray(2).also { b.root.getLocationInWindow(it) }
-        b.celebration.play(icon[0] - root[0] + nfcIcon.width / 2f, icon[1] - root[1] + nfcIcon.height / 2f)
-        // el carnet late y brilla
-        idCard.animate().scaleX(1.05f).scaleY(1.05f).setDuration(160).withEndAction {
-            idCard.animate().scaleX(1f).scaleY(1f).setInterpolator(OvershootInterpolator(3f)).setDuration(450).start()
-        }.start()
+        // Una lectura real recibe una confirmación breve, sin confeti.
         idCard.sweepOnce()
         ValueAnimator.ofFloat(0f, 1f, 1f, 0f).apply {
             duration = 1600
             addUpdateListener {
                 val g = it.animatedValue as Float
                 idCard.glow = g
-                idCard.elevation = dp(10f + 18f * g)
+                idCard.elevation = dp(10f)
             }
         }.start()
         b.root.postDelayed({ showSuccessOverlay() }, 350)
@@ -532,15 +554,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (motionEnabled) {
             successOverlay.alpha = 0f
             successOverlay.animate().alpha(1f).setDuration(200).start()
-            successCheck.scaleX = 0.2f; successCheck.scaleY = 0.2f
-            successCheck.animate().scaleX(1f).scaleY(1f).setInterpolator(OvershootInterpolator(2.5f)).setDuration(550).start()
+            successCheck.scaleX = 0.95f; successCheck.scaleY = 0.95f
+            successCheck.animate().scaleX(1f).scaleY(1f).setInterpolator(DecelerateInterpolator()).setDuration(250).start()
             listOf(successTitle, successBody).forEachIndexed { i, v ->
                 v.alpha = 0f; v.translationY = dp(24f)
                 v.animate().alpha(1f).translationY(0f).setStartDelay(250L + i * 90).setDuration(400).start()
             }
             avd.reset()
             avd.start()
-            celebration.bringToFront()
         } else {
             successOverlay.alpha = 1f
             avd.reset()
@@ -604,8 +625,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tiltX += ((gx - gx0) - tiltX) * 0.15f
         tiltY += ((gy - gy0) - tiltY) * 0.15f
         val card = b.card.idCard
-        card.rotationY = (-tiltX * 2.5f).coerceIn(-8f, 8f)
-        card.rotationX = (tiltY * 2.5f).coerceIn(-8f, 8f)
+        card.rotationY = (-tiltX * 0.7f).coerceIn(-2f, 2f)
+        card.rotationX = (tiltY * 0.7f).coerceIn(-2f, 2f)
         card.holo = (tiltX / 3f).coerceIn(-1f, 1f)
     }
 
