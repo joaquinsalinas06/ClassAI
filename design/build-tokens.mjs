@@ -136,19 +136,26 @@ for (const mode of ["light", "dark"]) {
   }
 }
 
-const write = (relative, content) => {
-  const file = join(root, relative);
-  mkdirSync(dirname(file), { recursive: true });
-  writeFileSync(file, content);
-  console.log(`wrote ${relative}`);
-};
-write("web/src/styles/tokens.css", css);
-write("mobile/android/app/src/main/res/values/ds_tokens.xml", lightXml);
-write("mobile/android/app/src/main/res/values-night/ds_tokens.xml", darkXml);
-console.log(`\nContrast check (${rows.length} pairs; lux/presence marks are relieved by always-visible labels):`);
+console.log(`Contrast check (${rows.length} pairs; lux/presence marks use visible labels):`);
 if (process.argv.includes("--verbose")) console.log(rows.join("\n"));
 if (failures.length) {
   console.error(failures.join("\n"));
   process.exit(1);
 }
 console.log("all pairs pass");
+
+const check = process.argv.includes("--check");
+const write = (relative, content) => {
+  const file = join(root, relative);
+  if (check) {
+    if (readFileSync(file, "utf8") !== content) throw new Error(`Stale tokens: ${relative}; run node design/build-tokens.mjs`);
+    console.log(`verified ${relative}`);
+  } else {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, content);
+    console.log(`wrote ${relative}`);
+  }
+};
+write("web/src/styles/tokens.css", css);
+write("mobile/android/app/src/main/res/values/ds_tokens.xml", lightXml);
+write("mobile/android/app/src/main/res/values-night/ds_tokens.xml", darkXml);

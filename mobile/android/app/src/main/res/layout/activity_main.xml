@@ -15,7 +15,7 @@
         android:id="@+id/successOverlay"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/scrim"
+        android:background="@color/ds_bg_page"
         android:clickable="true"
         android:focusable="true"
         android:visibility="gone">
@@ -36,27 +36,28 @@
                 android:contentDescription="@string/cd_success"
                 android:elevation="12dp"
                 android:padding="18dp"
-                android:src="@drawable/avd_check" />
+                android:src="@drawable/avd_check"
+                android:tint="@color/ds_state_ok_text" />
 
             <TextView
                 android:id="@+id/successTitle"
                 android:accessibilityLiveRegion="assertive"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="24dp"
+                android:layout_marginTop="@dimen/ds_space_6"
                 android:fontFamily="sans-serif-black"
                 android:text="@string/success_title"
-                android:textColor="#FFFFFFFF"
-                android:textSize="30sp" />
+                android:textColor="@color/ds_text_primary"
+                android:textSize="@dimen/ds_text_metric_size" />
 
             <TextView
                 android:id="@+id/successBody"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="6dp"
+                android:layout_marginTop="@dimen/ds_space_1_5"
                 android:text="@string/success_body"
-                android:textColor="#CCFFFFFF"
-                android:textSize="16sp" />
+                android:textColor="@color/ds_text_secondary"
+                android:textSize="@dimen/ds_text_heading_size" />
         </LinearLayout>
     </FrameLayout>
 

@@ -3,10 +3,10 @@
     <aapt:attr name="android:drawable">
         <vector android:width="96dp" android:height="96dp"
             android:viewportWidth="48" android:viewportHeight="48">
-            <path android:name="ring" android:strokeColor="#FFFFFFFF" android:strokeWidth="3"
+            <path android:name="ring" android:strokeColor="@color/ds_brand_on_ink" android:strokeWidth="3"
                 android:strokeLineCap="round" android:trimPathEnd="0"
                 android:pathData="M24,4a20,20 0 1,1 0,40a20,20 0 1,1 0,-40" />
-            <path android:name="check" android:strokeColor="#FFFFFFFF" android:strokeWidth="4"
+            <path android:name="check" android:strokeColor="@color/ds_brand_on_ink" android:strokeWidth="4"
                 android:strokeLineCap="round" android:strokeLineJoin="round" android:trimPathEnd="0"
                 android:pathData="M14,24.5L21,31.5L34.5,17.5" />
         </vector>

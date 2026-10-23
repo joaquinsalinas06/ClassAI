@@ -10,8 +10,6 @@ import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.content.res.Configuration
-import android.graphics.LinearGradient
-import android.graphics.Shader
 import android.graphics.drawable.AnimatedVectorDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
@@ -153,12 +151,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         linkTint = link.backgroundTintList!!
         linkText = link.textColors
         server.setText(profile.server)
-        title.addOnLayoutChangeListener { v, l, _, r, _, _, _, _, _ ->
-            title.paint.shader = LinearGradient(0f, 0f, (r - l).toFloat(), 0f,
-                intArrayOf(getColor(R.color.title_1), getColor(R.color.title_2), getColor(R.color.title_3)),
-                null, Shader.TileMode.CLAMP)
-            v.invalidate()
-        }
         link.setOnClickListener { submit() }
         server.setOnEditorActionListener { _, id, _ -> (id == EditorInfo.IME_ACTION_DONE).also { if (it) submit() } }
     }
@@ -219,13 +211,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     // Botón → check animado (vinculado) o reloj (pendiente), y luego sigue
     private fun linkDone(linked: Boolean, next: () -> Unit): Unit = with(b.login.link) {
-        val to = getColor(if (linked) R.color.success else R.color.chip_pending)
-        val white = ColorStateList.valueOf(0xFFFFFFFF.toInt())
-        setTextColor(white)
-        iconTint = white
+        val to = getColor(if (linked) R.color.ds_state_ok_subtle else R.color.ds_state_regular_subtle)
+        val foreground = ColorStateList.valueOf(getColor(if (linked) R.color.ds_state_ok_text else R.color.ds_state_regular_text))
+        setTextColor(foreground)
+        iconTint = foreground
         text = if (linked) "¡Vinculado!" else "Guardado sin conexión"
         if (linked) {
             val avd = (getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable)
+            avd.setTint(foreground.defaultColor)
             icon = avd
             iconSize = dp(26f).toInt()
             avd.start()
@@ -299,7 +292,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             }
             true
         }
-        refresh.setColorSchemeColors(attr(androidx.appcompat.R.attr.colorPrimary), getColor(R.color.brand_teal))
+        refresh.setColorSchemeColors(attr(androidx.appcompat.R.attr.colorPrimary), getColor(R.color.ds_brand_air_to))
         refresh.setProgressBackgroundColorSchemeColor(attr(com.google.android.material.R.attr.colorSurfaceContainerHigh))
         refresh.setOnRefreshListener { if (status == CardStatus.PENDING) retry() else { renderCard(); refresh.isRefreshing = false } }
         retry.setOnClickListener { refresh.isRefreshing = true; retry() }
@@ -375,11 +368,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun setStatus(s: CardStatus): Unit = with(b.card) {
         val color = getColor(when (s) {
-            CardStatus.ACTIVE -> R.color.chip_active
-            CardStatus.PENDING -> R.color.chip_pending
-            CardStatus.NFC_OFF -> R.color.chip_error
-            CardStatus.NO_NFC, CardStatus.NO_HCE -> R.color.chip_neutral
+            CardStatus.ACTIVE -> R.color.ds_state_ok_subtle
+            CardStatus.PENDING -> R.color.ds_state_regular_subtle
+            CardStatus.NFC_OFF -> R.color.ds_state_alert_subtle
+            CardStatus.NO_NFC, CardStatus.NO_HCE -> R.color.ds_state_offline_subtle
         })
+        val foreground = getColor(when (s) {
+            CardStatus.ACTIVE -> R.color.ds_state_ok_text
+            CardStatus.PENDING -> R.color.ds_state_regular_text
+            CardStatus.NFC_OFF -> R.color.ds_state_alert_text
+            CardStatus.NO_NFC, CardStatus.NO_HCE -> R.color.ds_state_offline_text
+        })
+        chipText.setTextColor(foreground)
+        chipIcon.imageTintList = ColorStateList.valueOf(foreground)
         val icon = when (s) {
             CardStatus.ACTIVE -> R.drawable.ic_check_circle
             CardStatus.PENDING -> R.drawable.ic_schedule
@@ -603,7 +604,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             s.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.apply {
                 setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
                 compoundDrawablePadding = dp(12f).toInt()
-                compoundDrawableTintList = ColorStateList.valueOf(getColor(R.color.brand_teal_light))
+                compoundDrawableTintList = ColorStateList.valueOf(getColor(R.color.ds_text_inverse))
             }
         }
         s.show()
