@@ -645,6 +645,8 @@ HTML_TEMPLATE = r"""<!doctype html>
       <option value="open" selected>Issues abiertos (todos los estados)</option>
       <option value="software">Implementado en código · por validar</option>
       <option value="partial">Implementación parcial</option>
+      <option value="native-ready">Sin bloqueos nativos (todos los avances)</option>
+      <option value="native-blocked">Con bloqueos nativos (todos los avances)</option>
       <option value="ready">Listos para empezar</option>
       <option value="blocked">Bloqueados</option>
       <option value="all">Abiertos + cerrados</option>
@@ -1553,6 +1555,8 @@ function applyFilters() {
       if (state === "open" && node.state !== "open") visible = false;
       if (state === "closed" && node.state !== "closed") visible = false;
       if (["ready", "blocked", "software", "partial"].includes(state) && statusClass(node) !== state) visible = false;
+      if (state === "native-ready" && (node.state !== "open" || node.is_blocked)) visible = false;
+      if (state === "native-blocked" && (node.state !== "open" || !node.is_blocked)) visible = false;
 
       ele.style("display", visible ? "element" : "none");
     });
