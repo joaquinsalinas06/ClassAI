@@ -71,7 +71,11 @@ def clean_issue(raw: dict[str, Any]) -> dict[str, Any]:
         }
         for user in raw.get("assignees", [])
     ]
+    body = (raw.get("body") or "").lower()
+    progress = next((value for value in ("software", "partial")
+                     if f"<!-- classai-progress: {value} -->" in body), None)
     return {
+        "progress": progress,
         "number": raw["number"],
         "id": raw["id"],
         "title": raw.get("title") or "",
@@ -186,8 +190,11 @@ def collect_graph(repo: str, token: str | None) -> dict[str, Any]:
 
     open_nodes = [n for n in nodes.values() if n["state"] == "open"]
     closed_nodes = [n for n in nodes.values() if n["state"] == "closed"]
-    blocked_nodes = [n for n in open_nodes if n["is_blocked"]]
-    ready_nodes = [n for n in open_nodes if not n["is_blocked"]]
+    software_nodes = [n for n in open_nodes if n["progress"] == "software"]
+    partial_nodes = [n for n in open_nodes if n["progress"] == "partial"]
+    remaining_nodes = [n for n in open_nodes if n["progress"] is None]
+    blocked_nodes = [n for n in remaining_nodes if n["is_blocked"]]
+    ready_nodes = [n for n in remaining_nodes if not n["is_blocked"]]
 
     return {
         "repository": repo,
@@ -196,6 +203,9 @@ def collect_graph(repo: str, token: str | None) -> dict[str, Any]:
             "issues": len(nodes),
             "open": len(open_nodes),
             "closed": len(closed_nodes),
+            "software": len(software_nodes),
+            "partial": len(partial_nodes),
+            "native_blocked": sum(n["is_blocked"] for n in open_nodes),
             "blocked": len(blocked_nodes),
             "ready": len(ready_nodes),
             "dependency_edges": len(dependency_edges),
@@ -228,6 +238,8 @@ HTML_TEMPLATE = r"""<!doctype html>
       --ready: #22c55e;
       --blocked: #ef4444;
       --closed: #64748b;
+      --software: #60a5fa;
+      --partial: #f59e0b;
       --accent: #8b9cff;
       --shadow: 0 18px 48px rgba(0,0,0,.34);
     }
@@ -480,6 +492,8 @@ HTML_TEMPLATE = r"""<!doctype html>
     .pill.ready { border-color: rgba(34,197,94,.45); color: #86efac; }
     .pill.blocked { border-color: rgba(239,68,68,.45); color: #fca5a5; }
     .pill.closed { border-color: rgba(100,116,139,.45); color: #a8b1c1; }
+    .pill.software { border-color: rgba(96,165,250,.55); color: #93c5fd; }
+    .pill.partial { border-color: rgba(245,158,11,.55); color: #fbbf24; }
 
     .github-link {
       display: inline-flex;
@@ -581,6 +595,9 @@ HTML_TEMPLATE = r"""<!doctype html>
 
     .dot.ready { background: var(--ready); }
     .dot.blocked { background: var(--blocked); }
+    .dot.software { background: var(--software); }
+    .dot.partial { background: var(--partial); }
+    .dot.closed { background: var(--closed); }
 
     @media (max-width: 1100px) {
       .milestone-strip { grid-template-columns: repeat(2, minmax(150px, 1fr)); }
@@ -625,7 +642,9 @@ HTML_TEMPLATE = r"""<!doctype html>
     <input id="search" type="search" placeholder="Buscar #, título, persona o label…" />
     <select id="milestone"><option value="">Todas las semanas</option></select>
     <select id="state">
-      <option value="open" selected>Issues abiertos</option>
+      <option value="open" selected>Issues abiertos (todos los estados)</option>
+      <option value="software">Implementado en código · por validar</option>
+      <option value="partial">Implementación parcial</option>
       <option value="ready">Listos para empezar</option>
       <option value="blocked">Bloqueados</option>
       <option value="all">Abiertos + cerrados</option>
@@ -656,8 +675,11 @@ HTML_TEMPLATE = r"""<!doctype html>
       <div class="legend-row"><span class="line before"></span> azul = lo que necesito antes</div>
       <div class="legend-row"><span class="line after"></span> ámbar = lo que desbloqueo después</div>
       <div class="legend-row"><span class="line dashed"></span> parent / sub-issue</div>
-      <div class="legend-row"><span class="dot ready"></span> listo para empezar</div>
-      <div class="legend-row"><span class="dot blocked"></span> todavía bloqueado</div>
+      <div class="legend-row"><span class="dot software"></span> azul = implementado en software; falta validar</div>
+      <div class="legend-row"><span class="dot partial"></span> ámbar = avance parcial documentado</div>
+      <div class="legend-row"><span class="dot ready"></span> verde = sin bloqueos nativos; no auditado</div>
+      <div class="legend-row"><span class="dot blocked"></span> rojo = dependencia nativa abierta; no auditado</div>
+      <div class="legend-row"><span class="dot closed"></span> gris = cerrado en GitHub</div>
     </div>
   </aside>
 </main>
@@ -879,6 +901,8 @@ BAND_ORDER.forEach(function(bandKey) {
 
 function statusClass(node) {
   if (node.state === "closed") return "closed";
+  if (node.progress === "software") return "software";
+  if (node.progress === "partial") return "partial";
   return node.is_blocked ? "blocked" : "ready";
 }
 
@@ -894,8 +918,10 @@ function bandStats(key) {
   const nodes = nodesByBand.get(key) || [];
   return {
     open: nodes.filter(function(n) { return n.state === "open"; }).length,
-    ready: nodes.filter(function(n) { return n.state === "open" && !n.is_blocked; }).length,
-    blocked: nodes.filter(function(n) { return n.state === "open" && n.is_blocked; }).length
+    ready: nodes.filter(function(n) { return statusClass(n) === "ready"; }).length,
+    blocked: nodes.filter(function(n) { return statusClass(n) === "blocked"; }).length,
+    software: nodes.filter(function(n) { return statusClass(n) === "software"; }).length,
+    partial: nodes.filter(function(n) { return statusClass(n) === "partial"; }).length
   };
 }
 
@@ -925,7 +951,7 @@ BAND_ORDER.forEach(function(key) {
       kind: "header",
       milestone: key,
       accent: meta.accent,
-      label: meta.short + "\n" + meta.goal + "\n" + stats.ready + " listos · " + stats.blocked + " bloqueados"
+      label: meta.short + "\n" + meta.goal + "\n" + stats.software + " software · " + stats.partial + " parciales · " + stats.ready + " listos · " + stats.blocked + " bloqueados"
     },
     position: { x: band.center, y: HEADER_Y },
     classes: "decorative week-header"
@@ -971,7 +997,7 @@ DATA.nodes.forEach(function(node) {
       status: statusClass(node)
     },
     position: position,
-    classes: "issue " + statusClass(node) + (node.is_parent ? " parent" : "")
+    classes: "issue " + statusClass(node) + (node.is_parent ? " parent" : "") + (node.is_blocked ? " native-blocked" : "")
   });
 });
 
@@ -1051,6 +1077,18 @@ const cy = cytoscape({
         "border-color": "#22c55e",
         "border-width": 2.8
       }
+    },
+    {
+      selector: "node.issue.software",
+      style: { "border-color": "#60a5fa", "border-width": 3.2, "background-color": "#102139" }
+    },
+    {
+      selector: "node.issue.partial",
+      style: { "border-color": "#f59e0b", "border-width": 3.2, "background-color": "#292112" }
+    },
+    {
+      selector: "node.issue.native-blocked.software, node.issue.native-blocked.partial",
+      style: { "border-style": "dashed" }
     },
     {
       selector: "node.issue.closed",
@@ -1310,12 +1348,13 @@ function renderDetails(number, story) {
 
   const beforeCount = story ? story.beforeNodes.length : 0;
   const afterCount = story ? story.afterNodes.length : 0;
-  const stateClass = node.state === "closed" ? "closed" : (node.is_blocked ? "blocked" : "ready");
-  const stateLabel = node.state === "closed" ? "Cerrado" : (node.is_blocked ? "Bloqueado" : "Listo");
+  const stateClass = statusClass(node);
+  const stateLabel = ({closed: "Cerrado", software: "Software implementado · por validar", partial: "Avance parcial", blocked: "Bloqueado", ready: "Listo para empezar"})[stateClass];
 
   document.getElementById("details").innerHTML =
     '<h2>#' + node.number + " · " + escapeHtml(node.title) + "</h2>" +
     '<div><span class="pill ' + stateClass + '">' + stateLabel + "</span>" +
+    (node.is_blocked ? '<span class="pill blocked">Con bloqueos nativos (' + node.open_blockers.length + ')</span>' : "") +
     '<span class="pill">Nivel ' + (rankByNumber.get(node.number) || 0) + "</span></div>" +
     '<div class="story-flow">' +
       '<div class="story-step before"><strong>← Antes</strong><span>' +
@@ -1468,6 +1507,7 @@ function renderMilestoneStrip() {
       '<span class="week">' + escapeHtml(meta.short) + "</span>" +
       '<span class="goal">' + escapeHtml(meta.goal) + "</span>" +
       '<span class="mini">Cierra ' + escapeHtml(due) + " · " +
+        stats.software + " software · " + stats.partial + " parciales · " +
         stats.ready + " listos · " + stats.blocked + " bloqueados</span>";
 
     button.addEventListener("click", function() {
@@ -1482,6 +1522,8 @@ function renderSummary(visibleCount) {
   const summary = document.getElementById("summary");
   summary.innerHTML =
     '<span class="metric"><strong>' + visibleCount + "</strong> visibles</span>" +
+    '<span class="metric"><strong>' + DATA.summary.software + "</strong> software listo</span>" +
+    '<span class="metric"><strong>' + DATA.summary.partial + "</strong> parciales</span>" +
     '<span class="metric"><strong>' + DATA.summary.ready + "</strong> listos</span>" +
     '<span class="metric"><strong>' + DATA.summary.blocked + "</strong> bloqueados</span>" +
     '<span class="metric"><strong>' + DATA.summary.dependency_edges + "</strong> dependencias</span>";
@@ -1510,8 +1552,7 @@ function applyFilters() {
       if (milestone && milestoneKey(node) !== milestone) visible = false;
       if (state === "open" && node.state !== "open") visible = false;
       if (state === "closed" && node.state !== "closed") visible = false;
-      if (state === "ready" && (node.state !== "open" || node.is_blocked)) visible = false;
-      if (state === "blocked" && (node.state !== "open" || !node.is_blocked)) visible = false;
+      if (["ready", "blocked", "software", "partial"].includes(state) && statusClass(node) !== state) visible = false;
 
       ele.style("display", visible ? "element" : "none");
     });
