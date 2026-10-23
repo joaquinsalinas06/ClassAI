@@ -13,3 +13,12 @@ web/node_modules/
 web/dist/
 web/screenshots/
 **/data/models/
+
+# Firmware credentials and local Android build state
+firmware/classai_node/secrets.h
+mobile/android/local.properties
+mobile/android/.gradle/
+mobile/android/.kotlin/
+mobile/android/**/build/
+.pytest_cache/
+.ruff_cache/

@@ -740,6 +740,12 @@ def main() -> None:
     def on_connect_fail(client: mqtt.Client, userdata: object) -> None:
         print("No se pudo conectar a MQTT. Se reintentará automáticamente.")
 
+    def on_subscribe(client, userdata, mid, reason_codes, properties) -> None:
+        if any(code.is_failure for code in reason_codes):
+            print("MQTT rechazó una suscripción")
+        else:
+            print("Suscripciones MQTT confirmadas")
+
     def on_disconnect(client: mqtt.Client, userdata: object, disconnect_flags: object, reason_code: object, properties: object) -> None:
         if reason_code != 0:
             sent_by_server = getattr(disconnect_flags, "is_disconnect_packet_from_server", False)
@@ -759,6 +765,7 @@ def main() -> None:
 
     client.on_connect = on_connect
     client.on_connect_fail = on_connect_fail
+    client.on_subscribe = on_subscribe
     client.on_disconnect = on_disconnect
     client.on_message = on_message
 
