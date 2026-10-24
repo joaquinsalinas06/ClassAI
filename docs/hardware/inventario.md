@@ -38,10 +38,10 @@ comunicados**. Todos los registros B están pendientes de devolución.
 | B-05 | LED verde | 1 LED | en mano | Señalización con resistencia en serie |
 | B-06 | LED amarillo | 1 LED | en mano | Señalización con resistencia en serie |
 | B-07 | LED blanco | 2 LEDs | en mano | Lote propio de B, separado de C-06 |
-| B-08 | Módulo rojo de sonido, micrófono y ajuste azul | 1 módulo | en mano | Descritos LED1/LED2/VR1 y probable AO/G/+/DO; KY-038/KY-037 provisional, no amplificador confirmado |
-| B-09 | Buzzer de dos patas | 1 unidad | en mano | Tipo activo/pasivo, tensión y consumo por confirmar |
-| B-10 | Matriz LED con módulo VCC/GND/DIN/CS/CLK | 1 módulo/conjunto | en mano | Probable MAX7219; leer chip, tamaño y conectores de entrada/salida. No contar dos módulos por tener dos extremos |
-| B-11 | Módulo de relé de dos canales | 1 módulo, 2 canales | en mano | Entradas GND/IN1/IN2/VCC y zona JD-VCC/VCC con puente según descripción. Tensión, nivel activo y aislamiento por confirmar; COM1/NO1/NC1 separados de COM2/NO2/NC2 |
+| B-08 | Detector analógico/digital de sonido: AO/G/+/DO, micrófono electret y potenciómetro W104/VR1 | 1 módulo | en mano; fotografiado 24/10 | LED1/LED2 y U1 de 8 patas visibles; tipo KY-038 semejante, **no confirmado**. AO y DO no probadas eléctricamente; ninguna medición de dB ni nivel de salida validado |
+| B-09 | Buzzer cilíndrico con orificio acústico, dos patas y signo + | 1 unidad | en mano; fotografiado 24/10 | Polaridad + visible; tipo activo/pasivo, modelo, tensión y corriente **sin confirmar**. No alimentarlo desde GPIO sin validar |
+| B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 probable, chip ilegible; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos |
+| B-11 | Relé doble: 2 × TONG LING JQC-3FF-S-Z **5VDC**; COM1/NO1/NC1 y COM2/NO2/NC2 | 1 módulo, 2 canales | en mano; fotografiado 24/10 | Control GND/IN1/IN2/VCC; bloque JD-VCC/VCC/GND con puente amarillo. Bobina 5 V confirmada; lógica de disparo, corriente de placa, aislamiento y compatibilidad GPIO 3,3 V **pendientes** |
 
 ## C — Material temporal facilitado por el profesor
 
@@ -72,11 +72,11 @@ no confundir con fabricante genuino o comportamiento ya probado.
 
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| D-01 | PN532 NFC RFID V3 | 1 módulo | en mano | NFC por SPI/I²C/HSU; pines sin soldar. Etiquetas SPI SCK/MISO/MOSI/CS/VCC/GND/IRQ/RSTO; segunda fila I²C por confirmar visualmente |
+| D-01 | PN532 NFC MODULE V3 serigrafiado **ELECHOUSE** | 1 módulo | en mano; fotografiado 24/10 | Selector DIP de dos canales; SPI SCK/MISO/MOSI/SS/VCC/GND/IRQ/RSTO; I²C SCL/SDA/VCC/GND; HSU GND/VCC/TXD/RXD al dorso. Cabeceras sin soldar; placa compatible visualmente con manual V3, autenticidad/función no probadas |
 | D-02 | Tarjeta NFC incluida con D-01 | 1 tarjeta | en mano | Tipo exacto y UID no verificados; no publicar credenciales completas |
 | D-03 | Llavero NFC incluido con D-01 | 1 llavero | en mano | Tipo exacto no verificado |
-| D-04 | TFT SPI 1,54 pulgadas, versión 1.1 | 1 pantalla | en mano; desconectada por Joaquín | Probable ST7789 240×240. Inscripción dictada «ST77689» pendiente de foto. Es la MISMA pantalla usada en la mascota, no una adicional prestada |
-| D-05 | Ventilador brushless DC 5 V; variante anunciada 4010 | 1 ventilador | en mano | Etiqueta azul leída «Pegdal Antu», Made in China; corriente no indicada. Dimensiones/fabricante por confirmar |
+| D-04 | TFT SPI marcada **1.54TFT-SPI-ST7789 Ver:1.1** | 1 pantalla | en mano, fotografiada 24/10; desconectada | Pines reales GND/VCC/SCL/SDA/RST/DC/CS/BL; cabecera visible. Controlador ST7789 identificado por serigrafía, resolución probable 240×240 sin medición; tensión VCC/BL no validada |
+| D-05 | Ventilador brushless **PENGDALANTU / 鹏达蓝图 / DC 5V**, variante 4010 del anuncio | 1 ventilador | en mano; fotografiado 24/10 | 2 cables rojo/negro y ficha blanca de 2 posiciones. 5 V confirmado por etiqueta, **corriente no indicada**; paso del conector, polaridad y dimensiones físicas no medidos |
 | D-06 | PIR, variante HC-SR501-green | 1 módulo | en mano | Tres pines y jumper amarillo; leer VCC/OUT/GND y modo antes de alimentar |
 | D-07 | Micrófono digital INMP441 | 1 módulo | en mano | VCC/GND/SD/LR/WS/SCK; I²S, no ADC; no es B-08 |
 | D-08 | Amplificador I²S MAX98357A, identificación según anuncio | 1 módulo | en mano | LRC/BCLK/DIN/GAIN/SD/GND/VIN; pines/bornera por montar. Leer placa real |
@@ -104,6 +104,27 @@ Enlaces públicos de producto (no sustituyen inspección de la variante):
 [E-03](https://www.aliexpress.com/item/1005009071621102.html),
 [E-04](https://www.aliexpress.com/item/32392610240.html).
 
+## Trazabilidad de anuncios y revisión fotográfica
+
+Lista de vendedores/variantes visibles, sin número de orden y sin atribuirles fabricación del dispositivo. **La compra conjunta D es propiedad del equipo, no de Joaquín**; E es personal aunque pueda usarse temporalmente en ClassAI.
+
+| ID | Tienda/escaparate mostrado | Variante o producto observado |
+|---|---|---|
+| D-05 | YX Technology | 4010 5V Negro |
+| D-09 | KY WIN ROBOT Store | 2 altavoces 4 Ω / 3 W |
+| D-08 | SZFYDOSH Technology Store | MAX98357A «Small chip» |
+| D-07 | JiaDenuo Store | «1pcsINMP441» |
+| D-10 | KIMCHOW 3C Store | Cable micro USB plata; longitud sin confirmar |
+| D-04 | YouKeyi Store | «1.54 Inch TFT» |
+| D-01/D-02/D-03 | Tienda oficial ZAVE (nombre del escaparate) | PN532 V3 con tarjeta y llavero |
+| D-06 | No legible en captura | HC-SR501-green |
+| E-01 | 3C-World Dropshipping Store | ESP32 38Pin Type C |
+| E-02 | Eiechip Official Store | 400 Points Breadboard |
+| E-03 | Realpoy Module Wholesale Store | 20cm KIT |
+| E-04 | S+S+S+ Store | Kit R3 Mini Breadboard **sin Arduino** |
+
+Ver [identificacion-fisica.md](identificacion-fisica.md) para transcripciones, enlaces técnicos, alimentación y lista mínima de faltantes. Fotografías del 24/10 confirman la presencia física de D-01/D-04/D-05/B-08/B-09/B-10/B-11; **no certifican pruebas de funcionamiento**. La recepción E continúa sin confirmar.
+
 ## Seguimiento de préstamos, recepciones y devoluciones
 
 Registrar una fila por movimiento; no sobrescribir el historial. La ausencia de
@@ -121,7 +142,8 @@ actualizar disponibilidad de los IDs afectados y revisar montajes que los usan.
 - Contar y separar tipos de A-02; contar resistencias, D-11 y contenido de kits al recibir.
 - Confirmar responsable y fechas/condiciones de A/B/C; distribución final de D.
 - Fotografiar/leer cada ESP32 y asociarlo a A-01/B-02/E-01 antes de asignarle un rol.
-- Confirmar controlador/etiqueta de D-04, consumo del ventilador y características de B-09/B-10/B-11.
+- D-04 ya identificada por serigrafía ST7789 V1.1, falta VCC/BL y prueba de panel; ventilador DC 5V confirmado sin corriente medida.
+- B-09 ya fotografiado con signo + pero tipo/tensión sin verificar; B-10 es matriz 8×8 con MAX7219 por confirmar; B-11 son dos bobinas 5V TONG LING, faltan disparo 3,3V/jumper/consumo.
 - Identificar B-08, el PIR B-04 y el orden de terminales de cada placa real.
 - Confirmar recepción de E; disponer de cable de DATOS USB-C apropiado para E-01
   (no se ha inventariado uno, y los micro USB no encajan).

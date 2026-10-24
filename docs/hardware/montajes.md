@@ -18,10 +18,10 @@ fuente o adaptación se quedan bloqueados hasta resolver ese requisito.
 | M-03 · Transporte MQTT | Una placa, USB, red compatible y laptop | Requiere un perfil sin sensores/NFC/actuadores no conectados. El nodo base no es ese perfil por defecto. Contrato classai/v1 y SQLite de prueba | Status, telemetría null, config y reconexión; no etiquetar como medición física ni asistencia NFC |
 | M-04 · Temperatura/humedad | Una placa; B-03 x1; protoboard y jumpers | Prueba aislada: DATA GPIO4; identificar alimentación/pull-up y usar DHT11 | Lecturas reales y manejo de fallo; no inventariar DHT22 ni MLX por estar en el firmware |
 | M-05 · Presencia | Una placa; D-06 **o** B-04 x1; protoboard y jumpers | Prueba aislada: OUT GPIO27, solo si pantalla desconectada y niveles confirmados | Movimiento, retorno, retardo y jumper; no afirmar presencia inmóvil garantizada |
-| M-06 · Sonido relativo | Una placa; B-08 x1; protoboard y jumpers | Tras identificar placa/niveles: AO GPIO34 (ADC1); DO opcional, no asignado aún | Diferencias relativas de señal, no dB calibrados ni reconocimiento de voz |
+| M-06 · Sonido relativo | Una placa; B-08 x1; protoboard y jumpers | **AO/G/+/DO identificados**; tras validar alimentación y máximo AO/DO: AO GPIO34 (ADC1); DO opcional no asignado | Diferencias relativas de señal, no dB calibrados ni reconocimiento de voz |
 | M-07 · Audio digital | Una placa; D-07 x1 para captura **o** D-08 x1 + D-09 x1 para reproducción | Captura/reproducción primero por separado; I²S, fuente y pines pendientes de diseño; verificar conectores/soldadura. No conectar un altavoz al micrófono | Captura digital o tono/audio a bajo volumen; no existe aún integración de estos drivers en el nodo base |
 | M-08 · Matriz / buzzer | Una placa; B-10 **o** B-09 | Identificar componente, tensión y adaptación/driver antes de fijar GPIO | Señalización aislada; no marcar control completo de confort |
-| M-09 · Ventilador con control | Una placa; D-05 x1; canal de B-11 **o** driver adecuado; fuente y jumpers | Bloqueado hasta conocer consumos, bobinas, nivel activo, protección y fuente. Identificar COM/NO/NC de UN canal | ON/OFF, estado seguro al boot y ausencia de resets; no usar contactos de red eléctrica |
+| M-09 · Ventilador con control | Una placa; D-05 (5 V) x1; un canal de B-11 (relés 5 V) **o** driver adecuado; fuente DC externa y conexiones seguras | Bobinas 5 V confirmadas; **bloqueado** hasta conocer arranque del fan y capacidad de fuente, probar activación GPIO 3,3 V, jumper y contactos COM1/NO1. No derivar corriente del hub/ESP32 | ON/OFF, estado seguro al boot y ausencia de resets; no usar tensión de red |
 | M-10 · NFC | Una placa; D-01 x1, D-02 o D-03; jumpers; LED/resistencia opcionales | Soldar header, verificar V3 y SPI; solo entonces mapa 18/19/23/5. Pantalla desconectada | Versión PN532, tarjeta/llavero y repetibilidad; móvil requiere además Android HCE y prueba APDU física |
 
 «Una placa» significa escoger A-01 o B-02, anotarlo en el registro y confirmar que
@@ -90,3 +90,7 @@ En cada nueva prueba completar: receta, fecha, quién monta, placa exacta,
 materiales/cantidad, conexiones/tensión, firmware, criterio de éxito, resultado
 observado y desmontaje. Si falla, registrar el fallo; no mover la issue a
 completada por compilación, simulador o fotogramas contados sin observación física.
+
+
+## Actualización sin ensayo eléctrico (24/10/2026)
+Fotos de D-01, D-04, D-05 y B-08/B-09/B-10/B-11 identificadas en [identificacion-fisica.md](identificacion-fisica.md). Ningún montaje se marca probado por ellas. Mantener M-09 bloqueado hasta medir/confirmar fuente, corriente, relé y nivel de señal. E-01/E-02/E-03/E-04 no pasan de pedido a disponible sin recepción confirmada.
