@@ -18,12 +18,24 @@ describe("PN532 physical assembly", () => {
     expect(a.wires.every(w=>w.from.startsWith("bb:") !== w.to.startsWith("bb:"))).toBe(true);
     expect(new Set(a.wires.flatMap(w=>[w.from,w.to]).filter(e=>e.startsWith("bb:"))).size).toBe(12);
     for (const c of nfcConnections) {
-      expect(actual.connected(`bb:A${c.row}`,`bb:B${c.row}`)).toBe(true);
-      expect(actual.connected(`bb:A${c.row}`,`bb:F${c.row}`)).toBe(false);
-      for (const rail of ["LP","LN","RP","RN"]) expect(actual.connected(`bb:${rail}1`,`esp1:${c.esp}`)).toBe(false);
+      expect(actual.connected(`bb:${c.espHole}`,`bb:${c.moduleHole}`)).toBe(true);
+      if (c.espHole.startsWith("A")) expect(actual.connected(`bb:${c.espHole}`,`bb:F${c.espHole.slice(1)}`)).toBe(false);
+      for (const rail of ["RP","RN"]) expect(actual.connected(`bb:${rail}1`,`esp1:${c.esp}`)).toBe(false);
     }
     for (const pin of ["IRQ","RSTO"]) expect(a.wires.some(w=>[w.from,w.to].includes(`nfc1:${pin}`))).toBe(false);
     expect(actual.findings.some(f=>f.text.includes("sin conexión propuesta"))).toBe(false);
+  });
+  it("keeps neighboring positive/negative rails separate and works within split upper halves", () => {
+    const a=fresh();a.board.splitRails=true;
+    const result=analyze(a);
+    expect(result.connected("esp1:3V3","nfc1:VCC")).toBe(true);
+    expect(result.connected("esp1:GND","nfc1:GND")).toBe(true);
+    expect(result.connected("bb:LP2","bb:LN2")).toBe(false);
+    expect(result.connected("bb:LP2","bb:LP16")).toBe(false);
+    expect(result.connected("bb:LN4","bb:LN16")).toBe(false);
+    expect(result.findings.filter(f=>f.level==="error")).toEqual([]);
+    a.wires.push({id:"short-rails",from:"bb:LP3",to:"bb:LN3",note:"invalid short for test"});
+    expect(analyze(a).findings.some(f=>f.level==="error"&&f.text.includes("Alimentación"))).toBe(true);
   });
   it("matches actual firmware SPI pins and logical catalog routing", () => {
     const firmware = readFileSync(new URL("../../../firmware/nfc_bench/nfc_bench.ino", import.meta.url),"utf8");
@@ -44,7 +56,7 @@ describe("PN532 physical assembly", () => {
   });
   it("detects a short and wrong SPI function, and round-trips with revision history", () => {
     const a=fresh();
-    a.wires[2]!.to="bb:C2";
+    a.wires[2]!.to="bb:LP14";
     expect(analyze(a).findings.some(f=>f.level==="error"&&f.text.includes("Alimentación"))).toBe(true);
     const swapped=fresh();swapped.wires[4]!.from="esp1:GPIO19";
     expect(analyze(swapped).findings.some(f=>f.text.includes("Funciones de señal incompatibles"))).toBe(true);

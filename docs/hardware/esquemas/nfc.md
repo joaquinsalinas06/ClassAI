@@ -24,8 +24,8 @@ Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes 
 
 | Desde | Hasta | Vía / condición | Estado |
 |---|---|---|---|
-| ESP32 · 3V3 | PN532 · VCC | A2 / B2 · 3,3 V | Propuesto |
-| ESP32 · GND | PN532 · GND | A4 / B4 | Propuesto |
+| ESP32 · 3V3 | PN532 · VCC | Riel + izquierdo LP15 / LP2 · 3,3 V | Propuesto |
+| ESP32 · GND | PN532 · GND | Riel − izquierdo LN14 / LN4 | Propuesto |
 | ESP32 · GPIO18 | PN532 · SCK | A6 / B6 | Propuesto |
 | PN532 · MISO | ESP32 · GPIO19 | A8 / B8 | Propuesto |
 | ESP32 · GPIO23 | PN532 · MOSI | A10 / B10 | Propuesto |
@@ -35,7 +35,7 @@ Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes 
 
 1. DIP SPI, sin alimentación: canal 1 OFF / canal 2 ON; leer números, no copiar dirección de la foto.
 2. Revisar soldadura: sin puentes, pines firmes y antena despejada. Confirmar cabecera macho/hembra para elegir M–H/M–M. IRQ/RSTO quedan sin conectar.
-3. Parejas A2/B2, A4/B4, A6/B6, A8/B8, A10/B10 y A12/B12: cada A/B comparte tira; nunca unir A con F ni redes distintas. Cada punta ocupa su agujero.
+3. Potencia por rieles izquierdos: + LP15/LP2 y − LN14/LN4, solo mitad superior. Señales por A6/B6, A8/B8, A10/B10 y A12/B12. No unir + con −, A con F ni redes distintas.
 4. Primer ensayo sin pantalla ni actuadores. No imprimir ni publicar tokens/UID completos.
 
 Resultado esperado: PN532 responde con versión; 20 detecciones con retirada entre lecturas. Después probar Android HCE por separado.

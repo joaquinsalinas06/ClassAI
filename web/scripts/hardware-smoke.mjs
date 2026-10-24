@@ -144,6 +144,8 @@ try {
   await page.getByRole("button",{name:"Exportar JSON",exact:true}).click();
   const nfcJson=JSON.parse(await readFile(await (await nfcJsonEvent).path(),"utf8"));
   assert.equal(nfcJson.version,1);assert.equal(nfcJson.wires.length,12);
+  assert.equal(nfcJson.wires[0].to,"bb:LP15");assert.equal(nfcJson.wires[1].from,"bb:LP2");
+  assert.equal(nfcJson.wires[2].to,"bb:LN14");assert.equal(nfcJson.wires[3].from,"bb:LN4");
   assert.ok(nfcJson.parts.some(p=>p.definition==="pn532"));
   await page.getByLabel("Importar montaje JSON").setInputFiles({name:"nfc-roundtrip.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(nfcJson))});
   await page.getByRole("button",{name:"Ver todo",exact:true}).click();
