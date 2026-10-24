@@ -45,3 +45,14 @@ issues describen funcionalidad terminada: comprobar código y pruebas.
   despliegues ni cargas de artefactos sin una necesidad concreta.
 - Si cambian dependencias Python, regenerar requirements-ci.txt con el comando
   universal del README; web siempre mantiene pnpm-lock.yaml coherente.
+
+## Hardware físico
+
+Antes de asignar placas, cablear o preparar un ensayo, leer
+`docs/hardware/README.md`, `inventario.md`, `conexiones.md` y `montajes.md` en esa
+carpeta. Mantener IDs y propiedad: A/B/C son préstamos, D es compra del equipo y
+E es personal de Joaquín. No inventar plazos, cantidades de kits ni recepción.
+Asociar el dispositivo físico a su ID antes de cargar firmware y registrar
+montaje/desmontaje. El tercer ESP32 sigue pendiente de recepción; la propuesta
+multinodo no está implementada. Verificar niveles/pinout reales y conflictos TFT
+antes de usar el firmware integrado; no publicar secretos ni respaldos de flash.
