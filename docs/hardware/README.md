@@ -13,6 +13,8 @@ préstamo, devolución o entrega se ha supuesto.
 | [identificacion-fisica.md](identificacion-fisica.md) | Fotografías revisadas (sin publicarlas), etiquetas verificadas, proveedores, fuente 5 V, riesgos y faltantes |
 | [conexiones.md](conexiones.md) | Señales necesarias, pinouts de referencia, asignaciones del código y conflictos |
 | [banco-ambiente.md](banco-ambiente.md) | Primer circuito completo DHT11/PIR: alimentación, cableado, referencias y firmware de ensayo |
+| [esquemas/README.md](esquemas/README.md) | Colección de 12 esquemas SVG y guías por banco, exportables desde la web |
+| [siguientes-bancos.md](siguientes-bancos.md) | Orden práctico, reparto de dos placas, presupuesto de cables y preparación tras soldadura |
 | [visualizador.md](visualizador.md) | Banco local, formato JSON y límites de validación |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
 

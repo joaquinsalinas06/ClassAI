@@ -67,3 +67,11 @@ node scripts/screens.mjs http://localhost:5181 screenshots
 `/montajes` abre el visualizador local de conexiones y pasos de armado. Permite
 importar/exportar JSON y guardar revisiones en el navegador. No requiere hardware
 ni backend propio. Véase [alcance, formato y pendientes](../docs/hardware/visualizador.md).
+
+La biblioteca superior contiene 12 bancos (`/montajes?banco=nfc`, `led-boton`,
+`audio-salida`, etc.), con conexiones por nombres, condiciones, materiales y
+exportación SVG/colección JSON. Seleccionar/exportar no modifica el borrador de
+ambiente. La colección no es el JSON importable del editor. Ver
+[esquemas y guías](../docs/hardware/esquemas/README.md) y
+[orden práctico](../docs/hardware/siguientes-bancos.md). Regenerar los SVG y
+guías desde raíz con `node web/scripts/export-hardware-missions.mjs`.

@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Download, Plus, Undo2, Upload } from "lucide-react";
 import { PageHeader } from "../ui/PageHeader";
 import { Button } from "../ui/Button";
+import { MissionLibrary } from "../hardware/MissionLibrary";
 import { WiringReference } from "../hardware/WiringReference";
 import { routingMetrics } from "../hardware/routing";
 import example from "../hardware/example.json";
@@ -69,9 +70,10 @@ export function Hardware() {
   const visibleWires = step === null ? assembly.wires : assembly.wires.slice(0, step);
   const errors = result.findings.filter(f => f.level === "error");
   return <>
-    <PageHeader title="Montajes" description="Arma el banco de ambiente: identifica cada pieza, sigue los cables y comprueba las conexiones antes de energizar."
+    <PageHeader title="Montajes" description="Elige un banco, consulta materiales y conexiones y registra cada ensayo. Integra solo después de comprobar las piezas por separado."
       actions={<><Button icon={<Download size={14} />} onClick={exportFile}>Exportar JSON</Button><label className="relative"><span className="sr-only">Importar montaje JSON</span><input aria-label="Importar montaje JSON" type="file" accept="application/json,.json" className="absolute inset-0 z-10 w-full cursor-pointer opacity-0" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = ""; }} /><Button tabIndex={-1} icon={<Upload size={14} />}>Importar JSON</Button></label></>} />
-    <section className="mb-5 rounded-lg border border-line bg-surface p-4">
+    <MissionLibrary />
+    <section id="ambiente-fisico" className="mb-5 rounded-lg border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center gap-3"><h2 className="text-heading">Primer montaje · DHT11 + PIR</h2><span className="text-caption text-muted">ESP32 de 30 pines · USB abajo</span></div>
       <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V por confirmar</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
       <p className="mt-2 text-caption text-regular-text">ESP32 DEVKITV1 de 30 pines fotografiado; DHT11 −/OUT/+ reportado. Las letras del PIR no se leen con claridad en las fotos: su orden dibujado sigue siendo una referencia. El jumper amarillo selecciona disparo; no es una entrada de alimentación.</p>

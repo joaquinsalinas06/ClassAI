@@ -152,3 +152,20 @@ acepta tanto este layout como `compact` y ausencia de layout, sin migrar guardad
 El inventario registra cero H–H disponibles. No se asume que el PIR se pueda
 insertar mecánicamente en la protoboard. Fotos confirman ESP32 DEVKITV1, no VIN
 medido ni etiquetas legibles del PIR. Los estados de propuesta permanecen.
+
+## Biblioteca de bancos
+
+La parte superior de /montajes ofrece 12 esquemas por misión, antes del editor
+físico de ambiente. `?banco=nfc` (y los demás IDs del catálogo) selecciona una
+referencia. Cambiar banco, resaltar conexiones y exportar no toca localStorage
+ni modifica el borrador de ambiente. Los esquemas se ordenan por nombres de
+terminales, no por la ubicación física del conector: las ilustraciones ayudan
+a reconocer módulos, pero no son clones mecánicos certificados.
+
+Cada tramo incluye tipo de red, vía/interposición y condición. Los pendientes
+se dibujan discontinuos. La biblioteca exporta SVG y una colección JSON con
+formato `classai-bank-reference-v1`, distinto del JSON editable de ambiente;
+no importar la colección como montaje. Los SVG/Markdown del repositorio se
+regeneran con `node web/scripts/export-hardware-missions.mjs` y comparten el
+catálogo `web/src/hardware/missions.ts` con la página. La exportación no aprueba
+ensayos ni dimensiona los drivers que figuran pendientes.

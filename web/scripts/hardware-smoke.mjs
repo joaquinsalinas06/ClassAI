@@ -11,6 +11,38 @@ try {
   page.on("pageerror", e => errors.push(e.message));
   await page.goto(`${base}/montajes`);
   await page.getByRole("heading", { name: "Montajes", exact: true }).waitFor();
+  const draftBeforeBanks = await page.getByLabel("Nombre del montaje").inputValue();
+  const collectionEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Exportar colección JSON", exact: true }).click();
+  const collectionDownload = await collectionEvent;
+  const collection = JSON.parse(await readFile(await collectionDownload.path(), "utf8"));
+  assert.equal(collection.format, "classai-bank-reference-v1");
+  assert.equal(collection.missions.length, 12);
+  for (const bank of collection.missions) {
+    await page.locator(`[data-bank-id="${bank.id}"]`).click();
+    const diagram = page.locator(`[data-mission-diagram="${bank.id}"]`);
+    await diagram.waitFor();
+    assert.equal(await diagram.locator("[data-mission-wire]").count(), bank.links.length);
+    if (bank.links.some(w => w.pending)) assert.ok(await diagram.locator('path[stroke-dasharray="8 6"]').count());
+  }
+  assert.equal(await page.getByLabel("Nombre del montaje").inputValue(), draftBeforeBanks);
+  assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), null);
+  await page.locator('[data-bank-id="nfc"]').click();
+  await page.getByRole("button", { name: "Conexión siguiente", exact: true }).click();
+  assert.equal(await page.locator('[data-mission-wire="0"]').getAttribute("opacity"), "1");
+  const svgEvent = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Descargar esquema SVG", exact: true }).click();
+  const svgDownload = await svgEvent;
+  const svg = await readFile(await svgDownload.path(), "utf8");
+  assert.ok(svg.includes("PN532"));
+  assert.ok(svg.includes('xmlns="http://www.w3.org/2000/svg"'));
+  assert.ok(!svg.includes('opacity="0.32"'));
+  await page.getByRole("button", { name: "Todas las conexiones", exact: true }).click();
+  await mkdir("screenshots", { recursive: true });
+  await page.locator('[data-mission-diagram="nfc"]').screenshot({ path: "screenshots/bank-nfc.png" });
+  await page.locator('[data-bank-id="audio-salida"]').click();
+  await page.locator('[data-mission-diagram="audio-salida"]').screenshot({ path: "screenshots/bank-audio.png" });
+  await page.locator('[data-bank-id="nfc"]').click();
   assert.equal(await page.locator('[data-wire]').count(),12);
   assert.equal(await page.locator('[data-wire-color="orange"]').count(),2);
   assert.equal(await page.locator('[data-wire-color="green"]').count(),2);
@@ -72,10 +104,12 @@ try {
     await page.getByRole("heading", { name: "Montajes", exact: true }).waitFor();
     await page.screenshot({ path: `screenshots/hardware-${theme}-desktop.png`, fullPage: true });
     await page.setViewportSize({ width: 390, height: 844 });
+    await page.getByLabel("Elegir banco de prueba").selectOption("audio-salida");
+    assert.equal(await page.locator('[data-mission-diagram="audio-salida"]').count(), 1);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth), false);
     await page.screenshot({ path: `screenshots/hardware-${theme}-mobile.png`, fullPage: true });
     await page.setViewportSize({ width: 1440, height: 1000 });
   }
   assert.deepEqual(errors, []);
-  console.log("PASS: steps, resistor short/undo, save/reload, import rejection/roundtrip, export, snapshot recovery, light/dark, mobile, no runtime errors.");
+  console.log("PASS: 12 banks, conditional links, SVG/collection export without draft overwrite, steps, resistor short/undo, save/reload, import rejection/roundtrip, export, snapshot recovery, light/dark, mobile, no runtime errors.");
 } finally { await browser.close(); }
