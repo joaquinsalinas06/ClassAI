@@ -2,7 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
 import {
   BotMessageSquare, Check, ChevronsUpDown, History, LayoutDashboard, Menu, Moon, Palette, PanelLeft, Radio, Search, Sun,
-  UsersRound, type LucideIcon,
+  UsersRound, CircuitBoard, type LucideIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,6 +34,7 @@ export const NAV: NavItem[] = [
   { to: "/aula", label: "Aula en vivo", icon: Radio, key: "l" },
   { to: "/sesiones", label: "Sesiones", icon: History, key: "s" },
   { to: "/asistente", label: "Asistente", icon: BotMessageSquare, key: "a" },
+  { to: "/montajes", label: "Montajes", icon: CircuitBoard, key: "m" },
   { to: "/estudiantes", label: "Estudiantes", icon: UsersRound, key: "e" },
 ];
 export const NAV_FOOTER: NavItem[] = [{ to: "/design", label: "Sistema de diseño", icon: Palette, key: "d" }];

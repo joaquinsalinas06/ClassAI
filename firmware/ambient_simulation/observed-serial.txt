@@ -1,0 +1,3 @@
+SIMULACION DHT22 + PIR: no valida DHT11, VIN ni piezas reales
+SIM temp_c=24.0 rh_pct=40.0 motion=0
+SIM temp_c=29.0 rh_pct=65.0 motion=0

@@ -1,0 +1,428 @@
+{
+  "version": 1,
+  "name": "M-04/05 · Ambiente: recorrido simplificado",
+  "note": "Propuesta compacta de 10 jumpers: PIR a la izquierda junto a VIN/GND/D27, DHT11 a la derecha. Cablear apagado; verificar serigrafía, PIR, VIN, OUT, continuidad y pull-up antes de energizar. Sin ensayo físico. Rieles derechos libres; sin puente entre rieles.",
+  "board": {
+    "rows": 30,
+    "rails": true,
+    "splitRails": false
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "30 pines reportados por Joaquín. Distribución DevKit V1 de referencia: comparar etiquetas con la placa real; asociación A-01/B-02 pendiente. USB es la única entrada; VIN/5 V solo se usa como salida de USB después de comprobar esa ruta en la placa.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal"
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal"
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground"
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3
+        }
+      ]
+    },
+    {
+      "id": "dht11",
+      "name": "DHT11 · módulo − OUT +",
+      "pending": "B-03: etiquetas − / OUT / + reportadas, orientación de lectura por confirmar. VCC propuesta a 3,3 V, DATA a GPIO4 y pull-up 10 kΩ a 3,3 V; comprobar que esta variante funciona a esa tensión.",
+      "pins": [
+        {
+          "id": "GND",
+          "kind": "ground"
+        },
+        {
+          "id": "DATA",
+          "kind": "signal",
+          "function": "dht"
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3
+        }
+      ]
+    },
+    {
+      "id": "pir",
+      "name": "PIR · HC-SR501 de referencia",
+      "pending": "PIR con tres patas y jumper amarillo reportado, compatible visualmente con inventario B-04/D-06, sin identificar. Confirmar VCC/OUT/GND en reverso antes de seguir el dibujo. Referencia HC-SR501: 5 V de alimentación y salida lógica alrededor de 3 V; medir OUT antes de GPIO27.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5
+        },
+        {
+          "id": "OUT",
+          "kind": "signal",
+          "function": "presence"
+        },
+        {
+          "id": "GND",
+          "kind": "ground"
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia axial",
+      "pending": "Usar valor medido y patas en agujeros distintos. R1 = 10 kΩ, café-negro-naranja-dorado (C-02); si el módulo ya integra pull-up a 3,3 V, revisar el paralelo antes del montaje definitivo.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "Por asociar A-01/B-02",
+      "holes": {}
+    },
+    {
+      "id": "dht1",
+      "definition": "dht11",
+      "inventory": "B-03",
+      "holes": {}
+    },
+    {
+      "id": "pir1",
+      "definition": "pir",
+      "inventory": "Elegir D-06 o B-04",
+      "holes": {}
+    },
+    {
+      "id": "r1",
+      "definition": "resistor",
+      "inventory": "C-02 · 10 kΩ ±5 %, verificar",
+      "holes": {
+        "1": "C8",
+        "2": "G8"
+      },
+      "resistance": 10000
+    }
+  ],
+  "wires": [
+    {
+      "id": "w1",
+      "from": "esp1:GND",
+      "to": "bb:LN22",
+      "color": "black",
+      "note": "Apagado: GND derecho del ESP32 → riel izquierdo −, LN22. Comprobar continuidad hasta LN5.",
+      "bends": [
+        [
+          707,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "w3",
+      "from": "esp1:3V3",
+      "to": "bb:LP23",
+      "color": "red",
+      "note": "3V3 → LP23, riel izquierdo + de 3,3 V. Cable recto; comprobar continuidad hasta LP15 y LP8.",
+      "bends": []
+    },
+    {
+      "id": "w5",
+      "from": "bb:LN5",
+      "to": "dht1:GND",
+      "color": "black",
+      "note": "Riel izquierdo − → terminal − del DHT11. Usar las marcas, no copiar posición si está invertido.",
+      "bends": [
+        [
+          707,
+          231
+        ],
+        [
+          1130,
+          231
+        ],
+        [
+          1130,
+          331
+        ]
+      ]
+    },
+    {
+      "id": "w6",
+      "from": "bb:LP15",
+      "to": "dht1:VCC",
+      "color": "red",
+      "note": "LP15 (+3,3 V) → + del DHT11. No alimentar este sensor desde VIN.",
+      "bends": [
+        [
+          1290,
+          402
+        ]
+      ]
+    },
+    {
+      "id": "w7",
+      "from": "dht1:DATA",
+      "to": "bb:A8",
+      "color": "green",
+      "note": "Terminal OUT del DHT11 → A8. A8 y C8 pertenecen a la misma tira, lado A–E.",
+      "bends": [
+        [
+          1240,
+          370
+        ],
+        [
+          750,
+          370
+        ]
+      ]
+    },
+    {
+      "id": "w8",
+      "from": "esp1:GPIO4",
+      "to": "bb:B8",
+      "color": "green",
+      "note": "GPIO4 del ESP32 → B8; misma red de OUT y pata 1 de R1.",
+      "bends": [
+        [
+          630,
+          438
+        ],
+        [
+          630,
+          303
+        ],
+        [
+          770,
+          303
+        ]
+      ]
+    },
+    {
+      "id": "w9",
+      "from": "bb:LP8",
+      "to": "bb:J8",
+      "color": "red",
+      "note": "Riel +3,3 V → J8; comparte la tira F–J con pata 2 de R1. Pull-up 10 kΩ entre DATA y 3,3 V.",
+      "bends": [
+        [
+          685,
+          240
+        ],
+        [
+          958,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "w10",
+      "from": "esp1:GND_L",
+      "to": "pir1:GND",
+      "color": "black",
+      "note": "GND izquierdo del ESP32 → GND confirmado del PIR. Comparte masa con el otro GND dentro del ESP32: no hace falta puente de rieles.",
+      "bends": [
+        [
+          240,
+          519
+        ],
+        [
+          240,
+          651
+        ]
+      ]
+    },
+    {
+      "id": "w11",
+      "from": "esp1:VIN",
+      "to": "pir1:VCC",
+      "color": "orange",
+      "note": "Solo tras medir y validar alimentación: VIN → VCC confirmado del PIR. Conexión directa, sin riel de 5 V ni fuente adicional.",
+      "bends": [
+        [
+          220,
+          546
+        ],
+        [
+          220,
+          690
+        ],
+        [
+          70,
+          690
+        ]
+      ]
+    },
+    {
+      "id": "w12",
+      "from": "pir1:OUT",
+      "to": "esp1:GPIO27",
+      "color": "yellow",
+      "note": "D27 / GPIO27 → OUT del PIR, tras comprobar nivel ≤3,3 V. Seguir el cable amarillo: los cruces no son uniones.",
+      "bends": [
+        [
+          120,
+          710
+        ],
+        [
+          260,
+          710
+        ],
+        [
+          260,
+          411
+        ]
+      ]
+    }
+  ],
+  "revisions": [],
+  "layout": "compact"
+}
