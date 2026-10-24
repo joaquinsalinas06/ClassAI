@@ -17,15 +17,15 @@ tras diseñar y verificar esa configuración.
 | C-04 | Pulsador hacia GND, entrada con pull-up | 1 | Identificar parejas internas; cuatro patas no son cuatro GPIO |
 | B-03 | DHT11: DATA | 1 bidireccional | Pinout real, alimentación/pull-up y configurar driver DHT11, no DHT22 |
 | B-04, D-06 | PIR: OUT | 1 entrada por módulo | Modelo y VCC/OUT/GND; no inferir orden por color o posición de la lente |
-| B-08 | Probable AO analógico / DO umbral | 1 ADC; opcional 1 digital más | Confirmar modelo y tensión máxima de AO/DO; alimentarlo a 5 V no vuelve sus salidas seguras para ESP32 |
+| B-08 | AO analógico / DO umbral: pines **AO/G/+/DO** confirmados por foto; sensor tipo KY-038 no certificado | 1 ADC; opcional 1 digital más | Verificar alimentación real y máxima tensión de AO/DO, no conectar salida de 5 V directamente al ESP32; no mide dB calibrados |
 | D-01 | SPI: SCK, MISO, MOSI, CS/SS | 4 | Soldar conectores, identificar V3 y ajustar modo SPI sin alimentación; IRQ/RSTO no usados por el driver actual |
-| D-04 | TFT SPI: SCL/SCK, SDA/MOSI, CS, DC, RST | 5; +1 si BL se controla por GPIO | Controlador, VCC y circuito BL de la placa real; SCL/SDA aquí no implica I²C |
-| B-10 | Probable MAX7219: DIN, CLK, CS/LOAD | 3 | Chip, alimentación y nivel lógico: un MAX7219 a 5 V no garantiza reconocer un HIGH de 3,3 V; evaluar adaptación |
+| D-04 | **1.54TFT-SPI-ST7789 Ver:1.1**, pines **GND/VCC/SCL/SDA/RST/DC/CS/BL**, SPI | 5; +1 si BL se controla por GPIO | Serigrafía ST7789 confirmada; VCC/BL del breakout y panel físico aún por validar; SCL/SDA aquí no implica I²C |
+| B-10 | Matriz 8×8: entrada VCC/GND/**DIN/CS/CLK**; cascada VCC/GND/**DOUT/CS/CLK**; controlador probable MAX7219 | 3 | Leer chip; si es MAX7219 a 5 V, nivel HIGH especificado supera 3,3 V: colocar conversor tipo AHCT |
 | D-07 | INMP441: SCK/BCLK, WS, SD hacia ESP32 | 3 I²S | Alimentación 3,3 V; L/R fija canal, no dejarlo flotante |
 | D-08 | MAX98357A: BCLK, LRC/WS, DIN desde ESP32 | 3 I²S; controles opcionales aparte | VIN, GAIN y SD del breakout; SD aquí es control, no los datos SD del micrófono |
-| B-09 | Buzzer: señal mediante etapa adecuada si hace falta | 1 | Activo/pasivo, tensión/corriente y necesidad de transistor; no asumir que puede alimentarse con GPIO |
-| B-11 | IN1, IN2 | 2 si se usan ambos canales | Bobinas, disparo alto/bajo, compatibilidad 3,3 V, puente JD-VCC y estado seguro al arranque |
-| D-05 | Ventilador DC 5 V | 0 directo; 1 control mediante driver o canal de relé | Corriente/fuente y protección; NO alimentar desde GPIO |
+| B-09 | Buzzer polarizado de dos patas, signo **+** fotografiado | 1 | Activo/pasivo, tensión/corriente y necesidad de transistor sin comprobar; no asumir que puede alimentarse con GPIO |
+| B-11 | Dos relés TONG LING **JQC-3FF-S-Z 5VDC**. Control **GND/IN1/IN2/VCC**, jumper **JD-VCC/VCC/GND**; contactos NOx/COMx/NCx | 2 si se usan ambos canales | Bobinas 5 V confirmadas; disparo alto/bajo, 3,3 V compatible, función jumper y corriente placa sin prueba; no inferir aislamiento del opto aparente |
+| D-05 | Ventilador **PENGDALANTU DC 5 V**, 2 hilos y ficha blanca de 2 posiciones | 0 directo; 1 control mediante canal de relé | Tensión 5 V confirmada; corriente de arranque y conector no identificados, NO alimentar desde GPIO ni 3V3 |
 | D-09 | Altavoz entre SPK+ y SPK− del amplificador | 0 GPIO directos | Conector y polaridad; ninguno de esos terminales es GND; probar un altavoz, no dos de 4 Ω en paralelo |
 
 Tarjeta D-02 y llavero D-03 no requieren GPIO propios: se presentan al lector.
@@ -112,5 +112,18 @@ El piloto no requiere conectar red eléctrica a los contactos del relé.
 - [HC-SR501 de referencia](https://joy-it.net/files/files/Produkte/SEN-HC-SR501/SEN-HC-SR501_Manual_2024-04-16.pdf).
 - [Código de resistencias Vishay](https://www.vishay.com/docs/49478/_dale_resistor_color_code_chart_vmn_ms0002_1612.pdf).
 
-No existe ficha exacta identificada para el fan D-05 ni para B-08/B-09/B-11;
+No existe ficha exacta identificada para el fan D-05 ni para el buzzer B-09 ni para el módulo completo B-08/B-11; existe **ficha de familia** para relés TONG LING 5 V pero no valida el circuito del módulo;
 no completar sus parámetros copiando los de un módulo visualmente parecido.
+
+
+## Evidencia fotográfica 24/10/2026 y diseño de fuente
+Las fotos nuevas están descritas en [identificacion-fisica.md](identificacion-fisica.md) sin subir fotos del usuario al repositorio. D-05 (fan) y las bobinas de B-11 **requieren 5 V DC**, pero esa coincidencia de voltaje NO garantiza una fuente adecuada; se desconoce la corriente de arranque del ventilador y el consumo total del módulo relé.
+
+- Mac/hub USB → ESP32 para programación y alimentación **solo dentro del presupuesto USB confirmado**. No sacar alimentación de motor ni de bobina de un GPIO o del regulador 3V3.
+- Fuente DC regulada de 5 V externa por defecto → alimentación de relé validada; por el circuito de contacto COM1–NO1 puede conmutarse el positivo del fan. Negativo del fan vuelve a la fuente de 5 V. Confirmar COM/NO por multímetro, polaridad y calibre.
+- Adaptación IN1 a ESP32 depende de prueba de nivel y configuración JD-VCC/VCC/GND: no conectar/controlar en caliente ni asumir trigger LOW por semejanza de módulos.
+- No unir dos entradas de alimentación ESP32 (USB y VIN/3V3 externos) sin diseño adecuado; usar una sola ruta para cada ESP32.
+- B-08 usa AO/G/+/DO; si el sensor se alimenta a 5 V, **la salida a ADC/GPIO podría exceder 3,3 V**: comprobar nivel antes de conectar.
+- No hay aún modelo ni OUTPUT del hub/cargador, por lo que no se valida su capacidad.
+
+[Referencia familia bobinas JQC-3FF-S-Z](https://denkovi.com/Documents/JQC-3FF-S-Z.pdf); [referencia detector KY-038](https://sensorkit.joy-it.net/en/sensors/ky-038).

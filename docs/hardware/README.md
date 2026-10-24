@@ -1,6 +1,6 @@
 # Hardware ClassAI: inventario y montajes
 
-Registro inicial: **23/10/2026**, basado en el inventario narrado por Joaquín y
+Registro inicial: **23/10/2026**; revisión fotográfica **24/10/2026**, basada en el inventario narrado por Joaquín y
 contrastado con el código del repositorio. Las etiquetas de una pieza y una
 prueba física prevalecen sobre el título de un anuncio. Ninguna fecha de
 préstamo, devolución o entrega se ha supuesto.
@@ -10,6 +10,7 @@ préstamo, devolución o entrega se ha supuesto.
 | Archivo | Para qué sirve |
 |---|---|
 | [inventario.md](inventario.md) | Fuente de verdad de piezas/lotes, IDs, propietario, cantidades, recepción, devolución y uso |
+| [identificacion-fisica.md](identificacion-fisica.md) | Fotografías revisadas (sin publicarlas), etiquetas verificadas, proveedores, fuente 5 V, riesgos y faltantes |
 | [conexiones.md](conexiones.md) | Señales necesarias, pinouts de referencia, asignaciones del código y conflictos |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
 
@@ -50,7 +51,7 @@ actualizar también esta tabla. No incluye contenido interno sin contar de kits.
 | Módulos de micrófono | 2: B-08 y D-07, de interfaces distintas | — |
 | Audio de salida | 1 amplificador D-08, 2 altavoces D-09, 1 buzzer B-09 | — |
 | Señalización | 1 matriz B-10 y **6 LEDs sueltos** | LEDs adicionales de E-04, sin contar |
-| Control | 1 pulsador C-04, 1 relé doble B-11 (2 canales), 1 ventilador D-05 | Pulsadores adicionales de E-04, sin contar |
+| Control | 1 pulsador C-04, 1 relé doble B-11 (2 bobinas de 5 V), 1 ventilador D-05 (DC 5 V) | Pulsadores adicionales de E-04, sin contar |
 | NFC | 1 lector D-01 + 1 tarjeta D-02 + 1 llavero D-03 | — |
 | Resistencias y conectores | Lotes sin contar | Resistencias/accesorios de E-04, sin contar |
 
@@ -69,3 +70,9 @@ un total ficticio de 60/120 jumpers.
 El estado «en mano» no significa «probado». No cambiar progreso de issues por
 la mera compra, documentación o simulación. No guardar contraseñas WiFi/MQTT,
 claves de API, contenido de flash/NVS ni números de pedidos privados aquí.
+
+
+## Corte de verificación física (24/10/2026)
+Se fotografiaron y asociaron a sus IDs sin duplicar stock: **D-05 ventilador 5 V**, **D-04 TFT ST7789 Ver:1.1**, **D-01 PN532 V3 serigrafiado Elechouse**, **B-10 matriz LED 8×8**, **B-11 módulo con dos relés TONG LING 5VDC**, **B-09 buzzer polarizado** y **B-08 detector AO/G/+/DO**. **No se ha ejecutado ninguna prueba eléctrica**; revisar [identificacion-fisica.md](identificacion-fisica.md) y [conexiones.md](conexiones.md) antes de montar.
+
+La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. Las compras E-01 a E-04 siguen pendientes de recepción física.
