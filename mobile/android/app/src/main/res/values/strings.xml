@@ -27,8 +27,8 @@
     <string name="details_hide">Ocultar detalles técnicos</string>
     <string name="details_token">Token de credencial</string>
     <string name="action_copy">Copiar token</string>
-    <string name="success_title">¡Asistencia enviada!</string>
-    <string name="success_body">El lector recibió tu credencial</string>
+    <string name="success_title">Credencial leída</string>
+    <string name="success_body">El lector recibió tu credencial. Confirma la asistencia en la web.</string>
 
     <string name="action_save">Guardar</string>
     <string name="menu_server">Cambiar servidor</string>

@@ -11,7 +11,9 @@ class ProfileStore(context: Context) {
     val enrolled: Boolean get() = prefs.getBoolean("enrolled", false)
     var server: String
         get() = prefs.getString("server", null) ?: DEFAULT_SERVER
-        set(v) = prefs.edit().putString("server", v).apply()
+        set(v) {
+            if (server != v) prefs.edit().putString("server", v).putBoolean("enrolled", false).apply()
+        }
 
     val hasProfile: Boolean get() = code != null && name != null
 

@@ -57,6 +57,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private val io = Executors.newSingleThreadExecutor()
     private val timeFmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
+    private var enrollmentGeneration = 0
     private var busy = false
     private var status: CardStatus? = null
     private var chipColor = 0
@@ -201,10 +202,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun enroll(code: String, name: String, server: String, done: (EnrollOutcome) -> Unit) {
-        val json = enrollJson(code, name, tokens.getOrCreate().toHex())
+        val credential = tokens.getOrCreate()
+        val request = ++enrollmentGeneration
+        val json = enrollJson(code, name, credential.toHex())
         io.execute {
             val outcome = enrollOutcome(postEnroll(server, json))
-            runOnUiThread { if (!isDestroyed) done(outcome) }
+            runOnUiThread {
+                if (!isDestroyed && enrollmentResultIsCurrent(request, enrollmentGeneration, server,
+                        profile.server, credential, tokens.get())) done(outcome)
+            }
         }
     }
 
@@ -465,13 +471,21 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     b.card.idCard.sweepOnce()
                     snack("¡Teléfono vinculado!")
                 }
-                EnrollOutcome.Pending -> snack("Sigue sin conexión con ${profile.server}")
-                is EnrollOutcome.Rejected -> MaterialAlertDialogBuilder(this)
-                    .setIcon(R.drawable.ic_warning)
-                    .setTitle("No se pudo vincular")
-                    .setMessage(outcome.message)
-                    .setPositiveButton("Entendido", null)
-                    .show()
+                EnrollOutcome.Pending -> {
+                    profile.setEnrolled(false)
+                    renderCard()
+                    snack("Sigue sin conexión con ${profile.server}")
+                }
+                is EnrollOutcome.Rejected -> {
+                    profile.setEnrolled(false)
+                    renderCard()
+                    MaterialAlertDialogBuilder(this)
+                        .setIcon(R.drawable.ic_warning)
+                        .setTitle("No se pudo vincular")
+                        .setMessage(outcome.message)
+                        .setPositiveButton("Entendido", null)
+                        .show()
+                }
             }
         }
     }
@@ -487,10 +501,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 reject(v.serverLayout)
                 return@setOnClickListener
             }
+            val changed = profile.server != s
             profile.server = s
             sheet.dismiss()
-            renderDetails()
-            snack("Servidor actualizado")
+            if (changed) {
+                enrollmentGeneration++
+                renderCard()
+                snack("Servidor actualizado; verificando tu misma credencial")
+                retry()
+            } else renderDetails()
         }
         sheet.setContentView(v.root)
         sheet.show()
@@ -504,6 +523,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 "Si el teléfono ya estaba vinculado, pide al docente que revoque la credencial anterior.")
             .setNegativeButton("Cancelar", null)
             .setPositiveButton("Desvincular") { _, _ ->
+                enrollmentGeneration++
                 tokens.regenerate()
                 profile.clear()
                 status = null

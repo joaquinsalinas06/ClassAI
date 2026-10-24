@@ -35,9 +35,9 @@ AnimatedVectorDrawable y vistas Canvas propias (`Fx.kt`); sin Lottie ni librerí
    las ondas NFC laten: "Acerca el teléfono al lector".
 3. **Tap**: cuando el lector completa GET_CREDENTIAL (9000) y la app está en primer plano, se ve
    la celebración (ondas y confeti desde el ícono NFC, brillo del carnet, check animado,
-   vibración, "¡Asistencia enviada!") y la lectura entra en *Últimas lecturas*. El servicio HCE
+   vibración, "Credencial leída") y la lectura entra en *Últimas lecturas*. El servicio HCE
    responde igual con la app cerrada; la animación es solo feedback local.
-4. Barra superior: *Cambiar servidor* (hoja inferior) y *Desvincular / regenerar credencial*
+4. Barra superior: *Cambiar servidor* (hoja inferior; al cambiar invalida Activa y verifica de nuevo la misma credencial) y *Desvincular / regenerar credencial*
    (confirmación → token nuevo, borra el perfil y vuelve al login; el docente debe revocar la
    credencial anterior en el backend).
 5. *Ver detalles técnicos*: token HEX con botón copiar (para enrolamiento manual), AID, estado
@@ -62,7 +62,7 @@ Content-Type: application/json; charset=utf-8
 | Respuesta | App |
 |---|---|
 | `200` `{"student_code","full_name","credential_id","status":"active"}` (cualquier 2xx) | Activa (no lee el cuerpo) |
-| `409` | Rechazado: el estudiante ya tiene un teléfono activo |
+| `409` | Rechazado: otro teléfono activo o credencial revocada; no regenerar automáticamente |
 | otro `4xx` | Rechazado con el código HTTP |
 | `5xx`, timeout (5 s) o sin conexión | Pendiente de vincular, reintentable |
 
@@ -116,3 +116,13 @@ Test de host: `g++ -std=c++17 -I firmware/classai_node firmware/classai_node/tes
 
 Identificación de asistencia, no autenticación fuerte: el token es estático y puede copiarse si
 alguien controla un lector. Sin iOS. PN532 está "Not Recommended for New Designs" (NXP).
+
+
+## Ensayo local completo
+
+Ver [HCE local](../../docs/hardware/nfc-hce-local.md). El Mac ejecuta API/ingesta
+sobre una base separada; el teléfono usa la IP LAN del Mac, no localhost. Cambiar
+servidor conserva token/perfil y marca pendiente hasta comprobar el nuevo servidor;
+respuestas antiguas no activan otra vinculación. Repetir POST /mobile/enroll con
+mismo código/token activo devuelve 200 y el mismo credential_id, sin duplicarlo.
+La celebración acredita respuesta HCE, no persistencia de asistencia en backend.

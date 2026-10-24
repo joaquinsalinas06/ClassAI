@@ -90,3 +90,8 @@ fun initials(name: String): String {
     val letters = listOfNotNull(words.firstOrNull(), words.lastOrNull()?.takeIf { words.size > 1 })
     return letters.joinToString("") { it.take(1) }.uppercase()
 }
+
+// An old request must not activate a profile after a server switch or credential replacement.
+fun enrollmentResultIsCurrent(request: Int, latest: Int, requestedServer: String, currentServer: String,
+                              requestedToken: ByteArray, currentToken: ByteArray?): Boolean =
+    request == latest && requestedServer == currentServer && currentToken?.contentEquals(requestedToken) == true
