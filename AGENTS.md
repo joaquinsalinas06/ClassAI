@@ -56,3 +56,10 @@ Asociar el dispositivo físico a su ID antes de cargar firmware y registrar
 montaje/desmontaje. El tercer ESP32 sigue pendiente de recepción; la propuesta
 multinodo no está implementada. Verificar niveles/pinout reales y conflictos TFT
 antes de usar el firmware integrado; no publicar secretos ni respaldos de flash.
+
+## Skill de montajes
+
+Para diseñar, revisar u optimizar montajes de hardware, leer y aplicar
+`.agents/skills/classai-hardware-assembly/SKILL.md`. También cuando Joaquín pida
+«usa classai-hardware-assembly». Si faltan instrumentos o datos, adaptar el
+procedimiento y conservar los pendientes; una simulación no aprueba el montaje real.

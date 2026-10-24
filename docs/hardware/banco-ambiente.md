@@ -213,3 +213,15 @@ No completar #4 (DHT22) por un ensayo DHT11 ni #7 por compilar.
 La paleta física distingue PCB verde, sensor azul, carcasa PIR clara, resistor
 beige y metal; el resto mantiene Geist y los tokens de ClassAI. No hay movimiento
 decorativo. Selección y avance de pasos responden inmediatamente.
+
+## Si no hay multímetro
+
+Joaquín indica que no dispone de uno. Se puede continuar con identificación
+por etiquetas/fotos, documentación de la variante y ensayo virtual; no convertir
+una lectura virtual en medición VIN física ni alimentar una conexión todavía
+dudosa. No se exige comprar instrumentos para continuar diseñando.
+
+Se preparó y ejecutó parcialmente [ambient_simulation](../../firmware/ambient_simulation/README.md):
+Wokwi, con **DHT22 sustituto**, observó cambios 24 °C/40 % → 29 °C/65 %. PIR
+LOW observado; HIGH/retorno pendientes. No valida el DHT11 físico ni sustituye
+el firmware `ambient_bench`. Ver R-007 y el extracto serial de simulación.
