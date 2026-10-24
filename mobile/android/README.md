@@ -50,7 +50,9 @@ con este build. AGP 9.1, Gradle wrapper 9.3.1, minSdk 26 y compile/target 36.
 
 La ilustración identifica **Tu teléfono → Lector del aula** con una pantalla NFC
 y base. Dos destellos suaves y ondas secuenciales animan la escena; el carnet entra
-con un fundido corto y una sola onda tenue, sin giro 3D ni confeti. Todo usa Canvas/animación nativa. Se detienen cuando la vista no es visible
+con un fundido corto y una sola onda tenue, sin giro 3D. Una respuesta HCE válida muestra un confeti breve con los colores
+compartidos; el efecto respeta la opción de reducir animaciones y funciona
+también desde la pantalla de acceso, sin enrolamiento ni conexión MQTT. Todo usa Canvas/animación nativa. Se detienen cuando la vista no es visible
 y respetan la opción del sistema para reducir/desactivar animaciones. Login, carnet
 y confirmación usan los tokens de `design/tokens.json`; fuentes nativas como fallback
 sin descargas. Las credenciales y el perfil viven en SharedPreferences privadas con
@@ -136,3 +138,12 @@ Test de host: `g++ -std=c++17 -I firmware/classai_node firmware/classai_node/tes
 
 Identificación de asistencia, no autenticación fuerte: el token es estático y puede copiarse si
 alguien controla un lector. Sin iOS. PN532 está "Not Recommended for New Designs" (NXP).
+
+## Trazas privadas de laboratorio
+
+Con autorización del operador, compilar debug con `CLASSAI_LAB_DIAGNOSTICS=1`
+(acepta entorno o .env) muestra APDU RX/TX completas en detalles técnicos y
+logcat, incluida la credencial. El valor por defecto es 0; release nunca activa
+estas trazas. Los logs del laboratorio no se adjuntan a Git, issues ni PR.
+El toque sigue sin requerir Internet, MQTT ni enrolamiento confirmado para
+responder con el token local; eso no autoriza asistencia en el backend.

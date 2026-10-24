@@ -11,17 +11,20 @@
 // Librería: Adafruit PN532 1.3.4 + Adafruit BusIO (Library Manager).
 // Límites conocidos de Adafruit 1.3.4:
 //  - readDetectedPassiveTargetID lee 20 bytes: UID de 10 bytes llega truncado (raro en la práctica).
-//  - inListPassiveTarget imprime "Tag number: 1" por Serial en cada tap (no es nuestro log).
+//  - copia de build preparada por scripts/ci/prepare-pn532.py conserva Tg al leer UID.
 #include <Arduino.h>
 #include <SPI.h>
 #include <Adafruit_PN532.h>
+#ifndef CLASSAI_PN532_RETAINS_TARGET
+#error "Preparar PN532 con scripts/ci/prepare-pn532.py y compilar con --library RUTA"
+#endif
 
 #include "nfc_protocol.h"
 #include "nfc_reader.h"
 
 // PN532 V3 (Elechouse) en SPI: DIP ch1 OFF, ch2 ON. VSPI del ESP32.
 static const uint8_t PIN_SCK = 18, PIN_MISO = 19, PIN_MOSI = 23, PIN_SS = 5;
-static const uint16_t POLL_TIMEOUT_MS = 50;  // respaldo; con retries=1 el PN532 responde antes
+static const uint16_t POLL_TIMEOUT_MS = 250;  // respaldo; con retries=1 el PN532 responde antes
 static const uint8_t RELEASE_MISSES = 2;     // lecturas vacías seguidas = target retirado
 
 static Adafruit_PN532 nfc(PIN_SS);
@@ -55,13 +58,12 @@ static bool exchange(const uint8_t* apdu, uint8_t len, uint8_t* resp, uint8_t* r
 static bool readCredential(const uint8_t* uid, uint8_t uidLen, NfcCredential& out) {
   uint8_t resp[32];
   uint8_t n = sizeof(resp);
-  // readPassiveTargetID inlista el target pero no guarda su Tg (Adafruit-PN532 #66);
-  // inListPassiveTarget sí, y es lo que usa inDataExchange.
-  bool exchanged = nfc.inListPassiveTarget() &&
-                   exchange(nfcp::SELECT_APDU, sizeof(nfcp::SELECT_APDU), resp, &n);
+  // The staged library retains Tg from UID detection. Re-listing here loses the HCE activation.
+  bool exchanged = exchange(nfcp::SELECT_APDU, sizeof(nfcp::SELECT_APDU), resp, &n);
 
   switch (nfcp::afterSelect(exchanged, resp, exchanged ? n : 0, uidLen)) {
     case nfcp::Path::HCE:
+      Serial.println("[NFC] SELECT ClassAI aceptado; solicitando credencial");
       n = sizeof(resp);
       if (exchange(nfcp::GET_CREDENTIAL_APDU, sizeof(nfcp::GET_CREDENTIAL_APDU), resp, &n) &&
           nfcp::parseCredential(resp, n, out.token)) {

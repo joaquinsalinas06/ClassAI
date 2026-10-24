@@ -515,7 +515,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val adapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
         val hce = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
         token.text = tokens.getOrCreate().toHex().chunked(8).joinToString(" ")
-        tech.text = "NFC: ${if (adapter == null) "no disponible" else if (adapter.isEnabled) "activado" else "desactivado"}\n" +
+        tech.text = "APK ${BuildConfig.VERSION_NAME} · trazas ${if (BuildConfig.DEBUG && BuildConfig.CLASSAI_LAB_DIAGNOSTICS) "completas de laboratorio" else "INS/SW"}\n" +
+            "NFC: ${if (adapter == null) "no disponible" else if (adapter.isEnabled) "activado" else "desactivado"}\n" +
             "HCE: ${if (hce) "compatible" else "no disponible"}\n" +
             "Vinculación: ${if (profile.enrolled) "confirmada por el servidor" else "pendiente"}\n" +
             "Servidor (configurado en .env): ${BuildConfig.CLASSAI_API_URL}\n" +
@@ -527,9 +528,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun onLogEntry(e: EventLog.Entry) {
-        if (b.card.root.visibility != View.VISIBLE) return
-        renderDetails()
-        if (e.read) celebrate()
+        if (b.card.root.visibility == View.VISIBLE) renderDetails()
+        if (e.read) {
+            if (b.card.root.visibility == View.VISIBLE) celebrate()
+            else { vibrate(); showSuccessOverlay() }
+        }
     }
 
     private fun celebrate(): Unit = with(b.card) {
@@ -539,7 +542,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             showSuccessOverlay()
             return
         }
-        // Una lectura real recibe una confirmación breve, sin confeti.
+        // La celebración confirma la entrega NFC, nunca persistencia de asistencia.
         idCard.sweepOnce()
         ValueAnimator.ofFloat(0f, 1f, 1f, 0f).apply {
             duration = 1600
@@ -556,6 +559,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         root.removeCallbacks(hideSuccess)
         successOverlay.animate().cancel()
         successOverlay.visibility = View.VISIBLE
+        confetti.post { if (successOverlay.visibility == View.VISIBLE) confetti.burst() }
         val avd = successCheck.drawable as AnimatedVectorDrawable
         if (motionEnabled) {
             successOverlay.alpha = 0f

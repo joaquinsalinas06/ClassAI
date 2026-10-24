@@ -12,6 +12,12 @@ GET_CREDENTIAL, y el backend vincula ese mismo token al estudiante. Una tarjeta
 física tiene su propia credencial UID; no es el token HCE del teléfono.
 
 «Credencial leída» en el celular significa que respondió a GET_CREDENTIAL.
+Con ClassAI abierta, muestra confirmación, vibración y confeti incluso desde
+la pantalla de acceso y sin MQTT. Un tap de tarjeta/llavero separado no avisa al
+celular sin otro canal; esta reacción local exige acercar el propio teléfono.
+NFC_ONLY no consulta NTP externo; la ingesta utiliza la hora local del backend
+cuando el nodo envía ts=null. API y broker apuntan al Mac de la LAN.
+
 «Evento publicado QoS0» en Serial significa aceptación local por la librería
 MQTT, **no asistencia persistida**. La comprobación final es la lista de
 asistentes de la sesión en web/API. No se añadió confirmación APDU/MQTT nueva.
@@ -97,8 +103,18 @@ que reutiliza `nfc_reader.cpp` y `nfc_protocol.h`:
 
 ```sh
 .venv/bin/python backend/nfc_lab.py configure-firmware
-arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property compiler.cpp.extra_flags=-DNFC_ONLY=1 --build-path /tmp/classai-nfc-only-build firmware/classai_node
+umask 077  # también protege artefactos que incluyen secrets.h
+python3 scripts/ci/prepare-pn532.py /tmp/classai-pn532-hce
+arduino-cli compile --library /tmp/classai-pn532-hce --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property compiler.cpp.extra_flags=-DNFC_ONLY=1 --build-path /tmp/classai-nfc-only-build firmware/classai_node
 ```
+
+`prepare-pn532.py` crea una copia de build de Adafruit PN532 1.3.4, sin alterar
+la biblioteca instalada: conserva el identificador Tg obtenido al detectar el
+UID y permite enviar SELECT/GET a esa misma activación. Evita una segunda búsqueda
+que hacía perder la sesión HCE. La copia también reduce SPI hardware a 300 kHz
+y etiqueta fallos de transporte/estado PN532 sin volcar sus payloads. El sondeo
+usa 250 ms. Son medidas de diagnóstico, no una validación RF por simulación. No sobrescribe una carpeta preparada existente;
+reutilizarla o elegir otra ruta y pasarla a --library. CI prepara su propia copia.
 
 El helper reutiliza `~/.config/classai/network.json` si existe, con claves
 `wifi_ssid` y `wifi_password` y permisos 0600. Ese perfil privado queda fuera del

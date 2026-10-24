@@ -301,3 +301,57 @@ class SignalView(context: Context, attrs: AttributeSet? = null) : View(context, 
         if (motionEnabled && isShown) postInvalidateDelayed(48)
     }
 }
+
+
+/** Decorative burst only after a successful local NFC credential response. */
+class ConfettiView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    private data class Piece(val vx: Float, val vy: Float, val spin: Float, val color: Int)
+    private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
+    private var pieces = emptyList<Piece>()
+    private var animator: ValueAnimator? = null
+    private var progress = 1f
+
+    fun burst() {
+        animator?.cancel()
+        if (!motionEnabled || !isShown) return
+        val colors = intArrayOf(context.getColor(R.color.ds_state_ok_solid),
+            context.getColor(R.color.ds_state_regular_solid), context.getColor(R.color.ds_brand_air_to))
+        pieces = List(40) { i ->
+            val angle = kotlin.random.Random.nextFloat() * 2f * Math.PI.toFloat()
+            val speed = dp(100f + kotlin.random.Random.nextFloat() * 180f)
+            Piece(cos(angle) * speed, -abs(sin(angle)) * speed - dp(70f),
+                kotlin.random.Random.nextFloat() * 540f, colors[i % colors.size])
+        }
+        animator = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1400
+            interpolator = android.view.animation.LinearInterpolator()
+            addUpdateListener { progress = it.animatedValue as Float; invalidate() }
+            start()
+        }
+    }
+
+    override fun onDraw(canvas: Canvas) {
+        super.onDraw(canvas)
+        if (progress >= 1f) return
+        val t = progress * 1.4f
+        pieces.forEach {
+            paint.color = it.color
+            paint.alpha = (255f * (1f - progress)).toInt()
+            canvas.save()
+            canvas.translate(width / 2f + it.vx * t, height * .45f + it.vy * t + dp(240f) * t * t)
+            canvas.rotate(it.spin * progress)
+            canvas.drawRect(-dp(3f), -dp(5f), dp(3f), dp(5f), paint)
+            canvas.restore()
+        }
+    }
+
+    override fun onVisibilityChanged(changedView: View, visibility: Int) {
+        super.onVisibilityChanged(changedView, visibility)
+        if (visibility != VISIBLE) { animator?.cancel(); progress = 1f }
+    }
+
+    override fun onDetachedFromWindow() {
+        animator?.cancel()
+        super.onDetachedFromWindow()
+    }
+}

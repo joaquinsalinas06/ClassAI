@@ -16,7 +16,7 @@ with tempfile.TemporaryDirectory() as tmp:
     for mode in (0, 1):
         text = subprocess.check_output([compiler, "-E", "-P", "-x", "c++", f"-DNFC_ONLY={mode}", "-I", tmp,
                                         "-I", str(SKETCH.parent), str(out / SKETCH.name)], text=True)
-        for call in ("digitalWrite(", "digitalRead(", "pinMode(", "Wire.begin("):
+        for call in ("digitalWrite(", "digitalRead(", "pinMode(", "Wire.begin(", "configTime("):
             assert (call not in text) if mode else (call in text), (mode, call)
         assert 'Serial.println(eventQueue[eventHead])' not in text
     functions = source[source.index("void labStatus()"):source.index("// RED (sin bucles")]

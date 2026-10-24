@@ -19,6 +19,9 @@ require(apiUri.scheme in listOf("http", "https") && apiUri.host != null &&
     "CLASSAI_API_URL must be an http(s) base URL without credentials, query or fragment"
 }
 
+val labDiagnostics = (providers.environmentVariable("CLASSAI_LAB_DIAGNOSTICS").orNull
+    ?: localEnv.getProperty("CLASSAI_LAB_DIAGNOSTICS")) == "1"
+
 android {
     namespace = "com.classai.mobile"
     compileSdk = 36
@@ -27,8 +30,9 @@ android {
         applicationId = "com.classai.mobile"
         minSdk = 26
         targetSdk = 36
-        versionCode = 3
-        versionName = "0.3"
+        versionCode = 5
+        versionName = "0.5"
+        buildConfigField("Boolean", "CLASSAI_LAB_DIAGNOSTICS", labDiagnostics.toString())
         buildConfigField("String", "CLASSAI_API_URL", "\"${classaiApiUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
 

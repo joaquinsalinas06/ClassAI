@@ -62,6 +62,13 @@
                 android:textColor="@color/ds_text_secondary"
                 android:textSize="@dimen/ds_text_heading_size" />
         </LinearLayout>
+        <com.classai.mobile.ConfettiView
+            android:id="@+id/confetti"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:importantForAccessibility="no"
+            android:clickable="false"
+            android:focusable="false" />
     </FrameLayout>
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

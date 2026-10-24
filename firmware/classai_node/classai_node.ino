@@ -390,7 +390,9 @@ void maintainWiFi(unsigned long now) {
       Serial.print("WiFi conectado. IP: ");
       Serial.print(WiFi.localIP());
       Serial.printf(" RSSI: %d dBm\n", WiFi.RSSI());
+#if !NFC_ONLY
       configTime(0, 0, "pool.ntp.org", "time.google.com");  // UTC
+#endif
     }
     return;
   }
@@ -608,6 +610,10 @@ void setup() {
   nextWifiAttempt = millis() + WIFI_RETRY_MIN_MS;
   Serial.printf("Conectando a WiFi: %s (sin bloquear)\n", WIFI_SSID);
 
+#if NFC_ONLY
+  // A missing broker must not monopolize the local NFC diagnostic loop.
+  wifiClient.setConnectionTimeout(250);
+#endif
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(1024);
   mqttClient.setSocketTimeout(5);
