@@ -51,6 +51,91 @@ No cambiar GPIO de un montaje ya validado solo para aprovechar todos los
 componentes. Primero escoger qué funciones necesita la demo; no son obligatorios
 ambos PIR, los seis LEDs, ambos altavoces y todas las pantallas a la vez.
 
+## Misiones para dos placas conectadas (24/10/2026)
+
+Plan previo a conectar hardware, solicitado por Joaquín. Revisión de issues y
+comentarios de [#2](https://github.com/joaquinsalinas06/ClassAI/issues/2),
+[#13](https://github.com/joaquinsalinas06/ClassAI/issues/13) y
+[#72](https://github.com/joaquinsalinas06/ClassAI/issues/72), junto con las
+aclaraciones de la [PR #87](https://github.com/joaquinsalinas06/ClassAI/pull/87),
+head `18b2522`. Las issues citadas en la tabla siguen abiertas en esta revisión;
+esta planificación no cambia estados, responsables, fechas ni dependencias GitHub.
+
+Las columnas son bancos temporales, no nuevos IDs de inventario. Tras M-00,
+elegir una placa distinta A-01/B-02 para cada banco y reservar materiales sin
+duplicarlos. La mascota puede esperar para dedicar ambas placas a validaciones
+que desbloquean el producto. E-01 solo se suma después de confirmar su recepción.
+
+| Turno propuesto | Banco NFC, una placa | Banco de entradas, otra placa | Evidencia para avanzar |
+|---|---|---|---|
+| 0 · Identidad y preservación | M-00, identificar primera placa | M-00, identificar segunda placa después; luego pueden quedar ambas conectadas | ID/propietario, modelo, puerto USB asociado, firmware previo y respaldo privado por placa; ninguna carga todavía |
+| 1 · Entradas mínimas | M-10: D-01 + D-02/D-03; validar SPI y tarjetas, issue [#2](https://github.com/joaquinsalinas06/ClassAI/issues/2) | M-01: C-04 + C-05 + C-01, issue [#3](https://github.com/joaquinsalinas06/ClassAI/issues/3) y parte visual de [#10](https://github.com/joaquinsalinas06/ClassAI/issues/10) | NFC: versión, 20 lecturas consecutivas y retorno tras retirar tarjeta. Botón: una transición por pulsación, sin repetir al mantenerlo; LED responde. Solo hay dos credenciales inventariadas: falta una tercera para completar #2 |
+| 2 · Teléfono y ambiente | M-10 con Android: [#72](https://github.com/joaquinsalinas06/ClassAI/issues/72); después matriz de [#76](https://github.com/joaquinsalinas06/ClassAI/issues/76) | M-05 con un PIR, [#7](https://github.com/joaquinsalinas06/ClassAI/issues/7); después M-04 con B-03 y M-06 con B-08, en ensayos separados | HCE: SELECT/GET_CREDENTIAL, 10 taps con credencial estable y tarjeta legible después. PIR: activación/retorno/retardo. DHT11: 20 lecturas válidas o error explícito. Sonido: tres estímulos y rango ADC relativo, tras medir niveles |
+| 3 · Cadena remota | Pasar C-04 al banco NFC tras desmontar M-01: sesión [#18](https://github.com/joaquinsalinas06/ClassAI/issues/18), transporte [#23](https://github.com/joaquinsalinas06/ClassAI/issues/23), asistencia [#34](https://github.com/joaquinsalinas06/ClassAI/issues/34) y [#75](https://github.com/joaquinsalinas06/ClassAI/issues/75) | Tras validar entradas, preparar agregación parcial [#19](https://github.com/joaquinsalinas06/ClassAI/issues/19), telemetría [#24](https://github.com/joaquinsalinas06/ClassAI/issues/24) y fallos [#41](https://github.com/joaquinsalinas06/ClassAI/issues/41) | Comparar serial → MQTT → BD → UI; distinguir las aulas de ensayo. Probar los ocho escenarios de #75, incluida deduplicación por estudiante/sesión. No declarar integración entre placas |
+| 4 · Actuación y regresión | M-02 mascota como ensayo opcional separado, una vez liberada una placa | M-09 solo al resolver fuente/lógica de [#9](https://github.com/joaquinsalinas06/ClassAI/issues/9); luego [#26](https://github.com/joaquinsalinas06/ClassAI/issues/26) y [#35](https://github.com/joaquinsalinas06/ClassAI/issues/35) | ON/OFF, boot seguro y ausencia de resets; posteriormente cortes de red [#40](https://github.com/joaquinsalinas06/ClassAI/issues/40), cierre/historial [#42](https://github.com/joaquinsalinas06/ClassAI/issues/42) y sesión completa [#39](https://github.com/joaquinsalinas06/ClassAI/issues/39) con arquitectura acordada |
+
+### Cableados candidatos por misión, por confirmar físicamente
+
+Usar los mapas de M-01/M-04/M-05/M-06/M-10 y [conexiones.md](conexiones.md):
+PN532 18/19/23/5 en su placa; botón 32 y LED 25 con resistencia en la otra.
+Después, en el banco de entradas, DHT11 DATA 4, PIR OUT 27 o sonido AO 34.
+Cada receta empieza aislada. Registrar alimentación, GND, pin a pin y cables
+reales antes de cargar; estos números son GPIO, no posiciones del conector.
+VCC/pull-up/niveles siguen sujetos a verificar la placa concreta. No unir GPIO
+entre ESP32; estas misiones no necesitan un enlace eléctrico entre placas.
+
+### Preparación que sigue pendiente
+
+- **Firmware por misión:** el nodo base activa MLX90614/NFC e inicializa relé 26
+  y buzzer 17. No es un sketch mínimo para estas pruebas; preparar y revisar cada
+  perfil antes de cargar, incluidas inicializaciones y escrituras de salidas.
+  El prototipo TFT existe por separado; no mezclarlo con el nodo integrado.
+- **Diferencias con issues:** B-03 es DHT11, mientras [#4](https://github.com/joaquinsalinas06/ClassAI/issues/4)
+  y #19 piden DHT22. Registrar el ensayo DHT11 como parcial y acordar alcance
+  antes de completar esas issues. El BH1750 de [#5](https://github.com/joaquinsalinas06/ClassAI/issues/5)
+  y el MLX90614 del firmware no están inventariados; no afirmar lux ni agregador
+  completo. B-08 tiene modelo pendiente y exige validar niveles; D-07 INMP441
+  es otra interfaz, no sustituto directo del sensor analógico.
+- **Dos USB:** después de identificar cada placa por separado, mantener una
+  tabla ID ↔ puerto ↔ serie USB (si existe) ↔ chip/MAC verificado. Un puente USB
+  no identifica por sí solo el SoC ni el propietario. Seleccionar puerto
+  explícito para cada lectura/carga; nunca usar autodetección con dos placas.
+  Revalidar la asociación si se reconecta y no abrir dos monitores sobre un puerto.
+- **Respaldo:** localizar el respaldo existente sin moverlo ni sobrescribirlo;
+  verificar tamaño/hash y asociación con la placa. Si falta uno, obtenerlo antes
+  de reemplazar firmware, solo tras identificar la placa y revisar si el acceso
+  reinicia el montaje. Guardar flash/NVS fuera de Git; no publicar contenido ni
+  asumir que tener un archivo demuestra que se haya probado su restauración.
+- **MQTT y software:** preparar broker/backend/web y enrolamiento Android en la
+  laptop mientras se prueban entradas; es trabajo independiente de las placas.
+  Dos nodos base en una misma aula colisionan: usar aulas de ensayo distintas o
+  un solo emisor MQTT hasta resolver identidad/sesión. El comentario de #13
+  describe QoS objetivo; PubSubClient publica realmente con QoS 0, también eventos.
+- **Potencia y señalización:** #9 espera fuente 5 V, corriente de arranque,
+  jumper y lógica de B-11. #10 solo puede avanzar parcialmente con LED hasta
+  identificar buzzer y controlador/niveles de matriz. M-07 audio queda como
+  ensayo posterior independiente, con sus pines y drivers aún pendientes.
+- **Cierre:** cada resultado aporta evidencia a [#52](https://github.com/joaquinsalinas06/ClassAI/issues/52),
+  [#56](https://github.com/joaquinsalinas06/ClassAI/issues/56),
+  [#57](https://github.com/joaquinsalinas06/ClassAI/issues/57) y
+  [#58](https://github.com/joaquinsalinas06/ClassAI/issues/58).
+  La issue [#36](https://github.com/joaquinsalinas06/ClassAI/issues/36) requiere
+  aplicación única en ESP32: los bancos paralelos no satisfacen ese alcance ni
+  aprueban una arquitectura distribuida.
+
+### Ficha por placa al conectar
+
+Completar una ficha por placa y anexar cada cambio al registro histórico:
+
+| Campo | Dato que debe observarse |
+|---|---|
+| Fecha/hora y responsable | Hora local America/Lima; quién conecta y prueba |
+| Identidad | A-01/B-02, propietario, módulo/serigrafía, chip y puerto verificados; E-01 solo tras recepción |
+| Preservación | Firmware previo conocido/desconocido; referencia privada del respaldo, tamaño/hash y restauración probada/no probada |
+| Montaje real | IDs/cantidades, pin ESP32 → terminal del módulo, alimentación/fuente y mediciones; foto identificable sin secretos |
+| Ensayo | M-xx + issues, sketch/commit/perfil y puerto explícito, criterio esperado y resultado observado |
+| Cierre | Pendiente/PASS/FAIL con evidencia, fallos, qué quedó conectado y destino de cada pieza al desmontar |
+
 ## Trabajo necesario antes de activar varios nodos en una misma aula
 
 La arquitectura actual del producto sigue descrita en [architecture.md](../architecture.md).
@@ -84,6 +169,7 @@ respaldos de flash/NVS: pueden contener credenciales.
 | Registro / fecha real | Estado | Placa / módulos | GPIO / firmware | Evidencia y pendientes |
 |---|---|---|---|---|
 | R-001 · 23/10/2026, fecha del relato | Declaración de Joaquín | D-04 es la pantalla del prototipo y fue retirada; placa física no asociada todavía a A-01 o B-02 | Prototipo TFT: 14/23/5/27/26 | No asumir montaje aún conectado. Confirmar placa/propietario antes de reconstruir. No demuestra MQTT físico |
+| R-002 · 24/10/2026, America/Lima | Inspección del host y planificación; sin ensayo eléctrico | Ningún ESP32 conectado, confirmado por Joaquín; A-01/B-02 sin asociación USB; E-01 pendiente de recepción confirmada | Sin cableado real observable ni carga de firmware; propuesta de misiones de este documento | `ls /dev/cu.*` e `ioreg -r -c IOSerialBSDClient -l`: solo Bluetooth-Incoming-Port, debug-console y RedmiBuds6Play; `system_profiler SPUSBDataType -json`: lista vacía, plano IOUSB sin periféricos. Pendientes identidad de placas, cableado pin a pin, localización/verificación del respaldo existente y ensayos. No se leyó ni escribió flash/NVS |
 | PLANTILLA · por completar | Propuesto / montado / probado / desmontado | ID de placa + IDs y cantidades usados | Tabla de conexiones real, alimentación y ruta/commit/perfil del firmware | Responsable, prueba y resultado, referencia de foto/log, limitaciones; al desmontar, destino y piezas devueltas |
 
 En cada nueva prueba completar: receta, fecha, quién monta, placa exacta,
