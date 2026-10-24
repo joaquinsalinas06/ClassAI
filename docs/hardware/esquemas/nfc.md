@@ -1,8 +1,10 @@
 # M-10 · NFC · tarjetas y llavero
 
-Primer banco tras terminar la cabecera PN532: detectar versión y leer tarjeta/llavero antes de Android HCE.
+Montaje físico disponible: detectar versión y leer tarjeta/llavero antes de Android HCE, tras revisar soldadura.
 
 **Propuesta, sin ensayo físico. Soldadura en curso.**
+
+[Abrir guía física con 12 cables y diagnóstico](../banco-nfc.md).
 
 ![Esquema de referencia](nfc.svg)
 

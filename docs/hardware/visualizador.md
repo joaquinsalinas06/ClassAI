@@ -169,3 +169,15 @@ no importar la colección como montaje. Los SVG/Markdown del repositorio se
 regeneran con `node web/scripts/export-hardware-missions.mjs` y comparten el
 catálogo `web/src/hardware/missions.ts` con la página. La exportación no aprueba
 ensayos ni dimensiona los drivers que figuran pendientes.
+
+## Montaje físico NFC
+
+`/montajes?guia=nfc` abre la receta física NFC en memoria sin sobrescribir el
+guardado; `?banco=nfc` conserva su selección lógica independiente. El botón del
+banco abre la distribución y permite deshacer para recuperar cambios en memoria.
+La receta en `web/src/hardware/nfc.ts` usa formato Assembly v1 existente, sin
+migrar guardados. `pn532SpiFrontCCW` fija orden frontal girado del manual, no
+orden funcional. El dibujo conserva 12 cables numerados y seis redes, pasos,
+resaltado e historial. Exportar dibujo SVG siempre incluye todos los cables,
+sin resaltado, aunque la vista esté en un paso parcial. SVG/JSON estáticos:
+`node web/scripts/export-nfc-assembly.mjs` desde raíz. Véase [guía NFC](banco-nfc.md).

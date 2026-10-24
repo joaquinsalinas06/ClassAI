@@ -31,7 +31,7 @@ export const missions: Mission[] = [
   },
   {
     id: "nfc", code: "M-10", title: "NFC · tarjetas y llavero", group: "NFC / sesión", state: "Soldadura en curso",
-    summary: "Primer banco tras terminar la cabecera PN532: detectar versión y leer tarjeta/llavero antes de Android HCE.",
+    summary: "Montaje físico disponible: detectar versión y leer tarjeta/llavero antes de Android HCE, tras revisar soldadura.",
     modules: [{ name: "ESP32", inventory: "A-01 o B-02", shape: "esp32" }, { name: "PN532 V3", inventory: "D-01", shape: "nfc" }],
     materials: ["D-01: PN532 V3 ×1", "D-02: tarjeta ×1", "D-03: llavero ×1", "D-11: cabecera, soldadura en curso; contar", "B-01 o A-04: protoboard"], jumpers: "Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes por protoboard, 0 H–H",
     links: [link("ESP32 · 3V3", "PN532 · VCC", "power", "A2 / B2 · 3,3 V"), link("ESP32 · GND", "PN532 · GND", "ground", "A4 / B4"), link("ESP32 · GPIO18", "PN532 · SCK", "signal", "A6 / B6"), link("PN532 · MISO", "ESP32 · GPIO19", "signal", "A8 / B8"), link("ESP32 · GPIO23", "PN532 · MOSI", "signal", "A10 / B10"), link("ESP32 · GPIO5", "PN532 · SS", "signal", "A12 / B12")],

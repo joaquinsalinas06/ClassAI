@@ -6,7 +6,7 @@ function download(name: string, data: string, type: string) {
   const url = URL.createObjectURL(new Blob([data], { type }));
   const a = document.createElement("a"); a.href = url; a.download = name; a.click(); URL.revokeObjectURL(url);
 }
-export function MissionLibrary() {
+export function MissionLibrary({ onOpenNfc, onOpenAmbient }: { onOpenNfc: () => void; onOpenAmbient: () => void }) {
   const [id, setId] = useState(() => {
     const q = new URLSearchParams(window.location.search);
     return missions.some(m => m.id === q.get("banco")) ? q.get("banco")! : q.get("guia") === "ambiente" ? "ambiente" : "nfc";
@@ -36,7 +36,8 @@ export function MissionLibrary() {
         <div ref={diagram} className="overflow-x-auto rounded-lg border border-line bg-sunken"><MissionDiagram mission={mission} selected={selected} onSelect={setSelected}/></div>
         <div className="mt-4 grid gap-4 lg:grid-cols-2"><section><h4 className="text-label">Materiales de este banco</h4><ul className="mt-2 list-disc space-y-1 pl-5 text-small text-fg-2">{mission.materials.map(m=><li key={m}>{m}</li>)}</ul><p className="mt-2 text-small"><strong>Cables:</strong> {mission.jumpers}</p></section><section><h4 className="text-label">Antes de conectar</h4><ol className="mt-2 list-decimal space-y-1 pl-5 text-small text-fg-2">{mission.checks.map(c=><li key={c}>{c}</li>)}</ol></section></div>
         <div className="mt-4 space-y-2 border-t border-line pt-3 text-small text-fg-2"><p><strong>Resultado esperado:</strong> {mission.test}</p><p><strong>Firmware:</strong> {mission.firmware}</p><p className="text-regular-text"><strong>Separar de otros bancos:</strong> {mission.conflicts}</p></div>
-        {mission.id==="ambiente"&&<div className="mt-3"><Button size="sm" onClick={()=>document.getElementById("ambiente-fisico")?.scrollIntoView({behavior:"instant"})}>Ver distribución física de ambiente</Button></div>}
+        {mission.id==="nfc"&&<div className="mt-3"><Button size="sm" onClick={onOpenNfc}>Abrir montaje físico NFC</Button><p className="mt-1 text-caption text-muted">ESP32, protoboard y PN532 con 12 cables numerados. Abre en memoria; conserva lo guardado hasta guardar otra revisión.</p></div>}
+        {mission.id==="ambiente"&&<div className="mt-3"><Button size="sm" onClick={onOpenAmbient}>Ver distribución física de ambiente</Button></div>}
         <div className="mt-3 flex flex-wrap gap-3 text-caption">{mission.sources.map(s=><a key={s.url} className="text-link underline" href={s.url}>{s.title}</a>)}</div>
         <p role="status" className="mt-2 text-caption text-muted">{exportMessage}</p>
       </article>

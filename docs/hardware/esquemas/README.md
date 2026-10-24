@@ -1,6 +1,6 @@
 # Esquemas por banco
 
-Referencias generadas desde web/src/hardware/missions.ts. No prueban un montaje real ni autorizan energizar conexiones pendientes. Conservan IDs de inventario, fuentes, GPIO, condiciones y conflictos. Ver [orden y reparto de dos placas](../siguientes-bancos.md). La [guía física de ambiente](../banco-ambiente.md) conserva su diagrama con agujeros.
+Referencias generadas desde web/src/hardware/missions.ts. No prueban un montaje real ni autorizan energizar conexiones pendientes. Conservan IDs de inventario, fuentes, GPIO, condiciones y conflictos. Ver [orden y reparto de dos placas](../siguientes-bancos.md). Las guías físicas de [ambiente](../banco-ambiente.md) y [NFC](../banco-nfc.md) incluyen diagramas con agujeros.
 
 | Banco | Grupo | Estado | Archivos |
 |---|---|---|---|

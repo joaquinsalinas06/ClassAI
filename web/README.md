@@ -75,3 +75,7 @@ ambiente. La colección no es el JSON importable del editor. Ver
 [esquemas y guías](../docs/hardware/esquemas/README.md) y
 [orden práctico](../docs/hardware/siguientes-bancos.md). Regenerar los SVG y
 guías desde raíz con `node web/scripts/export-hardware-missions.mjs`.
+
+Guía física NFC: `/montajes?guia=nfc`, ESP32 30 pines + protoboard + PN532 V3,
+12 M–H numerados y exportación SVG/JSON del editor. Ver [montaje y pruebas](../docs/hardware/banco-nfc.md).
+Regenerar sus archivos estáticos: `node scripts/export-nfc-assembly.mjs` desde web.

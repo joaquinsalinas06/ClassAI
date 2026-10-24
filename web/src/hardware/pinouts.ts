@@ -3,6 +3,9 @@ export const devkit30 = {
   left: ["EN", "GPIO36", "GPIO39", "GPIO34", "GPIO35", "GPIO32", "GPIO33", "GPIO25", "GPIO26", "GPIO27", "GPIO14", "GPIO12", "GPIO13", "GND_L", "VIN"],
   right: ["GPIO23", "GPIO22", "GPIO1", "GPIO3", "GPIO21", "GPIO19", "GPIO18", "GPIO5", "GPIO17", "GPIO16", "GPIO4", "GPIO2", "GPIO15", "GND", "3V3"],
 };
+// PN532 V3 manual p. 2, component face rotated 90° counterclockwise: SPI edge at left.
+export const pn532SpiFrontCCW = ["RSTO", "IRQ", "GND", "VCC", "SS", "MOSI", "MISO", "SCK"];
+
 // Official DevKitC V4 header labels, J2 / J3, pins 1–19. Not an identification of E-01.
 export const devkit38 = {
   left: ["3V3", "EN", "VP", "VN", "IO34", "IO35", "IO32", "IO33", "IO25", "IO26", "IO27", "IO14", "IO12", "GND", "IO13", "D2", "D3", "CMD", "5V"],

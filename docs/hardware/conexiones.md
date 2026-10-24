@@ -143,3 +143,10 @@ No unir dos bocinas de 4 Ω en paralelo sobre la única salida mono. GPIO26
 coincide con TFT RST y relé; GPIO25 con LED y WS. Ver [guías por banco](esquemas/README.md)
 y sus condiciones. La cabecera/adaptador de NFC y los adaptadores de bocinas
 están en proceso de soldadura según Joaquín; no se ha confirmado finalización.
+
+## Guía física NFC
+
+[Montaje PN532 SPI](banco-nfc.md): 3V3/GND y GPIO18/19/23/5,
+12 M–H con cabecera macho confirmada, seis tiras de protoboard independientes.
+DIP 1 OFF / 2 ON con alimentación desconectada; IRQ/RSTO y rieles libres.
+Coincide con `firmware/nfc_bench`; no cambia el mapa del producto integrado.

@@ -7,8 +7,8 @@ export const wireColors: Record<WireColor, { label: string; hex: string }> = {
   red: { label: "Rojo · 3,3 V", hex: "#db3345" },
   black: { label: "Negro · GND", hex: "#252d38" },
   orange: { label: "Naranja · 5 V nominal", hex: "#dc7519" },
-  green: { label: "Verde · DATA DHT11", hex: "#15855e" },
-  yellow: { label: "Amarillo · OUT PIR", hex: "#b78a08" },
+  green: { label: "Verde", hex: "#15855e" },
+  yellow: { label: "Amarillo", hex: "#b78a08" },
   blue: { label: "Azul", hex: "#2867c7" },
   purple: { label: "Violeta", hex: "#8753b7" },
 };
@@ -18,7 +18,7 @@ export function terminalLabel(end: string) {
     return m ? `Riel ${m[1]![0] === "L" ? "izquierdo" : "derecho"} ${m[1]![1] === "P" ? "+" : "−"} · ${m[2]}` : `Agujero ${h}`;
   }
   const [part, pin] = end.split(":");
-  const name = part === "esp1" ? "ESP32" : part === "dht1" ? "DHT11" : part === "pir1" ? "PIR" : part;
+  const name = part === "esp1" ? "ESP32" : part === "dht1" ? "DHT11" : part === "pir1" ? "PIR" : part === "nfc1" ? "PN532" : part;
   const label = part === "dht1" ? ({ GND: "−", DATA: "OUT", VCC: "+" }[pin!] ?? pin) : pin;
   return `${name} · ${label?.replace("GND_L", "GND").replace("GPIO", "GPIO ")}`;
 }
@@ -35,7 +35,8 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
     <rect x={x - 5} y={y - 5} width="10" height="10" rx="1" fill="#d5b865" stroke="#70582b" />
     {text && <text x={labelX} y={labelY} textAnchor="middle" fontSize="12" fontWeight="600" fill="#26344a">{text}</text>}<title>{terminalLabel(end)}</title>
   </g>;
-  return <svg data-assembly-board width={width * zoom} height={height * zoom} viewBox={`0 0 ${width} ${height}`} className="block max-w-none" aria-label="Protoboard con rieles, ESP32 de 30 pines, DHT11 y PIR; guía de referencia">
+  const nfc = assembly.parts.some(p => p.definition === "pn532");
+  return <svg xmlns="http://www.w3.org/2000/svg" data-assembly-board width={width * zoom} height={height * zoom} viewBox={`0 0 ${width} ${height}`} className="block max-w-none" aria-label={nfc ? "Montaje físico NFC: ESP32, protoboard y PN532 V3, 12 cables M–H" : "Protoboard con rieles, ESP32 de 30 pines, DHT11 y PIR; guía de referencia"}>
     <defs>
       <linearGradient id="metal" x2="1" y2="1"><stop stopColor="#f2f4f5"/><stop offset=".5" stopColor="#b0bbc6"/><stop offset="1" stopColor="#e2e6e9"/></linearGradient>
       <radialGradient id="lens" cx="35%" cy="25%"><stop stopColor="#fff"/><stop offset="1" stopColor="#d6e0e7"/></radialGradient>
@@ -59,9 +60,9 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x} y={Math.max(160 + assembly.board.rows * 18, assembly.layout === "breadboard" ? 790 : 0) + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{source?.pin.kind === "ground" ? "GND" : voltage === undefined ? "Libre" : `${String(voltage).replace(".", ",")} V${voltage === 5 ? "*" : ""}`}</text></g>;
     })}
     {[..."ABCDEFGHIJ"].map(c => <text key={c} x={point(`${c}1`)[0]} y="135" textAnchor="middle" fontSize="11" fill="#667081">{c}</text>)}
-    {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x={480 + offset} y={ys(i + 1) + 4} textAnchor="end" fontSize="10" fill="#758194">{i + 1}</text><text x={733 + offset} y={ys(i + 1) + 4} fontSize="10" fill="#758194">{i + 1}</text></g>)}
+    {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x={480 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} textAnchor="end" fontSize="10" fill="#758194">{i + 1}</text><text x={733 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} fontSize="10" fill="#758194">{i + 1}</text></g>)}
     {contacts(assembly.board).map(h => { const [x, y] = point(h); return <g key={h} role="button" tabIndex={0} aria-label={`Contacto ${h}`} onKeyDown={e => key(e, `bb:${h}`)} onClick={() => onSelect(`bb:${h}`)} style={{ cursor: "pointer" }}>
-      {active(`bb:${h}`) && <circle cx={x} cy={y} r="8" fill="#3b9edc" opacity=".3"/>}<rect x={x - 3.4} y={y - 3.4} width="6.8" height="6.8" rx="1.8" fill={active(`bb:${h}`) ? "#237db3" : "#737f8d"}/><title>{h} · {contactStrip(h, assembly.board)}</title></g>; })}
+      {active(`bb:${h}`) && <circle cx={x} cy={y} r="8" fill="#3b9edc" opacity=".3"/>}<rect x={x - 3.4} y={y - 3.4} width="6.8" height="6.8" rx="1.8" fill={active(`bb:${h}`) ? "#237db3" : "#737f8d"}/><title>{`${h} · ${contactStrip(h, assembly.board)}`}</title></g>; })}
     {[...origin].map(([id, { x, y, type }]) => {
       const p = assembly.parts.find(p => p.id === id)!;
       if (type === "esp32") return <g key={id}>
@@ -81,6 +82,35 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <rect x={x + 81} y={y + 439} width="68" height="40" rx="4" fill="url(#metal)" stroke="#6c7581" strokeWidth="2"/><rect x={x + 91} y={y + 467} width="48" height="9" rx="3" fill="#34414c"/>
         {definition(assembly,p).pins.map(pin => { const pt = ends.get(`${id}:${pin.id}`)!; const left = pt[0] < x; return <g key={pin.id}>{pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={left ? x+31 : x+199} y={pt[1]+4} textAnchor={left?"start":"end"} fill={pin.id.startsWith("GND")?"#e0e4e1":pin.id==="3V3"||pin.id==="VIN"?"#f0ba77":"#d4ded9"} fontSize="11">{labelPin(pin.id)}</text></g>; })}
         <path d={`M${x+115} ${y+480} v60 q0 25 35 25 h85`} stroke="#27313e" strokeWidth="12" fill="none"/><text x={x+115} y={y+590} textAnchor="middle" fill="#344255" fontSize="13">USB de datos → computadora</text>
+      </g>;
+      if (type === "pn532") return <g key={id} data-pn532-physical>
+        <text x={x} y={y-65} fill="#28364b" fontSize="18" fontWeight="600">PN532 V3 · D-01</text>
+        <text x={x} y={y-43} fill="#526276" fontSize="12">Cara componentes · giro 90° antihoraria</text>
+        <text x={x} y={y-23} fill="#526276" fontSize="12">Conector SPI a la izquierda · leer etiquetas</text>
+        <rect x={x} y={y} width="350" height="350" rx="22" fill="#b9362b" stroke="#79251e" strokeWidth="3"/>
+        {[12,23,34].map(inset=><rect key={inset} x={x+inset} y={y+inset} width={350-inset*2} height={350-inset*2} rx="22" fill="none" stroke="#f5c18d" strokeWidth="3"/>)}
+        <circle cx={x+50} cy={y+300} r="13" fill="#edf2f5" stroke="#d2b46b" strokeWidth="5"/>
+        <circle cx={x+300} cy={y+50} r="13" fill="#edf2f5" stroke="#d2b46b" strokeWidth="5"/>
+        <rect x={x+168} y={y+100} width="80" height="80" fill="#20272c" stroke="#ddc399" strokeWidth="5"/>
+        <text x={x+208} y={y+145} textAnchor="middle" fill="#e6e2d4" fontSize="13">PN532</text>
+        <text x={x+190} y={y+215} textAnchor="middle" fill="#fff3de" fontSize="13">NFC MODULE V3</text>
+        <text x={x+190} y={y+237} textAnchor="middle" fill="#fff3de" fontSize="12">Antena perimetral: dejar libre</text>
+        <g aria-label="Selector SPI: canal 1 OFF, canal 2 ON">
+          <rect x={x+250} y={y+250} width="55" height="60" rx="3" fill="#242b2d"/>
+          <text x={x+277} y={y+246} textAnchor="middle" fill="#fff3de" fontSize="10">↑ ON</text>
+          {[0,1].map(i=><g key={i}><rect x={x+258+i*23} y={y+257} width="13" height="34" fill="#121b20"/><rect x={x+258+i*23} y={y+(i===0?278:257)} width="13" height="13" fill="#efd64c"/><text x={x+264+i*23} y={y+305} textAnchor="middle" fill="#fff3de" fontSize="11">{i+1}</text></g>)}
+        </g>
+        <text x={x+240} y={y+330} fill="#fff3de" fontSize="11">1 OFF · 2 ON</text>
+        {["GND", "VCC", "SDA", "SCL"].map((label,i)=><g key={label}><circle cx={x+120+i*28} cy={y+303} r="4" fill="#dfc38a"/><text x={x+120+i*28} y={y+287} textAnchor="middle" fontSize="9" fill="#fff3de">{label}</text></g>)}
+        <text x={x+162} y={y+325} textAnchor="middle" fill="#fff3de" fontSize="10">I²C / HSU libres</text>
+        {definition(assembly,p).pins.map(pin=>{const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}>
+          <path d={`M${x-8} ${pt[1]} H${pt[0]}`} stroke="#c7aa64" strokeWidth="4"/>
+          {pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={pt[0]+14} y={pt[1]+4} fontSize="12" fill="#fff3de">{pin.id}</text>
+          {["IRQ","RSTO"].includes(pin.id)&&<text x={pt[0]+59} y={pt[1]+4} fontSize="10" fill="#fff3de">libre</text>}
+        </g>;})}
+        <text x={x} y={y+385} fill="#344255" fontSize="13">Apagado: ajustar DIP antes de conectar USB.</text>
+        <text x={x} y={y+408} fill="#526276" fontSize="12">3V3 → VCC · el selector no alimenta la placa.</text>
+        <text x={x} y={y+431} fill="#526276" fontSize="12">Tarjeta / llavero sobre la antena; sin metal debajo.</text>
       </g>;
       if (type !== "dht11" && type !== "pir") return <g key={id}>
         <rect x={x-8} y={y+6} width="185" height={50+definition(assembly,p).pins.length*24} rx="6" fill="#dce6ef" stroke="#9aafc0"/>
@@ -114,7 +144,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       const c = wireColors[w.color ?? "blue"].hex;
       const across = (a[0] < 400 && b[0] > 850) || (b[0] < 400 && a[0] > 850);
       const d = w.bends !== undefined ? `M${a} ${w.bends.map(p=>`L${p}`).join(" ")} L${b}` : across ? `M${a} H${330 + i * 3} V${760 + (i%3)*16} H875 V${b[1]} H${b[0]}` : a[0] > 850 || b[0] > 850 ? `M${a} H${850 + (i%4)*12} V${b[1]} H${b[0]}` : `M${a} H${350 + (i%4)*12} V${b[1]} H${b[0]}`;
-      return <g key={w.id} data-wire={w.id}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?10:8} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeWidth={active(w.from)?5.5:4} strokeLinecap="round" strokeLinejoin="round" filter="url(#wire-shadow)" fill="none"><title>{terminalLabel(w.from)} → {terminalLabel(w.to)}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/></g>;
+      return <g key={w.id} data-wire={w.id} onClick={() => onSelect(w.from)} style={{cursor:"pointer"}}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?10:8} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeWidth={active(w.from)?5.5:4} strokeLinecap="round" strokeLinejoin="round" filter="url(#wire-shadow)" fill="none"><title>{`${terminalLabel(w.from)} → ${terminalLabel(w.to)}`}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/>{nfc && <g data-wire-number={i+1}><rect x={(w.bends?.[0]?.[0]??a[0])+5} y={a[1]-17} width="25" height="17" rx="5" fill="#fffefa" stroke={c}/><text x={(w.bends?.[0]?.[0]??a[0])+17.5} y={a[1]-4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#26344a">{i+1}</text></g>}</g>;
     })}
 
     {[...origin].filter(([,o]) => o.type === "dht11" || o.type === "pir").map(([id]) => {

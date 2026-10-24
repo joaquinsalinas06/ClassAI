@@ -110,6 +110,59 @@ try {
     await page.screenshot({ path: `screenshots/hardware-${theme}-mobile.png`, fullPage: true });
     await page.setViewportSize({ width: 1440, height: 1000 });
   }
+  // NFC physical guide must preserve both the saved draft and in-memory edits.
+  await page.goto(`${base}/montajes`);
+  const storedBeforeNfc = await page.evaluate(() => localStorage.getItem("classai.hardware.v1"));
+  await page.getByLabel("Nombre del montaje").fill("Cambio sin guardar antes de NFC");
+  await page.locator('[data-bank-id="nfc"]').click();
+  await page.getByRole("button", { name: "Abrir montaje físico NFC", exact: true }).click();
+  await page.locator('[data-pn532-physical]').waitFor();
+  assert.equal(await page.locator('[data-assembly-board] [data-wire]').count(), 12);
+  assert.equal(await page.locator('[data-wire-number]').count(), 12);
+  assert.equal(await page.getByRole("table", {name:"Seis redes NFC"}).getByRole("row").count(), 7);
+  assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), storedBeforeNfc);
+  await page.getByRole("button",{name:"Deshacer",exact:true}).click();
+  assert.equal(await page.getByLabel("Nombre del montaje").inputValue(), "Cambio sin guardar antes de NFC");
+  await page.goto(`${base}/montajes?guia=nfc`);
+  await page.locator('[data-pn532-physical]').waitFor();
+  assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), storedBeforeNfc);
+  assert.equal(await page.getByRole("heading",{name:"Primer montaje · DHT11 + PIR",exact:true}).count(),0);
+  for(const color of ["red","black","blue","purple","green","yellow"]) assert.equal(await page.locator(`[data-assembly-board] [data-wire-color="${color}"]`).count(),2);
+  await page.getByRole("button",{name:"Ver MOSI",exact:true}).click();
+  await page.getByText("Contacto seleccionado: PN532 · MOSI. Se resalta su red completa.",{exact:true}).waitFor();
+  await page.getByRole("button",{name:"Recorrer armado",exact:true}).click();
+  await page.getByRole("button",{name:"Siguiente",exact:true}).click();
+  assert.equal(await page.locator('[data-assembly-board] [data-wire]').count(),1);
+  const physicalSvgEvent=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Exportar dibujo SVG",exact:true}).click();
+  const physicalSvg=await readFile(await (await physicalSvgEvent).path(),"utf8");
+  assert.equal((physicalSvg.match(/data-wire="/g)??[]).length,12);
+  assert.ok(physicalSvg.includes("data-pn532-physical"));
+  assert.ok(physicalSvg.includes('xmlns="http://www.w3.org/2000/svg"'));
+  assert.ok(!physicalSvg.includes('opacity=".35"'));
+  const nfcJsonEvent=page.waitForEvent("download");
+  await page.getByRole("button",{name:"Exportar JSON",exact:true}).click();
+  const nfcJson=JSON.parse(await readFile(await (await nfcJsonEvent).path(),"utf8"));
+  assert.equal(nfcJson.version,1);assert.equal(nfcJson.wires.length,12);
+  assert.ok(nfcJson.parts.some(p=>p.definition==="pn532"));
+  await page.getByLabel("Importar montaje JSON").setInputFiles({name:"nfc-roundtrip.json",mimeType:"application/json",buffer:Buffer.from(JSON.stringify(nfcJson))});
+  await page.getByRole("button",{name:"Ver todo",exact:true}).click();
+  await page.getByLabel("Escala del montaje").selectOption("0.8");
+  await page.locator('[data-assembly-board]').screenshot({path:"screenshots/nfc-physical.png"});
+  for(const theme of ["light","dark"]) {
+    await page.evaluate(t=>localStorage.setItem("classai.theme",t),theme);
+    await page.reload();await page.locator('[data-pn532-physical]').waitFor();
+    await page.setViewportSize({width:390,height:844});
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>window.innerWidth),false);
+    await page.screenshot({path:`screenshots/nfc-${theme}-mobile.png`,fullPage:true});
+    await page.setViewportSize({width:1440,height:1000});
+  }
+  // Switching back uses the same reversible editor, including preserved history.
+  await page.locator('[data-bank-id="ambiente"]').click();
+  await page.getByRole("button",{name:"Ver distribución física de ambiente",exact:true}).click();
+  assert.equal(await page.locator('[data-pn532-physical]').count(),0);
+  assert.equal(await page.locator('[data-assembly-board] [data-wire]').count(),12);
+  assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), storedBeforeNfc);
   assert.deepEqual(errors, []);
-  console.log("PASS: 12 banks, conditional links, SVG/collection export without draft overwrite, steps, resistor short/undo, save/reload, import rejection/roundtrip, export, snapshot recovery, light/dark, mobile, no runtime errors.");
+  console.log("PASS: physical NFC deep link, reversible presets, 12 M–H, full SVG/JSON, six nets, NFC mobile/light/dark; 12 banks, conditional links, SVG/collection export without draft overwrite, steps, resistor short/undo, save/reload, import rejection/roundtrip, export, snapshot recovery, light/dark, mobile, no runtime errors.");
 } finally { await browser.close(); }

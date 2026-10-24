@@ -2,7 +2,7 @@
 
 SPI SCK18 / MISO19 / MOSI23 / SS5, VCC 3,3 V y GND según PN532 V3 de referencia.
 DIP 1 OFF / 2 ON sin alimentación; IRQ/RSTO no usados. Sin red, pantalla, sensores
-ni actuadores. [Esquema y revisión de cabecera](../../docs/hardware/esquemas/nfc.md).
+ni actuadores. [Montaje físico, cabecera y diagnóstico](../../docs/hardware/banco-nfc.md).
 No conectar la TFT con esta receta. Una soldadura en curso no es soldadura probada.
 
 Compilar desde raíz, sin cargar:
@@ -18,7 +18,7 @@ versión/configuración, tarjeta mantenida, retirada y reentrada ejercitados sob
 el sketch real con stubs; no prueban radio, tarjeta real ni soldaduras.
 
 Antes de cargar: identidad/puerto, respaldo privado preservado y cableado anotado.
-Ensayo físico pendiente: versión PN532 y 20 detecciones retirando entre lecturas.
+Ensayo físico pendiente: versión PN532, tarjeta mantenida sin repetición y 20 detecciones retirando entre lecturas (10 tarjeta + 10 llavero).
 Serial 115200. Registra longitud de UID y contador, **nunca su valor**. Una tarjeta
 mantenida no vuelve a contar hasta dos consultas sin target. No prueba Android
 HCE, APDU, deduplicación por estudiante/sesión ni cadena MQTT/BD/web. No se ha
