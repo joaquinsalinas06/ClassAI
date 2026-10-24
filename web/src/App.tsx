@@ -24,6 +24,7 @@ export const router = createBrowserRouter([
       { path: "sesiones/:id", lazy: () => import("./pages/SessionDetail").then((m) => ({ Component: m.SessionDetail })) },
       { path: "asistente", lazy: () => import("./pages/Assistant").then((m) => ({ Component: m.Assistant })) },
       { path: "estudiantes", lazy: () => import("./pages/Students").then((m) => ({ Component: m.Students })) },
+      { path: "montajes", lazy: () => import("./pages/Hardware").then((m) => ({ Component: m.Hardware })) },
       { path: "design", lazy: () => import("./pages/DesignSystem").then((m) => ({ Component: m.DesignSystem })) },
       { path: "*", element: <NotFound /> },
     ],
