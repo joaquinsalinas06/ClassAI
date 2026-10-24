@@ -1,14 +1,15 @@
 # Banco M-04/05: ESP32 de 30 pines + DHT11 + PIR
 
-Diseño de referencia de 24/10/2026. Joaquín reporta **ESP32 de 30 pines** y
-**DHT11 con etiquetas − / OUT / +**. B-02 (universidad) cuenta ahora con un orden de terminales reportado, compatible
-con DevKit V1 de 30 pines. La primera placa descrita parece del mismo tipo, pero
-su asociación a A-01 y las lecturas D4/D14, D5/B5 y VN siguen pendientes. No se ha
-verificado ninguna de ellas por fotografía, chip ni puerto USB. La orientación
-de lectura del DHT11 sigue sin comprobarse. El PIR reportado
-tiene tres terminales y un selector de tres pines con puente amarillo: coincide
-con rasgos del tipo HC-SR501 de B-04/D-06, pero no lo identifica inequívocamente.
-No elegir propietario ni ID de PIR por semejanza.
+Diseño de referencia revisado el 24/10/2026. ESP32 **DEVKITV1 de 30 pines**
+observado en fotos 7/8, aún sin asociarlo a A-01/B-02 ni a un puerto USB. D4, D5,
+VP y VN son legibles. La otra placa conserva su pinout reportado. DHT11 B-03 con
+**− / OUT / +** reportado previamente. El PIR de fotos 1–6 coincide visualmente
+con el HC-SR501 declarado; sus tres etiquetas y el chip no son legibles, por lo
+que el orden dibujado sigue siendo una referencia, no una lectura de esas fotos.
+
+**Receta preferida: sin H–H**, cuya ausencia confirma Joaquín. Solo usa M–H y
+un M–M, con uniones en la protoboard; no requiere soldar ni forzar el PIR dentro
+de ella. No hay ensayo eléctrico ni medición de VIN.
 
 ## Objetivo y evidencia disponible
 
@@ -28,26 +29,20 @@ confirmarse en reverso. No intercambiarlo por el selector H/L.
 
 ## Alimentación prevista
 
-- Una sola entrada de alimentación para el ESP32: **USB de datos** desde la laptop.
-- Riel izquierdo **+ = 3,3 V** desde 3V3; riel izquierdo − = GND.
-- En la guía compacta el PIR recibe alimentación nominal de **5 V desde VIN
-  directamente, solo tras verificar la ruta USB y requisitos del módulo real**.
-  Los rieles derechos quedan libres. No conectar otra fuente a VIN usando USB.
-- La masa del PIR y del DHT11 es común mediante los dos GND del ESP32.
-  No hace falta puente entre rieles negativos. Confirmar continuidad de rieles;
-  si están cortados, colocar puentes de unión apropiados y registrarlos. La opción
-  de riel partido del visualizador permite ver que un extremo queda sin fuente.
-- **DHT11 + → 3,3 V; − → GND; OUT → GPIO4.** La referencia de sensor admite 3,3 V,
-  pero el módulo B-03 concreto necesita prueba. No subirlo a 5 V por ensayo/error:
-  un pull-up del breakout a 5 V podría aplicar 5 V al ESP32.
-- **R1 = 10 kΩ** de C-02, bandas café-negro-naranja-dorado si se confirma su valor,
-  entre OUT y 3,3 V. Si el módulo ya tiene pull-up, verificar su valor/tensión y
-  revisar el paralelo; este diseño no exige comprar otro resistor.
-- **PIR HC-SR501 de referencia: VCC → 5 V; GND → GND; OUT → GPIO27.** La referencia
-  Joy-IT indica salida lógica de 3 V. Medir/confirmar el HIGH del módulo real y
-  que no exceda 3,3 V antes de conectar OUT al ESP32. Los potenciómetros ajustan
-  sensibilidad/tiempo y el puente selecciona comportamiento de disparo; nunca
-  moverlo energizado.
+- Solo USB como entrada al ESP32; sin fuente externa simultánea a VIN/3V3.
+- Riel izquierdo +: **3,3 V desde 3V3** por LP29. Negativo izquierdo libre.
+- Riel derecho −: **GND** desde GND derecho por RN28. Positivo derecho libre.
+- DHT11 + → LP15 (3,3 V), − → RN5, OUT → A8; GPIO4 → B8. R1 10 kΩ entre
+  C8 y G8, alimentada por LP8–J8. Confirmar pull-up incorporado y funcionamiento
+  de B-03 a 3,3 V; no subir el módulo a 5 V por ensayo/error.
+- VIN → F20, H20 → VCC identificado del PIR: **F20–J20 son un solo nodo de
+  alimentación nominal 5 V pendiente de confirmar**. No unirlo con 3,3 V.
+- GPIO27 → G24, J24 → OUT identificado del PIR: **F24–J24 son otro nodo**,
+  exclusivo de datos. No confundir fila 20 con 24 ni columna izquierda/derecha.
+- PIR GND → RN30, compartido con DHT11 mediante el riel derecho negativo.
+- Referencia HC-SR501: alimentación 5 V, salida lógica alrededor de 3 V según
+  Joy-IT. Mantener pendientes ruta USB–VIN y nivel/orden reales. El puente
+  amarillo selecciona disparo; no alimenta el sensor. Ajustar sin alimentación.
 
 Este presupuesto solo contempla sensores. No añadir ventilador, bobinas, audio
 u otras cargas al USB/regulador a partir de este diseño. No es una medición de
@@ -64,53 +59,47 @@ Colocar R1 entre **C8 y G8**, cruzando la ranura. Así la pata 1 queda en el nod
 A8/B8/C8 y la pata 2 en G8/J8. El cuerpo y longitud de patas deben poder alcanzar
 esos contactos; el dibujo no es una plantilla métrica.
 
-| Paso | Desde | Hasta | Color y finalidad |
+| Paso | Desde | Hasta | Tipo / función |
 |---|---|---|---|
-| 1 | ESP32 GND derecho | LN22 | Negro; masa del DHT11 mediante riel izquierdo − |
-| 2 | ESP32 3V3 | LP23 | Rojo; riel izquierdo + de 3,3 V |
-| 3 | LN5 | DHT11 − | Negro |
-| 4 | LP15 | DHT11 + | Rojo; alimentación directa |
-| 5 | DHT11 OUT | A8 | Verde; datos |
-| 6 | ESP32 D4 / GPIO4 | B8 | Verde; mismo nodo que A8 y R1 en C8 |
-| 7 | LP8 | J8 | Rojo; pull-up R1 C8–G8 hacia 3,3 V |
-| 8 | ESP32 GND izquierdo | PIR GND confirmado | Negro; masa común por el ESP32 |
-| 9 | ESP32 VIN, tras comprobar alimentación | PIR VCC confirmado | Naranja; sin riel de 5 V |
-| 10 | PIR OUT validado a lógica ≤3,3 V | ESP32 D27 / GPIO27 | Amarillo |
+| 1 | ESP32 GND derecho | RN28 | M–H negro; masa de ambos sensores |
+| 2 | ESP32 3V3 | LP29 | M–H rojo; riel izquierdo + |
+| 3 | RN5 | DHT11 − | M–H negro |
+| 4 | LP15 | DHT11 + | M–H rojo |
+| 5 | DHT11 OUT | A8 | M–H verde |
+| 6 | ESP32 D4 / GPIO4 | B8 | M–H verde; A8/B8/C8 comparten tira |
+| 7 | LP8 | J8 | M–M rojo; pull-up R1 C8–G8 |
+| 8 | RN30 | PIR GND identificado | M–H negro |
+| 9 | ESP32 VIN, alimentación confirmada | F20 | M–H naranja |
+| 10 | H20 | PIR VCC identificado | M–H naranja; comparte tira con F20 |
+| 11 | ESP32 D27 / GPIO27 | G24 | M–H amarillo |
+| 12 | J24 | PIR OUT identificado y nivel compatible | M–H amarillo; comparte tira con G24 |
 
-### Revisión de recorridos, 24/10/2026
+### Adaptación al material disponible
 
-La guía compacta coloca PIR a la izquierda del ESP32, junto a los contactos
-que utiliza, y DHT11 a la derecha de la protoboard. No mueve las posiciones de
-los pines dentro de los módulos. Retira el puente LN–RN y el alimentador del
-riel derecho positivo; conecta PIR a VIN y GND izquierdo directamente. Los dos
-GND de referencia del ESP32 están unidos dentro de la placa; confirmar su
-continuidad física sin alimentación. Los rieles derechos quedan **libres**.
+Los pines macho del ESP32 y del PIR reciben las hembras de los jumpers M–H.
+Sus extremos macho entran en **agujeros distintos de la misma tira** para
+conectarse: F20 con H20 (VCC), G24 con J24 (OUT). La masa aprovecha RN. No hace
+falta H–H, empalmes, meter dos puntas en un agujero ni apoyar el PIR forzando sus
+patas sobre la protoboard. No unir terminales distintos a una misma tira.
 
-| Medida del dibujo | Referencia anterior | Guía compacta |
-|---|---:|---:|
-| Jumpers | 12 | 10 |
-| Giros no colineales | 38 | 20 |
-| Longitud trazada, unidades SVG | 7420 | 4144 |
+| Medida del dibujo | Referencia inicial | Propuesta compacta histórica | Preferida sin H–H |
+|---|---:|---:|---:|
+| Jumpers | 12 | 10, incluía 3 H–H | 12, cero H–H |
+| Giros | 38 | 20 | 25 |
+| Longitud en unidades SVG | 7420 | 4144 | 6658 |
 
-Se conservan todas las parejas de terminales de componentes que compartían red
-(incluidas ambas patas separadas de R1). La diferencia en rieles sin uso es
-intencional. Estas cifras comparan las dos propuestas, **no prueban un óptimo
-global**, ausencia de cruces ni longitudes físicas. Los cruces con separación
-blanca son puentes visuales, no uniones; solo terminales y tiras definen redes.
-No doblar un jumper real a 90 grados ni tensarlo para imitar el trazado.
+La nueva receta prioriza **11 M–H + 1 M–M** frente a la compacta que dependía de
+cables ausentes. C-08 (~16 M–H) y C-07 (~10 M–M) cubren esas cantidades nominales;
+falta comprobar cuántos están libres y su alcance, sin asumir recepción de E.
+Los valores son del dibujo, no centímetros ni demostración de óptimo global.
+La prueba compara todas las parejas de terminales de componentes con la receta
+inicial y conserva sus redes, incluidas ambas patas separadas de R1. Los rieles
+libres cambian intencionadamente. Cruces con separación blanca no son uniones.
 
-Material de conexión previsto con headers macho: **6 M–H + 1 M–M + 3 H–H**.
-C-08 declara ~16 M–H y C-07 ~10 M–M, sin certificar disponibilidad libre o
-longitud; **los tres H–H no están confirmados**. Revisar A-02/C-07/C-08 sin
-duplicar stock ni asumir contenido E-03/E-04 pendiente. Si faltan H–H, ajustar
-la distribución a cables y adaptadores realmente identificados; no improvisar
-empalmes ni cambiar pinout para ahorrar cables. R1 sigue en C-02, sin cantidad
-exacta ni valor medido. La continuidad de rieles y dimensiones B-01 están pendientes.
-
-Los JSON anteriores sin `layout` conservan su distribución. El ejemplo nuevo
-usa `layout: compact`; cargarlo no sobrescribe revisiones ni localStorage.
-La skill local [classai-hardware-assembly](../../.agents/skills/classai-hardware-assembly/SKILL.md)
-recoge la revisión de inventario, redes y rutas para futuros cambios.
+`layout: breadboard` selecciona esta disposición; `compact` y los JSON sin layout
+conservan su geometría anterior. Cargar la guía no sobrescribe guardados.
+La skill [classai-hardware-assembly](../../.agents/skills/classai-hardware-assembly/SKILL.md)
+recoge la revisión de inventario, redes y rutas para futuras modificaciones.
 
 Armar sin USB. Verificar valor de R1, polaridad, separación 3,3/5 V, ausencia de
 corto a GND, continuidad y orientación antes de energizar. Comprobar niveles del
@@ -140,7 +129,7 @@ ya incorpora pull-up a 3,3 V, se puede prescindir de R1 externa tras identificar
 
 **VIN no es una salida regulada de 5 V.** Es la entrada del regulador de 3,3 V;
 la ruta desde USB depende de la variante y puede incluir caída en diodos. Antes
-del paso 9 de la guía compacta: con sensores y otras cargas desconectados y solo USB como fuente,
+del paso 9 de la guía sin H–H: con sensores y otras cargas desconectados y solo USB como fuente,
 medir tensión DC VIN–GND y registrar placa, lectura y condiciones. Confirmar
 además que la alimentación disponible cumple los requisitos del PIR concreto;
 una lectura en vacío no certifica capacidad de corriente. El dibujo naranja es
@@ -156,6 +145,7 @@ como el relato de Joaquín del 24/10/2026:
 | B-02, universidad | VIN, GND, D13, D12, D14, D27, D26, D25, D33, D32, D35, D34, VN, VP, EN | 3V3, GND, D15, D2, D4, RX2, TX2, D5, D18, D19, D21, RX0, TX0, D22, D23 | Declaración; VN se leyó con duda. Coincide con referencia DevKit V1; falta inspección y USB |
 | Primera placa descrita, ID por asociar | Mismo orden aparente, con VN omitido o dudoso | Mismo orden aparente, con D14 en posición esperada D4 y B5 en posición esperada D5 | Esas sustituciones son hipótesis para cotejar, no etiquetas verificadas |
 
+Las fotos 7/8 confirman D4/D5/VP/VN en la placa fotografiada, sin asociación A/B.
 El SVG muestra D4/D27 como en la serigrafía de referencia y conserva GPIO4/27
 como identidad eléctrica. VP=GPIO36, VN=GPIO39, RX2=GPIO16, TX2=GPIO17,
 RX0=GPIO3, TX0=GPIO1. EN y las alimentaciones no son GPIO.
@@ -225,3 +215,5 @@ Se preparó y ejecutó parcialmente [ambient_simulation](../../firmware/ambient_
 Wokwi, con **DHT22 sustituto**, observó cambios 24 °C/40 % → 29 °C/65 %. PIR
 LOW observado; HIGH/retorno pendientes. No valida el DHT11 físico ni sustituye
 el firmware `ambient_bench`. Ver R-007 y el extracto serial de simulación.
+
+[Adafruit: tiras de cinco contactos de la protoboard](https://learn.adafruit.com/breadboards-for-beginners/breadboards). Las parejas F20/H20 y G24/J24 usan ese principio; no se ha certificado la continuidad del ejemplar físico.

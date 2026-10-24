@@ -43,3 +43,5 @@ Referencias: [ESP32](https://docs.wokwi.com/guides/esp32),
 [DHT22](https://docs.wokwi.com/parts/wokwi-dht22),
 [PIR y botón Simulate Motion](https://docs.wokwi.com/parts/wokwi-pir-motion-sensor),
 [configuración](https://docs.wokwi.com/vscode/project-config).
+
+La distribución física preferida está en [banco-ambiente.md](../../docs/hardware/banco-ambiente.md): 11 M–H + 1 M–M, sin H–H. El diagrama virtual conserva redes equivalentes, pero usa conexiones abstractas y no representa el género de los jumpers ni las uniones físicas F20/H20 y G24/J24. Para construir, seguir la guía física identificada, no interpretar una línea virtual como un cable H–H disponible.

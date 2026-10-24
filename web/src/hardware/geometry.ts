@@ -1,5 +1,5 @@
 import { contacts, definition, type Assembly } from "./model";
-import { devkit30 } from "./pinouts";
+import { devkit30, pn532SpiFrontCCW } from "./pinouts";
 const { left: leftPins, right: rightPins } = devkit30;
 export function assemblyGeometry(assembly: Assembly) {
   const compact = assembly.layout === "compact", offset = compact ? 250 : 0;
@@ -22,6 +22,14 @@ export function assemblyGeometry(assembly: Assembly) {
         const l = leftPins.indexOf(pin.id), r = rightPins.indexOf(pin.id);
         ends.set(`${p.id}:${pin.id}`, l >= 0 ? [x - 8, y + 28 + l * 27] : r >= 0 ? [x + 238, y + 28 + r * 27] : [x + 238, y + 28 + i * 22]);
       });
+    } else if (d.id === "pn532") {
+      const x = 940, y = 150;
+      origin.set(p.id, { x, y, type: d.id });
+      d.pins.forEach(pin => {
+        const index = pn532SpiFrontCCW.indexOf(pin.id);
+        ends.set(`${p.id}:${pin.id}`, [x + 42, y + 60 + Math.max(0, index) * 28]);
+      });
+      sensorY = Math.max(sensorY, 650);
     } else if (Object.keys(p.holes).length) {
       Object.entries(p.holes).forEach(([pin, h]) => ends.set(`${p.id}:${pin}`, point(h)));
     } else {
@@ -34,5 +42,5 @@ export function assemblyGeometry(assembly: Assembly) {
   }
   contacts(assembly.board).forEach(h => ends.set(`bb:${h}`, point(h)));
   const height = Math.max(840, 225 + assembly.board.rows * 18, espCount * 620 + 120, sensorY + 30);
-  return { point, ends, origin, height, ys, width: compact ? 1370 : 1120, offset };
+  return { point, ends, origin, height, ys, width: assembly.parts.some(p => p.definition === "pn532") ? 1370 : compact ? 1370 : 1120, offset };
 }

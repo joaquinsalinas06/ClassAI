@@ -72,7 +72,7 @@ no confundir con fabricante genuino o comportamiento ya probado.
 
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| D-01 | PN532 NFC MODULE V3 serigrafiado **ELECHOUSE** | 1 módulo | en mano; fotografiado 24/10 | Selector DIP de dos canales; SPI SCK/MISO/MOSI/SS/VCC/GND/IRQ/RSTO; I²C SCL/SDA/VCC/GND; HSU GND/VCC/TXD/RXD al dorso. Cabeceras sin soldar; placa compatible visualmente con manual V3, autenticidad/función no probadas |
+| D-01 | PN532 NFC MODULE V3 serigrafiado **ELECHOUSE** | 1 módulo | en mano; fotografiado 24/10 | Selector DIP de dos canales; SPI SCK/MISO/MOSI/SS/VCC/GND/IRQ/RSTO; I²C SCL/SDA/VCC/GND; HSU GND/VCC/TXD/RXD al dorso. Cabecera macho confirmada por Joaquín al aprobar guía NFC; soldadura declarada en curso, terminación por revisar; placa compatible visualmente con manual V3, autenticidad/función no probadas |
 | D-02 | Tarjeta NFC incluida con D-01 | 1 tarjeta | en mano | Tipo exacto y UID no verificados; no publicar credenciales completas |
 | D-03 | Llavero NFC incluido con D-01 | 1 llavero | en mano | Tipo exacto no verificado |
 | D-04 | TFT SPI marcada **1.54TFT-SPI-ST7789 Ver:1.1** | 1 pantalla | en mano, fotografiada 24/10; desconectada | Pines reales GND/VCC/SCL/SDA/RST/DC/CS/BL; cabecera visible. Controlador ST7789 identificado por serigrafía, resolución probable 240×240 sin medición; tensión VCC/BL no validada |
@@ -159,3 +159,35 @@ con DevKit V1; VN se leyó con duda. Ver [banco-ambiente.md](banco-ambiente.md)
 para el orden completo. Primera placa descrita: 30 contactos aparentes, ID aún
 por asociar y etiquetas D4/D14, D5/B5 y VN por cotejar. Son declaraciones, no
 identificaciones USB ni ensayos. E-01 sigue pendiente de recepción.
+
+## Fotografías de ESP32/PIR y cables disponibles · 24/10/2026
+
+- Fotos 7/8: una placa **ESP32 DEVKITV1**, módulo con marcado ESP-WROOM-32,
+  micro USB, EN/BOOT y 30 contactos macho. D4, D5, VP y VN son legibles y
+  coinciden con el mapa documentado. No atribuir fabricación DOIT por ese texto;
+  falta asociar esa foto a A-01 o B-02 y a un puerto USB. No se ha observado
+  eléctricamente VIN ni se ha leído/cargado flash.
+- Fotos 1–6: un PIR con lente Fresnel, cuatro condensadores, dos potenciómetros,
+  conector macho de tres terminales y jumper amarillo de selección. Aspecto
+  compatible con el HC-SR501 ya declarado; no se distinguen las letras VCC/OUT/GND
+  ni el marcado del chip. No asignar B-04/D-06 por el color ni certificar el orden
+  de terminales por semejanza. No se recibió una nueva pieza por fotografiarla.
+- Joaquín confirma **cero cables H–H disponibles**. La receta preferida se cambia
+  a **11 M–H + 1 M–M** con uniones por tiras de protoboard. C-08 (~16 M–H) y
+  C-07 (~10 M–M) siguen siendo cantidades declaradas: comprobar unidades libres
+  y alcance físico, sin duplicarlas ni contar E pendiente. No hace falta pedir
+  H–H para esa receta si los jumpers declarados están disponibles y alcanzan.
+
+## Preparación de NFC y bocinas · 24/10/2026
+
+Joaquín declara **soldadura de adaptadores para bocinas y NFC en curso**. Se
+asocia a la preparación de D-09 y D-01, con conectores del lote D-11 cuando
+corresponda; no se crean cantidades ni se presupone que la cabecera de D-08 ya
+esté terminada. El tipo de conectores y la revisión final siguen pendientes.
+No cambiar estos módulos a «probados» ni afirmar soldadura terminada. Se
+conservan los propietarios y la disponibilidad declarada de dos ESP32.
+
+Para NFC con cabecera macho, la receta por seis tiras usa 12 M–H; si se suelda
+cabecera hembra, usa 6 M–H + 6 M–M. Ambas evitan H–H. Confirmar tipo al terminar,
+no pedir más cables antes de revisar C-07/C-08 y material libre. Una sola bocina
+D-09 se ensaya en la salida mono de D-08; la segunda queda sin conectar.

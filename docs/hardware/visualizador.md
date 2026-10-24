@@ -142,3 +142,42 @@ usa unidades SVG, no longitud real. Los rieles muestran su conexión actual o
 No hay optimizador automático: se revisó una distribución concreta y se probó
 la equivalencia de redes entre terminales antes/después. Los JSON e historiales
 previos no se migran ni sobrescriben al abrir la guía.
+
+## Preferencia sin H–H (24/10/2026)
+
+`layout: "breadboard"` conserva ESP32 a la izquierda y sensores a la derecha.
+Es la guía actual: 12 jumpers (11 M–H + 1 M–M), 25 giros. Nodos F20/H20 para VCC
+PIR y G24/J24 para OUT sustituyen conexiones H–H; GND comparte RN. El parser
+acepta tanto este layout como `compact` y ausencia de layout, sin migrar guardados.
+El inventario registra cero H–H disponibles. No se asume que el PIR se pueda
+insertar mecánicamente en la protoboard. Fotos confirman ESP32 DEVKITV1, no VIN
+medido ni etiquetas legibles del PIR. Los estados de propuesta permanecen.
+
+## Biblioteca de bancos
+
+La parte superior de /montajes ofrece 12 esquemas por misión, antes del editor
+físico de ambiente. `?banco=nfc` (y los demás IDs del catálogo) selecciona una
+referencia. Cambiar banco, resaltar conexiones y exportar no toca localStorage
+ni modifica el borrador de ambiente. Los esquemas se ordenan por nombres de
+terminales, no por la ubicación física del conector: las ilustraciones ayudan
+a reconocer módulos, pero no son clones mecánicos certificados.
+
+Cada tramo incluye tipo de red, vía/interposición y condición. Los pendientes
+se dibujan discontinuos. La biblioteca exporta SVG y una colección JSON con
+formato `classai-bank-reference-v1`, distinto del JSON editable de ambiente;
+no importar la colección como montaje. Los SVG/Markdown del repositorio se
+regeneran con `node web/scripts/export-hardware-missions.mjs` y comparten el
+catálogo `web/src/hardware/missions.ts` con la página. La exportación no aprueba
+ensayos ni dimensiona los drivers que figuran pendientes.
+
+## Montaje físico NFC
+
+`/montajes?guia=nfc` abre la receta física NFC en memoria sin sobrescribir el
+guardado; `?banco=nfc` conserva su selección lógica independiente. El botón del
+banco abre la distribución y permite deshacer para recuperar cambios en memoria.
+La receta en `web/src/hardware/nfc.ts` usa formato Assembly v1 existente, sin
+migrar guardados. `pn532SpiFrontCCW` fija orden frontal girado del manual, no
+orden funcional. El dibujo conserva 12 cables numerados y seis redes, pasos,
+resaltado e historial. Exportar dibujo SVG siempre incluye todos los cables,
+sin resaltado, aunque la vista esté en un paso parcial. SVG/JSON estáticos:
+`node web/scripts/export-nfc-assembly.mjs` desde raíz. Véase [guía NFC](banco-nfc.md).
