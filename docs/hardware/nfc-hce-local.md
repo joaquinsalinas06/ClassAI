@@ -63,7 +63,7 @@ APK debug: `mobile/android/app/build/outputs/apk/debug/app-debug.apk` tras compi
 
 ```sh
 cd mobile/android
-JAVA_HOME=/ruta/a/jdk17 ANDROID_HOME=/ruta/al/sdk ./gradlew --no-daemon testDebugUnitTest assembleDebug
+CLASSAI_API_URL=http://IP_DEL_MAC:8000 JAVA_HOME=/ruta/a/jdk17 ANDROID_HOME=/ruta/al/sdk ./gradlew --no-daemon testDebugUnitTest assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -72,10 +72,13 @@ credencial. Si falla por firma o versión, detenerse y revisar la instalación
 existente; no resolverlo destruyendo sus datos. Si no hay teléfono por USB,
 queda pendiente instalar la actualización (el APK existe localmente).
 
-En ClassAI → **Cambiar servidor**, introducir la URL LAN del Mac. Al cambiarla
-se invalida el estado Activa del servidor anterior y se verifica la misma
-credencial automáticamente; sin red queda Pendiente con Reintentar. Una respuesta
-antigua de otro servidor o credencial no activa el perfil nuevo.
+La app usa el rebranding compartido de las PR #84/#85 (temas claro/oscuro),
+entrada solo por código y URL definida al compilar mediante CLASSAI_API_URL o
+`mobile/android/.env`. El menú de cambiar servidor de la versión anterior se
+sustituye por esa configuración. Al actualizar un APK que apunta a otra URL,
+se conserva código/token, se invalida Activa y se revalida contra la API nueva.
+Sin red queda Pendiente. No desinstalar ni usar Cambiar de estudiante para corregir
+la red. Ver detalles técnicos permite comprobar la URL incluida en el APK.
 
 - 200: teléfono vinculado. Repetir mismo código/token devuelve el mismo registro.
 - 404: preparar el código correcto en la base local.
@@ -97,7 +100,10 @@ que reutiliza `nfc_reader.cpp` y `nfc_protocol.h`:
 arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property compiler.cpp.extra_flags=-DNFC_ONLY=1 --build-path /tmp/classai-nfc-only-build firmware/classai_node
 ```
 
-El helper pide SSID/clave sin mostrar la clave y crea `firmware/classai_node/secrets.h`
+El helper reutiliza `~/.config/classai/network.json` si existe, con claves
+`wifi_ssid` y `wifi_password` y permisos 0600. Ese perfil privado queda fuera del
+repositorio y puede ser leído por otros bancos al preparar sus configuraciones.
+Si no existe, pide SSID/clave sin mostrar la clave. Crea `firmware/classai_node/secrets.h`
 privado (permisos 0600, ignorado por Git), con NFC_ONLY=1, ROOM_ID=nfc-lab y broker
 LAN. **Nunca sobrescribe un secrets.h existente**: revisar/editar localmente su
 configuración si ya existe. No publica claves ni carga firmware. Los artefactos

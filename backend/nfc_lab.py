@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 ROOT = Path(__file__).resolve().parents[1]
 LAB_DB = ROOT / "backend/data/nfc-hce-lab.db"
 ROOM = "nfc-lab"
+NETWORK_FILE = Path.home() / ".config/classai/network.json"
 
 
 def local_ip():
@@ -59,10 +60,21 @@ def configure_firmware(address, port=1883):
     target = ROOT / "firmware/classai_node/secrets.h"
     if target.exists():
         raise ValueError("secrets.h ya existe: se conserva. Revísalo localmente; no se sobrescribe.")
-    ssid = input("Wi-Fi 2,4 GHz (SSID): ").strip()
+    network = {}
+    if NETWORK_FILE.exists():
+        if NETWORK_FILE.stat().st_mode & 0o077:
+            raise ValueError("El perfil privado de red debe tener permisos 600")
+        network = json.loads(NETWORK_FILE.read_text())
+        if not isinstance(network, dict):
+            raise ValueError("Perfil de red inválido")
+    ssid = network.get("wifi_ssid") or input("Wi-Fi 2,4 GHz (SSID): ").strip()
     if not ssid:
         raise ValueError("Falta SSID")
-    password = getpass.getpass("Clave Wi-Fi (no se muestra): ")
+    password = network.get("wifi_password")
+    if password is None:
+        password = getpass.getpass("Clave Wi-Fi (no se muestra): ")
+    if not isinstance(ssid, str) or not isinstance(password, str):
+        raise ValueError("Perfil de red inválido")
     user = os.getenv("MQTT_USERNAME", "")
     mqtt_password = os.getenv("MQTT_PASSWORD", "")
     values = {"NFC_ONLY": 1, "WIFI_SSID": ssid, "WIFI_PASSWORD": password,

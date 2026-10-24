@@ -138,7 +138,8 @@ Texto plano `online` (publicado al conectar, retenido) y `offline` (Last Will, r
 
 ## Enrolamiento móvil local (HTTP)
 
-`POST /mobile/enroll` conserva su cuerpo y respuesta existentes. Reintentar mismo
+`POST /mobile/enroll` acepta código y token; `full_name` es opcional por compatibilidad
+con APK anteriores. El nombre siempre procede del padrón del servidor. Reintentar mismo
 student_code y token android_hce activo devuelve 200 y el mismo credential_id,
 sin crear otra fila ni renombrar el estudiante. Otro token activo del estudiante
 y un token revocado devuelven 409; no se reactivan por reintento. Cambiar servidor

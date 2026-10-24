@@ -26,6 +26,7 @@ def test_configure_never_overwrites_private_file(tmp_path, monkeypatch):
     target.parent.mkdir(parents=True)
     target.write_text("KEEP PRIVATE")
     monkeypatch.setattr(nfc_lab, "ROOT", tmp_path)
+    monkeypatch.setattr(nfc_lab, "NETWORK_FILE", tmp_path / "network.json")
     with pytest.raises(ValueError, match="se conserva"):
         configure_firmware("192.0.2.2")
     assert target.read_text() == "KEEP PRIVATE"
@@ -34,6 +35,7 @@ def test_configure_never_overwrites_private_file(tmp_path, monkeypatch):
 def test_configure_creates_private_nfc_profile_without_displaying_secret(tmp_path, monkeypatch, capsys):
     import nfc_lab
     monkeypatch.setattr(nfc_lab, "ROOT", tmp_path)
+    monkeypatch.setattr(nfc_lab, "NETWORK_FILE", tmp_path / "network.json")
     (tmp_path / "firmware/classai_node").mkdir(parents=True)
     monkeypatch.setattr("builtins.input", lambda _: "Lab WiFi")
     monkeypatch.setattr(nfc_lab.getpass, "getpass", lambda _: "synthetic-passphrase")
@@ -43,3 +45,21 @@ def test_configure_creates_private_nfc_profile_without_displaying_secret(tmp_pat
     content = target.read_text()
     assert "#define NFC_ONLY 1" in content and "#define MQTT_PORT 1884" in content
     assert "synthetic-passphrase" not in capsys.readouterr().out
+
+
+def test_private_network_profile_is_reused_and_not_printed(tmp_path, monkeypatch, capsys):
+    import nfc_lab
+    import json
+    monkeypatch.setattr(nfc_lab, "ROOT", tmp_path)
+    profile = tmp_path / "network.json"
+    monkeypatch.setattr(nfc_lab, "NETWORK_FILE", profile)
+    (tmp_path / "firmware/classai_node").mkdir(parents=True)
+    profile.write_text(json.dumps({"wifi_ssid": "Synthetic lab", "wifi_password": "test-only"}))
+    profile.chmod(0o644)
+    with pytest.raises(ValueError, match="permisos 600"):
+        configure_firmware("192.0.2.2")
+    profile.chmod(0o600)
+    monkeypatch.setattr("builtins.input", lambda _: pytest.fail("Should reuse profile"))
+    configure_firmware("192.0.2.2")
+    assert "Synthetic lab" in (tmp_path / "firmware/classai_node/secrets.h").read_text()
+    assert "test-only" not in capsys.readouterr().out

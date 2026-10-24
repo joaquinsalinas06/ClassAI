@@ -12,9 +12,10 @@ with tempfile.TemporaryDirectory() as tmp:
     out = Path(tmp)
     for name in ("WiFi.h", "PubSubClient.h", "Wire.h", "Preferences.h", "ArduinoJson.h", "Adafruit_MLX90614.h", "secrets.h"):
         (out / name).write_text("")
+    (out / SKETCH.name).write_text(source)
     for mode in (0, 1):
         text = subprocess.check_output([compiler, "-E", "-P", "-x", "c++", f"-DNFC_ONLY={mode}", "-I", tmp,
-                                        "-I", str(SKETCH.parent), str(SKETCH)], text=True)
+                                        "-I", str(SKETCH.parent), str(out / SKETCH.name)], text=True)
         for call in ("digitalWrite(", "digitalRead(", "pinMode(", "Wire.begin("):
             assert (call not in text) if mode else (call in text), (mode, call)
         assert 'Serial.println(eventQueue[eventHead])' not in text
