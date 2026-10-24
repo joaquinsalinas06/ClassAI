@@ -11,14 +11,14 @@ try {
   page.on("pageerror", e => errors.push(e.message));
   await page.goto(`${base}/montajes`);
   await page.getByRole("heading", { name: "Montajes", exact: true }).waitFor();
-  assert.equal(await page.locator('[data-wire]').count(),12);
-  assert.equal(await page.locator('[data-wire-color="orange"]').count(),2);
+  assert.equal(await page.locator('[data-wire]').count(),10);
+  assert.equal(await page.locator('[data-wire-color="orange"]').count(),1);
   assert.equal(await page.locator('[data-wire-color="green"]').count(),2);
   await page.getByText("Comparar placas · mapa de 30 y referencia de 38 pines", { exact: true }).click();
   assert.equal(await page.getByRole("table", { name: "Pinout de referencia 30 pines" }).getByRole("row").count(), 16);
   await page.getByRole("button", { name: "38 pines · referencia E-01 pendiente", exact: true }).click();
   assert.equal(await page.getByRole("table", { name: "Pinout de referencia 38 pines" }).getByRole("row").count(), 20);
-  assert.equal(await page.locator('[data-wire]').count(), 12);
+  assert.equal(await page.locator('[data-wire]').count(), 10);
   assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), null);
   await page.getByRole("button", { name: "30 pines · disponibles", exact: true }).click();
   await page.getByText("Comparar placas · mapa de 30 y referencia de 38 pines", { exact: true }).click();

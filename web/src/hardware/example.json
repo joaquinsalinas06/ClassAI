@@ -1,7 +1,7 @@
 {
   "version": 1,
-  "name": "M-04/05 · Ambiente: DHT11 + PIR",
-  "note": "Guía de referencia ESP32 DevKit V1 de 30 pines (USB abajo). Joaquín reporta ESP32 de 30 pines y DHT11 con − / OUT / +; faltan asociación A-01/B-02, correspondencia de serigrafía y orientación del PIR. Cablear apagado; alimentar solo por USB tras comprobar niveles y continuidad. Sin ensayo físico.",
+  "name": "M-04/05 · Ambiente: recorrido simplificado",
+  "note": "Propuesta compacta de 10 jumpers: PIR a la izquierda junto a VIN/GND/D27, DHT11 a la derecha. Cablear apagado; verificar serigrafía, PIR, VIN, OUT, continuidad y pull-up antes de energizar. Sin ensayo físico. Rieles derechos libres; sin puente entre rieles.",
   "board": {
     "rows": 30,
     "rails": true,
@@ -256,78 +256,23 @@
     {
       "id": "w1",
       "from": "esp1:GND",
-      "to": "bb:LN28",
+      "to": "bb:LN22",
       "color": "black",
-      "note": "Con USB desconectado: GND del ESP32 → riel izquierdo −, contacto 28.",
+      "note": "Apagado: GND derecho del ESP32 → riel izquierdo −, LN22. Comprobar continuidad hasta LN5.",
       "bends": [
         [
-          340,
+          707,
           519
-        ],
-        [
-          340,
-          636
-        ]
-      ]
-    },
-    {
-      "id": "w2",
-      "from": "bb:LN2",
-      "to": "bb:RN2",
-      "color": "black",
-      "note": "Unir rieles − izquierdo y derecho. Ambas mitades comparten GND; comprobar continuidad.",
-      "bends": [
-        [
-          457,
-          105
-        ],
-        [
-          785,
-          105
         ]
       ]
     },
     {
       "id": "w3",
       "from": "esp1:3V3",
-      "to": "bb:LP29",
+      "to": "bb:LP23",
       "color": "red",
-      "note": "3V3 del ESP32 → riel izquierdo + (3,3 V). Nunca unir este riel con el de 5 V.",
-      "bends": [
-        [
-          358,
-          546
-        ],
-        [
-          358,
-          654
-        ]
-      ]
-    },
-    {
-      "id": "w4",
-      "from": "esp1:VIN",
-      "to": "bb:RP29",
-      "color": "orange",
-      "note": "Solo si VIN entrega USB 5 V en esta placa: VIN → riel derecho + (5 V). No conectar otra fuente a VIN.",
-      "bends": [
-        [
-          36,
-          546
-        ],
-        [
-          36,
-          738
-        ],
-        [
-          830,
-          738
-        ],
-        [
-          830,
-          654
-        ]
-      ]
+      "note": "3V3 → LP23, riel izquierdo + de 3,3 V. Cable recto; comprobar continuidad hasta LP15 y LP8.",
+      "bends": []
     },
     {
       "id": "w5",
@@ -337,41 +282,29 @@
       "note": "Riel izquierdo − → terminal − del DHT11. Usar las marcas, no copiar posición si está invertido.",
       "bends": [
         [
-          457,
+          707,
           231
         ],
         [
-          800,
+          1130,
           231
         ],
         [
-          800,
+          1130,
           331
         ]
       ]
     },
     {
       "id": "w6",
-      "from": "bb:LP5",
+      "from": "bb:LP15",
       "to": "dht1:VCC",
       "color": "red",
-      "note": "Riel izquierdo + (3,3 V) → terminal + del DHT11.",
+      "note": "LP15 (+3,3 V) → + del DHT11. No alimentar este sensor desde VIN.",
       "bends": [
         [
-          435,
-          204
-        ],
-        [
-          818,
-          204
-        ],
-        [
-          818,
-          356
-        ],
-        [
-          1040,
-          356
+          1290,
+          402
         ]
       ]
     },
@@ -383,20 +316,12 @@
       "note": "Terminal OUT del DHT11 → A8. A8 y C8 pertenecen a la misma tira, lado A–E.",
       "bends": [
         [
-          990,
-          377
+          1240,
+          370
         ],
         [
-          838,
-          377
-        ],
-        [
-          838,
-          285
-        ],
-        [
-          500,
-          285
+          750,
+          370
         ]
       ]
     },
@@ -408,16 +333,16 @@
       "note": "GPIO4 del ESP32 → B8; misma red de OUT y pata 1 de R1.",
       "bends": [
         [
-          376,
+          630,
           438
         ],
         [
-          376,
-          294
+          630,
+          303
         ],
         [
-          520,
-          294
+          770,
+          303
         ]
       ]
     },
@@ -429,66 +354,50 @@
       "note": "Riel +3,3 V → J8; comparte la tira F–J con pata 2 de R1. Pull-up 10 kΩ entre DATA y 3,3 V.",
       "bends": [
         [
-          420,
-          276
+          685,
+          240
         ],
         [
-          420,
-          312
-        ],
-        [
-          730,
-          312
-        ],
-        [
-          730,
-          276
+          958,
+          240
         ]
       ]
     },
     {
       "id": "w10",
-      "from": "bb:RN20",
+      "from": "esp1:GND_L",
       "to": "pir1:GND",
       "color": "black",
-      "note": "Riel derecho − → GND del PIR, únicamente tras identificar el terminal en reverso.",
+      "note": "GND izquierdo del ESP32 → GND confirmado del PIR. Comparte masa con el otro GND dentro del ESP32: no hace falta puente de rieles.",
       "bends": [
         [
-          860,
-          492
+          240,
+          519
         ],
         [
-          860,
-          687
-        ],
-        [
-          1040,
-          687
+          240,
+          651
         ]
       ]
     },
     {
       "id": "w11",
-      "from": "bb:RP20",
+      "from": "esp1:VIN",
       "to": "pir1:VCC",
       "color": "orange",
-      "note": "Riel derecho + (5 V) → VCC del PIR HC-SR501; verificar modelo y polaridad.",
+      "note": "Solo tras medir y validar alimentación: VIN → VCC confirmado del PIR. Conexión directa, sin riel de 5 V ni fuente adicional.",
       "bends": [
         [
-          763,
-          474
+          220,
+          546
         ],
         [
-          884,
-          474
+          220,
+          690
         ],
         [
-          884,
-          707
-        ],
-        [
-          940,
-          707
+          70,
+          690
         ]
       ]
     },
@@ -497,22 +406,23 @@
       "from": "pir1:OUT",
       "to": "esp1:GPIO27",
       "color": "yellow",
-      "note": "OUT del PIR → GPIO27; medir HIGH y confirmar que no excede 3,3 V antes de conectar. Ajustar retardo y esperar estabilización.",
+      "note": "D27 / GPIO27 → OUT del PIR, tras comprobar nivel ≤3,3 V. Seguir el cable amarillo: los cruces no son uniones.",
       "bends": [
         [
-          990,
-          778
+          120,
+          710
         ],
         [
-          18,
-          778
+          260,
+          710
         ],
         [
-          18,
+          260,
           411
         ]
       ]
     }
   ],
-  "revisions": []
+  "revisions": [],
+  "layout": "compact"
 }

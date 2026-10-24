@@ -129,3 +129,16 @@ borrador actual. El esquema explica la receta original, no se recalcula al edita
 El comparador 30/38 muestra filas con USB abajo y referencia oficial DevKitC
 J2/J3, sin modificar el montaje ni asignar esa variante a E-01. La tensión del
 riel naranja sigue nominal y pendiente de medir VIN–GND en cada placa.
+
+## Recorrido compacto (24/10/2026)
+
+`layout: "compact"` es opcional y se valida al importar; sin él se conserva la
+distribución anterior. El ejemplo coloca PIR a la izquierda y usa 10 jumpers;
+los recorridos explícitos pueden tener cero giros (lista `bends` vacía).
+`geometry.ts` comparte posiciones entre dibujo y `routingMetrics`; el resumen
+cuenta giros no colineales y advierte si hay rutas sin especificar. La medida
+usa unidades SVG, no longitud real. Los rieles muestran su conexión actual o
+«Libre», sin etiquetar automáticamente todo positivo como alimentación.
+No hay optimizador automático: se revisó una distribución concreta y se probó
+la equivalencia de redes entre terminales antes/después. Los JSON e historiales
+previos no se migran ni sobrescriben al abrir la guía.

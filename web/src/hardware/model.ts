@@ -4,7 +4,7 @@ export interface Part { id: string; definition: string; inventory: string; holes
 export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][] }
 export type WireColor = "red" | "black" | "orange" | "green" | "yellow" | "blue" | "purple";
 export interface Revision { at: string; note: string; snapshot: string }
-export interface Assembly { version: 1; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
+export interface Assembly { version: 1; layout?: "compact"; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
 export interface Finding { level: "error" | "pending"; text: string }
 const idPattern = /^[a-zA-Z0-9_-]{1,60}$/;
 export function holeValid(hole: string, rows: number) {
@@ -34,6 +34,7 @@ export function parseAssembly(raw: string): Assembly {
   const ids = (xs: { id: string }[]) => xs.every(x => x && str(x.id, 60) && idPattern.test(x.id)) && new Set(xs.map(x => x.id)).size === xs.length;
   if (!a || a.version !== 1 || !str(a.name, 120) || !str(a.note) || !Number.isInteger(a.board?.rows) || a.board.rows < 1 || a.board.rows > 63 || !Array.isArray(a.catalog) || !a.catalog.length || a.catalog.length > 40 || !Array.isArray(a.parts) || a.parts.length > 20 || !Array.isArray(a.wires) || a.wires.length > 150 || !Array.isArray(a.revisions) || a.revisions.length > 50) fail();
   if ((a.board.rails !== undefined && typeof a.board.rails !== "boolean") || (a.board.splitRails !== undefined && typeof a.board.splitRails !== "boolean")) fail();
+  if (a.layout !== undefined && a.layout !== "compact") fail();
   if (!ids(a.catalog) || !ids(a.parts) || !ids(a.wires)) fail();
   for (const d of a.catalog) {
     if (!str(d.name, 120) || !str(d.pending) || !Array.isArray(d.pins) || d.pins.length > 50 || !ids(d.pins)) fail();

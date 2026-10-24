@@ -35,7 +35,7 @@ export function WiringReference({ onSignal }: { onSignal: () => void }) {
           <li>Medir tensión DC entre VIN (+) y GND (−). Anotar placa y lectura real.</li>
           <li>Usar VIN → VCC del PIR únicamente si su tensión y capacidad de alimentación son adecuadas para ese módulo.</li>
         </ol>
-        <p className="mt-3 text-small text-fg-2">PIR: <strong>VCC → alimentación verificada · GND → masa común · OUT → D27 / GPIO27</strong>, tras comprobar orden y nivel de salida. Los rieles positivos de 3,3 V y 5 V permanecen separados; ambos negativos comparten GND.</p>
+        <p className="mt-3 text-small text-fg-2">PIR: <strong>VCC → alimentación verificada · GND → masa común · OUT → D27 / GPIO27</strong>, tras comprobar orden y nivel de salida. En la guía compacta el PIR conecta directamente al ESP32; los rieles derechos quedan libres. Su GND y el del DHT11 comparten masa mediante el ESP32.</p>
         <p className="mt-3 text-caption text-regular-text">En esta guía, naranja significa alimentación nominal de 5 V pendiente de medir. No conectar una fuente externa a VIN mientras se alimenta por USB.</p>
         <p className="mt-3 text-caption text-muted">Referencias: <a className="text-link underline" href="https://learn.adafruit.com/dht/connecting-to-a-dhtxx-sensor">Adafruit · pull-up DHT</a> · <a className="text-link underline" href="https://docs.espressif.com/projects/esp-dev-kits/en/latest/esp32/esp32-devkitc/user_guide.html">Espressif · alimentación y DevKitC</a>. La ruta VIN de cada clon sigue pendiente.</p>
       </article>

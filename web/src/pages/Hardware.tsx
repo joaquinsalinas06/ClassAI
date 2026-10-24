@@ -3,6 +3,7 @@ import { Download, Plus, Undo2, Upload } from "lucide-react";
 import { PageHeader } from "../ui/PageHeader";
 import { Button } from "../ui/Button";
 import { WiringReference } from "../hardware/WiringReference";
+import { routingMetrics } from "../hardware/routing";
 import example from "../hardware/example.json";
 import { AssemblyBoard, terminalLabel, wireColors } from "../hardware/AssemblyBoard";
 import { analyze, contacts, definition, parseAssembly, recordRevision, terminals, type Assembly, type Wire } from "../hardware/model";
@@ -33,6 +34,7 @@ export function Hardware() {
   const [pirBack, setPirBack] = useState(false);
   const [partType, setPartType] = useState("resistor");
   const result = analyze(assembly);
+  const routing = routingMetrics(assembly);
   const holes = Array.from({ length: assembly.board.rows }, (_, i) => [..."ABCDEFGHIJ"].map(c => `${c}${i + 1}`)).flat();
   const allContacts = contacts(assembly.board);
   const update = (next: Assembly) => {
@@ -73,6 +75,13 @@ export function Hardware() {
       <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V verificados</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
       <p className="mt-2 text-caption text-regular-text">30 pines y etiquetas DHT11 reportados por Joaquín. Compara la serigrafía del ESP32 y confirma VCC/OUT/GND del PIR en reverso. El jumper amarillo selecciona disparo; no es una entrada de alimentación.</p>
       <div className="mt-3 flex flex-wrap gap-4 text-caption">{(["red", "orange", "black", "green", "yellow"] as const).map(c => <span key={c} className="inline-flex items-center gap-2"><span style={{background:wireColors[c].hex}} className="inline-block h-1.5 w-6 rounded-full" />{wireColors[c].label}</span>)}</div>
+    </section>
+    <section className="mb-5 rounded-lg border border-line bg-surface p-4" aria-label="Recorrido simplificado">
+      <h2 className="text-heading">Menos vueltas, conexiones completas</h2>
+      <p className="mt-2 text-small text-fg-2">Guía compacta: PIR junto al lado izquierdo del ESP32 (VIN / GND / D27), DHT11 a la derecha. Se eliminan el riel de 5 V y el puente entre negativos: el PIR usa conexiones directas al ESP32. Los dos GND del ESP32 comparten masa internamente.</p>
+      <p className="mt-2 text-small"><strong>{routing.cables} cables · {routing.explicit ? `${routing.turns} giros dibujados` : "recorridos editados sin medir"}</strong>. Referencia anterior: 12 cables y 38 giros; guía compacta: 10 y 20. Son medidas del dibujo, no centímetros ni una garantía de óptimo físico.</p>
+      <p className="mt-2 text-small text-regular-text">Inventario para esta propuesta: 6 jumpers macho–hembra, 1 macho–macho y 3 hembra–hembra. C-08 (~16 M–H) y C-07 (~10 M–M) están declarados; los 3 H–H y las longitudes útiles siguen por confirmar. No improvisar uniones ni dar por disponibles cables del pedido E.</p>
+      <p className="mt-2 text-caption text-muted">Cruces con separación blanca no son uniones. Solo cuentan terminales y tiras de cobre. Montar apagado; antes de energizar: identificación, polaridad PIR, VIN medido, OUT compatible y continuidad sin cortos. Cargar la guía es reversible y no guarda sobre tu montaje anterior.</p>
     </section>
     <WiringReference onSignal={() => { setSelected("esp1:GPIO4"); setStep(null); document.querySelector("[data-assembly-board]")?.scrollIntoView({ block: "center", behavior: "instant" }); }} />
     <div className="mb-5 grid gap-3 md:grid-cols-[1fr_2fr]">

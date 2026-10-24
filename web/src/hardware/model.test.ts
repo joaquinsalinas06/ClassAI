@@ -81,7 +81,7 @@ describe("hardware assembly", () => {
   });
   it("rejects 5 V on the DHT11 reference supply without conflating the pull-up with a short", () => {
     const a=fresh();a.wires=a.wires.filter(w=>w.id!=="w6");
-    wire(a,"bb:RP5","dht1:VCC");
+    wire(a,"esp1:VIN","dht1:VCC");
     expect(errors(a)).toContain("tensión de referencia 3.3 V incompatible");
     expect(errors(fresh())).toBe("");
   });

@@ -30,10 +30,11 @@ confirmarse en reverso. No intercambiarlo por el selector H/L.
 
 - Una sola entrada de alimentación para el ESP32: **USB de datos** desde la laptop.
 - Riel izquierdo **+ = 3,3 V** desde 3V3; riel izquierdo − = GND.
-- Riel derecho **+ = 5 V** desde VIN **solo si se verifica que ese terminal entrega
-  los 5 V de USB en la variante real**; riel derecho − = GND. No conectar otra
-  fuente a VIN mientras se usa USB ni unir ambos rieles positivos.
-- Ambos negativos se unen como referencia común. Confirmar continuidad de rieles;
+- En la guía compacta el PIR recibe alimentación nominal de **5 V desde VIN
+  directamente, solo tras verificar la ruta USB y requisitos del módulo real**.
+  Los rieles derechos quedan libres. No conectar otra fuente a VIN usando USB.
+- La masa del PIR y del DHT11 es común mediante los dos GND del ESP32.
+  No hace falta puente entre rieles negativos. Confirmar continuidad de rieles;
   si están cortados, colocar puentes de unión apropiados y registrarlos. La opción
   de riel partido del visualizador permite ver que un extremo queda sin fuente.
 - **DHT11 + → 3,3 V; − → GND; OUT → GPIO4.** La referencia de sensor admite 3,3 V,
@@ -65,18 +66,51 @@ esos contactos; el dibujo no es una plantilla métrica.
 
 | Paso | Desde | Hasta | Color y finalidad |
 |---|---|---|---|
-| 1 | ESP32 GND | LN28 | Negro, masa izquierda |
-| 2 | LN2 | RN2 | Negro, masa compartida |
-| 3 | ESP32 3V3 | LP29 | Rojo, alimentación 3,3 V |
-| 4 | ESP32 VIN, tras verificar salida USB 5 V | RP29 | Naranja, alimentación 5 V |
-| 5 | LN5 | DHT11 − | Negro |
-| 6 | LP5 | DHT11 + | Rojo |
-| 7 | DHT11 OUT | A8 | Verde, datos |
-| 8 | ESP32 GPIO4 | B8 | Verde, mismo nodo de datos |
-| 9 | LP8 | J8 | Rojo, lado 3,3 V de la resistencia pull-up |
-| 10 | RN20 | PIR GND confirmado | Negro |
-| 11 | RP20 | PIR VCC confirmado | Naranja |
-| 12 | PIR OUT validado a lógica ≤3,3 V | ESP32 GPIO27 | Amarillo |
+| 1 | ESP32 GND derecho | LN22 | Negro; masa del DHT11 mediante riel izquierdo − |
+| 2 | ESP32 3V3 | LP23 | Rojo; riel izquierdo + de 3,3 V |
+| 3 | LN5 | DHT11 − | Negro |
+| 4 | LP15 | DHT11 + | Rojo; alimentación directa |
+| 5 | DHT11 OUT | A8 | Verde; datos |
+| 6 | ESP32 D4 / GPIO4 | B8 | Verde; mismo nodo que A8 y R1 en C8 |
+| 7 | LP8 | J8 | Rojo; pull-up R1 C8–G8 hacia 3,3 V |
+| 8 | ESP32 GND izquierdo | PIR GND confirmado | Negro; masa común por el ESP32 |
+| 9 | ESP32 VIN, tras comprobar alimentación | PIR VCC confirmado | Naranja; sin riel de 5 V |
+| 10 | PIR OUT validado a lógica ≤3,3 V | ESP32 D27 / GPIO27 | Amarillo |
+
+### Revisión de recorridos, 24/10/2026
+
+La guía compacta coloca PIR a la izquierda del ESP32, junto a los contactos
+que utiliza, y DHT11 a la derecha de la protoboard. No mueve las posiciones de
+los pines dentro de los módulos. Retira el puente LN–RN y el alimentador del
+riel derecho positivo; conecta PIR a VIN y GND izquierdo directamente. Los dos
+GND de referencia del ESP32 están unidos dentro de la placa; confirmar su
+continuidad física sin alimentación. Los rieles derechos quedan **libres**.
+
+| Medida del dibujo | Referencia anterior | Guía compacta |
+|---|---:|---:|
+| Jumpers | 12 | 10 |
+| Giros no colineales | 38 | 20 |
+| Longitud trazada, unidades SVG | 7420 | 4144 |
+
+Se conservan todas las parejas de terminales de componentes que compartían red
+(incluidas ambas patas separadas de R1). La diferencia en rieles sin uso es
+intencional. Estas cifras comparan las dos propuestas, **no prueban un óptimo
+global**, ausencia de cruces ni longitudes físicas. Los cruces con separación
+blanca son puentes visuales, no uniones; solo terminales y tiras definen redes.
+No doblar un jumper real a 90 grados ni tensarlo para imitar el trazado.
+
+Material de conexión previsto con headers macho: **6 M–H + 1 M–M + 3 H–H**.
+C-08 declara ~16 M–H y C-07 ~10 M–M, sin certificar disponibilidad libre o
+longitud; **los tres H–H no están confirmados**. Revisar A-02/C-07/C-08 sin
+duplicar stock ni asumir contenido E-03/E-04 pendiente. Si faltan H–H, ajustar
+la distribución a cables y adaptadores realmente identificados; no improvisar
+empalmes ni cambiar pinout para ahorrar cables. R1 sigue en C-02, sin cantidad
+exacta ni valor medido. La continuidad de rieles y dimensiones B-01 están pendientes.
+
+Los JSON anteriores sin `layout` conservan su distribución. El ejemplo nuevo
+usa `layout: compact`; cargarlo no sobrescribe revisiones ni localStorage.
+La skill local [classai-hardware-assembly](../../.agents/skills/classai-hardware-assembly/SKILL.md)
+recoge la revisión de inventario, redes y rutas para futuros cambios.
 
 Armar sin USB. Verificar valor de R1, polaridad, separación 3,3/5 V, ausencia de
 corto a GND, continuidad y orientación antes de energizar. Comprobar niveles del
@@ -106,7 +140,7 @@ ya incorpora pull-up a 3,3 V, se puede prescindir de R1 externa tras identificar
 
 **VIN no es una salida regulada de 5 V.** Es la entrada del regulador de 3,3 V;
 la ruta desde USB depende de la variante y puede incluir caída en diodos. Antes
-del paso 4: con sensores y otras cargas desconectados y solo USB como fuente,
+del paso 9 de la guía compacta: con sensores y otras cargas desconectados y solo USB como fuente,
 medir tensión DC VIN–GND y registrar placa, lectura y condiciones. Confirmar
 además que la alimentación disponible cumple los requisitos del PIR concreto;
 una lectura en vacío no certifica capacidad de corriente. El dibujo naranja es
