@@ -4,83 +4,89 @@ App nativa Kotlin que convierte el teléfono en credencial de asistencia NFC. El
 (lector) le envía APDUs; la app (tarjeta emulada, `HostApduService`) responde con un token opaco
 de 16 bytes. Protocolo: **APDU HCE v0.1** en `docs/contracts.md`. Sin red durante el tap.
 
-## Build
+## Generar el APK
 
 Requisitos: JDK 17+ y Android SDK con `platforms;android-36` y `build-tools;36.0.0`.
+La dirección de API se configura al compilar, nunca por el alumno:
 
 ```sh
 cd mobile/android
-echo "sdk.dir=$HOME/Library/Android/sdk" > local.properties   # o ANDROID_HOME
+cp .env.example .env
+# Editar CLASSAI_API_URL en .env (sin comillas); este archivo está ignorado por Git.
 ./gradlew testDebugUnitTest assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-AGP 9.1 (Kotlin integrado), Gradle 9.3.1, minSdk 26, target/compile 36.
-Dependencias: `com.google.android.material:material:1.12.0` (Material 3) y
-`androidx.swiperefreshlayout:swiperefreshlayout:1.1.0`. Animaciones con ObjectAnimator,
-AnimatedVectorDrawable y vistas Canvas propias (`Fx.kt`); sin Lottie ni librerías de efectos.
+`CLASSAI_API_URL` del entorno tiene prioridad sobre `.env`; el valor de desarrollo
+es `http://10.0.2.2:8000` (el localhost del ordenador visto por el emulador).
+Un teléfono físico necesita una API accesible por LAN o HTTPS. Cambiar esa dirección
+requiere recompilar el APK, sin mostrar configuración al alumno. La URL no es un
+secreto; nunca incluir claves de administrador en ella. No se despliega un servidor
+con este build. AGP 9.1, Gradle wrapper 9.3.1, minSdk 26 y compile/target 36.
 
-## Flujo
+## Experiencia del alumno
 
-1. **Login** (primer arranque): código universitario, nombre completo y *Servidor* (URL del
-   backend; por defecto `http://10.0.2.2:8000`, el host visto desde el emulador). *Vincular este
-   teléfono* envía `POST {servidor}/mobile/enroll` con el token local (ver contrato abajo).
-   - 2xx → carnet **Activa**.
-   - 409 → error en el formulario: "Este estudiante ya tiene un teléfono activo, pide al docente
-     que lo revoque". Otro 4xx → error "El servidor rechazó los datos (HTTP n)".
-   - Sin red / 5xx → se guarda el perfil y el carnet queda **Pendiente de vincular**, con botón
-     *Reintentar* y deslizar hacia abajo para reintentar.
-2. **Carnet digital**: nombre, código, avatar con iniciales y chip de estado
-   (Activa / Pendiente de vincular / NFC desactivado / Sin HCE / Sin NFC). Con estado Activa
-   las ondas NFC laten: "Acerca el teléfono al lector".
-3. **Tap**: cuando el lector completa GET_CREDENTIAL (9000) y la app está en primer plano, se ve
-   la celebración (ondas y confeti desde el ícono NFC, brillo del carnet, check animado,
-   vibración, "¡Asistencia enviada!") y la lectura entra en *Últimas lecturas*. El servicio HCE
-   responde igual con la app cerrada; la animación es solo feedback local.
-4. Barra superior: *Cambiar servidor* (hoja inferior) y *Desvincular / regenerar credencial*
-   (confirmación → token nuevo, borra el perfil y vuelve al login; el docente debe revocar la
-   credencial anterior en el backend).
-5. *Ver detalles técnicos*: token HEX con botón copiar (para enrolamiento manual), AID, estado
-   NFC/HCE, servidor y log de APDUs (INS/SW, nunca el token).
+1. Primera apertura: **solo código universitario**. Teclado numérico, ceros iniciales
+   intactos, dígitos visibles y botón activo cuando el formato es válido. Se puede
+   enviar con el botón o la tecla Listo/Enter. El docente debe haber cargado el código
+   en el padrón. El nombre se obtiene de la respuesta del backend, no se pide otra vez.
+2. Vinculación: el token se genera localmente y se envía con el código. Mientras se
+   procesa no se duplican envíos. Si no hay conexión, se guarda el código y el carnet
+   queda **Pendiente de vincular**; se reintenta al volver a abrir, recuperar red o
+   pulsar Reintentar. Nunca se declara activo sin confirmación del servidor.
+3. Siguientes aperturas: se muestra el carnet guardado directamente. Una vinculación
+   activa no necesita Internet durante el tap, ni la Activity abierta. Los estados
+   NFC apagado, Sin NFC/Sin HCE y Pendiente siguen siendo explícitos.
+4. Tras leer la credencial: confirmación breve, vibración y hora en Últimas lecturas (memoria del proceso). La app
+   indica **Credencial leída**, no confirmación de asistencia en SQLite: el backend
+   sigue validando sesión/estudiante y puede rechazar una lectura.
+5. Menú secundario: Cambiar de estudiante pide confirmación, regenera la credencial y
+   vuelve al código. Para volver a vincular un teléfono distinto, el docente debe
+   revocar el anterior. **Ver detalles técnicos**, cerrado por defecto, muestra NFC/HCE reales,
+   vinculación, URL configurada, AID, credencial privada copiable y eventos APDU en memoria.
+   El botón de ajustes NFC permite configurar el teléfono. La URL sigue definiéndose
+   en `.env` al compilar; el alumno no necesita introducirla ni cambiarla.
 
-Tema claro/oscuro según el sistema, con la misma paleta semántica de la web.
-Fuente: `design/tokens.json` → `ds_tokens.xml`; ver `design/README.md`.
-Los recursos y Canvas consumen `ds_*` sin paleta de marca separada. Escala de
-texto/espaciado/radios compartida; fuentes nativas Android como fallback offline.
-Verificar tras cambios de diseño:
+La ilustración identifica **Tu teléfono → Lector del aula** con una pantalla NFC
+y base. Dos destellos suaves y ondas secuenciales animan la escena; el carnet entra
+con un fundido corto y una sola onda tenue, sin giro 3D ni confeti. Todo usa Canvas/animación nativa. Se detienen cuando la vista no es visible
+y respetan la opción del sistema para reducir/desactivar animaciones. Login, carnet
+y confirmación usan los tokens de `design/tokens.json`; fuentes nativas como fallback
+sin descargas. Las credenciales y el perfil viven en SharedPreferences privadas con
+backup deshabilitado. El APK conserva ese perfil entre reinicios normales.
 
-```sh
-# Desde la raíz
-node design/build-tokens.mjs --check
-node --test design/*.test.mjs
-```
-
-Con animaciones desactivadas (Opciones de desarrollador o
-"Quitar animaciones") no hay giros, brillos ni confeti: la información aparece estática.
-
-Datos locales (SharedPreferences privadas, `allowBackup=false`): token (`classai`) y perfil
-`code`, `name`, `server`, `enrolled` (`classai_profile`). El token se genera una vez y no cambia
-al reiniciar; solo *Desvincular* lo regenera.
+Este acceso por código es **enrolamiento del prototipo**, no autenticación
+institucional ni login con Google. Google requeriría configurar OAuth y verificar
+sus tokens en el backend; no se incluye un botón ficticio.
 
 ## Contrato de enrolamiento
 
-```
-POST {servidor}/mobile/enroll
+```http
+POST {API_URL}/mobile/enroll
 Content-Type: application/json; charset=utf-8
 
-{"student_code": "202310123", "full_name": "Valeria Quispe Rojas", "token": "<32 HEX mayúsculas>"}
+{"student_code":"0012345","token":"<32 HEX mayúsculas>"}
 ```
 
-| Respuesta | App |
-|---|---|
-| `200` `{"student_code","full_name","credential_id","status":"active"}` (cualquier 2xx) | Activa (no lee el cuerpo) |
-| `409` | Rechazado: el estudiante ya tiene un teléfono activo |
-| otro `4xx` | Rechazado con el código HTTP |
-| `5xx`, timeout (5 s) o sin conexión | Pendiente de vincular, reintentable |
+Respuesta `200`: `student_code`, nombre canónico `full_name`, `credential_id` y
+`status: active`. `full_name` en la petición sigue siendo opcional para compatibilidad
+con versiones anteriores; el backend usa siempre el nombre del padrón.
 
-El backend registra `credential.type = android_hce`, `token` = ese HEX (el mismo que el ESP32
-publica en `ATTENDANCE_RECORDED`). La red solo se usa aquí, nunca durante el tap.
-`network_security_config` permite HTTP en claro para cualquier host (prototipo en LAN).
+- Repetir código + token del mismo teléfono activo devuelve el mismo perfil/ID,
+  incluso si se perdió la primera respuesta. La operación se serializa en SQLite.
+- Otro teléfono activo para ese código devuelve `409`; código sin registrar `404`;
+  token inválido `400`. La app muestra una instrucción para el alumno/docente.
+- Sin red, respuesta incompleta/no válida o `5xx`: estado pendiente, reintentable.
+- El tap solo entrega el token opaco, sin código/nombre ni llamadas de red.
+
+Comprobaciones desde la raíz:
+
+```sh
+node design/build-tokens.mjs --check
+node --test design/*.test.mjs
+PYTHON_DOTENV_DISABLED=1 .venv/bin/python -m pytest backend -q
+PYTHON=.venv/bin/python scripts/ci/smoke.sh
+```
 
 ## Depuración (solo builds debug)
 
@@ -91,7 +97,8 @@ El emulador no tiene NFC. En builds debug:
 adb shell am start -n com.classai.mobile/.MainActivity --ez demo_nfc true --ez simulate_read true
 ```
 
-Mantener presionado el carnet también simula una lectura. Logcat: `adb logcat -s ClassAI`.
+La simulación solo se activa por ese intent explícito de depuración; mantener
+presionado el carnet no simula asistencia. Logcat: `adb logcat -s ClassAI`.
 Antes del tap real: NFC activo, teléfono **desbloqueado y con pantalla encendida**
 (`requireDeviceUnlock=true`); la app no necesita estar abierta ni tener Internet.
 
