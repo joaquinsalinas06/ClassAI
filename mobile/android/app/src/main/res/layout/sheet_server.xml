@@ -4,7 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/ds_space_6">
 
     <TextView
         android:layout_width="wrap_content"
@@ -21,7 +21,7 @@
         style="@style/ClassAI.Field"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="@dimen/ds_space_4"
         android:hint="@string/field_server"
         app:helperText="@string/field_server_helper"
         app:startIconDrawable="@drawable/ic_dns">
@@ -37,7 +37,7 @@
         android:id="@+id/save"
         android:layout_width="match_parent"
         android:layout_height="56dp"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="@dimen/ds_space_5"
         android:text="@string/action_save"
-        app:cornerRadius="16dp" />
+        app:cornerRadius="@dimen/ds_radius_md" />
 </LinearLayout>

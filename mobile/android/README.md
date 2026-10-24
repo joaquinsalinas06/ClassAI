@@ -43,7 +43,19 @@ AnimatedVectorDrawable y vistas Canvas propias (`Fx.kt`); sin Lottie ni librerí
 5. *Ver detalles técnicos*: token HEX con botón copiar (para enrolamiento manual), AID, estado
    NFC/HCE, servidor y log de APDUs (INS/SW, nunca el token).
 
-Tema claro/oscuro según el sistema. Con animaciones desactivadas (Opciones de desarrollador o
+Tema claro/oscuro según el sistema, con la misma paleta semántica de la web.
+Fuente: `design/tokens.json` → `ds_tokens.xml`; ver `design/README.md`.
+Los recursos y Canvas consumen `ds_*` sin paleta de marca separada. Escala de
+texto/espaciado/radios compartida; fuentes nativas Android como fallback offline.
+Verificar tras cambios de diseño:
+
+```sh
+# Desde la raíz
+node design/build-tokens.mjs --check
+node --test design/*.test.mjs
+```
+
+Con animaciones desactivadas (Opciones de desarrollador o
 "Quitar animaciones") no hay giros, brillos ni confeti: la información aparece estática.
 
 Datos locales (SharedPreferences privadas, `allowBackup=false`): token (`classai`) y perfil

@@ -11,7 +11,6 @@ import android.graphics.Paint
 import android.graphics.RadialGradient
 import android.graphics.RectF
 import android.graphics.Shader
-import android.graphics.SweepGradient
 import android.graphics.Typeface
 import android.os.Build
 import android.os.SystemClock
@@ -19,6 +18,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.view.ViewOutlineProvider
 import android.widget.FrameLayout
+import androidx.core.graphics.ColorUtils
 import kotlin.math.PI
 import kotlin.math.abs
 import kotlin.math.cos
@@ -37,11 +37,11 @@ private fun View.dp(v: Float) = v * resources.displayMetrics.density
 
 private fun View.now() = SystemClock.uptimeMillis()
 
-/** Fondo del login: manchas de color difuminadas que derivan lentamente. */
+/** Fondo del login: superficies neutras compartidas, con movimiento reducido. */
 class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     private val colors = intArrayOf(
-        context.getColor(R.color.blob_1), context.getColor(R.color.blob_2),
-        context.getColor(R.color.blob_3), context.getColor(R.color.blob_1),
+        context.getColor(R.color.ds_bg_selected), context.getColor(R.color.ds_bg_sunken),
+        context.getColor(R.color.ds_bg_hover), context.getColor(R.color.ds_bg_selected),
     )
     private val paints = colors.map { Paint(Paint.ANTI_ALIAS_FLAG) }
     private var radius = 0f
@@ -71,13 +71,13 @@ class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(
     }
 }
 
-/** Carnet digital: degradado de marca, brillo holográfico periódico y destello al leer. */
+/** Carnet digital: tinta de marca, brillo monocromo y destello al leer. */
 class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
-    private val radius = dp(24f)
+    private val radius = resources.getDimension(R.dimen.ds_radius_xl)
     private val bg = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x14FFFFFF }
+    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 20) }
     private val decoLine = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE; strokeWidth = dp(1.5f); color = 0x1AFFFFFF
+        style = Paint.Style.STROKE; strokeWidth = dp(1.5f); color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 26)
     }
     private val sheenPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(4f) }
@@ -102,23 +102,22 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
         clipToOutline = true
         elevation = dp(10f)
         if (Build.VERSION.SDK_INT >= 28) {
-            outlineSpotShadowColor = context.getColor(R.color.brand_violet)
-            outlineAmbientShadowColor = context.getColor(R.color.brand_indigo)
+            outlineSpotShadowColor = context.getColor(R.color.ds_border_strong)
+            outlineAmbientShadowColor = context.getColor(R.color.ds_border_strong)
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
-        bg.shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(),
-            intArrayOf(context.getColor(R.color.brand_indigo), context.getColor(R.color.brand_violet),
-                context.getColor(R.color.brand_teal)),
-            floatArrayOf(0f, 0.55f, 1f), Shader.TileMode.CLAMP)
-        // banda diagonal iridiscente (blanco → cian → rosa)
+        bg.color = context.getColor(R.color.ds_brand_ink)
+        // Brillo derivado de on-ink: no introduce una paleta paralela.
         val band = w * 0.45f
         sheenPaint.shader = LinearGradient(0f, 0f, band, band * 0.5f,
-            intArrayOf(0x00FFFFFF, 0x38FFFFFF, 0x3067E8F9, 0x30F472B6, 0x00FFFFFF),
+            intArrayOf(0, 24, 20, 16, 0).map {
+                ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), it)
+            }.toIntArray(),
             floatArrayOf(0f, 0.35f, 0.55f, 0.75f, 1f), Shader.TileMode.CLAMP)
         glowPaint.shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(),
-            context.getColor(R.color.brand_teal_light), context.getColor(R.color.brand_yellow), Shader.TileMode.CLAMP)
+            context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_ok_border), Shader.TileMode.CLAMP)
     }
 
     /** Lanza un barrido del brillo ahora. */
@@ -171,8 +170,8 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
 
 /** Ondas NFC: anillos que se expanden mientras el carnet está listo para el lector. */
 class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = Color.WHITE }
-    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x26FFFFFF }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = context.getColor(R.color.ds_brand_on_ink) }
+    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 38) }
     private val t0 = now()
 
     var active = false
@@ -211,8 +210,10 @@ class CelebrationView(context: Context, attrs: AttributeSet? = null) : View(cont
         val wobble: Float, val color: Int, val size: Float, val round: Boolean,
     )
 
-    private val palette = intArrayOf(0xFFFBBF24.toInt(), 0xFFF472B6.toInt(), 0xFF2DD4BF.toInt(),
-        0xFFA5B4FC.toInt(), 0xFFFFFFFF.toInt(), 0xFFA78BFA.toInt(), 0xFF34D399.toInt())
+    private val palette = intArrayOf(
+        context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_ok_border),
+        context.getColor(R.color.ds_brand_air_from), context.getColor(R.color.ds_brand_air_to),
+    )
     private val bits = ArrayList<Bit>()
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val ringPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE }
@@ -252,7 +253,7 @@ class CelebrationView(context: Context, attrs: AttributeSet? = null) : View(cont
             if (tk !in 0f..0.9f) continue
             val f = tk / 0.9f
             ringPaint.strokeWidth = dp(6f * (1 - f) + 1f)
-            ringPaint.color = if (k == 1) 0xFFFBBF24.toInt() else 0xFF2DD4BF.toInt()
+            ringPaint.color = context.getColor(R.color.ds_state_ok_solid)
             ringPaint.alpha = (230 * (1 - f)).toInt()
             canvas.drawCircle(ox, oy, dp(24f) + f * dp(260f), ringPaint)
         }
@@ -280,20 +281,20 @@ class CelebrationView(context: Context, attrs: AttributeSet? = null) : View(cont
     }
 }
 
-/** Avatar con iniciales y anillo degradado. */
+/** Avatar con iniciales y anillo en tinta. */
 class AvatarView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(3f) }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = 0x33FFFFFF }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+        style = Paint.Style.STROKE; strokeWidth = dp(3f); color = context.getColor(R.color.ds_brand_on_ink)
+    }
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 51) }
     private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.WHITE; textAlign = Paint.Align.CENTER; typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+        color = context.getColor(R.color.ds_brand_on_ink); textAlign = Paint.Align.CENTER; typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
     }
 
     var initials = ""
         set(v) { field = v; invalidate() }
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
-        ring.shader = SweepGradient(w / 2f, h / 2f,
-            intArrayOf(0xFF2DD4BF.toInt(), 0xFFFBBF24.toInt(), 0xFFF472B6.toInt(), 0xFFA78BFA.toInt(), 0xFF2DD4BF.toInt()), null)
         text.textSize = h * 0.36f
     }
 

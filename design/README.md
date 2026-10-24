@@ -5,6 +5,8 @@ Una sola fuente para web y Android: [`tokens.json`](tokens.json). Se edita ahí 
 ```bash
 node design/build-tokens.mjs            # escribe CSS y XML; falla si un texto no llega a 4.5:1
 node design/build-tokens.mjs --verbose  # además imprime cada par de contraste
+node design/build-tokens.mjs --check    # verifica contraste y salidas versionadas, sin escribir
+node --test design/*.test.mjs           # reproducibilidad y consumo de colores Android
 ```
 
 | Salida | Uso |
@@ -13,7 +15,20 @@ node design/build-tokens.mjs --verbose  # además imprime cada par de contraste
 | `mobile/android/app/src/main/res/values/ds_tokens.xml` | Colores claros `ds_*`, `dimen` (espaciado, radios, tipo en `sp`, íconos), `integer` (duraciones) |
 | `mobile/android/app/src/main/res/values-night/ds_tokens.xml` | Colores oscuros con los mismos nombres |
 
-Los archivos `ds_tokens.xml` son independientes de `colors.xml`/`themes.xml` del equipo móvil: se referencian, no se pisan.
+Android consume `ds_*` directamente desde temas, layouts, drawables y Canvas. No hay
+una paleta manual `colors.xml`. `themes.xml` adapta los roles Material a los tokens
+semánticos; carnet y marca usan `brand.ink/on-ink`, chips usan `state.*.text/subtle`.
+El logo repite el anillo de confort de la web y sus colores `brand.air-*`.
+
+La escala de tipo, márgenes, paddings y radios usa los `dimen` generados cuando
+corresponde. Android conserva sus fuentes nativas `sans-serif`/`monospace` como
+fallback offline (no descarga fuentes); controles Material, tamaños táctiles,
+proporciones del arte y geometría del lector conservan medidas nativas en dp.
+Las transparencias de efectos se derivan del color semántico, sin nuevos HEX.
+
+`pnpm test` en web incluye estas comprobaciones, así que Product CI detecta tanto
+salidas desactualizadas como colores manuales añadidos a Android. La comprobación
+de contraste usa los pares realmente empleados por chips/botones en ambos temas.
 
 ## Principios
 
