@@ -23,6 +23,7 @@ const pages = [
   ["asistente", "/asistente"],
   ["estudiantes", "/estudiantes"],
   ["design", "/design"],
+  ["montajes", "/montajes"],
 ];
 const only = process.env.ONLY?.split(",");
 const errors = [];
@@ -30,7 +31,7 @@ const browser = await chromium.launch();
 
 for (const [vpName, viewport, list] of [
   ["desktop", { width: 1440, height: 900 }, pages],
-  ["mobile", { width: 390, height: 844 }, pages.filter(([n]) => ["resumen", `aula-${roomIds[0]}`, "sesiones", "asistente"].includes(n))],
+  ["mobile", { width: 390, height: 844 }, pages.filter(([n]) => ["resumen", `aula-${roomIds[0]}`, "sesiones", "asistente", "montajes"].includes(n))],
 ]) {
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: vpName === "mobile" ? 2 : 1, colorScheme: theme });

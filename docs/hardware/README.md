@@ -12,6 +12,7 @@ préstamo, devolución o entrega se ha supuesto.
 | [inventario.md](inventario.md) | Fuente de verdad de piezas/lotes, IDs, propietario, cantidades, recepción, devolución y uso |
 | [identificacion-fisica.md](identificacion-fisica.md) | Fotografías revisadas (sin publicarlas), etiquetas verificadas, proveedores, fuente 5 V, riesgos y faltantes |
 | [conexiones.md](conexiones.md) | Señales necesarias, pinouts de referencia, asignaciones del código y conflictos |
+| [visualizador.md](visualizador.md) | Banco local, formato JSON y límites de validación |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
 
 Actualizar primero el inventario cuando llegue una compra, se cuenten cables,

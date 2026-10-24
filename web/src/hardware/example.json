@@ -1,0 +1,25 @@
+{
+  "version": 1,
+  "name": "ESP32 + PIR + DHT11",
+  "note": "Propuesta de banco: placa y propietario sin identificar. Confirmar VCC/pull-up del DHT11, VCC/OUT del PIR y continuidad de protoboard antes de montar. No se ha cargado firmware.",
+  "board": { "rows": 30 },
+  "catalog": [
+    { "id": "esp32", "name": "ESP32 · referencia lógica", "pending": "Modelo, pinout físico y asociación A-01/B-02 pendientes. El dibujo no representa el orden del conector.", "pins": [{ "id": "3V3", "kind": "source", "voltage": 3.3 }, { "id": "GND", "kind": "ground" }, { "id": "GPIO4", "kind": "signal" }, { "id": "GPIO27", "kind": "signal" }] },
+    { "id": "dht11", "name": "DHT11", "pending": "B-03: verificar orden de terminales, tensión de alimentación y pull-up. DATA4 es una propuesta del banco.", "pins": [{ "id": "VCC", "kind": "power" }, { "id": "DATA", "kind": "signal", "function": "dht" }, { "id": "GND", "kind": "ground" }] },
+    { "id": "pir", "name": "PIR", "pending": "D-06 o B-04, elegir uno y confirmar modelo, VCC/OUT/GND y nivel de salida. VCC queda sin conectar hasta validarlo.", "pins": [{ "id": "VCC", "kind": "power" }, { "id": "OUT", "kind": "signal", "function": "presence" }, { "id": "GND", "kind": "ground" }] },
+    { "id": "resistor", "name": "Resistencia · valor pendiente", "pending": "Valor, potencia y separación real de patas pendientes; símbolo entre dos agujeros, sin validación del cuerpo.", "pins": [{ "id": "1", "kind": "passive" }, { "id": "2", "kind": "passive" }] }
+  ],
+  "parts": [
+    { "id": "esp1", "definition": "esp32", "inventory": "Por asociar A-01/B-02", "holes": {} },
+    { "id": "dht1", "definition": "dht11", "inventory": "B-03", "holes": {} },
+    { "id": "pir1", "definition": "pir", "inventory": "Elegir D-06 o B-04", "holes": {} }
+  ],
+  "wires": [
+    { "id": "w1", "from": "esp1:GND", "to": "bb:A2", "note": "GND de referencia → A2." },
+    { "id": "w2", "from": "bb:B2", "to": "dht1:GND", "note": "B2 → GND DHT11; comparte tira A–E de fila 2." },
+    { "id": "w3", "from": "bb:C2", "to": "pir1:GND", "note": "C2 → GND PIR; misma referencia." },
+    { "id": "w4", "from": "esp1:GPIO4", "to": "dht1:DATA", "note": "GPIO4 → DATA DHT11; validar pull-up y nivel." },
+    { "id": "w5", "from": "esp1:GPIO27", "to": "pir1:OUT", "note": "GPIO27 ← OUT PIR; comprobar nivel antes de conectar." }
+  ],
+  "revisions": []
+}

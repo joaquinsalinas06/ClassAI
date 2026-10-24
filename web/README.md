@@ -61,3 +61,9 @@ node scripts/screens.mjs http://localhost:5181 screenshots
 - Si `POST /assistant/ask` responde 503 (sin clave del modelo) la página del asistente se desactiva con un aviso; el navegador igual registra la respuesta 503 en la consola de red.
 - La API no tiene un listado de estudiantes: la página Estudiantes los arma con la asistencia de las últimas 12 clases, y solo puede revocar credenciales cuyo ID se conoce.
 - El estado del ventilador no viaja en la telemetría: se estima con la regla del firmware (ALERT y temperatura sobre el máximo → encendido; OK → apagado; 60 s de retención).
+
+## Banco de montajes
+
+`/montajes` abre el visualizador local de conexiones y pasos de armado. Permite
+importar/exportar JSON y guardar revisiones en el navegador. No requiere hardware
+ni backend propio. Véase [alcance, formato y pendientes](../docs/hardware/visualizador.md).
