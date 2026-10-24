@@ -37,6 +37,7 @@ export function Hardware() {
   const routing = routingMetrics(assembly);
   const holes = Array.from({ length: assembly.board.rows }, (_, i) => [..."ABCDEFGHIJ"].map(c => `${c}${i + 1}`)).flat();
   const allContacts = contacts(assembly.board);
+  const focusNet = (end: string) => { setSelected(end); setStep(null); document.querySelector("[data-assembly-board]")?.scrollIntoView({ block: "center", behavior: "instant" }); };
   const update = (next: Assembly) => {
     try {
       const checked = parseAssembly(JSON.stringify(next));
@@ -72,18 +73,19 @@ export function Hardware() {
       actions={<><Button icon={<Download size={14} />} onClick={exportFile}>Exportar JSON</Button><label className="relative"><span className="sr-only">Importar montaje JSON</span><input aria-label="Importar montaje JSON" type="file" accept="application/json,.json" className="absolute inset-0 z-10 w-full cursor-pointer opacity-0" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = ""; }} /><Button tabIndex={-1} icon={<Upload size={14} />}>Importar JSON</Button></label></>} />
     <section className="mb-5 rounded-lg border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center gap-3"><h2 className="text-heading">Primer montaje · DHT11 + PIR</h2><span className="text-caption text-muted">ESP32 de 30 pines · USB abajo</span></div>
-      <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V verificados</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
-      <p className="mt-2 text-caption text-regular-text">30 pines y etiquetas DHT11 reportados por Joaquín. Compara la serigrafía del ESP32 y confirma VCC/OUT/GND del PIR en reverso. El jumper amarillo selecciona disparo; no es una entrada de alimentación.</p>
+      <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V por confirmar</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
+      <p className="mt-2 text-caption text-regular-text">ESP32 DEVKITV1 de 30 pines fotografiado; DHT11 −/OUT/+ reportado. Las letras del PIR no se leen con claridad en las fotos: su orden dibujado sigue siendo una referencia. El jumper amarillo selecciona disparo; no es una entrada de alimentación.</p>
       <div className="mt-3 flex flex-wrap gap-4 text-caption">{(["red", "orange", "black", "green", "yellow"] as const).map(c => <span key={c} className="inline-flex items-center gap-2"><span style={{background:wireColors[c].hex}} className="inline-block h-1.5 w-6 rounded-full" />{wireColors[c].label}</span>)}</div>
     </section>
     <section className="mb-5 rounded-lg border border-line bg-surface p-4" aria-label="Recorrido simplificado">
-      <h2 className="text-heading">Menos vueltas, conexiones completas</h2>
-      <p className="mt-2 text-small text-fg-2">Guía compacta: PIR junto al lado izquierdo del ESP32 (VIN / GND / D27), DHT11 a la derecha. Se eliminan el riel de 5 V y el puente entre negativos: el PIR usa conexiones directas al ESP32. Los dos GND del ESP32 comparten masa internamente.</p>
-      <p className="mt-2 text-small"><strong>{routing.cables} cables · {routing.explicit ? `${routing.turns} giros dibujados` : "recorridos editados sin medir"}</strong>. Referencia anterior: 12 cables y 38 giros; guía compacta: 10 y 20. Son medidas del dibujo, no centímetros ni una garantía de óptimo físico.</p>
-      <p className="mt-2 text-small text-regular-text">Inventario para esta propuesta: 6 jumpers macho–hembra, 1 macho–macho y 3 hembra–hembra. C-08 (~16 M–H) y C-07 (~10 M–M) están declarados; los 3 H–H y las longitudes útiles siguen por confirmar. No improvisar uniones ni dar por disponibles cables del pedido E.</p>
+      <h2 className="text-heading">Montaje con los cables disponibles</h2>
+      <p className="mt-2 text-small text-fg-2">Guía sin hembra–hembra: ESP32 a la izquierda, sensores a la derecha. Dos cables M–H se enlazan por una misma tira de cobre: F20–J20 para VCC del PIR y F24–J24 para OUT. La masa común usa el riel derecho −; el positivo derecho y el negativo izquierdo quedan libres.</p>
+      <p className="mt-2 text-small"><strong>{routing.cables} cables · {routing.explicit ? `${routing.turns} giros dibujados` : "recorridos editados sin medir"}</strong>. La propuesta anterior usaba 10 cables, incluidos 3 H–H que no tienes. Esta usa 12 cables y cero H–H; se prioriza tu material disponible. Son medidas del dibujo, no centímetros ni una garantía de óptimo físico.</p>
+      <p className="mt-2 text-small text-regular-text">Material: 11 jumpers macho–hembra (C-08: ~16 declarados) y 1 macho–macho (C-07: ~10 declarados). H–H: 0, ausencia confirmada por Joaquín. Comprobar cuántos están libres y su alcance; no hace falta soldar, torcer puntas ni pedir H–H para esta propuesta.</p>
+      <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => focusNet("bb:F20")}>Resaltar unión F20 / H20 · VCC PIR</Button><Button size="sm" onClick={() => focusNet("bb:G24")}>Resaltar unión G24 / J24 · OUT PIR</Button></div>
       <p className="mt-2 text-caption text-muted">Cruces con separación blanca no son uniones. Solo cuentan terminales y tiras de cobre. Montar apagado; antes de energizar: identificación, polaridad PIR, VIN medido, OUT compatible y continuidad sin cortos. Cargar la guía es reversible y no guarda sobre tu montaje anterior.</p>
     </section>
-    <WiringReference onSignal={() => { setSelected("esp1:GPIO4"); setStep(null); document.querySelector("[data-assembly-board]")?.scrollIntoView({ block: "center", behavior: "instant" }); }} />
+    <WiringReference onSignal={() => focusNet("esp1:GPIO4")} />
     <div className="mb-5 grid gap-3 md:grid-cols-[1fr_2fr]">
       <label className="text-small">Nombre del montaje<input className={field} value={assembly.name} maxLength={120} onChange={e => update({ ...assembly, name: e.target.value })} /></label>
       <label className="text-small">Observaciones y pendientes<input className={field} value={assembly.note} maxLength={2000} onChange={e => update({ ...assembly, note: e.target.value })} /></label>

@@ -159,3 +159,21 @@ con DevKit V1; VN se leyó con duda. Ver [banco-ambiente.md](banco-ambiente.md)
 para el orden completo. Primera placa descrita: 30 contactos aparentes, ID aún
 por asociar y etiquetas D4/D14, D5/B5 y VN por cotejar. Son declaraciones, no
 identificaciones USB ni ensayos. E-01 sigue pendiente de recepción.
+
+## Fotografías de ESP32/PIR y cables disponibles · 24/10/2026
+
+- Fotos 7/8: una placa **ESP32 DEVKITV1**, módulo con marcado ESP-WROOM-32,
+  micro USB, EN/BOOT y 30 contactos macho. D4, D5, VP y VN son legibles y
+  coinciden con el mapa documentado. No atribuir fabricación DOIT por ese texto;
+  falta asociar esa foto a A-01 o B-02 y a un puerto USB. No se ha observado
+  eléctricamente VIN ni se ha leído/cargado flash.
+- Fotos 1–6: un PIR con lente Fresnel, cuatro condensadores, dos potenciómetros,
+  conector macho de tres terminales y jumper amarillo de selección. Aspecto
+  compatible con el HC-SR501 ya declarado; no se distinguen las letras VCC/OUT/GND
+  ni el marcado del chip. No asignar B-04/D-06 por el color ni certificar el orden
+  de terminales por semejanza. No se recibió una nueva pieza por fotografiarla.
+- Joaquín confirma **cero cables H–H disponibles**. La receta preferida se cambia
+  a **11 M–H + 1 M–M** con uniones por tiras de protoboard. C-08 (~16 M–H) y
+  C-07 (~10 M–M) siguen siendo cantidades declaradas: comprobar unidades libres
+  y alcance físico, sin duplicarlas ni contar E pendiente. No hace falta pedir
+  H–H para esa receta si los jumpers declarados están disponibles y alcanzan.

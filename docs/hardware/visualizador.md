@@ -142,3 +142,13 @@ usa unidades SVG, no longitud real. Los rieles muestran su conexión actual o
 No hay optimizador automático: se revisó una distribución concreta y se probó
 la equivalencia de redes entre terminales antes/después. Los JSON e historiales
 previos no se migran ni sobrescriben al abrir la guía.
+
+## Preferencia sin H–H (24/10/2026)
+
+`layout: "breadboard"` conserva ESP32 a la izquierda y sensores a la derecha.
+Es la guía actual: 12 jumpers (11 M–H + 1 M–M), 25 giros. Nodos F20/H20 para VCC
+PIR y G24/J24 para OUT sustituyen conexiones H–H; GND comparte RN. El parser
+acepta tanto este layout como `compact` y ausencia de layout, sin migrar guardados.
+El inventario registra cero H–H disponibles. No se asume que el PIR se pueda
+insertar mecánicamente en la protoboard. Fotos confirman ESP32 DEVKITV1, no VIN
+medido ni etiquetas legibles del PIR. Los estados de propuesta permanecen.

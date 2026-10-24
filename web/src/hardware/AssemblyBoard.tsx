@@ -56,7 +56,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       const color = source?.pin.kind === "ground" ? "#526276" : voltage === 3.3 ? "#db3345" : voltage === 5 ? "#dc7519" : "#87929f";
       return <g key={rail}><text x={x} y="135" textAnchor="middle" fontSize="16" fill={color}>{rail[1] === "P" ? "+" : "−"}</text>
         {[0, ...(assembly.board.splitRails ? [1] : [])].map(section => <line key={section} x1={x - 9} x2={x - 9} y1={section ? ys(Math.ceil(assembly.board.rows / 2) + 1) - 5 : 145} y2={section || !assembly.board.splitRails ? ys(assembly.board.rows) + 8 : ys(Math.ceil(assembly.board.rows / 2)) + 5} stroke={color} strokeWidth="2" />)}
-        <text x={x} y={160 + assembly.board.rows * 18 + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{source?.pin.kind === "ground" ? "GND" : voltage === undefined ? "Libre" : `${String(voltage).replace(".", ",")} V${voltage === 5 ? "*" : ""}`}</text></g>;
+        <text x={x} y={Math.max(160 + assembly.board.rows * 18, assembly.layout === "breadboard" ? 790 : 0) + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{source?.pin.kind === "ground" ? "GND" : voltage === undefined ? "Libre" : `${String(voltage).replace(".", ",")} V${voltage === 5 ? "*" : ""}`}</text></g>;
     })}
     {[..."ABCDEFGHIJ"].map(c => <text key={c} x={point(`${c}1`)[0]} y="135" textAnchor="middle" fontSize="11" fill="#667081">{c}</text>)}
     {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x={480 + offset} y={ys(i + 1) + 4} textAnchor="end" fontSize="10" fill="#758194">{i + 1}</text><text x={733 + offset} y={ys(i + 1) + 4} fontSize="10" fill="#758194">{i + 1}</text></g>)}
@@ -106,7 +106,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
           <rect x={x+99} y={y+145} width="25" height="15" fill="#e3c326"/><text x={x+112} y={y+175} textAnchor="middle" fontSize="9" fill="#f0e9b1">H / L</text>
         </g>}
         {definition(assembly,p).pins.map(pin => {const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}><path d={`M${pt[0]} ${y+180} V${pt[1]}`} stroke="#b89c50" strokeWidth="5"/>{pinMark(`${id}:${pin.id}`,pt[0],pt[1],undefined,pt[0],pt[1]-14)}</g>;})}
-        <text x={x+65} y={y+(isDht?300:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "Orden − OUT + reportado" : "Orden de pines por confirmar"}</text>
+        <text x={x+65} y={y+(isDht?260:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "Orden − OUT + reportado" : "Orden de pines por confirmar"}</text>
       </g>;
     })}
     {wires.map((w, i) => {

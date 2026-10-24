@@ -79,3 +79,19 @@ Otros ESP32, otro ventilador, otro relé, otro PN532, más pantallas, amplificad
 - D-01: headers, selector SPI OFF/ON y prueba tarjeta/llavero.
 - E-01 a E-04: recepción, conteo de kit y características físicas.
 - Cargadores/hub: modelo, etiqueta OUTPUT y número de puertos/corriente disponible.
+
+## Ampliación fotográfica ESP32/PIR · 24/10/2026
+
+Las ocho fotos posteriores corresponden a seis vistas de un PIR y dos de una
+placa ESP32. No se suben las imágenes al repositorio.
+
+| Pieza fotografiada | Observado | No demostrado |
+|---|---|---|
+| ESP32, fotos 7/8, ID A/B aún por asociar | Reverso ESP32 DEVKITV1; módulo ESP-WROOM-32; 15 contactos macho por lado, micro USB y EN/BOOT; D4/D5/VP/VN legibles, compatibles con el mapa de 30 pines | Marca/fabricante auténtico, esquema de potencia exacto, tensión en VIN, identidad USB, firmware previo y funcionamiento |
+| PIR, fotos 1–6, ID B-04/D-06 aún por asociar | Lente, cuatro condensadores, dos ajustes naranjas, tres terminales macho y selector amarillo; aspecto HC-SR501 consistente con el relato | VCC/OUT/GND no legibles incluso ampliando foto 6; marcado de chip y regulador no legibles; no certifica posiciones ni tensión de salida |
+
+La falta de H–H fue confirmada por Joaquín. Se utiliza la protoboard para unir
+parejas de M–H en contactos distintos de una misma tira. No insertar dos puntas
+en un agujero ni torcer cables juntos. La receta no exige insertar el PIR en
+la protoboard: los condensadores/cuerpo podrían impedir un asiento correcto.
+No se realizó ningún montaje, medición ni operación sobre flash.
