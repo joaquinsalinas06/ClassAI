@@ -33,3 +33,32 @@ def test_mobile_enroll(tmp_path, monkeypatch):
     assert client.post("/mobile/enroll", json=dict(body, student_code="999")).status_code == 404
     # Token con formato inválido.
     assert client.post("/mobile/enroll", json=dict(body, token="Z" * 32)).status_code == 400
+
+    # Retry / lost HTTP response: same phone is idempotent and does not rename the student.
+    again = client.post("/mobile/enroll", json=body)
+    assert again.status_code == 200 and again.json() == ok.json()
+    assert connection.execute("SELECT COUNT(*) FROM credentials").fetchone() == (1,)
+    assert TOKEN not in again.text
+
+    # Revocation is never silently undone by retrying the old token.
+    connection.execute("UPDATE credentials SET active = 0, revoked_at = 'x'")
+    connection.commit()
+    assert client.post("/mobile/enroll", json=body).status_code == 409
+    assert connection.execute("SELECT active FROM credentials").fetchall() == [(0,)]
+
+
+def test_concurrent_same_student_cannot_enroll_two_phones(tmp_path, monkeypatch):
+    from concurrent.futures import ThreadPoolExecutor
+    database = tmp_path / "classai.db"
+    with sqlite3.connect(database) as connection:
+        connection.executescript((Path(__file__).resolve().parents[1] / "schema.sql").read_text())
+        connection.execute("INSERT INTO students (code, full_name, created_at) VALUES ('202999001','Lab','x')")
+    monkeypatch.setenv("DATABASE_PATH", str(database))
+    monkeypatch.setenv("LOCAL_TIMEZONE", "America/Lima")
+    def enroll(token):
+        with TestClient(api.app) as client:
+            return client.post("/mobile/enroll", json={"student_code":"202999001", "full_name":"Lab", "token":token}).status_code
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        assert sorted(pool.map(enroll, ["A" * 32, "B" * 32])) == [200, 409]
+    with sqlite3.connect(database) as connection:
+        assert connection.execute("SELECT COUNT(*) FROM credentials WHERE active = 1").fetchone() == (1,)

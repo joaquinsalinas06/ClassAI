@@ -46,6 +46,15 @@ class EnrollmentTest {
         assertNull(normalizeServer("http://"))
     }
 
+    @Test fun ignoresResponsesFromOldServerOrCredential() {
+        val token = ByteArray(16) { 1 }
+        assertTrue(enrollmentResultIsCurrent(2, 2, "http://a", "http://a", token, token.copyOf()))
+        org.junit.Assert.assertFalse(enrollmentResultIsCurrent(1, 2, "http://a", "http://a", token, token))
+        org.junit.Assert.assertFalse(enrollmentResultIsCurrent(2, 2, "http://a", "http://b", token, token))
+        org.junit.Assert.assertFalse(enrollmentResultIsCurrent(2, 2, "http://a", "http://a", token, ByteArray(16)))
+        org.junit.Assert.assertFalse(enrollmentResultIsCurrent(2, 2, "http://a", "http://a", token, null))
+    }
+
     @Test fun json() {
         assertEquals(
             """{"student_code":"202310123","full_name":"Ana \"Ani\" Pérez","token":"00FF"}""",

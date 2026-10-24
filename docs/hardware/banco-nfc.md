@@ -119,6 +119,12 @@ Sin instrumentos no se inventan medidas ni se exige comprar un multímetro para
 leer el diseño. Si persiste una incertidumbre de alimentación o soldadura, se
 registra y se pide revisión de esa conexión concreta antes de seguir.
 
+## Continuar con el celular
+
+La [guía HCE local](nfc-hce-local.md) usa el mismo montaje, actualiza la app sin
+cambiar token y añade el perfil NFC_ONLY con start/stop/status para registrar
+asistencia real. El banco básico de este documento sigue siendo el primer diagnóstico.
+
 ## Fuentes y límites
 
 - [Manual Elechouse PN532 V3](https://www.elechouse.com/elechouse/images/product/PN532_module_V3/PN532_%20Manual_V3.pdf), foto frontal p. 2, interfaces/selector p. 3. Base del orden físico y modo SPI.

@@ -113,6 +113,17 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             reader.start()
             wait_for(ready.is_set, processes)
 
+            # Real mobile enrolment route, same token delivered by the HCE protocol later.
+            with sqlite3.connect(db_path) as connection:
+                connection.execute("INSERT INTO students (code, full_name, created_at) VALUES ('202999001', 'HCE Lab Test', '2026-01-01T00:00:00Z')")
+            phone_token = "11223344556677889900AABBCCDDEEFF"  # synthetic, never a real phone
+            with TestClient(api.app) as client:
+                phone = {"student_code": "202999001", "full_name": "HCE Lab Test", "token": phone_token}
+                linked = client.post("/mobile/enroll", json=phone)
+                assert linked.status_code == 200
+                assert client.post("/mobile/enroll", json=phone).json() == linked.json()
+                assert phone_token not in linked.text
+
             common = {"v": 1, "device": "esp32-a101", "room": "a101",
                       "session_id": "a101-u1000", "ts": None, "uptime_ms": 1000}
             counter = 0
@@ -139,22 +150,24 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             publish("telemetry", {**reading, "room": "b202"})
             publish("telemetry", {**reading, "temp_c": "invalid"})
             publish("events", {**started, "event_id": "bad-version", "v": 2})
+            event("ATTENDANCE_RECORDED", credential={"type": "android_hce", "token": phone_token})
+            event("ATTENDANCE_RECORDED", credential={"type": "android_hce", "token": phone_token})
             event("SESSION_ENDED")  # ordered barrier; flushes minute summaries
             wait_for(lambda: rows("SELECT COUNT(*) FROM session_summaries")[0][0] == 1, processes)
 
             wait_for(lambda: any("sesión finalizada y resumida" in line for line in lines), processes)
             assert rows("SELECT c.type FROM attendance a JOIN credentials c ON c.id = a.credential_id ORDER BY c.type") == [
-                ("android_hce",), ("nfc_card_uid",),
+                ("android_hce",), ("android_hce",), ("nfc_card_uid",),
             ]
-            assert rows("SELECT COUNT(*) FROM events") == [(7,)]
+            assert rows("SELECT COUNT(*) FROM events") == [(9,)]
             assert rows("SELECT COUNT(*) FROM readings_raw") == [(1,)]
-            assert rows("SELECT COUNT(*) FROM attendance") == [(2,)]
+            assert rows("SELECT COUNT(*) FROM attendance") == [(3,)]
             assert rows("SELECT reason FROM attendance_rejections ORDER BY id") == [
                 ("unknown_credential",), ("invalid_payload",),
             ]
             assert rows("SELECT samples, avg FROM sensor_minutes WHERE metric = 'temp_c'") == [(1, 23.4)]
             assert rows("SELECT COUNT(*) FROM sensor_minutes WHERE metric = 'ir_object_c'") == [(0,)]
-            assert rows("SELECT attendance_count FROM session_summaries") == [(2,)]
+            assert rows("SELECT attendance_count FROM session_summaries") == [(3,)]
             assert sum("Mensaje MQTT ignorado" in line for line in lines) == 4
             assert any("asistencia duplicada (mismo estudiante)" in line for line in lines)
 
@@ -162,11 +175,13 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                 assert client.get("/health").json()["database"] == "available"
                 response = client.get("/sessions/a101-u1000/attendance")
                 assert response.status_code == 200
-                assert response.json()["count"] == 2
+                assert response.json()["count"] == 3
                 assert all(token not in response.text for _, _, _, token in STUDENTS)
+                assert phone_token not in response.text
+                assert sum(row["code"] == "202999001" for row in response.json()["data"]) == 1
                 summary = client.get("/sessions/a101-u1000/summary")
                 assert summary.status_code == 200
-                assert summary.json()["attendance_count"] == 2
+                assert summary.json()["attendance_count"] == 3
             # Check graceful shutdown flush/exit as well as live persisted state.
             ingest.terminate()
             assert ingest.wait(timeout=10) == 0
