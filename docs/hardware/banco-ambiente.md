@@ -1,8 +1,11 @@
 # Banco M-04/05: ESP32 de 30 pines + DHT11 + PIR
 
 Diseño de referencia de 24/10/2026. Joaquín reporta **ESP32 de 30 pines** y
-**DHT11 con etiquetas − / OUT / +**. No se ha asociado la placa a A-01/B-02 ni
-se ha comprobado la orientación de lectura de esas etiquetas. El PIR reportado
+**DHT11 con etiquetas − / OUT / +**. B-02 (universidad) cuenta ahora con un orden de terminales reportado, compatible
+con DevKit V1 de 30 pines. La primera placa descrita parece del mismo tipo, pero
+su asociación a A-01 y las lecturas D4/D14, D5/B5 y VN siguen pendientes. No se ha
+verificado ninguna de ellas por fotografía, chip ni puerto USB. La orientación
+de lectura del DHT11 sigue sin comprobarse. El PIR reportado
 tiene tres terminales y un selector de tres pines con puente amarillo: coincide
 con rasgos del tipo HC-SR501 de B-04/D-06, pero no lo identifica inequívocamente.
 No elegir propietario ni ID de PIR por semejanza.
@@ -78,6 +81,57 @@ esos contactos; el dibujo no es una plantilla métrica.
 Armar sin USB. Verificar valor de R1, polaridad, separación 3,3/5 V, ausencia de
 corto a GND, continuidad y orientación antes de energizar. Comprobar niveles del
 PIR con OUT separado del ESP32 y anotar el montaje/medición temporal por separado.
+
+## Por qué A8, B8 y la resistencia no forman un divisor
+
+En la protoboard, **A8/B8/C8/D8/E8 ya son el mismo nodo**, unidos internamente
+por una tira de cobre. OUT llega a A8, GPIO4 a B8 y una pata de R1 a C8.
+No hay que añadir un cable entre A8 y B8. R1 cruza hasta G8; F8/G8/H8/I8/J8
+forman el otro nodo, alimentado desde 3,3 V por el cable rojo LP8–J8.
+
+```text
+3,3 V ─────────────────────────── DHT11 +
+   │
+   └── R1 10 kΩ ──●────────────── D4 / GPIO4
+                  └───────────── DHT11 OUT
+                    A8/B8/C8
+GND ───────────────────────────── DHT11 −
+```
+
+El camino **OUT ↔ GPIO4 no atraviesa R1**. La resistencia mantiene la línea alta
+cuando está liberada; sensor y controlador se turnan para comunicar llevándola
+a LOW. No es un divisor ni una resistencia en serie con la alimentación.
+Quitar LP8–J8 desconecta el pull-up externo, no el cable que alimenta +. Si B-03
+ya incorpora pull-up a 3,3 V, se puede prescindir de R1 externa tras identificarlo.
+
+**VIN no es una salida regulada de 5 V.** Es la entrada del regulador de 3,3 V;
+la ruta desde USB depende de la variante y puede incluir caída en diodos. Antes
+del paso 4: con sensores y otras cargas desconectados y solo USB como fuente,
+medir tensión DC VIN–GND y registrar placa, lectura y condiciones. Confirmar
+además que la alimentación disponible cumple los requisitos del PIR concreto;
+una lectura en vacío no certifica capacidad de corriente. El dibujo naranja es
+una propuesta nominal, no una medición. No alimentar USB y VIN externamente a la vez.
+
+## Lectura reportada de las placas y referencia de 38 pines
+
+Vista frontal con USB abajo. Este orden se expresa **de abajo hacia arriba**,
+como el relato de Joaquín del 24/10/2026:
+
+| Placa | Izquierda ↑ | Derecha ↑ | Evidencia / pendiente |
+|---|---|---|---|
+| B-02, universidad | VIN, GND, D13, D12, D14, D27, D26, D25, D33, D32, D35, D34, VN, VP, EN | 3V3, GND, D15, D2, D4, RX2, TX2, D5, D18, D19, D21, RX0, TX0, D22, D23 | Declaración; VN se leyó con duda. Coincide con referencia DevKit V1; falta inspección y USB |
+| Primera placa descrita, ID por asociar | Mismo orden aparente, con VN omitido o dudoso | Mismo orden aparente, con D14 en posición esperada D4 y B5 en posición esperada D5 | Esas sustituciones son hipótesis para cotejar, no etiquetas verificadas |
+
+El SVG muestra D4/D27 como en la serigrafía de referencia y conserva GPIO4/27
+como identidad eléctrica. VP=GPIO36, VN=GPIO39, RX2=GPIO16, TX2=GPIO17,
+RX0=GPIO3, TX0=GPIO1. EN y las alimentaciones no son GPIO.
+
+El comparador de la web incluye **ESP32-DevKitC V4 de 38 pines**, tablas J2/J3
+oficiales; no cambia el banco de 30 pines. E-01 (38Pin Type C) sigue pedida.
+El DevKitC oficial usa micro USB: esa referencia **no identifica** el clon USB-C
+comprado. D2 de esa referencia es GPIO9/flash; no equivale a D2=GPIO2 del DevKit
+V1 de 30 pines. CLK/D0/D1/D2/D3/CMD quedan reservados para memoria. Confirmar
+modelo y serigrafía al recibir E-01 antes de trasladar cualquier posición.
 
 ## Firmware preparado, no cargado
 

@@ -1,17 +1,17 @@
 import type { KeyboardEvent } from "react";
+import { devkit30, silkscreen30 } from "./pinouts";
 import { contactStrip, contacts, definition, type Assembly, type Wire, type WireColor } from "./model";
 
 export const wireColors: Record<WireColor, { label: string; hex: string }> = {
   red: { label: "Rojo · 3,3 V", hex: "#db3345" },
   black: { label: "Negro · GND", hex: "#252d38" },
-  orange: { label: "Naranja · 5 V", hex: "#dc7519" },
+  orange: { label: "Naranja · 5 V nominal", hex: "#dc7519" },
   green: { label: "Verde · DATA DHT11", hex: "#15855e" },
   yellow: { label: "Amarillo · OUT PIR", hex: "#b78a08" },
   blue: { label: "Azul", hex: "#2867c7" },
   purple: { label: "Violeta", hex: "#8753b7" },
 };
-const leftPins = ["EN", "GPIO36", "GPIO39", "GPIO34", "GPIO35", "GPIO32", "GPIO33", "GPIO25", "GPIO26", "GPIO27", "GPIO14", "GPIO12", "GPIO13", "GND_L", "VIN"];
-const rightPins = ["GPIO23", "GPIO22", "GPIO1", "GPIO3", "GPIO21", "GPIO19", "GPIO18", "GPIO5", "GPIO17", "GPIO16", "GPIO4", "GPIO2", "GPIO15", "GND", "3V3"];
+const { left: leftPins, right: rightPins } = devkit30;
 export function terminalLabel(end: string) {
   if (end.startsWith("bb:")) {
     const h = end.slice(3), m = /^(LP|LN|RP|RN)(\d+)$/.exec(h);
@@ -59,7 +59,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
   const height = Math.max(840, 225 + assembly.board.rows * 18, espCount * 620 + 120, sensorY + 30);
   const active = (end: string) => connected(selected, end);
   const key = (e: KeyboardEvent, end: string) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onSelect(end); } };
-  const labelPin = (id: string) => ({ GPIO36: "VP", GPIO39: "VN", GPIO1: "TX0", GPIO3: "RX0", GPIO17: "TX2", GPIO16: "RX2" }[id] ?? id.replace("GPIO", "").replace("GND_L", "GND"));
+  const labelPin = silkscreen30;
   const pinMark = (end: string, x: number, y: number, text?: string, labelX = x, labelY = y - 15) => <g key={end} role="button" tabIndex={0} aria-label={`Terminal ${end}`} onClick={() => onSelect(end)} onKeyDown={e => key(e, end)} style={{ cursor: "pointer" }}>
     {active(end) && <circle cx={x} cy={y} r="12" fill="#59b3e9" opacity=".35" />}
     <rect x={x - 5} y={y - 5} width="10" height="10" rx="1" fill="#d5b865" stroke="#70582b" />
@@ -83,7 +83,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       const [x] = point(`${rail}1`), color = rail === "LP" ? "#db3345" : rail === "RP" ? "#dc7519" : "#526276";
       return <g key={rail}><text x={x} y="135" textAnchor="middle" fontSize="16" fill={color}>{rail[1] === "P" ? "+" : "−"}</text>
         {[0, ...(assembly.board.splitRails ? [1] : [])].map(section => <line key={section} x1={x - 9} x2={x - 9} y1={section ? ys(Math.ceil(assembly.board.rows / 2) + 1) - 5 : 145} y2={section || !assembly.board.splitRails ? ys(assembly.board.rows) + 8 : ys(Math.ceil(assembly.board.rows / 2)) + 5} stroke={color} strokeWidth="2" />)}
-        <text x={x} y={160 + assembly.board.rows * 18 + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{rail === "LP" ? "3,3 V" : rail === "RP" ? "5 V" : "GND"}</text></g>;
+        <text x={x} y={160 + assembly.board.rows * 18 + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{rail === "LP" ? "3,3 V" : rail === "RP" ? "5 V*" : "GND"}</text></g>;
     })}
     {[..."ABCDEFGHIJ"].map(c => <text key={c} x={point(`${c}1`)[0]} y="135" textAnchor="middle" fontSize="11" fill="#667081">{c}</text>)}
     {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x="480" y={ys(i + 1) + 4} textAnchor="end" fontSize="10" fill="#758194">{i + 1}</text><text x="733" y={ys(i + 1) + 4} fontSize="10" fill="#758194">{i + 1}</text></g>)}

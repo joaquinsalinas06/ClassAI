@@ -14,6 +14,16 @@ try {
   assert.equal(await page.locator('[data-wire]').count(),12);
   assert.equal(await page.locator('[data-wire-color="orange"]').count(),2);
   assert.equal(await page.locator('[data-wire-color="green"]').count(),2);
+  await page.getByText("Comparar placas · mapa de 30 y referencia de 38 pines", { exact: true }).click();
+  assert.equal(await page.getByRole("table", { name: "Pinout de referencia 30 pines" }).getByRole("row").count(), 16);
+  await page.getByRole("button", { name: "38 pines · referencia E-01 pendiente", exact: true }).click();
+  assert.equal(await page.getByRole("table", { name: "Pinout de referencia 38 pines" }).getByRole("row").count(), 20);
+  assert.equal(await page.locator('[data-wire]').count(), 12);
+  assert.equal(await page.evaluate(() => localStorage.getItem("classai.hardware.v1")), null);
+  await page.getByRole("button", { name: "30 pines · disponibles", exact: true }).click();
+  await page.getByText("Comparar placas · mapa de 30 y referencia de 38 pines", { exact: true }).click();
+  await page.getByRole("button", { name: "Resaltar señal OUT ↔ D4 en el montaje", exact: true }).click();
+  await page.getByText(/Contacto seleccionado: ESP32 · GPIO 4/).waitFor();
   await page.getByRole("button", { name: "Ver reverso del PIR", exact: true }).click();
   await page.getByText("BISS0001",{exact:true}).waitFor();
   await page.getByRole("button", { name: "Ver lente del PIR", exact: true }).click();

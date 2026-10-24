@@ -2,6 +2,7 @@ import { useState, type FormEvent } from "react";
 import { Download, Plus, Undo2, Upload } from "lucide-react";
 import { PageHeader } from "../ui/PageHeader";
 import { Button } from "../ui/Button";
+import { WiringReference } from "../hardware/WiringReference";
 import example from "../hardware/example.json";
 import { AssemblyBoard, terminalLabel, wireColors } from "../hardware/AssemblyBoard";
 import { analyze, contacts, definition, parseAssembly, recordRevision, terminals, type Assembly, type Wire } from "../hardware/model";
@@ -69,10 +70,11 @@ export function Hardware() {
       actions={<><Button icon={<Download size={14} />} onClick={exportFile}>Exportar JSON</Button><label className="relative"><span className="sr-only">Importar montaje JSON</span><input aria-label="Importar montaje JSON" type="file" accept="application/json,.json" className="absolute inset-0 z-10 w-full cursor-pointer opacity-0" onChange={e => { void importFile(e.target.files?.[0]); e.target.value = ""; }} /><Button tabIndex={-1} icon={<Upload size={14} />}>Importar JSON</Button></label></>} />
     <section className="mb-5 rounded-lg border border-line bg-surface p-4">
       <div className="flex flex-wrap items-center gap-3"><h2 className="text-heading">Primer montaje · DHT11 + PIR</h2><span className="text-caption text-muted">ESP32 de 30 pines · USB abajo</span></div>
-      <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
+      <p className="mt-2 text-small text-fg-2">Tu DHT11: <strong>− → GND · OUT → GPIO4 · + → 3,3 V</strong>. PIR de referencia: <strong>GND → GND · OUT → GPIO27 · VCC → 5 V verificados</strong>. R1: pull-up de 10 kΩ entre DATA y 3,3 V.</p>
       <p className="mt-2 text-caption text-regular-text">30 pines y etiquetas DHT11 reportados por Joaquín. Compara la serigrafía del ESP32 y confirma VCC/OUT/GND del PIR en reverso. El jumper amarillo selecciona disparo; no es una entrada de alimentación.</p>
       <div className="mt-3 flex flex-wrap gap-4 text-caption">{(["red", "orange", "black", "green", "yellow"] as const).map(c => <span key={c} className="inline-flex items-center gap-2"><span style={{background:wireColors[c].hex}} className="inline-block h-1.5 w-6 rounded-full" />{wireColors[c].label}</span>)}</div>
     </section>
+    <WiringReference onSignal={() => { setSelected("esp1:GPIO4"); setStep(null); document.querySelector("[data-assembly-board]")?.scrollIntoView({ block: "center", behavior: "instant" }); }} />
     <div className="mb-5 grid gap-3 md:grid-cols-[1fr_2fr]">
       <label className="text-small">Nombre del montaje<input className={field} value={assembly.name} maxLength={120} onChange={e => update({ ...assembly, name: e.target.value })} /></label>
       <label className="text-small">Observaciones y pendientes<input className={field} value={assembly.note} maxLength={2000} onChange={e => update({ ...assembly, note: e.target.value })} /></label>

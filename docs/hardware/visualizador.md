@@ -119,3 +119,13 @@ historial; además captura claro/oscuro y móvil sin desbordamiento de la págin
 El lienzo tiene desplazamiento horizontal propio para conservar legibles los
 agujeros. Las capturas se guardan localmente en `web/screenshots/`, ignorado por Git.
 Estas pruebas son de software; no certifican un montaje.
+
+## Aclaración de pinout y señal (24/10/2026)
+
+El dibujo de 30 pines muestra etiquetas D4/D27 y mantiene GPIO4/GPIO27 como
+identificadores eléctricos. El esquema explicativo separa el + directo del
+DHT11 y la rama pull-up de 10 kΩ; el botón resalta la red real OUT/GPIO4 del
+borrador actual. El esquema explica la receta original, no se recalcula al editarla.
+El comparador 30/38 muestra filas con USB abajo y referencia oficial DevKitC
+J2/J3, sin modificar el montaje ni asignar esa variante a E-01. La tensión del
+riel naranja sigue nominal y pendiente de medir VIN–GND en cada placa.

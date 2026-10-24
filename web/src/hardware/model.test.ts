@@ -5,6 +5,16 @@ const fresh = () => parseAssembly(JSON.stringify(example));
 const wire = (a: Assembly, from: string, to: string) => a.wires.push({ id: `test${a.wires.length}`, from, to, note: "" });
 const errors = (a: Assembly) => analyze(a).findings.filter(f => f.level === "error").map(f => f.text).join(" ");
 describe("hardware assembly", () => {
+  it("keeps DHT data directly connected and its pull-up separate from supply", () => {
+    const a = fresh(), result = analyze(a);
+    expect(result.connected("dht1:DATA", "esp1:GPIO4")).toBe(true);
+    for (const hole of ["A8", "B8", "C8", "D8", "E8"]) expect(result.connected("dht1:DATA", `bb:${hole}`)).toBe(true);
+    expect(result.connected("dht1:DATA", "esp1:3V3")).toBe(false);
+    expect(result.connected("dht1:VCC", "esp1:3V3")).toBe(true);
+    a.wires = a.wires.filter(w => !(w.from === "bb:LP8" && w.to === "bb:J8"));
+    expect(analyze(a).connected("dht1:VCC", "esp1:3V3")).toBe(true);
+    expect(analyze(a).connected("dht1:DATA", "esp1:GPIO4")).toBe(true);
+  });
   it("shares row halves, but isolates the gap and neighboring rows", () => {
     const result = analyze(fresh());
     expect(result.connected("bb:A2", "bb:E2")).toBe(true);
