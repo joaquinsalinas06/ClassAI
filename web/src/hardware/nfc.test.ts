@@ -48,6 +48,11 @@ describe("PN532 physical assembly", () => {
     expect(metrics.explicit).toBe(true);
     expect(metrics.cables).toBe(12);
     expect(metrics.turns).toBe(24);
+    const a=fresh(), {ends}=assemblyGeometry(a);
+    for (const wire of a.wires) {
+      const points=[ends.get(wire.from)!, ...wire.bends!, ends.get(wire.to)!];
+      for (let i=1;i<points.length;i++) expect(points[i]![0] === points[i-1]![0] || points[i]![1] === points[i-1]![1]).toBe(true);
+    }
   });
   it("uses the manual front-face pin order rotated counterclockwise", () => {
     expect(pn532SpiFrontCCW).toEqual(["RSTO","IRQ","GND","VCC","SS","MOSI","MISO","SCK"]);

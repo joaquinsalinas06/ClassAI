@@ -26,10 +26,10 @@ export const nfcAssembly = parseAssembly(JSON.stringify({
 const { ends } = assemblyGeometry(nfcAssembly);
 for (const [i, c] of nfcConnections.entries()) {
   const from = `esp1:${c.esp}`, to = `nfc1:${c.pin}`, a = `bb:${c.espHole}`, b = `bb:${c.moduleHole}`;
-  const s = ends.get(from)!, h = ends.get(a)!, t = ends.get(to)!;
+  const s = ends.get(from)!, h = ends.get(a)!, junction = ends.get(b)!, t = ends.get(to)!;
   const leftLane = 350 + [5, 4, 2, 1, 0, 3][i]! * 14, rightLane = 830 + i * 18;
   nfcAssembly.wires.push(
     { id: `nfc-${i * 2 + 1}`, from, to: a, color: c.color, note: `Cable ${i * 2 + 1} · M–H: hembra a ESP32 ${c.esp}, macho a ${c.espHole}. Montar sin USB.`, bends: [[leftLane, s[1]], [leftLane, h[1]]] },
-    { id: `nfc-${i * 2 + 2}`, from: b, to, color: c.color, note: `Cable ${i * 2 + 2} · M–H: macho a ${c.moduleHole}, hembra a PN532 ${c.pin}. ${c.espHole}/${c.moduleHole} comparten ${c.pin === "VCC" ? "riel + izquierdo, mitad superior" : c.pin === "GND" ? "riel − izquierdo, mitad superior" : "tira A–E"}; no puente adicional.`, bends: [[rightLane, h[1]], [rightLane, t[1]]] },
+    { id: `nfc-${i * 2 + 2}`, from: b, to, color: c.color, note: `Cable ${i * 2 + 2} · M–H: macho a ${c.moduleHole}, hembra a PN532 ${c.pin}. ${c.espHole}/${c.moduleHole} comparten ${c.pin === "VCC" ? "riel + izquierdo, mitad superior" : c.pin === "GND" ? "riel − izquierdo, mitad superior" : "tira A–E"}; no puente adicional.`, bends: [[rightLane, junction[1]], [rightLane, t[1]]] },
   );
 }
