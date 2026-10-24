@@ -2,6 +2,7 @@
 
 Prototipo universitario de confort del aula y asistencia NFC: ESP32 + PN532,
 app Android HCE, ingesta MQTT/SQLite, API FastAPI y panel React/Vite.
+[Hardware: inventario y montajes](docs/hardware/README.md) ·
 [Arquitectura](docs/architecture.md) · [Contratos MQTT/APDU](docs/contracts.md) ·
 [Demo](backend/DEMO.md) · [Web](web/README.md) · [Android](mobile/android/README.md).
 
