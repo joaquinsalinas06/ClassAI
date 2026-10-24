@@ -16,14 +16,18 @@ configuración personal. No se añaden dependencias.
 
 El primer ejemplo usa referencias de ESP32, B-03 DHT11 y un PIR por escoger entre
 D-06/B-04. A-01/B-02 aún no tienen identidad física asociada. Las alimentaciones
-VCC de sensores permanecen sin conectar porque pinout, niveles y pull-up requieren
-verificación. Los módulos se dibujan fuera de la protoboard; la disposición de
-terminales es lógica, no copia del conector real. No trasladar posiciones del
-SVG a la placa física.
+VCC de sensores están incluidas en el diseño de referencia completo de
+[banco-ambiente.md](banco-ambiente.md), junto con pull-up y alimentación USB.
+ESP32 tiene vista de 30 pines con USB y DHT11 sigue el orden −/OUT/+ reportado;
+contrastar la serigrafía antes de trasladar posiciones a la placa. El PIR incluye
+lente/reverso ilustrados; su orden de terminales sigue pendiente de confirmar.
 
 El núcleo entiende tiras de cinco contactos A–E y F–J por fila, separadas por la
-ranura. No modela rieles de alimentación, su continuidad, cuerpos de componentes,
-longitudes de cable, corriente, tolerancias ni comportamiento de firmware.
+ranura; modela rieles de alimentación continuos o cortados a mitad. Los rieles
+positivos izquierdo y derecho son independientes. Comprueba fuentes incompatibles
+y entradas de alimentación sin fuente o con tensión de referencia distinta.
+No valida la continuidad medida, cuerpos a escala, longitudes, corriente,
+tolerancias ni comportamiento de firmware.
 La resistencia opcional permite probar colocación de dos patas y puenteado.
 Todavía no hay arrastre de footprints, optimización automática ni PN532 funcional.
 
@@ -42,11 +46,15 @@ Formato `version: 1`:
   Dos ESP32 pueden tener GPIO4 sin colisionar: `esp1:GPIO4` y `esp2:GPIO4` son
   terminales distintos. Un ID de fuente no se debe duplicar para fingir que dos
   salidas de reguladores son una sola fuente.
-- `board`: filas de la protoboard; confirmar placa real y continuidad.
+- `board`: filas, `rails` y `splitRails`; confirmar placa y continuidad reales.
+  Contactos de riel `bb:LP1`, `bb:LN1`, `bb:RP1`, `bb:RN1` (izquierda/derecha, positivo/negativo).
 - `wires`: terminales `instancia:pin` o agujeros `bb:A2`. Su orden define los
-  pasos de armado. `note` describe la acción, sin credenciales.
+  pasos de armado. `note` describe la acción, sin credenciales. `color` indica
+  color del conductor; `bends` conserva su recorrido ilustrativo sin definir
+  longitud real. Un cambio de color conserva el recorrido si no cambian extremos.
 - `parts[].holes`: colocación de patas de la resistencia, p. ej. `1: C20` y
-  `2: G20`; valor y separación física se verifican por separado.
+  `2: G20`; `resistance` guarda ohmios y dibuja bandas 1 kΩ/10 kΩ; valor y
+  separación física se verifican por separado.
 - `revisions`: fecha UTC, nota y copia completa del montaje sin historial
   recursivo. La interfaz muestra hora America/Lima. No implica prueba física.
 
@@ -64,6 +72,8 @@ APDU ni compatibilidad HCE.
 2. Añadir/editar cables, componentes o patas de resistencia. Las comprobaciones
    señalan ocupación doble, resistencia puenteada, fuentes unidas entre sí/GND,
    señales conectadas a alimentación y funciones DHT/PIR en una misma red.
+   Pines `bus` del mismo componente comparten conductor interno (GND del ESP32);
+   `required: false` distingue pines sin usar de conexiones omitidas.
    Esta última regla es conservadora: compartir buses reales requiere ampliar
    el modelo, no eliminar conflictos por conveniencia.
 3. Recorrer el armado: solo se dibujan los cables añadidos hasta ese paso.
@@ -81,7 +91,10 @@ APDU ni compatibilidad HCE.
 Máximos de esta versión: 20 instancias, 150 cables, 63 filas, 50 revisiones y
 500 kB por archivo. Exportar con frecuencia; localStorage no es copia compartida
 ni respaldo garantizado. No almacenar flash/NVS, claves, WiFi, tokens ni imágenes
-privadas. El catálogo no certifica niveles ni presupuesto de fuente.
+privadas. El catálogo solo contrasta tensiones de referencia declaradas; no certifica
+niveles reales ni presupuesto de fuente. Borradores anteriores siguen legibles y
+no se sobrescriben automáticamente: **Cargar guía completa** es una edición
+reversible que conserva el historial.
 
 ## Evidencia y continuación
 
