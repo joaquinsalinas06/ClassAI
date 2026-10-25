@@ -2,7 +2,7 @@
   "version": 1,
   "bankId": "ventilador",
   "layout": "breadboard",
-  "name": "M-09 · Relé por USB · fan desconectado",
+  "name": "M-09 · Relé y ventilador",
   "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
   "board": {
     "rows": 30,
@@ -229,6 +229,25 @@
           "required": false
         }
       ]
+    },
+    {
+      "id": "supply5",
+      "name": "Fuente DC regulada 5 V / 2 A",
+      "pending": "Fuente genérica necesaria para el ventilador; no está en el inventario recibido.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "voltage": 0,
+          "required": false
+        }
+      ]
     }
   ],
   "parts": [
@@ -256,11 +275,21 @@
     {
       "id": "fan1",
       "definition": "fan",
-      "inventory": "D-05 · ventilador 5 V · NO CONECTAR",
+      "inventory": "D-05 · ventilador 5 V",
       "holes": {},
       "placement": {
         "x": 70,
         "y": 440
+      }
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "Fuente genérica regulada 5 V / 2 A · necesaria",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 700
       }
     }
   ],
@@ -307,8 +336,7 @@
       "to": "bb:LP26",
       "color": "orange",
       "jumper": "potencia",
-      "pending": "Usar como 5 V de USB solo si A-01 confirma pin VIN/5V unido a VBUS. Esta rama alimenta el relé sin fan.",
-      "note": "Cable 3 · potencia DC por bornes · esp1:VIN → bb:LP26. NO conectar: Usar como 5 V de USB solo si A-01 confirma pin VIN/5V unido a VBUS. Esta rama alimenta el relé sin fan.",
+      "note": "Cable 3 · potencia DC por bornes · esp1:VIN → bb:LP26. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           900,
@@ -352,8 +380,7 @@
       "to": "relay1:IN1",
       "color": "green",
       "jumper": "M–H",
-      "pending": "Confirmar módulo LOW-trigger con lógica 3,3 V, sin 5 V retornando a GPIO. Si no es compatible, usar la alternativa NPN.",
-      "note": "Cable 5 · M–H · bb:H12 → relay1:IN1. NO conectar: Confirmar módulo LOW-trigger con lógica 3,3 V, sin 5 V retornando a GPIO. Si no es compatible, usar la alternativa NPN.",
+      "note": "Cable 5 · M–H · bb:H12 → relay1:IN1. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           430,
@@ -379,8 +406,7 @@
       "to": "relay1:VCC",
       "color": "orange",
       "jumper": "potencia",
-      "pending": "Confirmar pin VIN/5V de A-01 y puente VCC/JD-VCC reales del módulo.",
-      "note": "Cable 6 · potencia DC por bornes · bb:LP5 → relay1:VCC. NO conectar: Confirmar pin VIN/5V de A-01 y puente VCC/JD-VCC reales del módulo.",
+      "note": "Cable 6 · potencia DC por bornes · bb:LP5 → relay1:VCC. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           415,
@@ -432,8 +458,7 @@
       "to": "relay1:IN2",
       "color": "orange",
       "jumper": "potencia",
-      "pending": "Solo bajo referencia LOW-trigger: canal 2 apagado a VCC; confirmar lógica real.",
-      "note": "Cable 8 · potencia DC por bornes · bb:LP9 → relay1:IN2. NO conectar: Solo bajo referencia LOW-trigger: canal 2 apagado a VCC; confirmar lógica real.",
+      "note": "Cable 8 · potencia DC por bornes · bb:LP9 → relay1:IN2. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           405,
@@ -452,6 +477,33 @@
           301
         ]
       ]
+    },
+    {
+      "id": "c9",
+      "from": "ps1:PLUS",
+      "to": "relay1:COM1",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 9 · potencia DC por bornes · ps1:PLUS → relay1:COM1. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c10",
+      "from": "relay1:NO1",
+      "to": "fan1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 10 · potencia DC por bornes · relay1:NO1 → fan1:PLUS. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c11",
+      "from": "fan1:MINUS",
+      "to": "ps1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 11 · potencia DC por bornes · fan1:MINUS → ps1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
     }
   ],
   "revisions": []

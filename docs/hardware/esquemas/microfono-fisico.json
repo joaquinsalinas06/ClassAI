@@ -251,7 +251,6 @@
       "to": "module1:VCC",
       "color": "red",
       "jumper": "M–H",
-      "pending": "Cotejar VCC, cabecera y desacoplo del breakout real.",
       "note": "Cable 2 · M–H · bb:LP4 → module1:VCC. NO conectar: Cotejar VCC, cabecera y desacoplo del breakout real.",
       "bends": [
         [
@@ -294,7 +293,6 @@
       "to": "module1:LR",
       "color": "black",
       "jumper": "M–H",
-      "pending": "Identificar L/R real; fijar canal izquierdo a GND.",
       "note": "Cable 5 · M–H · bb:LN8 → module1:LR. NO conectar: Identificar L/R real; fijar canal izquierdo a GND.",
       "bends": [
         [
@@ -323,7 +321,6 @@
       "to": "module1:SCK",
       "color": "blue",
       "jumper": "M–H",
-      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "note": "Cable 7 · M–H · bb:B12 → module1:SCK. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [
@@ -352,7 +349,6 @@
       "to": "module1:WS",
       "color": "yellow",
       "jumper": "M–H",
-      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "note": "Cable 9 · M–H · bb:B16 → module1:WS. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [
@@ -381,7 +377,6 @@
       "to": "module1:SD",
       "color": "green",
       "jumper": "M–H",
-      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "note": "Cable 11 · M–H · bb:B20 → module1:SD. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [

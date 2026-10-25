@@ -91,10 +91,11 @@ try {
 
   const ids=await page.locator('[data-bank-id]').evaluateAll(xs=>xs.map(x=>x.dataset.bankId));
   assert.equal(ids.length,16);
+  const physicalWireCounts={nfc:12,ambiente:11,dht11:6,pir:6,'led-boton':6,leds:8,ruido:6,microfono:11,matriz:11,buzzer:2,ventilador:11,pantalla:16,'audio-salida':11};
   for(const id of ids){
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();
-    if(['nfc','ambiente','dht11','pir','led-boton','leds','ruido','microfono','matriz','buzzer','ventilador','pantalla','audio-salida'].includes(id)) assert.equal(await canvas.locator('[data-assembly-board]').count(),1);
+    if(id in physicalWireCounts) {assert.equal(await canvas.locator('[data-assembly-board]').count(),1);assert.equal(await canvas.locator('[data-wire]').count(),physicalWireCounts[id],`${id} must draw every cable in its executable recipe`);}
     else {await canvas.locator(`[data-mission-diagram="${id}"]`).waitFor();assert.equal(await canvas.locator('[data-assembly-board]').count(),0);}
   }
   for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','pantalla','audio-salida']) {
@@ -123,8 +124,8 @@ try {
   assert.ok(fanText.includes('Rojo = + · negro = −'));
   assert.ok(fanText.includes('COM1')&&fanText.includes('NO1')&&fanText.includes('NC1'));
   assert.ok(!/(NO CONECTAR|SIN CABLE|FAN DESCONECTADO|Libre)/.test(fanText));
-  assert.ok(!fanText.includes('Fuente externa propuesta'));
-  assert.equal(await canvas.locator('[data-wire]').count(),3);
+  assert.ok(fanText.includes('Fuente DC regulada 5 V / 2 A'));
+  assert.equal(await canvas.locator('[data-wire]').count(),11);
 
   await page.locator('[data-bank-id="audio-salida"]').click();
   await page.locator('[data-mission="audio-salida"]').waitFor();

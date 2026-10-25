@@ -146,30 +146,52 @@ describe("readable minimal assemblies",()=>{
   expect(a.wires.some(w=>w.from==="bb:LN30"&&w.to==="bb:RN30")).toBe(true);
   expect(routingMetrics(a).turns).toBeLessThan(15);
  });
- it("keeps proposed stages out of the main module drawings without dropping compatibility warnings",()=>{
+ it("keeps proposed stages in compatibility while primary drawings stay direct",()=>{
   for(const id of ["matriz","buzzer","ventilador"]) {
    const g=benches[id]!;expect(g.assembly.parts.some(p=>["resistor","npn","ahct125"].includes(p.definition))).toBe(false);
-   expect(g.adaptation).toBeTruthy();expect(g.assembly.wires.some(w=>w.pending)).toBe(true);
+   expect(g.adaptation).toBeTruthy();expect(g.assembly.wires.some(w=>w.pending)).toBe(false);
   }
   expect(benches.matriz!.assembly.parts.filter(p=>p.definition==="matriz")).toHaveLength(1);
  });
- it("does not invent an owned 5 V source and leaves the fan load visibly open",()=>{
-  for(const id of ["ambiente","pir","matriz","ventilador","audio-salida"])expect(benches[id]!.assembly.parts.some(p=>p.definition==="supply5")).toBe(false);
+ it("shows the generic 5 V source only where the fan circuit needs it",()=>{
+  for(const id of ["ambiente","pir","matriz","audio-salida"])expect(benches[id]!.assembly.parts.some(p=>p.definition==="supply5")).toBe(false);
   const a=benches.ventilador!.assembly;
-  expect(a.wires.some(w=>w.from.startsWith("fan1:")||w.to.startsWith("fan1:"))).toBe(false);
-  expect(a.wires.some(w=>w.from==="esp1:VIN"&&w.pending)).toBe(true);
-  expect(benches.ventilador!.expected).toContain("no debe girar");
+  expect(a.parts.some(p=>p.definition==="supply5")).toBe(true);
+  expect(a.wires.some(w=>w.from.startsWith("fan1:")||w.to.startsWith("fan1:"))).toBe(true);
+  expect(a.wires.some(w=>w.pending)).toBe(false);
+  expect(benches.ventilador!.expected).toContain("ventilador gira");
  });
- it("keeps relay-only terminal pairs explicit while COM/NO/fan remain isolated",()=>{
+ it("connects relay control and the complete COM-NO fan branch",()=>{
   const a=benches.ventilador!.assembly,r=analyze({...a,wires:a.wires.map(w=>({...w,pending:undefined}))});
   expect(r.connected("esp1:VIN","relay1:VCC")).toBe(true);
   expect(r.connected("esp1:VIN","relay1:IN2")).toBe(true);
   expect(r.connected("esp1:GND_L","relay1:GND")).toBe(true);
   expect(r.connected("esp1:GPIO26","relay1:IN1")).toBe(true);
-  for(const pin of ["COM1","NO1","NC1"])expect(r.connected(`relay1:${pin}`,"esp1:VIN")).toBe(false);
-  for(const pin of ["PLUS","MINUS"])expect(a.wires.some(w=>w.from===`fan1:${pin}`||w.to===`fan1:${pin}`)).toBe(false);
+  expect(r.connected("relay1:COM1","ps1:PLUS")).toBe(true);
+  expect(r.connected("relay1:NO1","fan1:PLUS")).toBe(true);
+  expect(r.connected("fan1:MINUS","ps1:GND")).toBe(true);
+  expect(r.connected("relay1:NC1","fan1:PLUS")).toBe(false);
  });
  it("uses the UTEC three-pin DHT module's integrated pull-up instead of an extra breadboard resistor",()=>{
   for(const id of ["ambiente","dht11"])expect(benches[id]!.assembly.parts.some(p=>p.definition==="resistor")).toBe(false);
+ });
+ it("keeps every primary recipe complete instead of drawing dangling partial nets",()=>{
+  const expected:Record<string,[string,string][]>= {
+   ambiente:[["esp1:3V3","dht1:VCC"],["esp1:GND","dht1:GND"],["esp1:GPIO4","dht1:DATA"],["esp1:VIN","pir1:VCC"],["esp1:GND","pir1:GND"],["esp1:GPIO27","pir1:OUT"]],
+   dht11:[["esp1:3V3","dht1:VCC"],["esp1:GND","dht1:GND"],["esp1:GPIO4","dht1:DATA"]],
+   pir:[["esp1:VIN","pir1:VCC"],["esp1:GND","pir1:GND"],["esp1:GPIO27","pir1:OUT"]],
+   ruido:[["esp1:3V3","module1:VCC"],["esp1:GND","module1:G"],["esp1:GPIO34","module1:AO"]],
+   microfono:[["esp1:3V3","module1:VCC"],["esp1:GND","module1:GND"],["esp1:GPIO26","module1:SCK"],["esp1:GPIO25","module1:WS"],["esp1:GPIO33","module1:SD"],["esp1:GND","module1:LR"]],
+   matriz:[["esp1:VIN","matrix1:VCC"],["esp1:GND_L","matrix1:GND"],["esp1:GPIO13","matrix1:DIN"],["esp1:GPIO14","matrix1:CLK"],["esp1:GPIO27","matrix1:CS"]],
+   buzzer:[["esp1:GPIO17","bz1:PLUS"],["esp1:GND","bz1:MINUS"]],
+   ventilador:[["esp1:VIN","relay1:VCC"],["esp1:GND_L","relay1:GND"],["esp1:GPIO26","relay1:IN1"],["ps1:PLUS","relay1:COM1"],["relay1:NO1","fan1:PLUS"],["fan1:MINUS","ps1:GND"]],
+   "audio-salida":[["esp1:VIN","amp1:VIN"],["esp1:GND_L","amp1:GND"],["esp1:GPIO33","amp1:BCLK"],["esp1:GPIO25","amp1:LRC"],["esp1:GPIO22","amp1:DIN"],["esp1:GPIO21","amp1:SD"],["amp1:SPK_PLUS","speaker1:PLUS"],["amp1:SPK_MINUS","speaker1:MINUS"]],
+   pantalla:[["esp1:3V3","tft1:VCC"],["esp1:GND","tft1:GND"],["esp1:GPIO14","tft1:SCL"],["esp1:GPIO23","tft1:SDA"],["esp1:GPIO26","tft1:RST"],["esp1:GPIO27","tft1:DC"],["esp1:GPIO5","tft1:CS"]],
+  };
+  for(const [id,pairs] of Object.entries(expected)){
+   const a=benches[id]!.assembly,r=analyze(a);
+   expect(a.wires.some(w=>w.pending),id).toBe(false);
+   for(const [from,to] of pairs)expect(r.connected(from,to),`${id}: ${from} → ${to}`).toBe(true);
+  }
  });
 });

@@ -2,7 +2,7 @@
 
 Enviar arm y pattern; probar rot0/rot1/rot2/rot3. stop apaga el contenido y desarma.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](pantalla.svg)
 
@@ -23,9 +23,9 @@ Cables: 15 M–H + 1 M–M dibujados; cero H–H. Se reutilizan entre bancos; no
 | ESP32 · GND | Protoboard · LN28 | c1 · M–H | Referencia |
 | Protoboard · LN6 | TFT · GND | c2 · M–H | Referencia |
 | ESP32 · 3V3 | Protoboard · LP28 | c3 · M–H | Referencia |
-| Protoboard · LP8 | TFT · VCC | c4 · M–H | Pendiente; no conectar |
+| Protoboard · LP8 | TFT · VCC | c4 · M–H | Referencia |
 | Protoboard · LP25 | Protoboard · A25 | c5 · M–M | Referencia |
-| Protoboard · J25 | TFT · BL | c6 · M–H | Pendiente; no conectar |
+| Protoboard · J25 | TFT · BL | c6 · M–H | Referencia |
 | ESP32 · GPIO14 | Protoboard · A10 | c7 · M–H | Referencia |
 | Protoboard · B10 | TFT · SCL | c8 · M–H | Referencia |
 | ESP32 · GPIO23 | Protoboard · A12 | c9 · M–H | Referencia |
@@ -46,9 +46,9 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 | 1 | black | M–H | esp1:GND | bb:LN28 | Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 2 | black | M–H | bb:LN6 | tft1:GND | Cable 2 · M–H · bb:LN6 → tft1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 3 | red | M–H | esp1:3V3 | bb:LP28 | Cable 3 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 4 | red | M–H | bb:LP8 | tft1:VCC | NO conectar: Confirmar VCC del breakout D-04 a 3,3 V. |
+| 4 | red | M–H | bb:LP8 | tft1:VCC | Cable 4 · M–H · bb:LP8 → tft1:VCC. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 5 | red | M–M | bb:LP25 | bb:A25 | Cable 5 · M–M · bb:LP25 → bb:A25. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 6 | red | M–H | bb:J25 | tft1:BL | NO conectar: Confirmar BL admite referencia 3,3 V con R serie 1 kΩ; no usar GPIO ni puentear R. |
+| 6 | red | M–H | bb:J25 | tft1:BL | Cable 6 · M–H · bb:J25 → tft1:BL. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 7 | blue | M–H | esp1:GPIO14 | bb:A10 | Cable 7 · M–H · esp1:GPIO14 → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 8 | blue | M–H | bb:B10 | tft1:SCL | Cable 8 · M–H · bb:B10 → tft1:SCL. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 9 | green | M–H | esp1:GPIO23 | bb:A12 | Cable 9 · M–H · esp1:GPIO23 → bb:A12. Conectar sin USB; comprobar etiquetas y agujeros. |

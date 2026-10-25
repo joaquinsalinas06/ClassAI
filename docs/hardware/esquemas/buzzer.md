@@ -2,7 +2,7 @@
 
 Enviar arm y active para pulso de 120 ms; o passive para tono 2 kHz/120 ms. stop siempre apaga/desarma.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](buzzer.svg)
 
@@ -19,7 +19,7 @@ Cables: 2 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no 
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| ESP32 · GPIO17 | Protoboard · J14 | c1 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO17 | Protoboard · J14 | c1 · M–H | Referencia |
 | ESP32 · GND | Protoboard · J17 | c2 · M–H | Referencia |
 
 ## Armado cable por cable · USB desconectado
@@ -28,7 +28,7 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
-| 1 | yellow | M–H | esp1:GPIO17 | bb:J14 | NO conectar: Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación. |
+| 1 | yellow | M–H | esp1:GPIO17 | bb:J14 | Cable 1 · M–H · esp1:GPIO17 → bb:J14. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 2 | black | M–H | esp1:GND | bb:J17 | Cable 2 · M–H · esp1:GND → bb:J17. Conectar sin USB; comprobar etiquetas y agujeros. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
@@ -44,8 +44,8 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 ## Antes de energizar
 
 1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-2. Dos redes: señal a + y masa a −. Las dos patas y el uso previo desde alimentación Arduino no certifican consumo admisible desde GPIO.
-3. Directo únicamente con piezo/entrada compatible y consumo dentro del presupuesto GPIO; de lo contrario, ver transistor en Compatibilidad. No energizar el tramo condicionado.
+2. Conexión usada en clase: GPIO17 a la pata + y GND a la pata −; cotejar el signo + antes de insertar.
+3. Ensayo breve de 120 ms; detener si no suena, se calienta o reinicia la placa.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -81,8 +81,8 @@ Conflictos: GPIO17 puede depender del módulo ESP32; no usar referencia WROVER s
 
 Faltantes/confirmaciones:
 - Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-- Dos redes: señal a + y masa a −. Las dos patas y el uso previo desde alimentación Arduino no certifican consumo admisible desde GPIO.
-- Directo únicamente con piezo/entrada compatible y consumo dentro del presupuesto GPIO; de lo contrario, ver transistor en Compatibilidad. No energizar el tramo condicionado.
+- Conexión usada en clase: GPIO17 a la pata + y GND a la pata −; cotejar el signo + antes de insertar.
+- Ensayo breve de 120 ms; detener si no suena, se calienta o reinicia la placa.
 
 ## Registro de resultado
 

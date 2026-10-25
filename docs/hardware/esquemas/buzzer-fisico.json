@@ -212,8 +212,7 @@
       "to": "bb:J14",
       "color": "yellow",
       "jumper": "M–H",
-      "pending": "Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación.",
-      "note": "Cable 1 · M–H · esp1:GPIO17 → bb:J14. NO conectar: Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación.",
+      "note": "Cable 1 · M–H · esp1:GPIO17 → bb:J14. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": []
     },
     {

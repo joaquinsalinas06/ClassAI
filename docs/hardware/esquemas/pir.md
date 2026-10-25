@@ -2,7 +2,7 @@
 
 Ensayo PIR aislado sin inicializar el otro sensor.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](pir.svg)
 
@@ -26,16 +26,16 @@ Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no 
 
 ## Armado cable por cable · USB desconectado
 
-12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. R-027 elimina la fuente externa no disponible. PIR queda condicionado al pin VIN/5V alimentado por USB de una A-01 identificada.
+12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. PIR según guía UTEC: VCC a VIN/5V del ESP32 por USB, OUT a GPIO27 y GND común.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
 | 1 | black | M–H | esp1:GND | bb:RN28 | GND derecho del ESP32 → RN28. Riel derecho − para ambos sensores; comprobar continuidad, USB apagado. |
-| 2 | black | M–H | bb:RN30 | pir1:GND | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
-| 3 | orange | M–H | esp1:VIN | bb:F20 | NO conectar: A-01 no está identificada: confirmar que el pin serigrafiado VIN/5V expone los 5 V del USB antes de conectar el PIR. |
-| 4 | orange | M–H | bb:H20 | pir1:VCC | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
+| 2 | black | M–H | bb:RN30 | pir1:GND | RN30 → GND identificado del PIR; cable M–H, sin H–H. No tomar el orden dibujado como lectura de la foto. |
+| 3 | orange | M–H | esp1:VIN | bb:F20 | VIN/5V del ESP32 alimentado por USB → VCC del PIR, según la guía UTEC. |
+| 4 | orange | M–H | bb:H20 | pir1:VCC | H20 → VCC identificado del PIR, M–H. F20 y H20 comparten cobre; no añadir puente ni unir con 3,3 V. |
 | 5 | yellow | M–H | esp1:GPIO27 | bb:G24 | D27 / GPIO27 → G24, M–H. Tira F24–J24 exclusiva de señal, separada de F20–J20. |
-| 6 | yellow | M–H | bb:J24 | pir1:OUT | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
+| 6 | yellow | M–H | bb:J24 | pir1:OUT | J24 → OUT identificado del PIR, M–H; solo con señal compatible 3,3 V. G24 y J24 comparten cobre. Sin H–H. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -52,7 +52,7 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 5. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 6. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
 7. Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT.
-8. No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
+8. Cotejar VCC/OUT/GND mirando la misma cara del PIR antes de insertar los tres cables.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -90,7 +90,7 @@ Faltantes/confirmaciones:
 - Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
 - Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT.
-- No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
+- Cotejar VCC/OUT/GND mirando la misma cara del PIR antes de insertar los tres cables.
 
 ## Registro de resultado
 

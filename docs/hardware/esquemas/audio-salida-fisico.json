@@ -335,8 +335,7 @@
       "to": "amp1:VIN",
       "color": "orange",
       "jumper": "M–H",
-      "pending": "Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión.",
-      "note": "Cable 3 · M–H · esp1:VIN → amp1:VIN. NO conectar: Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión.",
+      "note": "Cable 3 · M–H · esp1:VIN → amp1:VIN. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           687,
@@ -358,8 +357,7 @@
       "to": "amp1:BCLK",
       "color": "blue",
       "jumper": "M–H",
-      "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 4 · M–H · esp1:GPIO33 → amp1:BCLK. NO conectar: Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 4 · M–H · esp1:GPIO33 → amp1:BCLK. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           310,
@@ -373,8 +371,7 @@
       "to": "amp1:LRC",
       "color": "yellow",
       "jumper": "M–H",
-      "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 5 · M–H · esp1:GPIO25 → amp1:LRC. NO conectar: Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 5 · M–H · esp1:GPIO25 → amp1:LRC. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           310,
@@ -388,8 +385,7 @@
       "to": "amp1:DIN",
       "color": "green",
       "jumper": "M–H",
-      "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 6 · M–H · esp1:GPIO22 → amp1:DIN. NO conectar: Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 6 · M–H · esp1:GPIO22 → amp1:DIN. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           1238,
@@ -425,8 +421,7 @@
       "to": "amp1:SD",
       "color": "purple",
       "jumper": "M–H",
-      "pending": "Confirmar SD de habilitación; no confundirlo con datos del micrófono.",
-      "note": "Cable 8 · M–H · bb:H22 → amp1:SD. NO conectar: Confirmar SD de habilitación; no confundirlo con datos del micrófono.",
+      "note": "Cable 8 · M–H · bb:H22 → amp1:SD. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           668,
@@ -453,8 +448,7 @@
       "to": "speaker1:PLUS",
       "color": "purple",
       "jumper": "altavoz",
-      "pending": "Salida diferencial: no unir a GND.",
-      "note": "Cable 10 · M–H · amp1:SPK_PLUS → speaker1:PLUS. NO conectar: Salida diferencial: no unir a GND.",
+      "note": "Cable 10 · M–H · amp1:SPK_PLUS → speaker1:PLUS. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": []
     },
     {
@@ -463,8 +457,7 @@
       "to": "speaker1:MINUS",
       "color": "purple",
       "jumper": "altavoz",
-      "pending": "Salida diferencial: no unir a GND.",
-      "note": "Cable 11 · M–H · amp1:SPK_MINUS → speaker1:MINUS. NO conectar: Salida diferencial: no unir a GND.",
+      "note": "Cable 11 · M–H · amp1:SPK_MINUS → speaker1:MINUS. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": []
     }
   ],

@@ -273,8 +273,7 @@
       "to": "bb:LP26",
       "color": "orange",
       "jumper": "potencia",
-      "pending": "Usar como 5 V de USB únicamente después de identificar A-01 y confirmar que su pin VIN/5V está unido a VBUS; no es una fuente externa ni alimenta un fan.",
-      "note": "Cable 2 · potencia DC por bornes · esp1:VIN → bb:LP26. NO conectar: Usar como 5 V de USB únicamente después de identificar A-01 y confirmar que su pin VIN/5V está unido a VBUS; no es una fuente externa ni alimenta un fan.",
+      "note": "Cable 2 · potencia DC por bornes · esp1:VIN → bb:LP26. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           435,
@@ -339,8 +338,7 @@
       "to": "matrix1:DIN",
       "color": "green",
       "jumper": "M–H",
-      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
-      "note": "Cable 7 · M–H · bb:H9 → matrix1:DIN. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 7 · M–H · bb:H9 → matrix1:DIN. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           310,
@@ -368,8 +366,7 @@
       "to": "matrix1:CLK",
       "color": "blue",
       "jumper": "M–H",
-      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
-      "note": "Cable 9 · M–H · bb:H5 → matrix1:CLK. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 9 · M–H · bb:H5 → matrix1:CLK. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           310,
@@ -397,8 +394,7 @@
       "to": "matrix1:CS",
       "color": "yellow",
       "jumper": "M–H",
-      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
-      "note": "Cable 11 · M–H · bb:H7 → matrix1:CS. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 11 · M–H · bb:H7 → matrix1:CS. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           310,

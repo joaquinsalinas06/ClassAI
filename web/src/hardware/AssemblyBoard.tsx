@@ -1,7 +1,7 @@
 import { assemblyGeometry } from "./geometry";
 import type { KeyboardEvent } from "react";
 import { silkscreen30 } from "./pinouts";
-import { analyze, contactStrip, contacts, definition, type Assembly, type Wire, type WireColor } from "./model";
+import { contactStrip, contacts, definition, type Assembly, type Wire, type WireColor } from "./model";
 
 export const wireColors: Record<WireColor, { label: string; hex: string }> = {
   red: { label: "Rojo · 3,3 V", hex: "#db3345" },
@@ -24,12 +24,7 @@ export function terminalLabel(end: string, assembly?: Assembly) {
   return `${name} · ${label?.replace("GND_L", "GND").replace("GPIO", "GPIO ")}`;
 }
 export function wiresToPlace(assembly: Assembly, wires: Wire[] = assembly.wires) {
-  const conditioned = assembly.wires.filter(w => w.pending);
-  if (!conditioned.length) return wires;
-  const { connected } = analyze(assembly);
-  return wires.filter(w => !w.pending && !conditioned.some(p =>
-    [w.from, w.to].some(end => connected(end, p.from) || connected(end, p.to))
-  ));
+  return wires.filter(w => !w.pending);
 }
 export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, zoom = 1, pirBack = false }: {
   assembly: Assembly; wires: Wire[]; selected: string; onSelect: (s: string) => void;
@@ -124,8 +119,8 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       </g>;
       if(type === "supply5"){
         const plus=ends.get(`${id}:PLUS`)!,ground=ends.get(`${id}:GND`)!,right=plus[0]>x+120;
-        return <g key={id}><text x={x+120} y={y-18} textAnchor="middle" fontSize="13" fill="#26344a">Fuente externa propuesta · 5 V / 2 A</text><rect x={x+40} y={y+5} width="155" height="105" rx="14" fill="#273238" stroke="#10181b" strokeWidth="2"/><text x={x+117} y={y+42} textAnchor="middle" fill="white" fontSize="15">5 V DC · 2 A</text><text x={x+117} y={y+64} textAnchor="middle" fill="#c7d2d9" fontSize="11">Adaptador USB regulado</text><rect x={right?x+175:x+24} y={y+78} width="35" height="16" rx="2" fill="url(#metal)"/><rect x={right?x+180:x+29} y={y+81} width="25" height="10" fill="#263238"/><path d={`M${right?x+210:x+24} ${y+86} H${right?x+230:x+6} V${(plus[1]+ground[1])/2}`} stroke="#263238" strokeWidth="7" fill="none"/>
-          <rect x={right?x+232:x-8} y={Math.min(plus[1],ground[1])-10} width="16" height="Math.abs(plus[1]-ground[1])+20" rx="2" fill="#38876b"/>{pinMark(`${id}:PLUS`,plus[0],plus[1],"+5 V",plus[0]+(right?30:-30),plus[1]+4)}{pinMark(`${id}:GND`,ground[0],ground[1],"GND",ground[0]+(right?30:-30),ground[1]+4)}<text x={x+120} y={y+135} textAnchor="middle" fontSize="11" fill="#526276">Cable USB a bornes DC · por conseguir</text></g>;
+        return <g key={id}><text x={x+120} y={y-18} textAnchor="middle" fontSize="13" fill="#26344a">{definition(assembly,p).name}</text><rect x={x+40} y={y+5} width="155" height="105" rx="14" fill="#273238" stroke="#10181b" strokeWidth="2"/><text x={x+117} y={y+42} textAnchor="middle" fill="white" fontSize="15">5 V DC · 2 A</text><text x={x+117} y={y+64} textAnchor="middle" fill="#c7d2d9" fontSize="11">Adaptador regulado</text><rect x={right?x+175:x+24} y={y+78} width="35" height="16" rx="2" fill="url(#metal)"/><rect x={right?x+180:x+29} y={y+81} width="25" height="10" fill="#263238"/><path d={`M${right?x+210:x+24} ${y+86} H${right?x+230:x+6} V${(plus[1]+ground[1])/2}`} stroke="#263238" strokeWidth="7" fill="none"/>
+          <rect x={right?x+232:x-8} y={Math.min(plus[1],ground[1])-10} width="16" height="Math.abs(plus[1]-ground[1])+20" rx="2" fill="#38876b"/>{pinMark(`${id}:PLUS`,plus[0],plus[1],"+5 V",plus[0]+(right?30:-30),plus[1]+4)}{pinMark(`${id}:GND`,ground[0],ground[1],"GND",ground[0]+(right?30:-30),ground[1]+4)}<text x={x+120} y={y+135} textAnchor="middle" fontSize="11" fill="#526276">{p.inventory.slice(0,55)}</text></g>;
       }
       if(type === "fan")return <g key={id}>
         <text x={x+120} y={y-15} textAnchor="middle" fontSize="14" fill="#26344a">D-05 · ventilador DC 5 V</text>
@@ -179,7 +174,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       </g>;
       if (type !== "dht11" && type !== "pir") return <g key={id}>
         <rect x={x+8} y={y+6} width="230" height={50+definition(assembly,p).pins.length*24} rx="6" fill="#dce6ef" stroke="#9aafc0"/>
-        <text x={x+5} y={y-12} fill="#26344a" fontWeight="600" fontSize="14">{p.inventory.slice(0,38)}</text><text x={x+5} y={y+25} fill="#26344a" fontSize="12">{definition(assembly,p).name.slice(0,23)}</text><text x={x+5} y={y+80+definition(assembly,p).pins.length*24} fill="#526276" fontSize="12">{type==="ruido" ? "Orden reportado; cotejar cara" : "Terminales por función"}</text><text x={x+5} y={y+100+definition(assembly,p).pins.length*24} fill="#526276" fontSize="12">{type==="ruido" ? "DO queda libre" : "Orden físico pendiente"}</text>
+        <text x={x+5} y={y-12} fill="#26344a" fontWeight="600" fontSize="14">{p.inventory.slice(0,38)}</text><text x={x+5} y={y+25} fill="#26344a" fontSize="12">{definition(assembly,p).name.slice(0,23)}</text>
         {type === "ruido" && <g><circle cx={x+170} cy={y+60} r="20" fill="url(#metal)" stroke="#39434b"/><circle cx={x+170} cy={y+60} r="12" fill="#404a52"/><rect x={x+158} y={y+100} width="24" height="24" fill="#316b9f"/><text x={x+170} y={y+117} textAnchor="middle" fill="white" fontSize="11">VR1</text></g>}
         {type === "tft" && <g><rect x={x+130} y={y+50} width="90" height="115" rx="4" fill="#b0393f"/><rect x={x+138} y={y+60} width="74" height="80" fill="#1c2730"/><text x={x+175} y={y+155} textAnchor="middle" fill="#fff" fontSize="11">ST7789</text></g>}
         {type === "amp" && <g><rect x={x+142} y={y+55} width="70" height="90" fill="#2a6b69"/><rect x={x+158} y={y+75} width="24" height="25" fill="#263034"/><rect x={x+146} y={y+125} width="62" height="15" fill="#4486b8"/><text x={x+178} y={y+119} textAnchor="middle" fill="white" fontSize="11">I²S</text></g>}
@@ -211,7 +206,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
           <rect x={x+99} y={y+145} width="25" height="15" fill="#e3c326"/><text x={x+112} y={y+175} textAnchor="middle" fontSize="11" fill="#f0e9b1">H / L</text>
         </g>}
         {definition(assembly,p).pins.map(pin => {const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}><path d={`M${pt[0]} ${y+180} V${pt[1]}`} stroke="#b89c50" strokeWidth="5"/>{pinMark(`${id}:${pin.id}`,pt[0],pt[1],undefined,pt[0],pt[1]-14)}</g>;})}
-        <text x={x+65} y={y+(isDht?260:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "Orden − OUT + reportado" : "Orden de pines por confirmar"}</text>
+        <text x={x+65} y={y+(isDht?260:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "− · OUT · + · vista frontal" : "VCC · OUT · GND · vista frontal"}</text>
       </g>;
     })}
     {placedWires.map((w, i) => {

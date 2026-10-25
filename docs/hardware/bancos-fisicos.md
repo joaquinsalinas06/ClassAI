@@ -2,22 +2,22 @@
 
 Corte inicial: 24/10/2026, America/Lima. Esta entrega añade diseño/software; **no hubo upload, lectura de flash, apertura de Serial ni ensayo físico**. R-023 de B-02/PN532 sigue siendo la referencia física anterior, con errores RF intermitentes. Respaldos, configuraciones privadas y credenciales conservados.
 
-## Actualización del 25/10/2026 · R-027
+## Actualización del 25/10/2026 · R-031
 
-La tabla y los conteos iniciales de abajo se conservan como estado histórico de R-025. **Los sustituyen las guías regeneradas y R-027.** No se presupone una fuente que Joaquín no posee: las vistas principales usan USB/3,3 V o muestran la carga desconectada. Los circuitos de fuente separada permanecen únicamente en **Compatibilidad** como material futuro.
+La tabla y los conteos iniciales de abajo se conservan como estado histórico. **Los sustituyen las guías regeneradas y R-031.** Los 13 bancos físicos muestran ahora todos los cables de su receta principal, sin redes parciales ni tramos que terminen antes del componente. Para el ventilador se dibuja la fuente genérica de 5 V que hace falta conseguir; no se presenta como recibida.
 
 | Banco | Entrega actual | Pendiente físico |
 |---|---|---|
-| DHT11 / PIR / conjunto | Tres perfiles aislados; DHT11 con pull-up integrado según Anexo X; PIR por VIN/5V de USB solo tras identificar A-01 | Etiquetas reales, variante PIR/OUT y confirmar que el pin VIN/5V de A-01 expone VBUS |
+| DHT11 / PIR / conjunto | Tres perfiles completos; DHT11 3V3/OUT4/GND y PIR VIN5V/OUT27/GND según guías UTEC | Cotejar las etiquetas mirando la misma cara y asociar A-01 antes de cargar |
 | LED/pulsador | Pulsador arriba, LED debajo; GPIO25/32 conservados, masas cercanas; 3 M–H + 3 M–M | A-01/puerto/respaldo, A/K y parejas de contacto |
-| B-08 / INMP441 / LEDs | Guías físicas y sketches aislados | B-08 preparado a 3,3 V; confirmar cabecera INMP441 y resistencias de LEDs |
-| Matriz | Módulo MAX7219, dibujo simple sin fuente ficticia y alternativa AHCT; sketch DIN13/CLK14/CS27 | VIN/5V USB y presupuesto; compatibilidad lógica o buffer |
-| Buzzer | Dos cables y buzzer sobre protoboard; sketch activo/pasivo; alternativa con transistor separada | Tipo/consumo admisible desde GPIO |
-| Relé/ventilador | Vista principal de prueba del relé por USB; COM/NO/NC y fan completamente desconectados. Etapa completa en Compatibilidad | Para el fan: fuente real 5 V, corriente de arranque, polaridad y adaptador; para el relé: VIN/5V, IN1 y JD-VCC |
-| Pantalla/audio | Ensayos aislados ST7789 y MAX98357A; audio principal por VIN/5V USB, una bocina y tono inicial al 1 % | Identificar A-01, variante, presupuesto USB, terminales y montaje; fuente separada solo para mayor potencia |
+| B-08 / INMP441 / LEDs | B-08 completo a 3,3 V; INMP441 completo por I²S; LEDs con resistencias individuales | Cotejar cabeceras y contar resistencias disponibles |
+| Matriz | MAX7219 completo: VIN/5V, GND, DIN13, CLK14 y CS27; alternativa AHCT conservada | Usar la cabecera IN/DIN y ensayar a brillo bajo |
+| Buzzer | Dos cables: GPIO17 a + y GND a −; sketch de pulso/tono; alternativa con transistor separada | Cotejar el signo + y detener ante calentamiento o reinicio |
+| Relé/ventilador | Circuito completo: control por USB/VIN, COM1–NO1, fan y fuente genérica 5 V/2 A | Conseguir la fuente y adaptador del conector; confirmar polaridad y trigger LOW |
+| Pantalla/audio | ST7789 completo a 3,3 V y MAX98357A completo por VIN/5V USB con una bocina | Cotejar terminales; audio inicial al 1 % |
 | Iluminación | Material requerido explícito | Sensor de luz no recibido |
 
-Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. La vista principal dibuja únicamente los cables que se deben colocar y los numera en orden; las rutas condicionadas y los rótulos redundantes de terminales sin uso no aparecen. La vista principal tampoco dibuja una fuente externa no disponible.
+Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. La vista principal dibuja y numera el circuito ejecutable completo. Los terminales no usados no generan cables ni rótulos adicionales.
 
 Compilación de la actualización: `bash scripts/ci/benches-build.sh`, Arduino CLI 1.5.1, core ESP32 3.3.12. Se añaden Adafruit GFX 1.12.6 y ST7735/ST7789 1.12.0 fijadas en instalación. Resultados de memoria nuevos se registran en R-026. No hubo carga, Serial físico, simulación nueva ni ensayo eléctrico. B-02/NFC y respaldos conservados.
 

@@ -54,31 +54,35 @@ export function simplifyBenches(benches:Record<string,BenchGuide>){
    benches[id]!.blockers=benches[id]!.blockers.map(s=>s.replace("Confirmar B-03, alimentación y pull-up del breakout.","Cotejar etiquetas +/OUT/− del módulo DHT11 de laboratorio, alimentado a 3,3 V.").replace("Confirmar DHT11/pull-up a 3,3 V; identificar PIR y fuente.","DHT11 con pull-up integrado; cotejar etiquetas del PIR y fuente."));
    benches[id]!.assembly=route(a);
  }
- const mic=benches.microfono!.assembly;leftFacing(mic);mic.parts.find(p=>p.id==="module1")!.placement={x:70,y:170};mic.parts.find(p=>p.id==="module1")!.rotation=180;benches.microfono!.assembly=route(mic);
+ const mic=benches.microfono!.assembly;leftFacing(mic);mic.parts.find(p=>p.id==="module1")!.placement={x:70,y:170};mic.parts.find(p=>p.id==="module1")!.rotation=180;
+ for(const w of mic.wires)w.pending=undefined;
+ benches.microfono!.blockers=[...checks,"Cotejar VCC/GND/SD/LR/WS/SCK mirando la misma cara del INMP441; alimentar a 3,3 V."];
+ benches.microfono!.assembly=route(mic);
 
  const matrix:Definition={id:"matriz",name:"Módulo matriz 8×8",pending:"MAX7219 del laboratorio, Anexo K aportado; dos conectores de cinco pines. Entrada DIN recibe datos; DOUT es salida para cascada. Conexión directa solo si el módulo admite HIGH de 3,3 V; MAX7219 estándar a 5 V requiere adaptación. Ver alternativa en Compatibilidad.",pins:[pin("VCC","power",5),pin("GND","ground"),pin("DIN","signal"),pin("CS","signal"),pin("CLK","signal"),pin("VCC_OUT"),pin("GND_OUT"),pin("DOUT","signal"),pin("CS_OUT"),pin("CLK_OUT")]};
  const m=base("matriz","M-08A · Matriz · montaje simple",[matrix],[{id:"matrix1",definition:"matriz",inventory:"B-10 · matriz 8×8",holes:{},placement:{x:70,y:170},rotation:180}]);leftFacing(m);
- wire(m,"esp1:GND_L","bb:RN21","black");power(m,"esp1:VIN","bb:LP26","orange","Usar como 5 V de USB únicamente después de identificar A-01 y confirmar que su pin VIN/5V está unido a VBUS; no es una fuente externa ni alimenta un fan.");wire(m,"bb:LP12","matrix1:VCC","orange");wire(m,"bb:LN11","matrix1:GND","black");wire(m,"bb:LN30","bb:RN30","black");
- [[13,"DIN",9,"green"],[14,"CLK",5,"blue"],[27,"CS",7,"yellow"]].forEach(([gpio,target,row,color])=>{wire(m,`esp1:GPIO${gpio}`,`bb:J${row}`,color as "green"|"blue"|"yellow");wire(m,`bb:H${row}`,`matrix1:${target}`,color as "green"|"blue"|"yellow","Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.");});
- benches.matriz=simple(m,benches.matriz!,["No se presupone una fuente externa: la ruta VIN/5V solo reutiliza el 5 V del USB si la placa A-01 coincide con una variante que lo expone y el presupuesto USB alcanza.","Entrada DIN y salida DOUT no se intercambian. MAX7219 estándar no garantiza HIGH con 3,3 V; usar la alternativa AHCT si corresponde."]);
+ wire(m,"esp1:GND_L","bb:RN21","black");power(m,"esp1:VIN","bb:LP26","orange");wire(m,"bb:LP12","matrix1:VCC","orange");wire(m,"bb:LN11","matrix1:GND","black");wire(m,"bb:LN30","bb:RN30","black");
+ [[13,"DIN",9,"green"],[14,"CLK",5,"blue"],[27,"CS",7,"yellow"]].forEach(([gpio,target,row,color])=>{wire(m,`esp1:GPIO${gpio}`,`bb:J${row}`,color as "green"|"blue"|"yellow");wire(m,`bb:H${row}`,`matrix1:${target}`,color as "green"|"blue"|"yellow");});
+ benches.matriz=simple(m,benches.matriz!,["UTEC Anexo K: VCC a 5 V, GND común, DIN GPIO13, CLK GPIO14 y CS GPIO27 en este firmware.","Cotejar la cabecera IN/DIN de la matriz; la cabecera OUT/DOUT es para cascada y no recibe el cable de datos."]);
  const bz:Definition={id:"buzzer",name:"Buzzer de dos patas",pending:"Referencia directa de dos cables como en clase; alimentación a 3,3 V reportada. Antes de conectar al GPIO, confirmar piezo/entrada de alta impedancia o consumo compatible. Si es una carga mayor, usar la alternativa con transistor.",pins:[pin("PLUS"),pin("MINUS")]};
  const b=base("buzzer","M-08B · Buzzer sobre protoboard",[bz],[{id:"bz1",definition:"buzzer",inventory:"B-09 · dos patas",holes:{PLUS:"G14",MINUS:"G17"}}]);
- wire(b,"esp1:GPIO17","bb:J14","yellow","Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación.");wire(b,"esp1:GND","bb:J17","black");
+ wire(b,"esp1:GPIO17","bb:J14","yellow");wire(b,"esp1:GND","bb:J17","black");
  b.note+=" Buzzer insertado en dos tiras distintas: ajustar filas al paso real sin forzar las patas ni unir + y −. Dibujo no métrico.";
- benches.buzzer=simple(b,benches.buzzer!,["Dos redes: señal a + y masa a −. Las dos patas y el uso previo desde alimentación Arduino no certifican consumo admisible desde GPIO.","Directo únicamente con piezo/entrada compatible y consumo dentro del presupuesto GPIO; de lo contrario, ver transistor en Compatibilidad. No energizar el tramo condicionado."]);
+ benches.buzzer=simple(b,benches.buzzer!,["Conexión usada en clase: GPIO17 a la pata + y GND a la pata −; cotejar el signo + antes de insertar.","Ensayo breve de 120 ms; detener si no suena, se calienta o reinicia la placa."]);
  benches.buzzer.expected="Pulso o tono breve y apagado tras 120 ms; sin zumbido permanente al arrancar. Tipo y consumo deben corresponder al montaje elegido.";
  const relay:Definition={id:"relay",name:"Módulo relé doble",pending:"Guía UTEC Anexo V: módulo relé doble de lógica 5 V y activo LOW. El módulo incluye sus relés; no se añaden bobinas externas. Referencia LOW-trigger con puente VCC/JD-VCC existente. Confirmar que IN1 acepta control 3,3 V sin devolver 5 V al GPIO. Si no, usar adaptación.",pins:[pin("VCC","power",5),pin("GND","ground"),pin("IN1","signal"),pin("IN2"),pin("COM1"),pin("NO1"),pin("NC1")]};
  const fan:Definition={id:"fan",name:"Ventilador DC 5 V",pending:"D-05 está recibido, pero falta una fuente 5 V con corriente de arranque suficiente y adaptar su conector/polaridad. En la vista principal el fan permanece completamente desconectado.",pins:[pin("PLUS"),pin("MINUS")]};
- const f=base("ventilador","M-09 · Relé por USB · fan desconectado",[relay,fan],[{id:"relay1",definition:"relay",inventory:"B-11 · módulo relé doble",holes:{},placement:{x:70,y:150},rotation:180},{id:"fan1",definition:"fan",inventory:"D-05 · ventilador 5 V · NO CONECTAR",holes:{},placement:{x:70,y:440}}]);leftFacing(f);
- // USB can conditionally feed the relay module on a verified A-01. The unknown fan load stays open.
+ const supply5:Definition={id:"supply5",name:"Fuente DC regulada 5 V / 2 A",pending:"Fuente genérica necesaria para el ventilador; no está en el inventario recibido.",pins:[pin("PLUS","source",5),pin("GND","ground",0)]};
+ const f=base("ventilador","M-09 · Relé y ventilador",[relay,fan,supply5],[{id:"relay1",definition:"relay",inventory:"B-11 · módulo relé doble",holes:{},placement:{x:70,y:150},rotation:180},{id:"fan1",definition:"fan",inventory:"D-05 · ventilador 5 V",holes:{},placement:{x:70,y:440}},{id:"ps1",definition:"supply5",inventory:"Fuente genérica regulada 5 V / 2 A · necesaria",holes:{},placement:{x:70,y:700}}]);leftFacing(f);
  wire(f,"esp1:GND_L","bb:RN28","black");wire(f,"bb:LN30","bb:RN30","black");
- power(f,"esp1:VIN","bb:LP26","orange","Usar como 5 V de USB solo si A-01 confirma pin VIN/5V unido a VBUS. Esta rama alimenta el relé sin fan.");
- wire(f,"esp1:GPIO26","bb:J12","green");wire(f,"bb:H12","relay1:IN1","green","Confirmar módulo LOW-trigger con lógica 3,3 V, sin 5 V retornando a GPIO. Si no es compatible, usar la alternativa NPN.");
- power(f,"bb:LP5","relay1:VCC","orange","Confirmar pin VIN/5V de A-01 y puente VCC/JD-VCC reales del módulo.");power(f,"bb:LN7","relay1:GND","black");power(f,"bb:LP9","relay1:IN2","orange","Solo bajo referencia LOW-trigger: canal 2 apagado a VCC; confirmar lógica real.");
- benches.ventilador=simple(f,benches.ventilador!,["Prueba disponible ahora: solo clic del relé, sin conectar COM1, NO1, NC1 ni el ventilador.","Para mover el fan falta una fuente regulada de 5 V con corriente de arranque suficiente; no se dibuja como si estuviera disponible.","Confirmar pin VIN/5V de A-01, LOW-trigger y compatibilidad 3,3 V de IN1. La alternativa NPN y la etapa completa quedan como referencia para cuando exista la fuente."]);
- benches.ventilador.action="Dejar el fan desconectado. Tras identificar A-01 y el relé, enviar arm y on: escuchar un clic de hasta 2 s; stop apaga y desarma.";
- benches.ventilador.expected="Solo el relé hace clic y vuelve a reposo; el ventilador no está conectado y no debe girar.";
- benches.ventilador.diagnosis="Sin clic: stop, retirar USB y revisar VIN/5V, GND, VCC, IN1 y trigger LOW. No conectar el fan para diagnosticar.";
+ power(f,"esp1:VIN","bb:LP26","orange");
+ wire(f,"esp1:GPIO26","bb:J12","green");wire(f,"bb:H12","relay1:IN1","green");
+ power(f,"bb:LP5","relay1:VCC","orange");power(f,"bb:LN7","relay1:GND","black");power(f,"bb:LP9","relay1:IN2","orange");
+ power(f,"ps1:PLUS","relay1:COM1","orange");power(f,"relay1:NO1","fan1:PLUS","orange");power(f,"fan1:MINUS","ps1:GND","black");
+ benches.ventilador=simple(f,benches.ventilador!,["UTEC Anexo V: relé a 5 V, GND común e IN1 activo LOW; en este banco IN1 usa GPIO26.","La fuente genérica regulada 5 V / 2 A es necesaria para la rama COM1 → NO1 → fan y todavía no está recibida.","Rojo del fan a NO1 y negro al negativo de la fuente; cotejar polaridad y adaptar el conector blanco sin forzarlo."]);
+ benches.ventilador.action="Con la fuente de 5 V disponible, enviar arm y on: el relé cierra COM1–NO1 durante hasta 2 s y alimenta el fan; stop apaga y desarma.";
+ benches.ventilador.expected="El relé hace clic, el ventilador gira durante la orden y ambos vuelven a reposo sin reiniciar el ESP32.";
+ benches.ventilador.diagnosis="Sin giro: stop, retirar USB y la fuente; revisar VCC/GND/IN1, COM1/NO1 y polaridad del fan antes de repetir.";
  const fanAssembly=benches.ventilador!.assembly;
  const setRoute=(id:string,bends:[number,number][])=>{fanAssembly.wires.find(w=>w.id===id)!.bends=bends;};
  setRoute("c1",[[850,519],[850,672]]);                  // ESP GND → right negative rail
@@ -102,15 +106,15 @@ export function simplifyBenches(benches:Record<string,BenchGuide>){
   {id:"rsd",definition:"resistor",inventory:"C-01 · 1 kΩ pull-down SD",resistance:1000,holes:{"1":"G22","2":"G25"}},
  ]);leftFacing(audio);
  wire(audio,"esp1:GND_L","bb:RN28","black");wire(audio,"bb:RN20","amp1:GND","black");
- wire(audio,"esp1:VIN","amp1:VIN","orange","Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión.");
- [[33,"BCLK","blue"],[25,"LRC","yellow"],[22,"DIN","green"]].forEach(([gpio,target,color])=>wire(audio,`esp1:GPIO${gpio}`,`amp1:${target}`,color as "blue"|"yellow"|"green","Cotejar terminal del breakout MAX98357A."));
- wire(audio,"esp1:GPIO21","bb:J22","purple");wire(audio,"bb:H22","amp1:SD","purple","Confirmar SD de habilitación; no confundirlo con datos del micrófono.");wire(audio,"bb:J25","bb:RN25","black");
- wire(audio,"amp1:SPK_PLUS","speaker1:PLUS","purple","Salida diferencial: no unir a GND.");audio.wires.at(-1)!.jumper="altavoz";
- wire(audio,"amp1:SPK_MINUS","speaker1:MINUS","purple","Salida diferencial: no unir a GND.");audio.wires.at(-1)!.jumper="altavoz";
+ wire(audio,"esp1:VIN","amp1:VIN","orange");
+ [[33,"BCLK","blue"],[25,"LRC","yellow"],[22,"DIN","green"]].forEach(([gpio,target,color])=>wire(audio,`esp1:GPIO${gpio}`,`amp1:${target}`,color as "blue"|"yellow"|"green"));
+ wire(audio,"esp1:GPIO21","bb:J22","purple");wire(audio,"bb:H22","amp1:SD","purple");wire(audio,"bb:J25","bb:RN25","black");
+ wire(audio,"amp1:SPK_PLUS","speaker1:PLUS","purple");audio.wires.at(-1)!.jumper="altavoz";
+ wire(audio,"amp1:SPK_MINUS","speaker1:MINUS","purple");audio.wires.at(-1)!.jumper="altavoz";
  audio.note+=" R-027: la vista principal no supone una fuente externa. D-08 y D-09 quedan a la izquierda, con I²S directo y solo el pull-down SD en protoboard; el circuito de fuente separada se conserva en Compatibilidad.";
  benches["audio-salida"]=simple(audio,fullAudio,[
-  "Sin fuente externa en la vista principal: confirmar A-01 y presupuesto USB antes de conectar VIN del MAX98357A.",
-  "Ensayo inicial al 1 % con una sola bocina; detener ante reset, calentamiento o distorsión. El circuito de fuente separada queda solo en Compatibilidad.",
+  "MAX98357A: VIN al pin VIN/5V del ESP32 alimentado por USB, GND común, BCLK33, LRC25, DIN22 y SD21.",
+  "Ensayo inicial al 1 % con una sola bocina; detener ante reset, calentamiento o distorsión. El circuito con fuente separada queda en Compatibilidad.",
   ...fullAudio.blockers.filter(s=>!s.startsWith("Fuente 5 V/2 A propuesta")),
  ]);
  benches["audio-salida"]!.diagnosis="Enviar stop ante un fallo y retirar USB. Revisar VIN/5V, GND, BCLK, LRC, DIN, SD y el par SPK±; no cambiar pines ni soldar con alimentación.";

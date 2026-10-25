@@ -21,18 +21,18 @@ describe("bank reference library", () => {
     expect(bank("nfc").links.some(w=>w.from==="ESP32 · 3V3"&&w.to==="PN532 · VCC")).toBe(true);
     expect(bank("nfc").links).toHaveLength(6);
   });
-  it("keeps TFT signals aligned with the existing prototype while leaving power conditional", () => {
+  it("keeps TFT signals and 3.3 V power aligned with the existing prototype", () => {
     const ino = readFileSync(new URL("../../../prototipo/mascota_claude_basica/main.ino", import.meta.url), "utf8");
     for (const [name,pin] of [["CS",5],["DC",27],["RST",26],["SCLK",14],["MOSI",23]] as const) expect(ino).toMatch(new RegExp(`#define TFT_${name}\\s+${pin}`));
-    expect(bank("pantalla").links.find(w=>w.to==="TFT · VCC")?.pending).toBe(true);
-    expect(bank("pantalla").links.find(w=>w.to==="TFT · BL")?.pending).toBe(true);
+    expect(bank("pantalla").links.find(w=>w.to==="TFT · VCC")?.pending).not.toBe(true);
+    expect(bank("pantalla").links.find(w=>w.to==="TFT · BL")?.pending).not.toBe(true);
   });
   it("does not ground either speaker output or power the amplifier from an ESP32 GPIO", () => {
     const audio = bank("audio-salida");
     const out = audio.links.filter(w=>w.kind==="speaker");
     expect(out).toHaveLength(2);
     expect(out.every(w=>!`${w.from} ${w.to}`.includes("GND"))).toBe(true);
-    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"ESP32 · VIN", pending:true });
+    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"ESP32 · VIN", pending:false });
     expect(audio.materials.join(" ")).toContain("solo una");
   });
   it("requires hardware references and transistor isolation for relay and buzzer", () => {

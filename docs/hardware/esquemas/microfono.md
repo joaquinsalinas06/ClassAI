@@ -2,7 +2,7 @@
 
 INMP441 captura audio digital. Se prueba separado del amplificador y del sensor de sonido analógico.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](microfono.svg)
 
@@ -34,16 +34,16 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
 | 1 | red | M–H | esp1:3V3 | bb:LP28 | Cable 1 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 2 | red | M–H | bb:LP4 | module1:VCC | NO conectar: Cotejar VCC, cabecera y desacoplo del breakout real. |
+| 2 | red | M–H | bb:LP4 | module1:VCC | Cable 2 · M–H · bb:LP4 → module1:VCC. NO conectar: Cotejar VCC, cabecera y desacoplo del breakout real. |
 | 3 | black | M–H | esp1:GND | bb:LN28 | Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 4 | black | M–H | bb:LN6 | module1:GND | Cable 4 · M–H · bb:LN6 → module1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 5 | black | M–H | bb:LN8 | module1:LR | NO conectar: Identificar L/R real; fijar canal izquierdo a GND. |
+| 5 | black | M–H | bb:LN8 | module1:LR | Cable 5 · M–H · bb:LN8 → module1:LR. NO conectar: Identificar L/R real; fijar canal izquierdo a GND. |
 | 6 | blue | M–H | esp1:GPIO26 | bb:A12 | Cable 6 · M–H · esp1:GPIO26 → bb:A12. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 7 | blue | M–H | bb:B12 | module1:SCK | NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
+| 7 | blue | M–H | bb:B12 | module1:SCK | Cable 7 · M–H · bb:B12 → module1:SCK. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
 | 8 | yellow | M–H | esp1:GPIO25 | bb:A16 | Cable 8 · M–H · esp1:GPIO25 → bb:A16. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 9 | yellow | M–H | bb:B16 | module1:WS | NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
+| 9 | yellow | M–H | bb:B16 | module1:WS | Cable 9 · M–H · bb:B16 → module1:WS. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
 | 10 | green | M–H | esp1:GPIO33 | bb:A20 | Cable 10 · M–H · esp1:GPIO33 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 11 | green | M–H | bb:B20 | module1:SD | NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
+| 11 | green | M–H | bb:B20 | module1:SD | Cable 11 · M–H · bb:B20 → module1:SD. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -57,9 +57,8 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 2. SD del micrófono es salida de datos; SD del amplificador tiene otra función.
 3. Revisar desacoplo y tensión del módulo real; la ficha INMP441 no identifica su breakout.
 4. Estos GPIO son propuesta nueva de ensayo, no integración I²S implementada.
-5. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
-6. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-7. Confirmar cabecera, orden real y desacoplo de D-07.
+5. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+6. Cotejar VCC/GND/SD/LR/WS/SCK mirando la misma cara del INMP441; alimentar a 3,3 V.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -94,9 +93,8 @@ Diagnóstico: Ceros: cotejar L/R, canal y SD; revisar SCK/WS y soldadura sin USB
 Conflictos: GPIO25/26 coinciden con el banco de audio y otras funciones; no conectar ambos automáticamente.
 
 Faltantes/confirmaciones:
-- Identificar A-01/puerto y preservar respaldo privado antes de cargar.
-- Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-- Confirmar cabecera, orden real y desacoplo de D-07.
+- Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+- Cotejar VCC/GND/SD/LR/WS/SCK mirando la misma cara del INMP441; alimentar a 3,3 V.
 
 ## Registro de resultado
 

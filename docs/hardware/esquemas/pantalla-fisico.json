@@ -311,8 +311,7 @@
       "to": "tft1:VCC",
       "color": "red",
       "jumper": "M–H",
-      "pending": "Confirmar VCC del breakout D-04 a 3,3 V.",
-      "note": "Cable 4 · M–H · bb:LP8 → tft1:VCC. NO conectar: Confirmar VCC del breakout D-04 a 3,3 V.",
+      "note": "Cable 4 · M–H · bb:LP8 → tft1:VCC. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           990,
@@ -335,8 +334,7 @@
       "to": "tft1:BL",
       "color": "red",
       "jumper": "M–H",
-      "pending": "Confirmar BL admite referencia 3,3 V con R serie 1 kΩ; no usar GPIO ni puentear R.",
-      "note": "Cable 6 · M–H · bb:J25 → tft1:BL. NO conectar: Confirmar BL admite referencia 3,3 V con R serie 1 kΩ; no usar GPIO ni puentear R.",
+      "note": "Cable 6 · M–H · bb:J25 → tft1:BL. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           990,

@@ -2,7 +2,7 @@
 
 Conservar el banco ya dibujado: temperatura/humedad y movimiento, sin hembra–hembra.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](ambiente.svg)
 
@@ -29,7 +29,7 @@ Cables: 11 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no
 
 ## Armado cable por cable · USB desconectado
 
-12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. R-027 elimina la fuente externa no disponible. PIR queda condicionado al pin VIN/5V alimentado por USB de una A-01 identificada. Guía UTEC aportada: breakout DHT11 con pull-up integrado; se elimina R externa.
+12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. PIR según guía UTEC: VCC a VIN/5V del ESP32 por USB, OUT a GPIO27 y GND común. Guía UTEC aportada: breakout DHT11 con pull-up integrado; se elimina R externa.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
@@ -39,11 +39,11 @@ Cables: 11 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no
 | 4 | red | M–H | bb:LP15 | dht1:VCC | M–H rojo: + del módulo DHT11 a 3,3 V. Pull-up integrado, según guía UTEC aportada. |
 | 5 | green | M–H | dht1:DATA | bb:A8 | Terminal OUT del DHT11 → A8. A8 y C8 pertenecen a la misma tira, lado A–E. |
 | 6 | green | M–H | esp1:GPIO4 | bb:B8 | GPIO4 del ESP32 → B8; misma red de OUT y pata 1 de R1. |
-| 7 | black | M–H | bb:RN30 | pir1:GND | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
-| 8 | orange | M–H | esp1:VIN | bb:F20 | NO conectar: A-01 no está identificada: confirmar que el pin serigrafiado VIN/5V expone los 5 V del USB antes de conectar el PIR. |
-| 9 | orange | M–H | bb:H20 | pir1:VCC | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
+| 7 | black | M–H | bb:RN30 | pir1:GND | RN30 → GND identificado del PIR; cable M–H, sin H–H. No tomar el orden dibujado como lectura de la foto. |
+| 8 | orange | M–H | esp1:VIN | bb:F20 | VIN/5V del ESP32 alimentado por USB → VCC del PIR, según la guía UTEC. |
+| 9 | orange | M–H | bb:H20 | pir1:VCC | H20 → VCC identificado del PIR, M–H. F20 y H20 comparten cobre; no añadir puente ni unir con 3,3 V. |
 | 10 | yellow | M–H | esp1:GPIO27 | bb:G24 | D27 / GPIO27 → G24, M–H. Tira F24–J24 exclusiva de señal, separada de F20–J20. |
-| 11 | yellow | M–H | bb:J24 | pir1:OUT | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
+| 11 | yellow | M–H | bb:J24 | pir1:OUT | J24 → OUT identificado del PIR, M–H; solo con señal compatible 3,3 V. G24 y J24 comparten cobre. Sin H–H. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -59,8 +59,8 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 4. Sin fuente externa: identificar A-01 y confirmar que VIN/5V expone VBUS antes de alimentar el PIR.
 5. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 6. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-7. DHT11 con pull-up integrado; cotejar etiquetas del PIR y fuente. Confirmar en A-01 que VIN/5V expone los 5 V del USB; no inferirlo por el dibujo.
-8. No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
+7. DHT11 con pull-up integrado; cotejar etiquetas del PIR y fuente. Usar el pin serigrafiado VIN/5V del ESP32 alimentado por USB.
+8. Cotejar VCC/OUT/GND mirando la misma cara del PIR antes de insertar los tres cables.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -97,8 +97,8 @@ Conflictos: PIR GPIO27 entra en conflicto con DC de la TFT.
 Faltantes/confirmaciones:
 - Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-- DHT11 con pull-up integrado; cotejar etiquetas del PIR y fuente. Confirmar en A-01 que VIN/5V expone los 5 V del USB; no inferirlo por el dibujo.
-- No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
+- DHT11 con pull-up integrado; cotejar etiquetas del PIR y fuente. Usar el pin serigrafiado VIN/5V del ESP32 alimentado por USB.
+- Cotejar VCC/OUT/GND mirando la misma cara del PIR antes de insertar los tres cables.
 
 ## Registro de resultado
 
