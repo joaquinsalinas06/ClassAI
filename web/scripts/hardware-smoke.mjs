@@ -66,7 +66,26 @@ try {
   await dialog.getByRole('button',{name:'Exportar JSON',exact:true}).click();
   const exported=JSON.parse(await readFile(await (await jsonEvent).path(),'utf8'));
   assert.equal(exported.revisions.length,1);
+  await dialog.getByRole('button',{name:'Editar',exact:true}).click();
+  await page.getByLabel('Nombre del montaje').fill('Cambio que se recuperará');
+  await dialog.getByRole('button',{name:'Historial',exact:true}).click();
+  await page.getByRole('button',{name:'Recuperar en borrador',exact:true}).click();
+  await dialog.getByRole('button',{name:'Editar',exact:true}).click();
+  assert.equal(await page.getByLabel('Nombre del montaje').inputValue(),'Mi NFC conservado');
+  await page.getByRole('button',{name:'Deshacer',exact:true}).click();
+  assert.equal(await page.getByLabel('Nombre del montaje').inputValue(),'Cambio que se recuperará');
+  await dialog.getByRole('button',{name:'Historial',exact:true}).click();
   await page.getByLabel('Importar montaje JSON').setInputFiles({name:'valid.json',mimeType:'application/json',buffer:Buffer.from(JSON.stringify(exported))});
+  assert.equal(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1')),saved);
+  await page.keyboard.press('Escape');
+
+  // Recovering an NFC revision while browsing ambient must also change the route.
+  await page.locator('[data-bank-id="ambiente"]').click();
+  await page.locator('[data-mission="ambiente"]').waitFor();
+  await page.getByRole('button',{name:'Historial',exact:true}).click();
+  await page.getByRole('button',{name:'Recuperar en borrador',exact:true}).click();
+  await page.locator('[data-mission="nfc"]').waitFor();
+  assert.ok((await canvas.textContent()).includes('PN532'));
   assert.equal(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1')),saved);
   await page.keyboard.press('Escape');
 
