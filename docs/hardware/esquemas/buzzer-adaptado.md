@@ -2,7 +2,7 @@
 
 Alternativa de compatibilidad; no es el montaje principal ni material ya recibido.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](buzzer-adaptado.svg)
 

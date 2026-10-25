@@ -2,7 +2,7 @@
 
 Enviar arm y active para pulso de 120 ms; o passive para tono 2 kHz/120 ms. stop siempre apaga/desarma.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](buzzer.svg)
 

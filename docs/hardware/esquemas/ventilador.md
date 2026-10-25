@@ -2,7 +2,7 @@
 
 Dejar el fan desconectado. Tras identificar A-01 y el relé, enviar arm y on: escuchar un clic de hasta 2 s; stop apaga y desarma.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](ventilador.svg)
 

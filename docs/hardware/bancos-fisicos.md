@@ -17,7 +17,7 @@ La tabla y los conteos iniciales de abajo se conservan como estado histórico de
 | Pantalla/audio | Ensayos aislados ST7789 y MAX98357A; audio principal por VIN/5V USB, una bocina y tono inicial al 1 % | Identificar A-01, variante, presupuesto USB, terminales y montaje; fuente separada solo para mayor potencia |
 | Iluminación | Material requerido explícito | Sensor de luz no recibido |
 
-Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. `ESPERA` aparece dentro de cada cable condicionado; `LIBRE` identifica terminales que no deben conectarse. La vista principal ya no dibuja una fuente externa no disponible.
+Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. Un cable bloqueado dice directamente `NO CONECTAR`; un terminal que no se usa dice `SIN CABLE`. No se muestran estados abstractos como `ESPERA`, `LIBRE` o `CONECTAR`. La vista principal ya no dibuja una fuente externa no disponible.
 
 Compilación de la actualización: `bash scripts/ci/benches-build.sh`, Arduino CLI 1.5.1, core ESP32 3.3.12. Se añaden Adafruit GFX 1.12.6 y ST7735/ST7789 1.12.0 fijadas en instalación. Resultados de memoria nuevos se registran en R-026. No hubo carga, Serial físico, simulación nueva ni ensayo eléctrico. B-02/NFC y respaldos conservados.
 

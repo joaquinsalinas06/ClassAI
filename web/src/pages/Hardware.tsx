@@ -138,7 +138,7 @@ export function Hardware() {
       </header>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2 text-caption">
         <span className={mission.id === "nfc" ? "text-ok-text" : "text-muted"}>{mission.id === "nfc" ? "Referencia NFC probada · RF intermitente" : mission.state}</span>
-        <span className="text-muted">{physicalBank ? `${assembly.wires.length} cables · ${assembly.wires.filter(w=>w.pending).length} por verificar · ${routing.turns} giros` : `${mission.links.length} conexiones propuestas`}</span>
+        <span className="text-muted">{physicalBank ? `${assembly.wires.length} cables · ${assembly.wires.filter(w=>w.pending).length} NO CONECTAR · ${routing.turns} giros` : `${mission.links.length} conexiones propuestas`}</span>
       </div>
       <div ref={diagram} className={`hardware-canvas ${zoom === 1 ? "hardware-canvas-fit" : ""}`} aria-label={physicalBank ? "Distribución y conexiones" : "Conexiones lógicas"}>
         {physicalBank ? <AssemblyBoard pirBack={pirBack} zoom={zoom} assembly={assembly} wires={visibleWires} selected={step !== null && step > 0 ? assembly.wires[step-1]!.from : selected} onSelect={end => {setSelected(end);setInspector("pines");}} connected={analyze({ ...assembly, wires: visibleWires }).connected}/> : <MissionDiagram mission={mission} selected={logicalStep} onSelect={setLogicalStep}/>}

@@ -2,7 +2,7 @@
 
 Ensayo PIR aislado sin inicializar el otro sensor.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](pir.svg)
 

@@ -2,7 +2,7 @@
 
 Conservar el banco ya dibujado: temperatura/humedad y movimiento, sin hembra–hembra.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](ambiente.svg)
 

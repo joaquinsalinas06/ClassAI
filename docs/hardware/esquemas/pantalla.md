@@ -2,7 +2,7 @@
 
 Enviar arm y pattern; probar rot0/rot1/rot2/rot3. stop apaga el contenido y desarma.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](pantalla.svg)
 
