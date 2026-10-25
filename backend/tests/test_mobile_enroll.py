@@ -35,7 +35,7 @@ def test_mobile_enroll(tmp_path, monkeypatch):
     assert client.post("/mobile/enroll", json=dict(body, token="Z" * 32)).status_code == 400
 
     # Retry / lost HTTP response: same phone is idempotent and does not rename the student.
-    again = client.post("/mobile/enroll", json=body)
+    again = client.post("/mobile/enroll", json={k: v for k, v in body.items() if k != "full_name"})
     assert again.status_code == 200 and again.json() == ok.json()
     assert connection.execute("SELECT COUNT(*) FROM credentials").fetchone() == (1,)
     assert TOKEN not in again.text

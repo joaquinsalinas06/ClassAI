@@ -223,7 +223,7 @@ def create_credential(
 
 class MobileEnrollIn(BaseModel):
     student_code: str = Field(min_length=1, max_length=32)
-    full_name: str = Field(min_length=1, max_length=120)
+    full_name: Optional[str] = Field(default=None, min_length=1, max_length=120)
     token: str = Field(min_length=32, max_length=32)
 
 

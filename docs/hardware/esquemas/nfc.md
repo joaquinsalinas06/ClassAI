@@ -1,8 +1,8 @@
 # M-10 · NFC · tarjetas y llavero
 
-Montaje físico disponible: detectar versión y leer tarjeta/llavero antes de Android HCE, tras revisar soldadura.
+ESP32 B-02 y PN532 D-01: montaje con rieles usado en el ensayo HCE → MQTT → asistencia. Retirar y presentar puede requerir reintentos; regularidad RF pendiente.
 
-**Propuesta, sin ensayo físico. Soldadura en curso.**
+**Propuesta, sin ensayo físico. HCE y asistencia física comprobados; regularidad RF pendiente.**
 
 [Abrir guía física con 12 cables y diagnóstico](../banco-nfc.md).
 
@@ -15,7 +15,7 @@ Mapa eléctrico por nombres: las posiciones se ordenan por función, no correspo
 - D-01: PN532 V3 ×1
 - D-02: tarjeta ×1
 - D-03: llavero ×1
-- D-11: cabecera, soldadura en curso; contar
+- D-11: cabecera macho montada en el ensayo NFC
 - B-01 o A-04: protoboard
 
 Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes por protoboard, 0 H–H. No reservar material ya usado en otro banco.
@@ -24,8 +24,8 @@ Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes 
 
 | Desde | Hasta | Vía / condición | Estado |
 |---|---|---|---|
-| ESP32 · 3V3 | PN532 · VCC | A2 / B2 · 3,3 V | Propuesto |
-| ESP32 · GND | PN532 · GND | A4 / B4 | Propuesto |
+| ESP32 · 3V3 | PN532 · VCC | Riel + izquierdo LP15 / LP2 · 3,3 V | Propuesto |
+| ESP32 · GND | PN532 · GND | Riel − izquierdo LN14 / LN4 | Propuesto |
 | ESP32 · GPIO18 | PN532 · SCK | A6 / B6 | Propuesto |
 | PN532 · MISO | ESP32 · GPIO19 | A8 / B8 | Propuesto |
 | ESP32 · GPIO23 | PN532 · MOSI | A10 / B10 | Propuesto |
@@ -35,12 +35,12 @@ Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes 
 
 1. DIP SPI, sin alimentación: canal 1 OFF / canal 2 ON; leer números, no copiar dirección de la foto.
 2. Revisar soldadura: sin puentes, pines firmes y antena despejada. Confirmar cabecera macho/hembra para elegir M–H/M–M. IRQ/RSTO quedan sin conectar.
-3. Parejas A2/B2, A4/B4, A6/B6, A8/B8, A10/B10 y A12/B12: cada A/B comparte tira; nunca unir A con F ni redes distintas. Cada punta ocupa su agujero.
+3. Potencia por rieles izquierdos: + LP15/LP2 y − LN14/LN4, solo mitad superior. Señales por A6/B6, A8/B8, A10/B10 y A12/B12. No unir + con −, A con F ni redes distintas.
 4. Primer ensayo sin pantalla ni actuadores. No imprimir ni publicar tokens/UID completos.
 
 Resultado esperado: PN532 responde con versión; 20 detecciones con retirada entre lecturas. Después probar Android HCE por separado.
 
-Firmware: firmware/nfc_bench: sketch aislado de versión/detecciones, sin publicar UID. No prueba HCE ni asistencia integrada.
+Firmware: firmware/classai_node, perfil NFC_ONLY: SPI 18/19/23/5, Serial 115200, status/start/stop. HCE y asistencia persistida probados (R-023). firmware/nfc_bench queda para diagnóstico de tarjetas.
 
 Conflictos: TFT comparte GPIO5/23 y usa otro SCK; no conectar ambas recetas como si fueran compatibles.
 

@@ -60,7 +60,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x} y={Math.max(160 + assembly.board.rows * 18, assembly.layout === "breadboard" ? 790 : 0) + (rail[1] === "N" ? 14 : 0)} textAnchor="middle" fill={color} fontSize="12">{source?.pin.kind === "ground" ? "GND" : voltage === undefined ? "Libre" : `${String(voltage).replace(".", ",")} V${voltage === 5 ? "*" : ""}`}</text></g>;
     })}
     {[..."ABCDEFGHIJ"].map(c => <text key={c} x={point(`${c}1`)[0]} y="135" textAnchor="middle" fontSize="11" fill="#667081">{c}</text>)}
-    {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x={480 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} textAnchor="end" fontSize="10" fill="#758194">{i + 1}</text><text x={733 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} fontSize="10" fill="#758194">{i + 1}</text></g>)}
+    {Array.from({ length: assembly.board.rows }, (_, i) => <g key={i}><text x={480 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} textAnchor="end" fontSize="11" fill="#758194">{i + 1}</text><text x={733 + offset} y={ys(i + 1) + (nfc ? -6 : 4)} fontSize="11" fill="#758194">{i + 1}</text></g>)}
     {contacts(assembly.board).map(h => { const [x, y] = point(h); return <g key={h} role="button" tabIndex={0} aria-label={`Contacto ${h}`} onKeyDown={e => key(e, `bb:${h}`)} onClick={() => onSelect(`bb:${h}`)} style={{ cursor: "pointer" }}>
       {active(`bb:${h}`) && <circle cx={x} cy={y} r="8" fill="#3b9edc" opacity=".3"/>}<rect x={x - 3.4} y={y - 3.4} width="6.8" height="6.8" rx="1.8" fill={active(`bb:${h}`) ? "#237db3" : "#737f8d"}/><title>{`${h} · ${contactStrip(h, assembly.board)}`}</title></g>; })}
     {[...origin].map(([id, { x, y, type }]) => {
@@ -75,10 +75,10 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x + 115} y={y + 178} textAnchor="middle" fill="#616970" fontSize="11">Wi-Fi / Bluetooth</text>
         <text x={x + 115} y={y + 225} textAnchor="middle" fill="#535f69" fontSize="22">CE</text>
         <rect x={x + 92} y={y + 294} width="45" height="42" fill="#1c2328" stroke="#87929a"/>
-        <text x={x + 115} y={y + 355} textAnchor="middle" fill="#dce6e1" fontSize="10">USB–UART</text>
+        <text x={x + 115} y={y + 355} textAnchor="middle" fill="#dce6e1" fontSize="11">USB–UART</text>
         <rect x={x + 66} y={y + 392} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 82} cy={y + 404} r="7" fill="#222c2a"/>
         <rect x={x + 134} y={y + 392} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 150} cy={y + 404} r="7" fill="#222c2a"/>
-        <text x={x + 82} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="10">EN</text><text x={x + 150} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="10">BOOT</text>
+        <text x={x + 82} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="11">EN</text><text x={x + 150} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="11">BOOT</text>
         <rect x={x + 81} y={y + 439} width="68" height="40" rx="4" fill="url(#metal)" stroke="#6c7581" strokeWidth="2"/><rect x={x + 91} y={y + 467} width="48" height="9" rx="3" fill="#34414c"/>
         {definition(assembly,p).pins.map(pin => { const pt = ends.get(`${id}:${pin.id}`)!; const left = pt[0] < x; return <g key={pin.id}>{pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={left ? x+31 : x+199} y={pt[1]+4} textAnchor={left?"start":"end"} fill={pin.id.startsWith("GND")?"#e0e4e1":pin.id==="3V3"||pin.id==="VIN"?"#f0ba77":"#d4ded9"} fontSize="11">{labelPin(pin.id)}</text></g>; })}
         <path d={`M${x+115} ${y+480} v60 q0 25 35 25 h85`} stroke="#27313e" strokeWidth="12" fill="none"/><text x={x+115} y={y+590} textAnchor="middle" fill="#344255" fontSize="13">USB de datos → computadora</text>
@@ -97,16 +97,16 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x+190} y={y+237} textAnchor="middle" fill="#fff3de" fontSize="12">Antena perimetral: dejar libre</text>
         <g aria-label="Selector SPI: canal 1 OFF, canal 2 ON">
           <rect x={x+250} y={y+250} width="55" height="60" rx="3" fill="#242b2d"/>
-          <text x={x+277} y={y+246} textAnchor="middle" fill="#fff3de" fontSize="10">↑ ON</text>
+          <text x={x+277} y={y+246} textAnchor="middle" fill="#fff3de" fontSize="11">↑ ON</text>
           {[0,1].map(i=><g key={i}><rect x={x+258+i*23} y={y+257} width="13" height="34" fill="#121b20"/><rect x={x+258+i*23} y={y+(i===0?278:257)} width="13" height="13" fill="#efd64c"/><text x={x+264+i*23} y={y+305} textAnchor="middle" fill="#fff3de" fontSize="11">{i+1}</text></g>)}
         </g>
         <text x={x+240} y={y+330} fill="#fff3de" fontSize="11">1 OFF · 2 ON</text>
-        {["GND", "VCC", "SDA", "SCL"].map((label,i)=><g key={label}><circle cx={x+120+i*28} cy={y+303} r="4" fill="#dfc38a"/><text x={x+120+i*28} y={y+287} textAnchor="middle" fontSize="9" fill="#fff3de">{label}</text></g>)}
-        <text x={x+162} y={y+325} textAnchor="middle" fill="#fff3de" fontSize="10">I²C / HSU libres</text>
+        {["GND", "VCC", "SDA", "SCL"].map((label,i)=><g key={label}><circle cx={x+120+i*28} cy={y+303} r="4" fill="#dfc38a"/><text x={x+120+i*28} y={y+287} textAnchor="middle" fontSize="11" fill="#fff3de">{label}</text></g>)}
+        <text x={x+162} y={y+325} textAnchor="middle" fill="#fff3de" fontSize="11">I²C / HSU libres</text>
         {definition(assembly,p).pins.map(pin=>{const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}>
           <path d={`M${x-8} ${pt[1]} H${pt[0]}`} stroke="#c7aa64" strokeWidth="4"/>
           {pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={pt[0]+14} y={pt[1]+4} fontSize="12" fill="#fff3de">{pin.id}</text>
-          {["IRQ","RSTO"].includes(pin.id)&&<text x={pt[0]+59} y={pt[1]+4} fontSize="10" fill="#fff3de">libre</text>}
+          {["IRQ","RSTO"].includes(pin.id)&&<text x={pt[0]+59} y={pt[1]+4} fontSize="11" fill="#fff3de">libre</text>}
         </g>;})}
         <text x={x} y={y+385} fill="#344255" fontSize="13">Apagado: ajustar DIP antes de conectar USB.</text>
         <text x={x} y={y+408} fill="#526276" fontSize="12">3V3 → VCC · el selector no alimenta la placa.</text>
@@ -124,8 +124,8 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         {isDht ? <g><rect x={x + 7} y={y + 12} width="121" height="125" rx="5" fill="#3188c8" stroke="#14669e" strokeWidth="2"/>{Array.from({length:6},(_,i)=><g key={i}>{[0,1,2].map(j=><rect key={j} x={x+17+i*17} y={y+25+j*31} width="9" height="20" rx="2" fill="#134e79"/>)}</g>)}<text x={x+65} y={y+158} textAnchor="middle" fill="#dce6f0" fontSize="11">−     OUT     +</text></g> : <g>
           {pirBack ? <g>
             {[12,105].flatMap(dx=>[24,92].map(dy=><g key={`${dx}-${dy}`}><ellipse cx={x+dx} cy={y+dy} rx="12" ry="16" fill="#202d30"/><ellipse cx={x+dx} cy={y+dy-4} rx="10" ry="9" fill="url(#metal)"/><path d={`M${x+dx-4} ${y+dy-4} h8 M${x+dx} ${y+dy-8} v8`} stroke="#6d7a83"/></g>))}
-            <rect x={x+37} y={y+28} width="47" height="75" fill="#20272a"/><text x={x+61} y={y+67} fill="#dce5df" fontSize="9" textAnchor="middle">BISS0001</text>
-            <text x={x+66} y={y+129} fill="#e0eadf" fontSize="10" textAnchor="middle">VCC / OUT / GND: leer PCB</text>
+            <rect x={x+37} y={y+28} width="47" height="75" fill="#20272a"/><text x={x+61} y={y+67} fill="#dce5df" fontSize="11" textAnchor="middle">BISS0001</text>
+            <text x={x+66} y={y+129} fill="#e0eadf" fontSize="11" textAnchor="middle">VCC / OUT / GND: leer PCB</text>
           </g> : <g>
           <circle cx={x+65} cy={y+73} r="65" fill="url(#lens)" stroke="#b8c5cf" strokeWidth="2"/>
           {[0,1,2,3].map(i=><ellipse key={i} cx={x+65} cy={y+73} rx={15+i*13} ry="61" fill="none" stroke="#c3d0da"/>)}
@@ -133,7 +133,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
           </g>}
           <rect x={x+8} y={y+143} width="25" height="23" rx="3" fill="#dd9435"/><rect x={x+47} y={y+143} width="25" height="23" rx="3" fill="#dd9435"/>
           <path d={`M${x+10} ${y+154} h20 M${x+49} ${y+154} h20`} stroke="#594529" strokeWidth="2"/>
-          <rect x={x+99} y={y+145} width="25" height="15" fill="#e3c326"/><text x={x+112} y={y+175} textAnchor="middle" fontSize="9" fill="#f0e9b1">H / L</text>
+          <rect x={x+99} y={y+145} width="25" height="15" fill="#e3c326"/><text x={x+112} y={y+175} textAnchor="middle" fontSize="11" fill="#f0e9b1">H / L</text>
         </g>}
         {definition(assembly,p).pins.map(pin => {const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}><path d={`M${pt[0]} ${y+180} V${pt[1]}`} stroke="#b89c50" strokeWidth="5"/>{pinMark(`${id}:${pin.id}`,pt[0],pt[1],undefined,pt[0],pt[1]-14)}</g>;})}
         <text x={x+65} y={y+(isDht?260:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "Orden − OUT + reportado" : "Orden de pines por confirmar"}</text>

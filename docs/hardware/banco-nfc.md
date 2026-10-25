@@ -47,7 +47,7 @@ OFF/OFF e I²C ON/OFF; no usarlos con esta receta SPI.
 El selector elige comunicación, no regula ni cambia la fuente. Esta receta usa
 **ESP32 3V3 → PN532 VCC y GND → GND**, según el rango VCC 3,3–5 V y SPI de
 3,3 V del diseño Elechouse V3. No conectar VCC a VIN/5 V ni añadir otra fuente,
-resistencia o puente. Los rieles laterales quedan libres. Confirmar las marcas
+resistencia o puente. El riel + izquierdo lleva 3,3 V y el − izquierdo GND; los derechos quedan libres. Confirmar las marcas
 de D-01 antes de energizar; no inferir funcionamiento de un clon por el dibujo.
 
 ## Conectar apagado, cable por cable
@@ -57,8 +57,8 @@ entra al agujero indicado. Cada fila de esta tabla son dos cables físicos.
 
 | Cables | Color | Primer cable | Segundo cable |
 |---|---|---|---|
-| 1 y 2 | Rojo | ESP32 3V3 → A2 | B2 → PN532 VCC |
-| 3 y 4 | Negro | ESP32 GND derecho → A4 | B4 → PN532 GND |
+| 1 y 2 | Rojo | ESP32 3V3 → LP15 (riel + izquierdo) | LP2 → PN532 VCC |
+| 3 y 4 | Negro | ESP32 GND derecho → LN14 (riel − izquierdo) | LN4 → PN532 GND |
 | 5 y 6 | Azul | ESP32 D18 / GPIO18 → A6 | B6 → PN532 SCK |
 | 7 y 8 | Violeta | ESP32 D19 / GPIO19 → A8 | B8 → PN532 MISO |
 | 9 y 10 | Verde | ESP32 D23 / GPIO23 → A10 | B10 → PN532 MOSI |
@@ -66,10 +66,22 @@ entra al agujero indicado. Cada fila de esta tabla son dos cables físicos.
 
 A y B de la **misma fila** ya comparten cobre dentro de la protoboard A–E:
 no añadir puente, ni compartir agujero. No hay unión interna de A–E a F–J.
-Las seis filas no se unen entre sí. Rieles +/− a ambos lados libres; IRQ/RSTO,
+Las cuatro filas de señal no se unen entre sí. En potencia, LP15 y LP2 comparten
+riel + izquierdo y LN14/LN4 comparten riel − izquierdo. Se usa solo la mitad
+superior: la receta también funciona si los rieles están cortados entre 15/16.
+Rieles derechos libres; IRQ/RSTO,
 conector I²C/HSU y terminales restantes sin cables. Los cruces dibujados con
 borde blanco no son conexiones. Si no hay colores iguales, conservar números
 y extremos; el color del plástico no determina la señal.
+
+## ¿Hay corto por estar al lado?
+
+No por proximidad: **+ y − son tiras distintas**. Un corto sería unirlas con un
+cable, puente de soldadura o metal expuesto. En el centro de la protoboard,
+A–E de una misma fila sí comparten cobre: positivo y negativo ahí se cortocircuitan.
+A–E y F–J están separados. No dejar puntas metálicas tocando terminales vecinos;
+insertar los jumpers correctamente y montar sin USB. El modelo verifica estas
+uniones; no comprueba defectos físicos ni certifica continuidad real de tu placa.
 
 ## Preparar y ejecutar el ensayo
 

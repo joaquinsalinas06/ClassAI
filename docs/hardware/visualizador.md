@@ -1,21 +1,23 @@
 # Visualizador de montajes
 
-Primera versión del banco de trabajo de ClassAI, accesible en `/montajes` de la
+Banco de trabajo de ClassAI, accesible en `/montajes` de la
 web. Funciona con datos locales, sin servicio de simulación ni acceso a placas.
 Para abrir toda la aplicación sin backend: `cd web` y `pnpm dev:mock`.
 El modo mock afecta a las aulas; el visualizador muestra propuestas de cableado,
-no lecturas simuladas ni montajes físicos verificados.
+no lecturas simuladas. La referencia NFC tiene ensayo físico registrado en R-023;
+los cambios del editor y los demás bancos no se aprueban por mostrarse en pantalla.
 
 ## Decisión y alcance
 
 El visualizador es parte de la web existente. El catálogo y los montajes se
 conservan en JSON versionado/exportable, separado del dibujo y de la validación.
-No se crea una skill instalada en el equipo: estas instrucciones y los archivos
-legibles permiten a un asistente editar datos revisables sin depender de una
-configuración personal. No se añaden dependencias.
+La skill de montaje vive en `.agents/skills/classai-hardware-assembly`. Los datos
+y estas instrucciones siguen siendo legibles sin configuración personal. Para
+el rediseño se consultaron tres skills externas, sin añadir dependencias web;
+ver [decisiones de interfaz](../design/montajes.md).
 
 El primer ejemplo usa referencias de ESP32, B-03 DHT11 y un PIR por escoger entre
-D-06/B-04. A-01/B-02 aún no tienen identidad física asociada. Las alimentaciones
+D-06/B-04. B-02 ya está asociada al ensayo NFC; no asignar A-01 por apariencia. Las alimentaciones
 VCC de sensores están incluidas en el diseño de referencia completo de
 [banco-ambiente.md](banco-ambiente.md), junto con pull-up y alimentación USB.
 ESP32 tiene vista de 30 pines con USB y DHT11 sigue el orden −/OUT/+ reportado;
@@ -29,7 +31,22 @@ y entradas de alimentación sin fuente o con tensión de referencia distinta.
 No valida la continuidad medida, cuerpos a escala, longitudes, corriente,
 tolerancias ni comportamiento de firmware.
 La resistencia opcional permite probar colocación de dos patas y puenteado.
-Todavía no hay arrastre de footprints, optimización automática ni PN532 funcional.
+Todavía no hay arrastre de footprints ni optimización automática. El visor no
+simula RF/APDU; el lector físico se valida por separado.
+
+## Navegación por banco
+
+La lista lateral tiene scroll propio. Un clic selecciona un banco y muestra solo
+sus piezas y conexiones: NFC y ambiente abren su distribución física; los otros
+diez muestran referencias lógicas identificadas como tales. Ya no hace falta
+pasar por la biblioteca y luego abrir un segundo editor independiente.
+
+El dibujo ocupa el área principal, con pasos y ajuste de escala abajo. Materiales,
+pines, guía, edición e historial se abren en un inspector lateral accesible mediante
+sus botones. Escape lo cierra. En móvil la lista se sustituye por un selector.
+`?guia=nfc`, `?guia=ambiente` y `?banco=<id>` siguen funcionando, así como Atrás y
+Adelante. Los borradores se conservan en memoria al cambiar entre bancos, sin
+escribir sobre la revisión guardada. Los comandos JSON/guardar están en Historial.
 
 ## Fuente editable
 

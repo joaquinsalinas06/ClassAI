@@ -10,7 +10,11 @@ class ClassAiHostApduService : HostApduService() {
 
     override fun processCommandApdu(commandApdu: ByteArray, extras: Bundle?): ByteArray {
         val response = handler.process(commandApdu, TokenStore(this).get())
-        // se registra solo INS y SW, nunca el token
+        // Full payloads are opt-in for the private lab build; normal builds keep INS/SW only.
+        if (BuildConfig.DEBUG && BuildConfig.CLASSAI_LAB_DIAGNOSTICS) {
+            EventLog.add("APDU RX ${commandApdu.toHex()}")
+            EventLog.add("APDU TX ${response.toHex()}")
+        }
         val ins = if (commandApdu.size > 1) "%02X".format(commandApdu[1]) else "--"
         val sw = response.takeLast(2).toByteArray().toHex()
         if (ins == "CA" && sw == "9000") EventLog.credentialRead() else EventLog.add("APDU INS $ins → SW $sw")

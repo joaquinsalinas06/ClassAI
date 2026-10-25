@@ -98,9 +98,10 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             wait_for(connect, processes)
             publisher.loop_start()
             wait_for(connected.is_set, processes)
+            from nfc_lab import lab_environment
             env = {
-                **os.environ, "MQTT_HOST": "127.0.0.1", "MQTT_PORT": str(port),
-                "MQTT_TOPIC": "MLX90614/temperature", "MQTT_CLIENT_ID": "smoke-ingest",
+                **lab_environment(db_path, "127.0.0.1", port),
+                "MQTT_CLIENT_ID": "smoke-ingest",
                 "MQTT_USERNAME": "", "MQTT_PASSWORD": "", "PYTHONUNBUFFERED": "1",
             }
             # cwd is temporary: load_dotenv cannot pick up the repository's .env.
@@ -116,7 +117,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             # Real mobile enrolment route, same token delivered by the HCE protocol later.
             with sqlite3.connect(db_path) as connection:
                 connection.execute("INSERT INTO students (code, full_name, created_at) VALUES ('202999001', 'HCE Lab Test', '2026-01-01T00:00:00Z')")
-            phone_token = "11223344556677889900AABBCCDDEEFF"  # synthetic, never a real phone
+            phone_token = bytes(range(16)).hex().upper()  # generated synthetic fixture, never a real phone
             with TestClient(api.app) as client:
                 phone = {"student_code": "202999001", "full_name": "HCE Lab Test", "token": phone_token}
                 linked = client.post("/mobile/enroll", json=phone)

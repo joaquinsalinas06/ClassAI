@@ -147,6 +147,7 @@ están en proceso de soldadura según Joaquín; no se ha confirmado finalizació
 ## Guía física NFC
 
 [Montaje PN532 SPI](banco-nfc.md): 3V3/GND y GPIO18/19/23/5,
-12 M–H con cabecera macho confirmada, seis tiras de protoboard independientes.
-DIP 1 OFF / 2 ON con alimentación desconectada; IRQ/RSTO y rieles libres.
+12 M–H con cabecera macho confirmada: riel + izquierdo para 3V3, − izquierdo
+para GND (solo mitad superior) y cuatro tiras de señal independientes.
+DIP 1 OFF / 2 ON con alimentación desconectada; IRQ/RSTO y rieles derechos libres.
 Coincide con `firmware/nfc_bench`; no cambia el mapa del producto integrado.

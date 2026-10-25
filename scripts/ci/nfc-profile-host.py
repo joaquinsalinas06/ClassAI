@@ -12,10 +12,11 @@ with tempfile.TemporaryDirectory() as tmp:
     out = Path(tmp)
     for name in ("WiFi.h", "PubSubClient.h", "Wire.h", "Preferences.h", "ArduinoJson.h", "Adafruit_MLX90614.h", "secrets.h"):
         (out / name).write_text("")
+    (out / SKETCH.name).write_text(source)
     for mode in (0, 1):
         text = subprocess.check_output([compiler, "-E", "-P", "-x", "c++", f"-DNFC_ONLY={mode}", "-I", tmp,
-                                        "-I", str(SKETCH.parent), str(SKETCH)], text=True)
-        for call in ("digitalWrite(", "digitalRead(", "pinMode(", "Wire.begin("):
+                                        "-I", str(SKETCH.parent), str(out / SKETCH.name)], text=True)
+        for call in ("digitalWrite(", "digitalRead(", "pinMode(", "Wire.begin(", "configTime("):
             assert (call not in text) if mode else (call in text), (mode, call)
         assert 'Serial.println(eventQueue[eventHead])' not in text
     functions = source[source.index("void labStatus()"):source.index("// RED (sin bucles")]
@@ -40,12 +41,26 @@ struct { bool online=false; bool connected() {return online;} } mqttClient;
 bool nfcOk=true, sessionActive=false;
 char deviceId[40]="esp32-nfc-lab-010203040506", sessionId[64]="";
 unsigned long bootCount=4, sessionSequence=0;
+int networkChecks=0;
+void labNetworkDiagnostics() {networkChecks++;}
 int eventCount=0;
 std::vector<std::string> events;
 void queueEvent(const char* e, const void*) { events.push_back(e); eventCount++; }
 '''
+    reader = (SKETCH.parent / "nfc_reader.cpp").read_text()
+    begin = reader.index("static bool exchange(")
+    end = reader.index("\n}", begin) + 2
+    actual_exchange = reader[begin:end]
+    exchange_stub = r'''
+struct { bool ok=false; bool inDataExchange(uint8_t*, uint8_t, uint8_t*, uint8_t*) { return ok; } } nfc;
+'''
     test = r'''
 int main() {
+  uint8_t response[32]={0}, length=32, apdu[5]={0};
+  assert(!exchange(apdu,5,response,&length) && length==0);
+  nfc.ok=true; length=32;
+  assert(exchange(apdu,5,response,&length) && length==32);
+  labCommand("net"); assert(networkChecks==1 && events.empty() && !sessionActive);
   labCommand("start"); assert(!sessionActive && events.empty());
   mqttClient.online=true; nfcOk=false;
   labCommand("start"); assert(!sessionActive && events.empty());
@@ -68,7 +83,7 @@ int main() {
 }
 '''
     cpp = out / "commands.cpp"
-    cpp.write_text(stub + functions + test)
+    cpp.write_text(stub + exchange_stub + actual_exchange + functions + test)
     exe = out / "commands"
     subprocess.run([compiler, "-std=c++17", "-Wall", "-Wextra", "-Werror", str(cpp), "-o", str(exe)], check=True)
     subprocess.run([str(exe)], check=True)

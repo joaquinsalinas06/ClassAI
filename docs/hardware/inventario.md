@@ -187,7 +187,7 @@ esté terminada. El tipo de conectores y la revisión final siguen pendientes.
 No cambiar estos módulos a «probados» ni afirmar soldadura terminada. Se
 conservan los propietarios y la disponibilidad declarada de dos ESP32.
 
-Para NFC con cabecera macho, la receta por seis tiras usa 12 M–H; si se suelda
+Para NFC con cabecera macho, la receta por cuatro tiras de señal y rieles +/− izquierdos usa 12 M–H; si se suelda
 cabecera hembra, usa 6 M–H + 6 M–M. Ambas evitan H–H. Confirmar tipo al terminar,
 no pedir más cables antes de revisar C-07/C-08 y material libre. Una sola bocina
 D-09 se ensaya en la salida mono de D-08; la segunda queda sin conectar.

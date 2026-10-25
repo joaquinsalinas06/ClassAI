@@ -2,7 +2,7 @@
   "version": 1,
   "layout": "breadboard",
   "name": "M-10 · NFC físico · PN532 SPI",
-  "note": "12 M–H, cabecera macho confirmada por Joaquín; soldadura terminada por revisar. DIP 1 OFF / 2 ON sin alimentación. 3V3, no VIN. IRQ/RSTO libres; rieles libres. Placa/puerto/respaldo por asociar antes de cargar. Sin ensayo físico.",
+  "note": "12 M–H, cabecera macho confirmada por Joaquín; soldadura terminada por revisar. DIP 1 OFF / 2 ON sin alimentación. 3V3, no VIN. IRQ/RSTO libres; riel izquierdo + a 3V3 y − a GND, solo mitad superior. Rieles derechos libres. Placa/puerto/respaldo por asociar antes de cargar. Sin ensayo físico.",
   "board": {
     "rows": 30,
     "rails": true,
@@ -245,9 +245,9 @@
     {
       "id": "nfc-1",
       "from": "esp1:3V3",
-      "to": "bb:A2",
+      "to": "bb:LP15",
       "color": "red",
-      "note": "Cable 1 · M–H: hembra a ESP32 3V3, macho a A2. Montar sin USB.",
+      "note": "Cable 1 · M–H: hembra a ESP32 3V3, macho a LP15. Montar sin USB.",
       "bends": [
         [
           420,
@@ -255,16 +255,16 @@
         ],
         [
           420,
-          168
+          402
         ]
       ]
     },
     {
       "id": "nfc-2",
-      "from": "bb:B2",
+      "from": "bb:LP2",
       "to": "nfc1:VCC",
       "color": "red",
-      "note": "Cable 2 · M–H: macho a B2, hembra a PN532 VCC. A2/B2 comparten tira; no puente adicional.",
+      "note": "Cable 2 · M–H: macho a LP2, hembra a PN532 VCC. LP15/LP2 comparten riel + izquierdo, mitad superior; no puente adicional.",
       "bends": [
         [
           830,
@@ -279,9 +279,9 @@
     {
       "id": "nfc-3",
       "from": "esp1:GND",
-      "to": "bb:A4",
+      "to": "bb:LN14",
       "color": "black",
-      "note": "Cable 3 · M–H: hembra a ESP32 GND, macho a A4. Montar sin USB.",
+      "note": "Cable 3 · M–H: hembra a ESP32 GND, macho a LN14. Montar sin USB.",
       "bends": [
         [
           406,
@@ -289,16 +289,16 @@
         ],
         [
           406,
-          204
+          384
         ]
       ]
     },
     {
       "id": "nfc-4",
-      "from": "bb:B4",
+      "from": "bb:LN4",
       "to": "nfc1:GND",
       "color": "black",
-      "note": "Cable 4 · M–H: macho a B4, hembra a PN532 GND. A4/B4 comparten tira; no puente adicional.",
+      "note": "Cable 4 · M–H: macho a LN4, hembra a PN532 GND. LN14/LN4 comparten riel − izquierdo, mitad superior; no puente adicional.",
       "bends": [
         [
           848,
@@ -332,7 +332,7 @@
       "from": "bb:B6",
       "to": "nfc1:SCK",
       "color": "blue",
-      "note": "Cable 6 · M–H: macho a B6, hembra a PN532 SCK. A6/B6 comparten tira; no puente adicional.",
+      "note": "Cable 6 · M–H: macho a B6, hembra a PN532 SCK. A6/B6 comparten tira A–E; no puente adicional.",
       "bends": [
         [
           866,
@@ -366,7 +366,7 @@
       "from": "bb:B8",
       "to": "nfc1:MISO",
       "color": "purple",
-      "note": "Cable 8 · M–H: macho a B8, hembra a PN532 MISO. A8/B8 comparten tira; no puente adicional.",
+      "note": "Cable 8 · M–H: macho a B8, hembra a PN532 MISO. A8/B8 comparten tira A–E; no puente adicional.",
       "bends": [
         [
           884,
@@ -400,7 +400,7 @@
       "from": "bb:B10",
       "to": "nfc1:MOSI",
       "color": "green",
-      "note": "Cable 10 · M–H: macho a B10, hembra a PN532 MOSI. A10/B10 comparten tira; no puente adicional.",
+      "note": "Cable 10 · M–H: macho a B10, hembra a PN532 MOSI. A10/B10 comparten tira A–E; no puente adicional.",
       "bends": [
         [
           902,
@@ -434,7 +434,7 @@
       "from": "bb:B12",
       "to": "nfc1:SS",
       "color": "yellow",
-      "note": "Cable 12 · M–H: macho a B12, hembra a PN532 SS. A12/B12 comparten tira; no puente adicional.",
+      "note": "Cable 12 · M–H: macho a B12, hembra a PN532 SS. A12/B12 comparten tira A–E; no puente adicional.",
       "bends": [
         [
           920,

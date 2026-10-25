@@ -12,6 +12,12 @@ GET_CREDENTIAL, y el backend vincula ese mismo token al estudiante. Una tarjeta
 física tiene su propia credencial UID; no es el token HCE del teléfono.
 
 «Credencial leída» en el celular significa que respondió a GET_CREDENTIAL.
+Con ClassAI abierta, muestra confirmación, vibración y confeti incluso desde
+la pantalla de acceso y sin MQTT. Un tap de tarjeta/llavero separado no avisa al
+celular sin otro canal; esta reacción local exige acercar el propio teléfono.
+NFC_ONLY no consulta NTP externo; la ingesta utiliza la hora local del backend
+cuando el nodo envía ts=null. API y broker apuntan al Mac de la LAN.
+
 «Evento publicado QoS0» en Serial significa aceptación local por la librería
 MQTT, **no asistencia persistida**. La comprobación final es la lista de
 asistentes de la sesión en web/API. No se añadió confirmación APDU/MQTT nueva.
@@ -25,6 +31,7 @@ uv venv --python 3.13 .venv
 uv pip install --python .venv/bin/python -r backend/requirements-ci.txt
 .venv/bin/python backend/nfc_lab.py prepare
 .venv/bin/python backend/nfc_lab.py doctor
+.venv/bin/python backend/nfc_lab.py mqtt-probe --broker-host IP_DEL_MAC
 .venv/bin/python backend/nfc_lab.py serve
 ```
 
@@ -34,6 +41,12 @@ estudiantes, nombres ya registrados, credenciales y sesiones existentes; no pide
 token. Si ya está creado, basta repetir sin cambiarlo. No usar `seed_demo --reset`.
 La base local está ignorada por Git. Si `.venv` ya existe, conservarla y omitir
 su creación; `uv pip install` sirve para completar dependencias.
+
+`mqtt-probe` abre publicador y suscriptor reales, espera SUBACK y recepción del
+mensaje QoS1 en un topic diagnóstico fuera de classai/v1; no crea asistencia.
+La variable MQTT_TOPIC de ingesta corresponde al formato legado MLX90614,
+**no** al topic de eventos del aula; ClassAI usa las suscripciones wildcard
+existentes. La prueba de integración usa el mismo entorno generado por el helper.
 
 `doctor` verifica CONNACK del broker existente en 127.0.0.1:1883 y muestra la IP
 del Mac. `serve` arranca **solo** ingesta, API en 0.0.0.0:8000 y web real en
@@ -63,7 +76,7 @@ APK debug: `mobile/android/app/build/outputs/apk/debug/app-debug.apk` tras compi
 
 ```sh
 cd mobile/android
-JAVA_HOME=/ruta/a/jdk17 ANDROID_HOME=/ruta/al/sdk ./gradlew --no-daemon testDebugUnitTest assembleDebug
+CLASSAI_API_URL=http://IP_DEL_MAC:8000 JAVA_HOME=/ruta/a/jdk17 ANDROID_HOME=/ruta/al/sdk ./gradlew --no-daemon testDebugUnitTest assembleDebug
 adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
@@ -72,10 +85,13 @@ credencial. Si falla por firma o versión, detenerse y revisar la instalación
 existente; no resolverlo destruyendo sus datos. Si no hay teléfono por USB,
 queda pendiente instalar la actualización (el APK existe localmente).
 
-En ClassAI → **Cambiar servidor**, introducir la URL LAN del Mac. Al cambiarla
-se invalida el estado Activa del servidor anterior y se verifica la misma
-credencial automáticamente; sin red queda Pendiente con Reintentar. Una respuesta
-antigua de otro servidor o credencial no activa el perfil nuevo.
+La app usa el rebranding compartido de las PR #84/#85 (temas claro/oscuro),
+entrada solo por código y URL definida al compilar mediante CLASSAI_API_URL o
+`mobile/android/.env`. El menú de cambiar servidor de la versión anterior se
+sustituye por esa configuración. Al actualizar un APK que apunta a otra URL,
+se conserva código/token, se invalida Activa y se revalida contra la API nueva.
+Sin red queda Pendiente. No desinstalar ni usar Cambiar de estudiante para corregir
+la red. Ver detalles técnicos permite comprobar la URL incluida en el APK.
 
 - 200: teléfono vinculado. Repetir mismo código/token devuelve el mismo registro.
 - 404: preparar el código correcto en la base local.
@@ -94,10 +110,23 @@ que reutiliza `nfc_reader.cpp` y `nfc_protocol.h`:
 
 ```sh
 .venv/bin/python backend/nfc_lab.py configure-firmware
-arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property compiler.cpp.extra_flags=-DNFC_ONLY=1 --build-path /tmp/classai-nfc-only-build firmware/classai_node
+umask 077  # también protege artefactos que incluyen secrets.h
+python3 scripts/ci/prepare-pn532.py /tmp/classai-pn532-hce
+arduino-cli compile --library /tmp/classai-pn532-hce --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property compiler.cpp.extra_flags=-DNFC_ONLY=1 --build-path /tmp/classai-nfc-only-build firmware/classai_node
 ```
 
-El helper pide SSID/clave sin mostrar la clave y crea `firmware/classai_node/secrets.h`
+`prepare-pn532.py` crea una copia de build de Adafruit PN532 1.3.4, sin alterar
+la biblioteca instalada: conserva el identificador Tg obtenido al detectar el
+UID y permite enviar SELECT/GET a esa misma activación. Evita una segunda búsqueda
+que hacía perder la sesión HCE. La copia también reduce SPI hardware a 300 kHz
+y etiqueta fallos de transporte/estado PN532 sin volcar sus payloads. El sondeo
+usa 250 ms. Son medidas de diagnóstico, no una validación RF por simulación. No sobrescribe una carpeta preparada existente;
+reutilizarla o elegir otra ruta y pasarla a --library. CI prepara su propia copia.
+
+El helper reutiliza `~/.config/classai/network.json` si existe, con claves
+`wifi_ssid` y `wifi_password` y permisos 0600. Ese perfil privado queda fuera del
+repositorio y puede ser leído por otros bancos al preparar sus configuraciones.
+Si no existe, pide SSID/clave sin mostrar la clave. Crea `firmware/classai_node/secrets.h`
 privado (permisos 0600, ignorado por Git), con NFC_ONLY=1, ROOM_ID=nfc-lab y broker
 LAN. **Nunca sobrescribe un secrets.h existente**: revisar/editar localmente su
 configuración si ya existe. No publica claves ni carga firmware. Los artefactos
@@ -172,3 +201,10 @@ estudiante esperado en **esa sesión**, no solo ver una animación o LED.
 No publicar tokens, UID, claves, DB, flash ni logs de payloads MQTT. El log nuevo
 del firmware muestra solo evento/id y publicación. Registrar en montajes por
 separado pruebas software y las físicas, con placa/puerto/commit/perfil y evidencia.
+
+
+Para aislar problemas de red, enviar `net` por Serial: muestra IP/gateway/máscara
+y prueba TCP al broker, API y descarga local, sin publicar eventos ni cambiar la
+sesión. Un pub/sub desde el Mac solo demuestra el broker desde ese host; no valida
+la comunicación ESP32→Mac. Tras cambiar de Wi-Fi, conservar el perfil anterior,
+actualizar el destino del firmware/APK y comprobar acceso desde la placa.

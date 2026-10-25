@@ -7,6 +7,7 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include <time.h>
+#include <errno.h>
 
 #if __has_include("secrets.h")
 #include "secrets.h"
@@ -330,6 +331,32 @@ void toggleSession() {
 }
 
 #if NFC_ONLY
+void labNetworkDiagnostics() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("NET: WiFi no conectado");
+    return;
+  }
+  Serial.printf("NET local=%s gateway=%s mask=%s DNS=%s broker=%s:%d\n",
+                WiFi.localIP().toString().c_str(), WiFi.gatewayIP().toString().c_str(),
+                WiFi.subnetMask().toString().c_str(), WiFi.dnsIP().toString().c_str(), MQTT_HOST, MQTT_PORT);
+  IPAddress address;
+  if (!address.fromString(MQTT_HOST)) {
+    Serial.println("NET: este diagnostico directo requiere broker IPv4 literal");
+    return;
+  }
+  const uint16_t ports[] = {MQTT_PORT, 8000, 8766};
+  for (uint16_t port : ports) {
+    WiFiClient probe;
+    errno = 0;
+    const uint32_t began = millis();
+    const bool connected = probe.connect(address, port, 1000);
+    const int error = errno;
+    Serial.printf("NET TCP %s:%u %s elapsed=%lu ms errno=%d\n", MQTT_HOST, port,
+                  connected ? "OK" : "FAIL", (unsigned long)(millis() - began), error);
+    probe.stop();
+  }
+}
+
 void labStatus() {
   Serial.printf("NFC_ONLY device=%s lector=%s WiFi=%s MQTT=%s sesion=%s cola=%d\n",
                 deviceId, nfcOk ? "listo" : "fallo", WiFi.status() == WL_CONNECTED ? "si" : "no",
@@ -338,6 +365,7 @@ void labStatus() {
 
 void labCommand(const char* command) {
   if (!strcmp(command, "status")) { labStatus(); return; }
+  if (!strcmp(command, "net")) { labNetworkDiagnostics(); return; }
   if (!strcmp(command, "start")) {
     if (sessionActive) { Serial.println("Sesion ya activa; no se crea otra"); return; }
     if (!nfcOk || !mqttClient.connected()) {
@@ -357,7 +385,7 @@ void labCommand(const char* command) {
     sessionActive = false; sessionId[0] = '\0';
     return;
   }
-  if (command[0]) Serial.println("Comando desconocido; usar status, start o stop");
+  if (command[0]) Serial.println("Comando desconocido; usar status, net, start o stop");
 }
 
 void readLabSerial() {
@@ -390,7 +418,9 @@ void maintainWiFi(unsigned long now) {
       Serial.print("WiFi conectado. IP: ");
       Serial.print(WiFi.localIP());
       Serial.printf(" RSSI: %d dBm\n", WiFi.RSSI());
+#if !NFC_ONLY
       configTime(0, 0, "pool.ntp.org", "time.google.com");  // UTC
+#endif
     }
     return;
   }
@@ -570,7 +600,7 @@ void setup() {
 #if NFC_ONLY
   snprintf(deviceId, sizeof(deviceId), "esp32-%.18s-%012llx", ROOM_ID,
            (unsigned long long)(ESP.getEfuseMac() & 0xffffffffffffULL));
-  Serial.println("NFC_ONLY: sin sensores/actuadores/pulsador. Comandos: status, start, stop + Enter.");
+  Serial.println("NFC_ONLY: sin sensores/actuadores/pulsador. Comandos: status, net, start, stop + Enter.");
 #else
   snprintf(deviceId, sizeof(deviceId), "esp32-%s", ROOM_ID);
 #endif
@@ -608,6 +638,10 @@ void setup() {
   nextWifiAttempt = millis() + WIFI_RETRY_MIN_MS;
   Serial.printf("Conectando a WiFi: %s (sin bloquear)\n", WIFI_SSID);
 
+#if NFC_ONLY
+  // A missing broker must not monopolize the local NFC diagnostic loop.
+  wifiClient.setConnectionTimeout(250);
+#endif
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(1024);
   mqttClient.setSocketTimeout(5);
