@@ -134,3 +134,15 @@ Texto plano `online` (publicado al conectar, retenido) y `offline` (Last Will, r
 - El SELECT también se acepta sin el `Le` final (13 bytes). GET_CREDENTIAL sin SELECT previo → `69 85`.
 - Lector: si el SELECT responde algo distinto de `90 00`, un UID de 4 bytes se ignora (teléfono sin ClassAI); un UID de 7/10 bytes se trata como tarjeta física ISO-DEP (p.ej. DESFire) → `nfc_card_uid`.
 - Limitación Adafruit PN532 1.3.4: UIDs de 10 bytes llegan truncados; en la práctica las tarjetas del curso son de 4 o 7 bytes.
+
+
+## Enrolamiento móvil local (HTTP)
+
+`POST /mobile/enroll` acepta código y token; `full_name` es opcional por compatibilidad
+con APK anteriores. El nombre siempre procede del padrón del servidor. Reintentar mismo
+student_code y token android_hce activo devuelve 200 y el mismo credential_id,
+sin crear otra fila ni renombrar el estudiante. Otro token activo del estudiante
+y un token revocado devuelven 409; no se reactivan por reintento. Cambiar servidor
+en Android conserva token/perfil pero invalida la vinculación hasta comprobar el
+nuevo destino. La lectura APDU no confirma persistencia: consultar attendance de
+la sesión. El perfil NFC_ONLY usa los eventos classai/v1 existentes, sin ACK nuevo.

@@ -1,0 +1,510 @@
+{
+  "version": 1,
+  "bankId": "ventilador",
+  "layout": "breadboard",
+  "name": "M-09 · Relé y ventilador",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "name": "Módulo relé doble",
+      "pending": "Guía UTEC Anexo V: módulo relé doble de lógica 5 V y activo LOW. El módulo incluye sus relés; no se añaden bobinas externas. Referencia LOW-trigger con puente VCC/JD-VCC existente. Confirmar que IN1 acepta control 3,3 V sin devolver 5 V al GPIO. Si no, usar adaptación.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "IN1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "IN2",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "COM1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NO1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NC1",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "fan",
+      "name": "Ventilador DC 5 V",
+      "pending": "D-05 está recibido, pero falta una fuente 5 V con corriente de arranque suficiente y adaptar su conector/polaridad. En la vista principal el fan permanece completamente desconectado.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "supply5",
+      "name": "Fuente DC regulada 5 V / 2 A",
+      "pending": "Fuente genérica necesaria para el ventilador; no está en el inventario recibido.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "voltage": 0,
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
+    },
+    {
+      "id": "relay1",
+      "definition": "relay",
+      "inventory": "B-11 · módulo relé doble",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 150
+      },
+      "rotation": 180
+    },
+    {
+      "id": "fan1",
+      "definition": "fan",
+      "inventory": "D-05 · ventilador 5 V",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 440
+      }
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "Fuente genérica regulada 5 V / 2 A · necesaria",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 700
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND_L",
+      "to": "bb:RN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND_L → bb:RN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          850,
+          519
+        ],
+        [
+          850,
+          672
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:LN30",
+      "to": "bb:RN30",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 2 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          672
+        ],
+        [
+          785,
+          672
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "esp1:VIN",
+      "to": "bb:LP26",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 3 · potencia DC por bornes · esp1:VIN → bb:LP26. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          900,
+          546
+        ],
+        [
+          900,
+          720
+        ],
+        [
+          400,
+          720
+        ],
+        [
+          400,
+          600
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "esp1:GPIO26",
+      "to": "bb:J12",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · esp1:GPIO26 → bb:J12. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          900,
+          384
+        ],
+        [
+          900,
+          348
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:H12",
+      "to": "relay1:IN1",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 5 · M–H · bb:H12 → relay1:IN1. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          430,
+          348
+        ],
+        [
+          390,
+          348
+        ],
+        [
+          390,
+          269
+        ],
+        [
+          310,
+          269
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "bb:LP5",
+      "to": "relay1:VCC",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 6 · potencia DC por bornes · bb:LP5 → relay1:VCC. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          415,
+          222
+        ],
+        [
+          350,
+          222
+        ],
+        [
+          350,
+          205
+        ],
+        [
+          310,
+          205
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "bb:LN7",
+      "to": "relay1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 7 · potencia DC por bornes · bb:LN7 → relay1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          445,
+          258
+        ],
+        [
+          370,
+          258
+        ],
+        [
+          370,
+          237
+        ],
+        [
+          310,
+          237
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "bb:LP9",
+      "to": "relay1:IN2",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 8 · potencia DC por bornes · bb:LP9 → relay1:IN2. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          405,
+          294
+        ],
+        [
+          330,
+          294
+        ],
+        [
+          330,
+          301
+        ],
+        [
+          310,
+          301
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "ps1:PLUS",
+      "to": "relay1:COM1",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 9 · potencia DC por bornes · ps1:PLUS → relay1:COM1. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c10",
+      "from": "relay1:NO1",
+      "to": "fan1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 10 · potencia DC por bornes · relay1:NO1 → fan1:PLUS. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c11",
+      "from": "fan1:MINUS",
+      "to": "ps1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 11 · potencia DC por bornes · fan1:MINUS → ps1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    }
+  ],
+  "revisions": []
+}

@@ -1,0 +1,418 @@
+{
+  "version": 1,
+  "bankId": "buzzer",
+  "layout": "breadboard",
+  "name": "M-08B · Buzzer 3,3 V con transistor",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "buzzer",
+      "name": "B-09 · buzzer de dos patas",
+      "pending": "Usuario reporta uso previo desde 3,3 V en Arduino; referencia nominal 3,3 V, sin certificar consumo ni activo/pasivo. No alimentar desde GPIO. Diseño Q1 para carga ≤10 mA; si supera, cambiar etapa/fuente antes de conectar.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "diode",
+      "name": "D1 · 1N4148",
+      "pending": "FALTANTE: diodo 1N4148; banda=K. Protección de carga pequeña, no une las redes como un cable.",
+      "pins": [
+        {
+          "id": "A",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "K",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "npn",
+      "name": "Q1 · onsemi 2N3904 TO-92",
+      "pending": "FALTANTE: 2N3904 onsemi TO-92. Vista de ficha: 1=E, 2=B, 3=C; verificar encapsulado, no copiar a PN2222/otro transistor. Ic de diseño ≤10 mA, no motor directo.",
+      "pins": [
+        {
+          "id": "E",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "B",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "C",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "bz1",
+      "definition": "buzzer",
+      "inventory": "B-09 · + y −",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 180
+      }
+    },
+    {
+      "id": "d1",
+      "definition": "diode",
+      "inventory": "FALTANTE · 1N4148",
+      "holes": {
+        "A": "G24",
+        "K": "G27"
+      }
+    },
+    {
+      "id": "q1",
+      "definition": "npn",
+      "inventory": "FALTANTE · onsemi 2N3904",
+      "holes": {
+        "E": "C18",
+        "B": "C19",
+        "C": "C20"
+      }
+    },
+    {
+      "id": "rb",
+      "definition": "resistor",
+      "inventory": "C-01 · 1 kΩ",
+      "resistance": 1000,
+      "holes": {
+        "1": "G19",
+        "2": "D19"
+      }
+    },
+    {
+      "id": "rp",
+      "definition": "resistor",
+      "inventory": "C-02 · 10 kΩ",
+      "resistance": 10000,
+      "holes": {
+        "1": "B19",
+        "2": "B22"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GPIO17",
+      "to": "bb:J19",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GPIO17 → bb:J19. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:A18",
+      "to": "bb:LN18",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 2 · M–M · bb:A18 → bb:LN18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c3",
+      "from": "bb:A22",
+      "to": "bb:LN22",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 3 · M–M · bb:A22 → bb:LN22. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c4",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "esp1:3V3",
+      "to": "bb:LP28",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar ensayo previo a 3,3 V y consumo del buzzer ≤10 mA; si no consta, mantener PLUS desconectado.",
+      "note": "Cable 5 · M–H · esp1:3V3 → bb:LP28. NO conectar: Confirmar ensayo previo a 3,3 V y consumo del buzzer ≤10 mA; si no consta, mantener PLUS desconectado.",
+      "bends": [
+        [
+          435,
+          546
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "bb:LP6",
+      "to": "bz1:PLUS",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Buzzer nominal 3,3 V y consumo ≤10 mA; no usar 5 V por ensayo/error.",
+      "note": "Cable 6 · M–H · bb:LP6 → bz1:PLUS. NO conectar: Buzzer nominal 3,3 V y consumo ≤10 mA; no usar 5 V por ensayo/error.",
+      "bends": [
+        [
+          990,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "bz1:MINUS",
+      "to": "bb:A20",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 7 · M–H · bz1:MINUS → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          500,
+          246
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "bb:E20",
+      "to": "bb:J24",
+      "color": "green",
+      "jumper": "M–M",
+      "note": "Cable 8 · M–M · bb:E20 → bb:J24. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          492
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "bb:J27",
+      "to": "bb:LP27",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "Cable 9 · M–M · bb:J27 → bb:LP27. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    }
+  ],
+  "revisions": []
+}

@@ -1,26 +1,21 @@
 package com.classai.mobile
 
-import java.io.IOException
-import java.net.HttpURLConnection
-import java.net.URL
-
-// Enrolamiento móvil: POST {server}/mobile/enroll {"student_code","full_name","token"}.
+// Enrolamiento móvil: código + token; el backend resuelve el nombre del padrón.
 // Lógica pura (sin Android) para poder probarla con JUnit.
 
-const val DEFAULT_SERVER = "http://10.0.2.2:8000"  // localhost del host visto desde el emulador
-
 sealed interface EnrollOutcome {
-    data object Linked : EnrollOutcome                        // 2xx: credencial activa
+    data class Linked(val fullName: String) : EnrollOutcome                        // 2xx: credencial activa
     data class Rejected(val message: String) : EnrollOutcome  // 4xx: corregir datos o pedir revocación
     data object Pending : EnrollOutcome                       // sin red / 5xx: se reintenta luego
 }
 
 // httpCode null = error de red
-fun enrollOutcome(httpCode: Int?): EnrollOutcome = when (httpCode) {
+fun enrollOutcome(httpCode: Int?, fullName: String? = null): EnrollOutcome = when (httpCode) {
     null -> EnrollOutcome.Pending
-    in 200..299 -> EnrollOutcome.Linked
+    in 200..299 -> fullName?.trim()?.takeIf { it.isNotEmpty() }?.let { EnrollOutcome.Linked(it) } ?: EnrollOutcome.Pending
+    404 -> EnrollOutcome.Rejected("Tu código aún no está registrado. Pide a tu docente que lo agregue")
     409 -> EnrollOutcome.Rejected("Este estudiante ya tiene un teléfono activo, pide al docente que lo revoque")
-    in 400..499 -> EnrollOutcome.Rejected("El servidor rechazó los datos (HTTP $httpCode)")
+    in 400..499 -> EnrollOutcome.Rejected("No pudimos vincular tu código. Revisa los dígitos o consulta a tu docente")
     else -> EnrollOutcome.Pending
 }
 
@@ -45,15 +40,8 @@ fun cardStatus(hasNfc: Boolean, hce: Boolean, nfcOn: Boolean, enrolled: Boolean)
 fun validateCode(code: String): String? =
     if (Regex("\\d{5,12}").matches(code.trim())) null else "Ingresa tu código universitario (solo números)"
 
-fun validateName(name: String): String? =
-    if (name.trim().length >= 3) null else "Ingresa tu nombre completo"
-
-// null si no es http(s)://…; sin "/" final
-fun normalizeServer(url: String): String? =
-    url.trim().trimEnd('/').takeIf { Regex("https?://[^\\s/]+(/\\S*)?").matches(it) }
-
-fun enrollJson(code: String, name: String, token: String): String =
-    """{"student_code":${jsonString(code.trim())},"full_name":${jsonString(name.trim())},"token":${jsonString(token)}}"""
+fun enrollJson(code: String, token: String): String =
+    """{"student_code":${jsonString(code.trim())},"token":${jsonString(token)}}"""
 
 fun jsonString(s: String): String = buildString {
     append('"')
@@ -66,27 +54,14 @@ fun jsonString(s: String): String = buildString {
     append('"')
 }
 
-// Bloqueante: llamar fuera del main thread. Devuelve el código HTTP o null si no hubo respuesta.
-fun postEnroll(server: String, json: String): Int? = try {
-    val c = URL("$server/mobile/enroll").openConnection() as HttpURLConnection
-    try {
-        c.requestMethod = "POST"
-        c.connectTimeout = 5000
-        c.readTimeout = 5000
-        c.doOutput = true
-        c.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        c.outputStream.use { it.write(json.toByteArray()) }
-        c.responseCode
-    } finally {
-        c.disconnect()
-    }
-} catch (e: IOException) {
-    null
-}
-
 // Iniciales para el avatar: primera letra del primer y último nombre ("Ana María Pérez" → "AP")
 fun initials(name: String): String {
     val words = name.trim().split(Regex("\\s+")).filter { it.isNotEmpty() }
     val letters = listOfNotNull(words.firstOrNull(), words.lastOrNull()?.takeIf { words.size > 1 })
     return letters.joinToString("") { it.take(1) }.uppercase()
 }
+
+// Ignore responses from replaced credentials, servers or older requests.
+fun enrollmentResultIsCurrent(request: Int, latest: Int, requestedServer: String, currentServer: String,
+                              requestedToken: ByteArray, currentToken: ByteArray?): Boolean =
+    request == latest && requestedServer == currentServer && currentToken?.contentEquals(requestedToken) == true

@@ -1,0 +1,210 @@
+# Visualizador de montajes
+
+Banco de trabajo de ClassAI, accesible en `/montajes` de la
+web. Funciona con datos locales, sin servicio de simulación ni acceso a placas.
+Para abrir toda la aplicación sin backend: `cd web` y `pnpm dev:mock`.
+El modo mock afecta a las aulas; el visualizador muestra propuestas de cableado,
+no lecturas simuladas. La referencia NFC tiene ensayo físico registrado en R-023;
+los cambios del editor y los demás bancos no se aprueban por mostrarse en pantalla.
+
+## Decisión y alcance
+
+El visualizador es parte de la web existente. El catálogo y los montajes se
+conservan en JSON versionado/exportable, separado del dibujo y de la validación.
+La skill de montaje vive en `.agents/skills/classai-hardware-assembly`. Los datos
+y estas instrucciones siguen siendo legibles sin configuración personal. Para
+el rediseño se consultaron tres skills externas, sin añadir dependencias web;
+ver [decisiones de interfaz](../design/montajes.md).
+
+El primer ejemplo usa referencias de ESP32, B-03 DHT11 y un PIR por escoger entre
+D-06/B-04. B-02 ya está asociada al ensayo NFC; no asignar A-01 por apariencia. Las alimentaciones
+VCC de sensores están incluidas en el diseño de referencia completo de
+[banco-ambiente.md](banco-ambiente.md), junto con pull-up y alimentación USB.
+ESP32 tiene vista de 30 pines con USB y DHT11 sigue el orden −/OUT/+ reportado;
+contrastar la serigrafía antes de trasladar posiciones a la placa. El PIR incluye
+lente/reverso ilustrados; su orden de terminales sigue pendiente de confirmar.
+
+El núcleo entiende tiras de cinco contactos A–E y F–J por fila, separadas por la
+ranura; modela rieles de alimentación continuos o cortados a mitad. Los rieles
+positivos izquierdo y derecho son independientes. Comprueba fuentes incompatibles
+y entradas de alimentación sin fuente o con tensión de referencia distinta.
+No valida la continuidad medida, cuerpos a escala, longitudes, corriente,
+tolerancias ni comportamiento de firmware.
+La resistencia opcional permite probar colocación de dos patas y puenteado.
+Todavía no hay arrastre de footprints ni optimización automática. El visor no
+simula RF/APDU; el lector físico se valida por separado.
+
+## Navegación por banco
+
+La lista lateral tiene scroll propio. Un clic selecciona un banco y muestra solo
+sus piezas y conexiones: NFC y ambiente abren su distribución física; los otros
+diez muestran referencias lógicas identificadas como tales. Ya no hace falta
+pasar por la biblioteca y luego abrir un segundo editor independiente.
+
+El dibujo ocupa el área principal, con pasos y ajuste de escala abajo. Materiales,
+pines, guía, edición e historial se abren en un inspector lateral accesible mediante
+sus botones. Escape lo cierra. En móvil la lista se sustituye por un selector.
+`?guia=nfc`, `?guia=ambiente` y `?banco=<id>` siguen funcionando, así como Atrás y
+Adelante. Los borradores se conservan en memoria al cambiar entre bancos, sin
+escribir sobre la revisión guardada. Los comandos JSON/guardar están en Historial.
+
+## Fuente editable
+
+- [Ejemplo JSON](../../web/src/hardware/example.json): catálogo inicial y propuesta.
+- [Modelo y comprobaciones](../../web/src/hardware/model.ts).
+- [Página](../../web/src/pages/Hardware.tsx).
+
+Formato `version: 1`:
+
+- `catalog`: definiciones, pines, función eléctrica y datos pendientes. No son
+  piezas adicionales del inventario. Los terminales usan nombres documentados;
+  un dibujo lógico no confirma su orden físico.
+- `parts`: instancias con ID propio, referencia de catálogo e ID de inventario.
+  Dos ESP32 pueden tener GPIO4 sin colisionar: `esp1:GPIO4` y `esp2:GPIO4` son
+  terminales distintos. Un ID de fuente no se debe duplicar para fingir que dos
+  salidas de reguladores son una sola fuente.
+- `board`: filas, `rails` y `splitRails`; confirmar placa y continuidad reales.
+  Contactos de riel `bb:LP1`, `bb:LN1`, `bb:RP1`, `bb:RN1` (izquierda/derecha, positivo/negativo).
+- `wires`: terminales `instancia:pin` o agujeros `bb:A2`. Su orden define los
+  pasos de armado. `note` describe la acción, sin credenciales. `color` indica
+  color del conductor; `bends` conserva su recorrido ilustrativo sin definir
+  longitud real. Un cambio de color conserva el recorrido si no cambian extremos.
+- `parts[].holes`: colocación de patas de la resistencia, p. ej. `1: C20` y
+  `2: G20`; `resistance` guarda ohmios y dibuja bandas 1 kΩ/10 kΩ; valor y
+  separación física se verifican por separado.
+- `revisions`: fecha UTC, nota y copia completa del montaje sin historial
+  recursivo. La interfaz muestra hora America/Lima. No implica prueba física.
+
+Para reutilizar una pieza, conservar su ID del inventario. Para crear otro banco,
+exportar/copiar el montaje y asignar instancias/placas distintas; no contar dos
+veces una pieza compartida. Para una nueva definición, describir únicamente pines
+conocidos y dejar el resto en `pending`; importar luego el JSON para revisarlo.
+NFC puede representarse mediante terminales lógicos; no se simulan lector, RF,
+APDU ni compatibilidad HCE.
+
+## Edición, continuidad e historial
+
+1. Seleccionar un terminal o agujero: se ilumina toda su red de conductores.
+   La resistencia no une sus patas como si fuera un cable.
+2. Añadir/editar cables, componentes o patas de resistencia. Las comprobaciones
+   señalan ocupación doble, resistencia puenteada, fuentes unidas entre sí/GND,
+   señales conectadas a alimentación y funciones DHT/PIR en una misma red.
+   Pines `bus` del mismo componente comparten conductor interno (GND del ESP32);
+   `required: false` distingue pines sin usar de conexiones omitidas.
+   Esta última regla es conservadora: compartir buses reales requiere ampliar
+   el modelo, no eliminar conflictos por conveniencia.
+3. Recorrer el armado: solo se dibujan los cables añadidos hasta ese paso.
+4. Escribir el cambio y guardar revisión en el navegador. Los cambios sin guardar
+   quedan en memoria; al recargar se recupera la última revisión guardada.
+5. Exportar JSON para respaldo e intercambio. Importar valida formato,
+   referencias, límites y agujeros antes de sustituir el borrador en memoria.
+   Un archivo inválido deja intacto el montaje actual. Un fallo de almacenamiento
+   se informa; no se declara guardado.
+6. Recuperar una revisión abre su copia como borrador y conserva el historial;
+   guardar otra revisión para registrar la recuperación. Deshacer conserva el
+   historial guardado. Los archivos exportados pueden versionarse tras revisar
+   que no contengan datos privados.
+
+Máximos de esta versión: 20 instancias, 150 cables, 63 filas, 50 revisiones y
+500 kB por archivo. Exportar con frecuencia; localStorage no es copia compartida
+ni respaldo garantizado. No almacenar flash/NVS, claves, WiFi, tokens ni imágenes
+privadas. El catálogo solo contrasta tensiones de referencia declaradas; no certifica
+niveles reales ni presupuesto de fuente. Borradores anteriores siguen legibles y
+no se sobrescriben automáticamente: **Cargar guía completa** es una edición
+reversible que conserva el historial.
+
+## Evidencia y continuación
+
+Los resultados físicos se anotan aparte en [montajes.md](montajes.md), con placa,
+cableado observado, mediciones, firmware y desmontaje. Ningún botón marca un
+montaje como probado. Antes de añadir footprints reales hacen falta medidas,
+orientación/paso de pines y fotos de las piezas específicas.
+
+Siguiente incremento propuesto: registrar esos datos físicos y representar el
+cuerpo/zonas inaccesibles; después comparar distribuciones de cableado conservando
+la misma red lógica. La integración con Wokwi o un renderizador externo puede
+consumir este registro, sin convertirlo en fuente de verdad del hardware.
+
+## Verificación de esta versión
+
+En `web/`: `pnpm typecheck`, `pnpm lint`, `pnpm test` y `pnpm build`.
+Con el servidor mock abierto, ejecutar
+`node scripts/hardware-smoke.mjs http://127.0.0.1:5188` (ajustar puerto).
+La comprobación recorre pasos, resistencia puenteada/deshacer, guardado/recarga,
+rechazo de importación inválida, exportación/reimportación y recuperación del
+historial; además captura claro/oscuro y móvil sin desbordamiento de la página.
+El lienzo tiene desplazamiento horizontal propio para conservar legibles los
+agujeros. Las capturas se guardan localmente en `web/screenshots/`, ignorado por Git.
+Estas pruebas son de software; no certifican un montaje.
+
+## Aclaración de pinout y señal (24/10/2026)
+
+El dibujo de 30 pines muestra etiquetas D4/D27 y mantiene GPIO4/GPIO27 como
+identificadores eléctricos. El esquema explicativo separa el + directo del
+DHT11 y la rama pull-up de 10 kΩ; el botón resalta la red real OUT/GPIO4 del
+borrador actual. El esquema explica la receta original, no se recalcula al editarla.
+El comparador 30/38 muestra filas con USB abajo y referencia oficial DevKitC
+J2/J3, sin modificar el montaje ni asignar esa variante a E-01. La tensión del
+riel naranja sigue nominal y pendiente de medir VIN–GND en cada placa.
+
+## Recorrido compacto (24/10/2026)
+
+`layout: "compact"` es opcional y se valida al importar; sin él se conserva la
+distribución anterior. El ejemplo coloca PIR a la izquierda y usa 10 jumpers;
+los recorridos explícitos pueden tener cero giros (lista `bends` vacía).
+`geometry.ts` comparte posiciones entre dibujo y `routingMetrics`; el resumen
+cuenta giros no colineales y advierte si hay rutas sin especificar. La medida
+usa unidades SVG, no longitud real. Los rieles muestran su conexión actual o
+«Libre», sin etiquetar automáticamente todo positivo como alimentación.
+No hay optimizador automático: se revisó una distribución concreta y se probó
+la equivalencia de redes entre terminales antes/después. Los JSON e historiales
+previos no se migran ni sobrescriben al abrir la guía.
+
+## Preferencia sin H–H (24/10/2026)
+
+`layout: "breadboard"` conserva ESP32 a la izquierda y sensores a la derecha.
+Es la guía actual: 12 jumpers (11 M–H + 1 M–M), 25 giros. Nodos F20/H20 para VCC
+PIR y G24/J24 para OUT sustituyen conexiones H–H; GND comparte RN. El parser
+acepta tanto este layout como `compact` y ausencia de layout, sin migrar guardados.
+El inventario registra cero H–H disponibles. No se asume que el PIR se pueda
+insertar mecánicamente en la protoboard. Fotos confirman ESP32 DEVKITV1, no VIN
+medido ni etiquetas legibles del PIR. Los estados de propuesta permanecen.
+
+## Biblioteca de bancos
+
+La parte superior de /montajes ofrece 12 esquemas por misión, antes del editor
+físico de ambiente. `?banco=nfc` (y los demás IDs del catálogo) selecciona una
+referencia. Cambiar banco, resaltar conexiones y exportar no toca localStorage
+ni modifica el borrador de ambiente. Los esquemas se ordenan por nombres de
+terminales, no por la ubicación física del conector: las ilustraciones ayudan
+a reconocer módulos, pero no son clones mecánicos certificados.
+
+Cada tramo incluye tipo de red, vía/interposición y condición. Los pendientes
+se dibujan discontinuos. La biblioteca exporta SVG y una colección JSON con
+formato `classai-bank-reference-v1`, distinto del JSON editable de ambiente;
+no importar la colección como montaje. Los SVG/Markdown del repositorio se
+regeneran con `node web/scripts/export-hardware-missions.mjs` y comparten el
+catálogo `web/src/hardware/missions.ts` con la página. La exportación no aprueba
+ensayos ni dimensiona los drivers que figuran pendientes.
+
+## Montaje físico NFC
+
+`/montajes?guia=nfc` abre la receta física NFC en memoria sin sobrescribir el
+guardado; `?banco=nfc` conserva su selección lógica independiente. El botón del
+banco abre la distribución y permite deshacer para recuperar cambios en memoria.
+La receta en `web/src/hardware/nfc.ts` usa formato Assembly v1 existente, sin
+migrar guardados. `pn532SpiFrontCCW` fija orden frontal girado del manual, no
+orden funcional. El dibujo conserva 12 cables numerados y seis redes, pasos,
+resaltado e historial. Exportar dibujo SVG siempre incluye todos los cables,
+sin resaltado, aunque la vista esté en un paso parcial. SVG/JSON estáticos:
+`node web/scripts/export-nfc-assembly.mjs` desde raíz. Véase [guía NFC](banco-nfc.md).
+
+## Extensión R-025
+
+El catálogo tiene 16 entradas, 11 con referencia de distribución/piezas. Las
+referencias de matriz/buzzer/fan siguen eléctricamente incompletas; pantalla/audio
+continúan como esquemas. Se conservan JSON v1 anteriores, guardados e historial.
+Campos opcionales: `bankId`, `parts[].placement`, `wires[].jumper` y
+`wires[].pending`. Un cable pendiente es discontinuo y no une redes en el
+analizador. Importar valida estos campos antes de tocar el borrador.
+[Detalle y evidencia](bancos-fisicos.md).

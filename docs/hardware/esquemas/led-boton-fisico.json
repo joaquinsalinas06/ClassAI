@@ -1,0 +1,349 @@
+{
+  "version": 1,
+  "bankId": "led-boton",
+  "layout": "breadboard",
+  "name": "M-01 · LED rojo y pulsador",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    },
+    {
+      "id": "led",
+      "name": "LED · ánodo A / cátodo K",
+      "pending": "Confirmar A/K por encapsulado y patas; no omitir resistencia serie de 1 kΩ.",
+      "pins": [
+        {
+          "id": "A",
+          "kind": "passive"
+        },
+        {
+          "id": "K",
+          "kind": "passive"
+        }
+      ]
+    },
+    {
+      "id": "button",
+      "name": "Pulsador de cuatro patas",
+      "pending": "Parejas A1/A2 y B1/B2 de referencia: identificar internamente el pulsador real antes de conectar.",
+      "pins": [
+        {
+          "id": "A1",
+          "kind": "passive",
+          "bus": "A",
+          "required": false
+        },
+        {
+          "id": "A2",
+          "kind": "passive",
+          "bus": "A",
+          "required": false
+        },
+        {
+          "id": "B1",
+          "kind": "passive",
+          "bus": "B",
+          "required": false
+        },
+        {
+          "id": "B2",
+          "kind": "passive",
+          "bus": "B",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
+    },
+    {
+      "id": "r1",
+      "definition": "resistor",
+      "inventory": "C-01 · 1 kΩ",
+      "resistance": 1000,
+      "holes": {
+        "1": "G14",
+        "2": "C14"
+      }
+    },
+    {
+      "id": "led1",
+      "definition": "led",
+      "inventory": "C-05 · rojo",
+      "holes": {
+        "A": "B14",
+        "K": "B17"
+      }
+    },
+    {
+      "id": "button1",
+      "definition": "button",
+      "inventory": "C-04",
+      "holes": {
+        "A1": "E6",
+        "A2": "F6",
+        "B1": "E8",
+        "B2": "F8"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND_L",
+      "to": "bb:RN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "M–H · esp1:GND_L → bb:RN28. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": [
+        [
+          785,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "esp1:GPIO25",
+      "to": "bb:J14",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "M–H · esp1:GPIO25 → bb:J14. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": [
+        [
+          708,
+          357
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "bb:A17",
+      "to": "bb:LN17",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "M–M · bb:A17 → bb:LN17. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
+    },
+    {
+      "id": "c4",
+      "from": "esp1:GPIO32",
+      "to": "bb:J6",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "M–H · esp1:GPIO32 → bb:J6. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": [
+        [
+          708,
+          303
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:J8",
+      "to": "bb:RN8",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "M–M · bb:J8 → bb:RN8. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "bb:LN30",
+      "to": "bb:RN30",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "M–M · bb:LN30 → bb:RN30. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
+    }
+  ],
+  "revisions": []
+}

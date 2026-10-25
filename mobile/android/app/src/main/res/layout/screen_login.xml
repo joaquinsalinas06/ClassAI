@@ -81,6 +81,8 @@
                         android:layout_marginTop="@dimen/ds_space_0"
                         android:hint="@string/field_code"
                         app:helperText="@string/field_code_helper"
+                        app:counterEnabled="true"
+                        app:counterMaxLength="12"
                         app:startIconContentDescription="@string/field_code"
                         app:startIconDrawable="@drawable/ic_badge">
 
@@ -88,45 +90,17 @@
                             android:id="@+id/code"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:imeOptions="actionNext"
+                            android:imeOptions="actionDone"
+                            android:digits="0123456789"
+                            android:fontFamily="monospace"
+                            android:fontFeatureSettings="tnum"
+                            android:letterSpacing="0.08"
+                            android:textSize="@dimen/ds_text_title_size"
+                            android:singleLine="true"
+                            android:autofillHints="username"
+                            android:selectAllOnFocus="false"
                             android:inputType="number"
                             android:maxLength="12" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/nameLayout"
-                        style="@style/ClassAI.Field"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/field_name"
-                        app:startIconContentDescription="@string/field_name"
-                        app:startIconDrawable="@drawable/ic_person">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/name"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:imeOptions="actionNext"
-                            android:inputType="textPersonName|textCapWords"
-                            android:maxLength="80" />
-                    </com.google.android.material.textfield.TextInputLayout>
-
-                    <com.google.android.material.textfield.TextInputLayout
-                        android:id="@+id/serverLayout"
-                        style="@style/ClassAI.Field"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:hint="@string/field_server"
-                        app:helperText="@string/field_server_helper"
-                        app:startIconContentDescription="@string/field_server"
-                        app:startIconDrawable="@drawable/ic_dns">
-
-                        <com.google.android.material.textfield.TextInputEditText
-                            android:id="@+id/server"
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:imeOptions="actionDone"
-                            android:inputType="textUri" />
                     </com.google.android.material.textfield.TextInputLayout>
 
                     <com.google.android.material.button.MaterialButton
@@ -135,6 +109,7 @@
                         android:layout_height="60dp"
                         android:layout_marginTop="@dimen/ds_space_5"
                         android:text="@string/action_link"
+                        android:enabled="false"
                         android:textSize="@dimen/ds_text_heading_size"
                         app:cornerRadius="@dimen/ds_radius_md"
                         app:icon="@drawable/ic_link"

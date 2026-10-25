@@ -12,6 +12,12 @@ préstamo, devolución o entrega se ha supuesto.
 | [inventario.md](inventario.md) | Fuente de verdad de piezas/lotes, IDs, propietario, cantidades, recepción, devolución y uso |
 | [identificacion-fisica.md](identificacion-fisica.md) | Fotografías revisadas (sin publicarlas), etiquetas verificadas, proveedores, fuente 5 V, riesgos y faltantes |
 | [conexiones.md](conexiones.md) | Señales necesarias, pinouts de referencia, asignaciones del código y conflictos |
+| [nfc-hce-local.md](nfc-hce-local.md) | Unión teléfono HCE → PN532 → MQTT → backend/web locales, sin cambiar token |
+| [banco-nfc.md](banco-nfc.md) | NFC físico: ESP32 + PN532, 12 M–H, selector SPI y prueba tarjeta/llavero |
+| [banco-ambiente.md](banco-ambiente.md) | Primer circuito completo DHT11/PIR: alimentación, cableado, referencias y firmware de ensayo |
+| [esquemas/README.md](esquemas/README.md) | Colección de 16 guías, 13 montajes físicos y alternativas de compatibilidad, exportables desde la web |
+| [siguientes-bancos.md](siguientes-bancos.md) | Orden práctico, reparto de dos placas, presupuesto de cables y preparación tras soldadura |
+| [visualizador.md](visualizador.md) | Banco local, formato JSON y límites de validación |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
 
 Actualizar primero el inventario cuando llegue una compra, se cuenten cables,
@@ -76,3 +82,7 @@ claves de API, contenido de flash/NVS ni números de pedidos privados aquí.
 Se fotografiaron y asociaron a sus IDs sin duplicar stock: **D-05 ventilador 5 V**, **D-04 TFT ST7789 Ver:1.1**, **D-01 PN532 V3 serigrafiado Elechouse**, **B-10 matriz LED 8×8**, **B-11 módulo con dos relés TONG LING 5VDC**, **B-09 buzzer polarizado** y **B-08 detector AO/G/+/DO**. **No se ha ejecutado ninguna prueba eléctrica**; revisar [identificacion-fisica.md](identificacion-fisica.md) y [conexiones.md](conexiones.md) antes de montar.
 
 La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. Las compras E-01 a E-04 siguen pendientes de recepción física.
+
+[Bancos físicos, materiales y evidencia R-025](bancos-fisicos.md): ensayos sucesivos con la otra placa, sin desmontar NFC automáticamente.
+
+Entrega actual: [bancos físicos](bancos-fisicos.md) y [componentes del laboratorio](circuitos-referencia.md), revisión R-026 del 25/10/2026.

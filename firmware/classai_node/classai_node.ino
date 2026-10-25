@@ -7,11 +7,16 @@
 #include <Preferences.h>
 #include <ArduinoJson.h>
 #include <time.h>
+#include <errno.h>
 
 #if __has_include("secrets.h")
 #include "secrets.h"
 #else
 #error "Falta secrets.h: copia secrets.example.h a secrets.h y completa tus datos"
+#endif
+
+#ifndef NFC_ONLY
+#define NFC_ONLY 0
 #endif
 
 #include "comfort.h"
@@ -21,7 +26,11 @@
 // SENSORES (1 = conectado, 0 = se envía null)
 // =====================================================
 
+#if NFC_ONLY
+#define USE_MLX90614 0
+#else
 #define USE_MLX90614 1
+#endif
 #define USE_DHT22 0
 #define USE_BH1750 0
 #define USE_PIR 0
@@ -103,7 +112,8 @@ uint32_t bootCount = 0;
 // =====================================================
 
 bool sessionActive = false;
-char sessionId[48] = "";
+char sessionId[64] = "";
+uint32_t eventSequence = 0, sessionSequence = 0;
 
 unsigned long lastTelemetry = 0;
 unsigned long nextWifiAttempt = 0, wifiBackoff = WIFI_RETRY_MIN_MS;
@@ -167,8 +177,12 @@ float inRange(float value, float low, float high) {
 }
 
 void beep(unsigned long ms) {
+#if !NFC_ONLY
   digitalWrite(PIN_BUZZER, HIGH);
   buzzerOffAt = millis() + ms;
+#else
+  (void)ms;
+#endif
 }
 
 // =====================================================
@@ -260,8 +274,10 @@ void enqueueEvent(const char* json) {
 void flushEvents() {
   while (eventCount > 0 && mqttClient.connected()) {
     if (!mqttClient.publish(eventsTopic, eventQueue[eventHead])) return;
-    Serial.print("Evento enviado: ");
-    Serial.println(eventQueue[eventHead]);
+    JsonDocument sent;
+    deserializeJson(sent, eventQueue[eventHead]);
+    Serial.printf("Evento publicado QoS0: %s id=%s (confirmar persistencia en API)\n",
+                  sent["event"].as<const char*>(), sent["event_id"].as<const char*>());
     eventHead = (eventHead + 1) % EVENT_QUEUE_SIZE;
     eventCount--;
   }
@@ -270,8 +286,9 @@ void flushEvents() {
 void queueEvent(const char* event, const NfcCredential* credential) {
   unsigned long uptime = millis();
   char eventId[64];
-  // bootCount evita repetir event_id tras un reinicio (uptime vuelve a 0).
-  snprintf(eventId, sizeof(eventId), "%s-%lu-%lu", deviceId, (unsigned long)bootCount, uptime);
+  // Counter also separates events queued during the same millisecond.
+  snprintf(eventId, sizeof(eventId), "%s-%lu-%lu", deviceId, (unsigned long)bootCount,
+           (unsigned long)++eventSequence);
 
   JsonDocument doc;
   doc["v"] = 1;
@@ -313,6 +330,82 @@ void toggleSession() {
   beep(150);
 }
 
+#if NFC_ONLY
+void labNetworkDiagnostics() {
+  if (WiFi.status() != WL_CONNECTED) {
+    Serial.println("NET: WiFi no conectado");
+    return;
+  }
+  Serial.printf("NET local=%s gateway=%s mask=%s DNS=%s broker=%s:%d\n",
+                WiFi.localIP().toString().c_str(), WiFi.gatewayIP().toString().c_str(),
+                WiFi.subnetMask().toString().c_str(), WiFi.dnsIP().toString().c_str(), MQTT_HOST, MQTT_PORT);
+  IPAddress address;
+  if (!address.fromString(MQTT_HOST)) {
+    Serial.println("NET: este diagnostico directo requiere broker IPv4 literal");
+    return;
+  }
+  const uint16_t ports[] = {MQTT_PORT, 8000, 8766};
+  for (uint16_t port : ports) {
+    WiFiClient probe;
+    errno = 0;
+    const uint32_t began = millis();
+    const bool connected = probe.connect(address, port, 1000);
+    const int error = errno;
+    Serial.printf("NET TCP %s:%u %s elapsed=%lu ms errno=%d\n", MQTT_HOST, port,
+                  connected ? "OK" : "FAIL", (unsigned long)(millis() - began), error);
+    probe.stop();
+  }
+}
+
+void labStatus() {
+  Serial.printf("NFC_ONLY device=%s lector=%s WiFi=%s MQTT=%s sesion=%s cola=%d\n",
+                deviceId, nfcOk ? "listo" : "fallo", WiFi.status() == WL_CONNECTED ? "si" : "no",
+                mqttClient.connected() ? "si" : "no", sessionActive ? sessionId : "inactiva", eventCount);
+}
+
+void labCommand(const char* command) {
+  if (!strcmp(command, "status")) { labStatus(); return; }
+  if (!strcmp(command, "net")) { labNetworkDiagnostics(); return; }
+  if (!strcmp(command, "start")) {
+    if (sessionActive) { Serial.println("Sesion ya activa; no se crea otra"); return; }
+    if (!nfcOk || !mqttClient.connected()) {
+      Serial.println("start rechazado: comprobar lector y MQTT con status"); return;
+    }
+    snprintf(sessionId, sizeof(sessionId), "%s-%lu-%lu", deviceId,
+             (unsigned long)bootCount, (unsigned long)++sessionSequence);
+    sessionActive = true;
+    queueEvent("SESSION_STARTED", nullptr);
+    Serial.printf("Sesion iniciada: %s; comprobar API antes de presentar\n", sessionId);
+    return;
+  }
+  if (!strcmp(command, "stop")) {
+    if (!sessionActive) { Serial.println("Sesion ya inactiva"); return; }
+    queueEvent("SESSION_ENDED", nullptr);
+    Serial.printf("Sesion cerrada localmente: %s; confirmar API, cola=%d\n", sessionId, eventCount);
+    sessionActive = false; sessionId[0] = '\0';
+    return;
+  }
+  if (command[0]) Serial.println("Comando desconocido; usar status, net, start o stop");
+}
+
+void readLabSerial() {
+  static char command[24];
+  static uint8_t used = 0;
+  static bool overflow = false;
+  for (uint8_t i = 0; i < 32 && Serial.available(); ++i) {
+    char c = Serial.read();
+    if (c == '\r') continue;
+    if (c == '\n') {
+      command[used] = '\0';
+      if (overflow) Serial.println("Comando demasiado largo, descartado");
+      else labCommand(command);
+      used = 0; overflow = false;
+    } else if (used < sizeof(command) - 1 && !overflow) command[used++] = c;
+    else overflow = true;
+  }
+}
+#endif
+
 // =====================================================
 // RED (sin bucles bloqueantes)
 // =====================================================
@@ -325,7 +418,9 @@ void maintainWiFi(unsigned long now) {
       Serial.print("WiFi conectado. IP: ");
       Serial.print(WiFi.localIP());
       Serial.printf(" RSSI: %d dBm\n", WiFi.RSSI());
+#if !NFC_ONLY
       configTime(0, 0, "pool.ntp.org", "time.google.com");  // UTC
+#endif
     }
     return;
   }
@@ -372,6 +467,7 @@ void maintainMqtt(unsigned long now) {
 // SENSORES Y ACTUADORES
 // =====================================================
 
+#if !NFC_ONLY
 void readButton(unsigned long now) {
   int reading = digitalRead(PIN_BUTTON);
   if (reading != buttonReading) {
@@ -383,6 +479,8 @@ void readButton(unsigned long now) {
     if (buttonStable == LOW) toggleSession();
   }
 }
+
+#endif
 
 // Muestras rápidas entre telemetrías: PIR se "retiene" y el ruido se promedia por ventanas.
 void sampleFastSensors() {
@@ -404,6 +502,7 @@ void sampleFastSensors() {
 
 // Ventilador solo si hay ALERTA por calor; REGULAR mantiene el estado actual (histéresis).
 void applyComfortState(const char* state, float tempC) {
+#if !NFC_ONLY
   unsigned long now = millis();
   bool wantRelay = relayOn;
   if (strcmp(state, "ALERT") == 0 && !isnan(tempC) && tempC > params.tempMax) wantRelay = true;
@@ -416,6 +515,9 @@ void applyComfortState(const char* state, float tempC) {
   }
   if (strcmp(state, "ALERT") == 0 && strcmp(lastState, "ALERT") != 0) beep(400);
   lastState = state;
+#else
+  (void)state; (void)tempC;
+#endif
 }
 
 void publishTelemetry() {
@@ -484,16 +586,24 @@ void setup() {
   Serial.println("CLASSAI NODE");
   Serial.println("============================");
 
+#if !NFC_ONLY
   pinMode(PIN_BUTTON, INPUT_PULLUP);
   pinMode(PIN_RELAY, OUTPUT);
   pinMode(PIN_BUZZER, OUTPUT);
   digitalWrite(PIN_RELAY, LOW);
   digitalWrite(PIN_BUZZER, LOW);
+#endif
 #if USE_PIR
   pinMode(PIN_PIR, INPUT);
 #endif
 
+#if NFC_ONLY
+  snprintf(deviceId, sizeof(deviceId), "esp32-%.18s-%012llx", ROOM_ID,
+           (unsigned long long)(ESP.getEfuseMac() & 0xffffffffffffULL));
+  Serial.println("NFC_ONLY: sin sensores/actuadores/pulsador. Comandos: status, net, start, stop + Enter.");
+#else
   snprintf(deviceId, sizeof(deviceId), "esp32-%s", ROOM_ID);
+#endif
   snprintf(telemetryTopic, sizeof(telemetryTopic), "classai/v1/%s/telemetry", ROOM_ID);
   snprintf(eventsTopic, sizeof(eventsTopic), "classai/v1/%s/events", ROOM_ID);
   snprintf(configTopic, sizeof(configTopic), "classai/v1/%s/config", ROOM_ID);
@@ -504,7 +614,9 @@ void setup() {
   prefs.putUInt("boots", bootCount);
   loadSavedConfig();
 
+#if !NFC_ONLY
   Wire.begin(PIN_SDA, PIN_SCL);
+#endif
 #if USE_MLX90614
   mlxOk = mlx.begin();
   Serial.println(mlxOk ? "MLX90614 encontrado" : "ERROR: MLX90614 no encontrado (se envía null)");
@@ -526,6 +638,10 @@ void setup() {
   nextWifiAttempt = millis() + WIFI_RETRY_MIN_MS;
   Serial.printf("Conectando a WiFi: %s (sin bloquear)\n", WIFI_SSID);
 
+#if NFC_ONLY
+  // A missing broker must not monopolize the local NFC diagnostic loop.
+  wifiClient.setConnectionTimeout(250);
+#endif
   mqttClient.setServer(MQTT_HOST, MQTT_PORT);
   mqttClient.setBufferSize(1024);
   mqttClient.setSocketTimeout(5);
@@ -543,14 +659,20 @@ void loop() {
   maintainMqtt(now);
   flushEvents();
 
+#if NFC_ONLY
+  readLabSerial();
+#else
   readButton(now);
   sampleFastSensors();
+#endif
 
   NfcCredential credential;
-  if (nfcOk && sessionActive && nfcPoll(credential)) {
-    Serial.printf("Credencial leída: %s\n", credential.type);
-    queueEvent("ATTENDANCE_RECORDED", &credential);
-    beep(80);
+  if (nfcOk && (NFC_ONLY || sessionActive) && nfcPoll(credential)) {
+    Serial.printf("Credencial leida: %s\n", credential.type);
+    if (sessionActive) {
+      queueEvent("ATTENDANCE_RECORDED", &credential);
+      beep(80);
+    } else Serial.println("Lectura diagnostica: sin sesion, no se publica asistencia");
   }
 
   if (now - lastTelemetry >= TELEMETRY_INTERVAL_MS) {
@@ -558,8 +680,10 @@ void loop() {
     publishTelemetry();
   }
 
+#if !NFC_ONLY
   if (buzzerOffAt != 0 && timeReached(millis(), buzzerOffAt)) {
     digitalWrite(PIN_BUZZER, LOW);
     buzzerOffAt = 0;
   }
+#endif
 }

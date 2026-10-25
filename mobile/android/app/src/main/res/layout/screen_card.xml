@@ -2,6 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:id="@+id/screen"
+    android:background="@color/ds_bg_page"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
@@ -237,6 +238,10 @@
 
                 <com.google.android.material.card.MaterialCardView
                     style="@style/Widget.Material3.CardView.Filled"
+                    app:cardBackgroundColor="@color/ds_bg_surface"
+                    app:cardElevation="0dp"
+                    app:strokeColor="@color/ds_border_default"
+                    app:strokeWidth="1dp"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/ds_space_3"
@@ -262,12 +267,10 @@
                             android:orientation="vertical"
                             android:padding="@dimen/ds_space_5">
 
-                            <ImageView
-                                android:id="@+id/emptyArt"
-                                android:layout_width="160dp"
-                                android:layout_height="110dp"
-                                android:importantForAccessibility="no"
-                                android:src="@drawable/ill_empty_reads" />
+                            <com.classai.mobile.SignalView
+                                android:layout_width="240dp"
+                                android:layout_height="136dp"
+                                android:importantForAccessibility="no" />
 
                             <TextView
                                 android:layout_width="wrap_content"
@@ -352,6 +355,14 @@
                             android:layout_marginTop="@dimen/ds_space_3"
                             android:lineSpacingExtra="4dp"
                             android:textAppearance="?attr/textAppearanceBodyMedium" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/technicalNfcSettings"
+                            style="@style/Widget.Material3.Button.TextButton.Icon"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/action_nfc_settings"
+                            app:icon="@drawable/ic_tune" />
 
                         <TextView
                             android:id="@+id/log"

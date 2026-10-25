@@ -8,3 +8,8 @@ for name in comfort nfc_protocol; do
     "firmware/classai_node/test/test_${name}.cpp" -o "$build_dir/$name"
   "$build_dir/$name"
 done
+
+python3 scripts/ci/nfc-profile-host.py
+
+bash scripts/ci/bench-host.sh
+bash scripts/ci/sensor-benches-host.sh

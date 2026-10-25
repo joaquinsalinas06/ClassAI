@@ -1,0 +1,4 @@
+[wokwi]
+version = 1
+firmware = "build/ambient_simulation.ino.bin"
+elf = "build/ambient_simulation.ino.elf"

@@ -1,0 +1,14 @@
+import { Button } from "../ui/Button";
+import { CircuitBoard, Check, ChevronRight } from "lucide-react";
+import { missions } from "./missions";
+
+/** One selection controls both navigation and the diagram; never keep a second active bank. */
+export function MissionLibrary({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
+  const groups = [...new Set(missions.map(m => m.group))];
+  return <aside className="hardware-banks" aria-label="Biblioteca de bancos">
+    <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-4"><CircuitBoard size={17} className="text-fg-2"/><h2 className="text-heading">Montajes</h2><span className="ml-auto text-caption tabular-nums text-muted">{missions.length}</span></div>
+    <label className="p-3 text-small lg:hidden">Banco de prueba<select aria-label="Elegir banco de prueba" className="mt-1 w-full rounded-md border border-line bg-surface p-2" value={selected} onChange={e=>onSelect(e.target.value)}>{missions.map(m=><option key={m.id} value={m.id}>{m.title}</option>)}</select></label>
+    <nav aria-label="Elegir banco" className="hidden min-h-0 flex-1 overflow-y-auto p-2 lg:block">{groups.map(group=><section key={group} className="mb-4"><h3 className="px-2 py-2 text-caption font-medium text-muted">{group}</h3>{missions.filter(m=>m.group===group).map(m=><button key={m.id} data-bank-id={m.id} aria-current={selected===m.id?"page":undefined} aria-pressed={selected===m.id} onClick={()=>onSelect(m.id)} className={`group flex min-h-11 w-full items-center gap-2 rounded-md px-2 py-2 text-left transition-colors duration-100 ${selected===m.id?"bg-selected text-fg":"text-fg-2 hover:bg-hover hover:text-fg"}`}><span className="min-w-0 flex-1"><span className="block text-label">{m.title}</span><span className="mt-0.5 block text-caption text-muted">{m.id==="nfc"?"Probado con HCE":m.id==="ambiente"?"Montaje físico · pendiente":m.code}</span></span>{selected===m.id?<ChevronRight size={14} className="shrink-0"/>:m.id==="nfc"?<Check size={13} className="shrink-0 text-ok-text"/>:null}</button>)}</section>)}</nav>
+    <div className="hidden shrink-0 border-t border-line px-3 py-3 lg:block"><p className="mb-2 text-caption text-muted">Un banco a la vez.<br/>Guarda tus cambios desde Historial.</p><Button size="sm" variant="ghost" onClick={()=>{const url=URL.createObjectURL(new Blob([JSON.stringify({format:"classai-bank-reference-v1",status:"referencia",missions},null,2)],{type:"application/json"}));const a=document.createElement("a");a.href=url;a.download="classai-bancos-referencia.json";a.click();URL.revokeObjectURL(url);}}>Exportar colección JSON</Button></div>
+  </aside>;
+}
