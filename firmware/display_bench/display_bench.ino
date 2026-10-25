@@ -10,7 +10,10 @@ BenchControl control;bool initialized=false;uint8_t rotation=0;
 void stopOutput(){if(initialized)screen.fillScreen(ST77XX_BLACK);}
 void pattern(){
  screen.setRotation(rotation);const uint16_t colors[]={ST77XX_RED,ST77XX_GREEN,ST77XX_BLUE};
- for(int i=0;i<3;++i)screen.fillRect(i*80,0,80,200,colors[i]);screen.fillRect(0,200,240,40,ST77XX_BLACK);
+ for(int i=0;i<3;++i){
+  screen.fillRect(i*80,0,80,200,colors[i]);
+ }
+ screen.fillRect(0,200,240,40,ST77XX_BLACK);
  screen.drawRect(0,0,240,240,ST77XX_WHITE);screen.setCursor(8,210);screen.setTextSize(2);screen.setTextColor(ST77XX_WHITE);screen.print("ClassAI 240x240");
 }
 bool command(const char* text){
