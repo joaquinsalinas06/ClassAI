@@ -61,3 +61,21 @@ node scripts/screens.mjs http://localhost:5181 screenshots
 - Si `POST /assistant/ask` responde 503 (sin clave del modelo) la página del asistente se desactiva con un aviso; el navegador igual registra la respuesta 503 en la consola de red.
 - La API no tiene un listado de estudiantes: la página Estudiantes los arma con la asistencia de las últimas 12 clases, y solo puede revocar credenciales cuyo ID se conoce.
 - El estado del ventilador no viaja en la telemetría: se estima con la regla del firmware (ALERT y temperatura sobre el máximo → encendido; OK → apagado; 60 s de retención).
+
+## Banco de montajes
+
+`/montajes` abre el visualizador local de conexiones y pasos de armado. Permite
+importar/exportar JSON y guardar revisiones en el navegador. No requiere hardware
+ni backend propio. Véase [alcance, formato y pendientes](../docs/hardware/visualizador.md).
+
+La biblioteca superior contiene 12 bancos (`/montajes?banco=nfc`, `led-boton`,
+`audio-salida`, etc.), con conexiones por nombres, condiciones, materiales y
+exportación SVG/colección JSON. Seleccionar/exportar no modifica el borrador de
+ambiente. La colección no es el JSON importable del editor. Ver
+[esquemas y guías](../docs/hardware/esquemas/README.md) y
+[orden práctico](../docs/hardware/siguientes-bancos.md). Regenerar los SVG y
+guías desde raíz con `node web/scripts/export-hardware-missions.mjs`.
+
+Guía física NFC: `/montajes?guia=nfc`, ESP32 30 pines + protoboard + PN532 V3,
+12 M–H numerados y exportación SVG/JSON del editor. Ver [montaje y pruebas](../docs/hardware/banco-nfc.md).
+Regenerar sus archivos estáticos: `node scripts/export-nfc-assembly.mjs` desde web.

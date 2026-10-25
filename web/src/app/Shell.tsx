@@ -2,7 +2,7 @@ import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
 import {
   BotMessageSquare, Check, ChevronsUpDown, History, LayoutDashboard, Menu, Moon, Palette, PanelLeft, Radio, Search, Sun,
-  UsersRound, type LucideIcon,
+  UsersRound, CircuitBoard, type LucideIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -34,6 +34,7 @@ export const NAV: NavItem[] = [
   { to: "/aula", label: "Aula en vivo", icon: Radio, key: "l" },
   { to: "/sesiones", label: "Sesiones", icon: History, key: "s" },
   { to: "/asistente", label: "Asistente", icon: BotMessageSquare, key: "a" },
+  { to: "/montajes", label: "Montajes", icon: CircuitBoard, key: "m" },
   { to: "/estudiantes", label: "Estudiantes", icon: UsersRound, key: "e" },
 ];
 export const NAV_FOOTER: NavItem[] = [{ to: "/design", label: "Sistema de diseño", icon: Palette, key: "d" }];
@@ -166,7 +167,7 @@ export function Shell() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: DURATION.base, ease: EASE.enter }}
-              className="mx-auto w-full max-w-[1360px] px-4 pt-5 pb-16 sm:px-6 lg:px-8 lg:pt-7"
+              className={location.pathname === "/montajes" ? "w-full px-4 py-3" : "mx-auto w-full max-w-[1360px] px-4 pt-5 pb-16 sm:px-6 lg:px-8 lg:pt-7"}
             >
               <ErrorBoundary label="esta página" resetKey={location.pathname}>
                 <Outlet />
@@ -258,7 +259,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () =>
                 <Dot tone={tone} pulse={tone === "alert"} />
               </span>
               {!collapsed && <span className="flex-1 truncate">{r.name ?? r.id}</span>}
-              {!collapsed && r.status === "offline" && <span className="text-caption text-faint">sin conexión</span>}
+              {!collapsed && r.status === "offline" && <span className="text-caption text-muted">sin conexión</span>}
             </NavLink>
           );
           return collapsed ? (

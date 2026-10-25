@@ -12,6 +12,12 @@ préstamo, devolución o entrega se ha supuesto.
 | [inventario.md](inventario.md) | Fuente de verdad de piezas/lotes, IDs, propietario, cantidades, recepción, devolución y uso |
 | [identificacion-fisica.md](identificacion-fisica.md) | Fotografías revisadas (sin publicarlas), etiquetas verificadas, proveedores, fuente 5 V, riesgos y faltantes |
 | [conexiones.md](conexiones.md) | Señales necesarias, pinouts de referencia, asignaciones del código y conflictos |
+| [nfc-hce-local.md](nfc-hce-local.md) | Unión teléfono HCE → PN532 → MQTT → backend/web locales, sin cambiar token |
+| [banco-nfc.md](banco-nfc.md) | NFC físico: ESP32 + PN532, 12 M–H, selector SPI y prueba tarjeta/llavero |
+| [banco-ambiente.md](banco-ambiente.md) | Primer circuito completo DHT11/PIR: alimentación, cableado, referencias y firmware de ensayo |
+| [esquemas/README.md](esquemas/README.md) | Colección de 12 esquemas SVG y guías por banco, exportables desde la web |
+| [siguientes-bancos.md](siguientes-bancos.md) | Orden práctico, reparto de dos placas, presupuesto de cables y preparación tras soldadura |
+| [visualizador.md](visualizador.md) | Banco local, formato JSON y límites de validación |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
 
 Actualizar primero el inventario cuando llegue una compra, se cuenten cables,

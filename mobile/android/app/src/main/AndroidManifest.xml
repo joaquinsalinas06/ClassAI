@@ -4,6 +4,7 @@
     <uses-permission android:name="android.permission.NFC" />
     <!-- Solo para el enrolamiento (POST /mobile/enroll); el tap NFC nunca usa red -->
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- required=false para que instale en cualquier teléfono; la app muestra si hay HCE -->
     <uses-feature android:name="android.hardware.nfc.hce" android:required="false" />

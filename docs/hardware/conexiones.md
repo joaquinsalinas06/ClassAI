@@ -127,3 +127,27 @@ Las fotos nuevas están descritas en [identificacion-fisica.md](identificacion-f
 - No hay aún modelo ni OUTPUT del hub/cargador, por lo que no se valida su capacidad.
 
 [Referencia familia bobinas JQC-3FF-S-Z](https://denkovi.com/Documents/JQC-3FF-S-Z.pdf); [referencia detector KY-038](https://sensorkit.joy-it.net/en/sensors/ky-038).
+
+## Bancos I²S aislados propuestos · 24/10/2026
+
+Estos mapas son nuevos **candidatos de ensayo**, no asignaciones implementadas
+en el nodo ni habilitación para conectarlos simultáneamente:
+
+| Banco | Alimentación | Relojes | Datos | Condición |
+|---|---|---|---|---|
+| M-07A · D-07 INMP441 | 3V3/GND; L/R a GND para canal izquierdo | GPIO26 → SCK/BCLK, GPIO25 → WS | SD → GPIO33 | Revisar módulo/cabecera; driver de captura pendiente |
+| M-07B · D-08 MAX98357A + una D-09 | Fuente 5 V DC adecuada → VIN del amplificador; masa común con ESP32 | GPIO26 → BCLK, GPIO25 → LRC/WS | GPIO22 → DIN | Fuente/corriente, GAIN/SD, soldadura y driver pendientes; SPK+/SPK− solo a una bocina, ninguno a GND |
+
+No derivar alimentación de la bocina del GPIO o del regulador 3V3 del ESP32.
+No unir dos bocinas de 4 Ω en paralelo sobre la única salida mono. GPIO26
+coincide con TFT RST y relé; GPIO25 con LED y WS. Ver [guías por banco](esquemas/README.md)
+y sus condiciones. La cabecera/adaptador de NFC y los adaptadores de bocinas
+están en proceso de soldadura según Joaquín; no se ha confirmado finalización.
+
+## Guía física NFC
+
+[Montaje PN532 SPI](banco-nfc.md): 3V3/GND y GPIO18/19/23/5,
+12 M–H con cabecera macho confirmada: riel + izquierdo para 3V3, − izquierdo
+para GND (solo mitad superior) y cuatro tiras de señal independientes.
+DIP 1 OFF / 2 ON con alimentación desconectada; IRQ/RSTO y rieles derechos libres.
+Coincide con `firmware/nfc_bench`; no cambia el mapa del producto integrado.

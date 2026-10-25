@@ -18,7 +18,7 @@ A están pendientes de devolución. Se conserva el alias sin inventar apellido.
 
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| A-01 | ESP32 con micro USB | 1 placa | en mano | Control y conectividad; número de contactos y modelo de placa por confirmar |
+| A-01 | ESP32 con micro USB | 1 placa | en mano | Control y conectividad; primera placa reportada parece de 30 contactos, asociación a A-01 pendiente; confirmar D4/D14, D5/B5 y VN; ver banco-ambiente.md |
 | A-02 | Jumpers | ~14 cables | en mano | ~8 iniciales + ~6 posteriores; parte serían macho–hembra, tipos sin separar |
 | A-03 | USB a micro USB | 1 cable | en mano | Cable prestado junto con A-01; no duplicarlo como accesorio de la U |
 | A-04 | Protoboard descrita como doble/dividida o cortada a la mitad | 1 unidad/conjunto declarado | en mano | Montajes temporales; dimensiones, puntos y número de mitades útiles por confirmar |
@@ -33,7 +33,7 @@ comunicados**. Todos los registros B están pendientes de devolución.
 |---|---|---|---|---|
 | B-01 | Protoboard con A–J, 30 posiciones numeradas y rieles ± laterales | 1 placa | en mano | Probablemente 30 filas; no equivale a 30 puntos. Tamaño total y continuidad de rieles por confirmar |
 | B-02 | ESP32 con micro USB, parecido a A-01 | 1 placa | en mano | Segunda placa disponible; modelo/pinout propios por confirmar |
-| B-03 | Módulo DHT11 | 1 módulo | en mano | Temperatura/humedad; NO es DHT22. Leer serigrafía de alimentación/datos |
+| B-03 | Módulo DHT11 | 1 módulo | en mano | Temperatura/humedad; NO es DHT22. Joaquín reporta etiquetas − / OUT / + (24/10); orientación de lectura, tensión/pull-up y prueba física pendientes |
 | B-04 | PIR parecido a D-06, de otro color | 1 módulo | en mano | Movimiento; HC-SR501 probable, modelo y orden de pines sin confirmar |
 | B-05 | LED verde | 1 LED | en mano | Señalización con resistencia en serie |
 | B-06 | LED amarillo | 1 LED | en mano | Señalización con resistencia en serie |
@@ -72,7 +72,7 @@ no confundir con fabricante genuino o comportamiento ya probado.
 
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| D-01 | PN532 NFC MODULE V3 serigrafiado **ELECHOUSE** | 1 módulo | en mano; fotografiado 24/10 | Selector DIP de dos canales; SPI SCK/MISO/MOSI/SS/VCC/GND/IRQ/RSTO; I²C SCL/SDA/VCC/GND; HSU GND/VCC/TXD/RXD al dorso. Cabeceras sin soldar; placa compatible visualmente con manual V3, autenticidad/función no probadas |
+| D-01 | PN532 NFC MODULE V3 serigrafiado **ELECHOUSE** | 1 módulo | en mano; fotografiado 24/10 | Selector DIP de dos canales; SPI SCK/MISO/MOSI/SS/VCC/GND/IRQ/RSTO; I²C SCL/SDA/VCC/GND; HSU GND/VCC/TXD/RXD al dorso. Cabecera macho confirmada por Joaquín al aprobar guía NFC; soldadura declarada en curso, terminación por revisar; placa compatible visualmente con manual V3, autenticidad/función no probadas |
 | D-02 | Tarjeta NFC incluida con D-01 | 1 tarjeta | en mano | Tipo exacto y UID no verificados; no publicar credenciales completas |
 | D-03 | Llavero NFC incluido con D-01 | 1 llavero | en mano | Tipo exacto no verificado |
 | D-04 | TFT SPI marcada **1.54TFT-SPI-ST7789 Ver:1.1** | 1 pantalla | en mano, fotografiada 24/10; desconectada | Pines reales GND/VCC/SCL/SDA/RST/DC/CS/BL; cabecera visible. Controlador ST7789 identificado por serigrafía, resolución probable 240×240 sin medición; tensión VCC/BL no validada |
@@ -147,3 +147,47 @@ actualizar disponibilidad de los IDs afectados y revisar montajes que los usan.
 - Identificar B-08, el PIR B-04 y el orden de terminales de cada placa real.
 - Confirmar recepción de E; disponer de cable de DATOS USB-C apropiado para E-01
   (no se ha inventariado uno, y los micro USB no encajan).
+
+## Aclaración para el banco de ambiente · 24/10/2026
+
+Joaquín reporta una placa ESP32 de **30 pines**, aún sin asociarla a A-01 o B-02 ni confirmar serigrafía/modelo. El PIR descrito tiene tres patas y selector de tres pines con puente amarillo; esto no permite asignarlo inequívocamente a B-04/D-06 ni fijar VCC/OUT/GND. Se conserva el inventario y su propiedad. Véase [banco-ambiente.md](banco-ambiente.md).
+
+## Pinout declarado el 24/10/2026
+
+B-02 (universidad): Joaquín reportó 15 contactos por lado, con orden compatible
+con DevKit V1; VN se leyó con duda. Ver [banco-ambiente.md](banco-ambiente.md)
+para el orden completo. Primera placa descrita: 30 contactos aparentes, ID aún
+por asociar y etiquetas D4/D14, D5/B5 y VN por cotejar. Son declaraciones, no
+identificaciones USB ni ensayos. E-01 sigue pendiente de recepción.
+
+## Fotografías de ESP32/PIR y cables disponibles · 24/10/2026
+
+- Fotos 7/8: una placa **ESP32 DEVKITV1**, módulo con marcado ESP-WROOM-32,
+  micro USB, EN/BOOT y 30 contactos macho. D4, D5, VP y VN son legibles y
+  coinciden con el mapa documentado. No atribuir fabricación DOIT por ese texto;
+  falta asociar esa foto a A-01 o B-02 y a un puerto USB. No se ha observado
+  eléctricamente VIN ni se ha leído/cargado flash.
+- Fotos 1–6: un PIR con lente Fresnel, cuatro condensadores, dos potenciómetros,
+  conector macho de tres terminales y jumper amarillo de selección. Aspecto
+  compatible con el HC-SR501 ya declarado; no se distinguen las letras VCC/OUT/GND
+  ni el marcado del chip. No asignar B-04/D-06 por el color ni certificar el orden
+  de terminales por semejanza. No se recibió una nueva pieza por fotografiarla.
+- Joaquín confirma **cero cables H–H disponibles**. La receta preferida se cambia
+  a **11 M–H + 1 M–M** con uniones por tiras de protoboard. C-08 (~16 M–H) y
+  C-07 (~10 M–M) siguen siendo cantidades declaradas: comprobar unidades libres
+  y alcance físico, sin duplicarlas ni contar E pendiente. No hace falta pedir
+  H–H para esa receta si los jumpers declarados están disponibles y alcanzan.
+
+## Preparación de NFC y bocinas · 24/10/2026
+
+Joaquín declara **soldadura de adaptadores para bocinas y NFC en curso**. Se
+asocia a la preparación de D-09 y D-01, con conectores del lote D-11 cuando
+corresponda; no se crean cantidades ni se presupone que la cabecera de D-08 ya
+esté terminada. El tipo de conectores y la revisión final siguen pendientes.
+No cambiar estos módulos a «probados» ni afirmar soldadura terminada. Se
+conservan los propietarios y la disponibilidad declarada de dos ESP32.
+
+Para NFC con cabecera macho, la receta por cuatro tiras de señal y rieles +/− izquierdos usa 12 M–H; si se suelda
+cabecera hembra, usa 6 M–H + 6 M–M. Ambas evitan H–H. Confirmar tipo al terminar,
+no pedir más cables antes de revisar C-07/C-08 y material libre. Una sola bocina
+D-09 se ensaya en la salida mono de D-08; la segunda queda sin conectar.

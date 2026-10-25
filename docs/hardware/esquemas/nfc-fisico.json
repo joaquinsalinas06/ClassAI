@@ -1,0 +1,451 @@
+{
+  "version": 1,
+  "layout": "breadboard",
+  "name": "M-10 · NFC físico · PN532 SPI",
+  "note": "12 M–H, cabecera macho confirmada por Joaquín; soldadura terminada por revisar. DIP 1 OFF / 2 ON sin alimentación. 3V3, no VIN. IRQ/RSTO libres; riel izquierdo + a 3V3 y − a GND, solo mitad superior. Rieles derechos libres. Placa/puerto/respaldo por asociar antes de cargar. Sin ensayo físico.",
+  "board": {
+    "rows": 30,
+    "rails": true,
+    "splitRails": false
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "ESP32 DEVKITV1, ESP-WROOM-32 y 30 pines observados en fotos de Joaquín; D4/D5/VP/VN legibles. ID A-01/B-02 por asociar, sin identificación USB. VIN sigue siendo alimentación nominal condicionada a la ruta USB de la variante.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false,
+          "function": "MOSI"
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false,
+          "function": "MISO"
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false,
+          "function": "SCK"
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false,
+          "function": "SS"
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "pn532",
+      "name": "PN532 V3 · cara componentes · SPI",
+      "pending": "D-01 compatible visualmente con Elechouse V3. Cabecera macho declarada; revisar soldadura, etiquetas y DIP apagado. Función física pendiente.",
+      "pins": [
+        {
+          "id": "RSTO",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "IRQ",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": true
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3,
+          "required": true
+        },
+        {
+          "id": "SS",
+          "kind": "signal",
+          "function": "SS",
+          "required": true
+        },
+        {
+          "id": "MOSI",
+          "kind": "signal",
+          "function": "MOSI",
+          "required": true
+        },
+        {
+          "id": "MISO",
+          "kind": "signal",
+          "function": "MISO",
+          "required": true
+        },
+        {
+          "id": "SCK",
+          "kind": "signal",
+          "function": "SCK",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 o B-02 · asociar placa física",
+      "holes": {}
+    },
+    {
+      "id": "nfc1",
+      "definition": "pn532",
+      "inventory": "D-01",
+      "holes": {}
+    }
+  ],
+  "wires": [
+    {
+      "id": "nfc-1",
+      "from": "esp1:3V3",
+      "to": "bb:LP15",
+      "color": "red",
+      "note": "Cable 1 · M–H: hembra a ESP32 3V3, macho a LP15. Montar sin USB.",
+      "bends": [
+        [
+          420,
+          546
+        ],
+        [
+          420,
+          402
+        ]
+      ]
+    },
+    {
+      "id": "nfc-2",
+      "from": "bb:LP2",
+      "to": "nfc1:VCC",
+      "color": "red",
+      "note": "Cable 2 · M–H: macho a LP2, hembra a PN532 VCC. LP15/LP2 comparten riel + izquierdo, mitad superior; no puente adicional.",
+      "bends": [
+        [
+          830,
+          168
+        ],
+        [
+          830,
+          294
+        ]
+      ]
+    },
+    {
+      "id": "nfc-3",
+      "from": "esp1:GND",
+      "to": "bb:LN14",
+      "color": "black",
+      "note": "Cable 3 · M–H: hembra a ESP32 GND, macho a LN14. Montar sin USB.",
+      "bends": [
+        [
+          406,
+          519
+        ],
+        [
+          406,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "nfc-4",
+      "from": "bb:LN4",
+      "to": "nfc1:GND",
+      "color": "black",
+      "note": "Cable 4 · M–H: macho a LN4, hembra a PN532 GND. LN14/LN4 comparten riel − izquierdo, mitad superior; no puente adicional.",
+      "bends": [
+        [
+          848,
+          204
+        ],
+        [
+          848,
+          266
+        ]
+      ]
+    },
+    {
+      "id": "nfc-5",
+      "from": "esp1:GPIO18",
+      "to": "bb:A6",
+      "color": "blue",
+      "note": "Cable 5 · M–H: hembra a ESP32 GPIO18, macho a A6. Montar sin USB.",
+      "bends": [
+        [
+          378,
+          330
+        ],
+        [
+          378,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "nfc-6",
+      "from": "bb:B6",
+      "to": "nfc1:SCK",
+      "color": "blue",
+      "note": "Cable 6 · M–H: macho a B6, hembra a PN532 SCK. A6/B6 comparten tira A–E; no puente adicional.",
+      "bends": [
+        [
+          866,
+          240
+        ],
+        [
+          866,
+          406
+        ]
+      ]
+    },
+    {
+      "id": "nfc-7",
+      "from": "esp1:GPIO19",
+      "to": "bb:A8",
+      "color": "purple",
+      "note": "Cable 7 · M–H: hembra a ESP32 GPIO19, macho a A8. Montar sin USB.",
+      "bends": [
+        [
+          364,
+          303
+        ],
+        [
+          364,
+          276
+        ]
+      ]
+    },
+    {
+      "id": "nfc-8",
+      "from": "bb:B8",
+      "to": "nfc1:MISO",
+      "color": "purple",
+      "note": "Cable 8 · M–H: macho a B8, hembra a PN532 MISO. A8/B8 comparten tira A–E; no puente adicional.",
+      "bends": [
+        [
+          884,
+          276
+        ],
+        [
+          884,
+          378
+        ]
+      ]
+    },
+    {
+      "id": "nfc-9",
+      "from": "esp1:GPIO23",
+      "to": "bb:A10",
+      "color": "green",
+      "note": "Cable 9 · M–H: hembra a ESP32 GPIO23, macho a A10. Montar sin USB.",
+      "bends": [
+        [
+          350,
+          168
+        ],
+        [
+          350,
+          312
+        ]
+      ]
+    },
+    {
+      "id": "nfc-10",
+      "from": "bb:B10",
+      "to": "nfc1:MOSI",
+      "color": "green",
+      "note": "Cable 10 · M–H: macho a B10, hembra a PN532 MOSI. A10/B10 comparten tira A–E; no puente adicional.",
+      "bends": [
+        [
+          902,
+          312
+        ],
+        [
+          902,
+          350
+        ]
+      ]
+    },
+    {
+      "id": "nfc-11",
+      "from": "esp1:GPIO5",
+      "to": "bb:A12",
+      "color": "yellow",
+      "note": "Cable 11 · M–H: hembra a ESP32 GPIO5, macho a A12. Montar sin USB.",
+      "bends": [
+        [
+          392,
+          357
+        ],
+        [
+          392,
+          348
+        ]
+      ]
+    },
+    {
+      "id": "nfc-12",
+      "from": "bb:B12",
+      "to": "nfc1:SS",
+      "color": "yellow",
+      "note": "Cable 12 · M–H: macho a B12, hembra a PN532 SS. A12/B12 comparten tira A–E; no puente adicional.",
+      "bends": [
+        [
+          920,
+          348
+        ],
+        [
+          920,
+          322
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}
