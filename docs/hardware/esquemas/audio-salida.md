@@ -2,7 +2,7 @@
 
 Enviar arm y tone para 440 Hz durante 300 ms, a amplitud digital inicial del 1 %. stop corta y desarma.
 
-**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
+**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](audio-salida.svg)
 

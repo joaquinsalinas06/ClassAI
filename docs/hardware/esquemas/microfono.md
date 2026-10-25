@@ -2,7 +2,7 @@
 
 INMP441 captura audio digital. Se prueba separado del amplificador y del sensor de sonido analógico.
 
-**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
+**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](microfono.svg)
 

@@ -2,7 +2,7 @@
 
 Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop apaga y desarma.
 
-**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
+**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](matriz.svg)
 

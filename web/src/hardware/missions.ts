@@ -158,7 +158,7 @@ for (const mission of missions) {
     if(mission.id==="matriz")mission.conflicts="Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita el pin de arranque GPIO15; ensayo aislado de PIR/TFT. DOUT no recibe datos del ESP32.";
     mission.sources.push({title:"Material de la U y criterios de armado",url:"https://github.com/joaquinsalinas06/ClassAI/blob/codex/physical-benches/docs/hardware/circuitos-referencia.md"});
   }
-  if (mission.id!=="nfc") mission.state=physical.assembly.wires.some(w=>w.pending)||!physical.firmware?"Montaje parcial · no conectar cables marcados":"Diseño y sketch · ensayo físico pendiente";
+  if (mission.id!=="nfc") mission.state=physical.assembly.wires.some(w=>w.pending)||!physical.firmware?"Copia los cables numerados":"Diseño y sketch · ensayo físico pendiente";
   const wires=physical.assembly.wires;
   mission.jumpers=`${wires.filter(w=>w.jumper==="M–H" || (!w.jumper && !w.note.includes("M–M"))).length} M–H + ${wires.filter(w=>w.jumper==="M–M" || (!w.jumper && w.note.includes("M–M"))).length} M–M dibujados; cero H–H${wires.some(w=>w.jumper==="potencia")?`. ${wires.filter(w=>w.jumper==="potencia").length} tramos de potencia por bornera`:""}${wires.some(w=>w.jumper==="altavoz")?" y un par de altavoz":""}`;
   mission.checks=[...new Set([...mission.checks,...physical.blockers])];

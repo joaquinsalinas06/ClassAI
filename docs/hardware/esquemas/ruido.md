@@ -2,7 +2,7 @@
 
 B-08 tiene AO/G/+/DO fotografiados. Es una entrada analógica relativa, no un sonómetro.
 
-**Montaje parcial · no conectar cables marcados.** Diseño de referencia, sin ensayo físico nuevo.
+**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](ruido.svg)
 

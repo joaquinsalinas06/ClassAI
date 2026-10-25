@@ -113,17 +113,18 @@ try {
   await page.locator('[data-bank-id="ruido"]').click();
   await page.locator('[data-mission="ruido"]').waitFor();
   assert.equal(await canvas.locator('svg[data-assembly-board] > title').count(),0,'blank-canvas hover must not cover the circuit');
-  for(const label of ['AO → GPIO34 · NO CONECTAR','G → GND','+ → 3,3 V · NO CONECTAR','DO · DEJAR SIN CABLE'])assert.ok((await canvas.textContent()).includes(label));
-  assert.ok(await canvas.locator('[data-wire-pending="true"]').count()>0,'conditioned wires need visible NO CONECTAR tags');
-  assert.ok(!(await canvas.textContent()).includes('ESPERA'));
+  for(const label of ['AO','G','+','DO'])assert.ok((await canvas.textContent()).includes(label));
+  assert.equal(await canvas.locator('[data-wire]').count(),2,'only the confirmed ground network is drawn');
+  assert.ok(!/(NO CONECTAR|SIN CABLE|ESPERA|Libre)/.test(await canvas.textContent()));
 
   await page.locator('[data-bank-id="ventilador"]').click();
   await page.locator('[data-mission="ventilador"]').waitFor();
   const fanText=await canvas.textContent();
-  assert.ok(fanText.includes('FAN DESCONECTADO'));
-  assert.ok(fanText.includes('COM1 · SIN CABLE')&&fanText.includes('NO1 · SIN CABLE')&&fanText.includes('NC1 · SIN CABLE'));
+  assert.ok(fanText.includes('Rojo = + · negro = −'));
+  assert.ok(fanText.includes('COM1')&&fanText.includes('NO1')&&fanText.includes('NC1'));
+  assert.ok(!/(NO CONECTAR|SIN CABLE|FAN DESCONECTADO|Libre)/.test(fanText));
   assert.ok(!fanText.includes('Fuente externa propuesta'));
-  assert.equal(await canvas.locator('[data-wire]').count(),8);
+  assert.equal(await canvas.locator('[data-wire]').count(),3);
 
   await page.locator('[data-bank-id="audio-salida"]').click();
   await page.locator('[data-mission="audio-salida"]').waitFor();

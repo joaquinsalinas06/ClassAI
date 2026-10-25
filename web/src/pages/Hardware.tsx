@@ -13,7 +13,7 @@ import { MissionLibrary } from "../hardware/MissionLibrary";
 import { WiringReference } from "../hardware/WiringReference";
 import { routingMetrics } from "../hardware/routing";
 
-import { AssemblyBoard, terminalLabel, wireColors } from "../hardware/AssemblyBoard";
+import { AssemblyBoard, terminalLabel, wireColors, wiresToPlace } from "../hardware/AssemblyBoard";
 import { analyze, contacts, definition, parseAssembly, recordRevision, terminals, type Assembly, type Wire } from "../hardware/model";
 
 const storageKey = "classai.hardware.v1";
@@ -62,8 +62,10 @@ export function Hardware() {
     setAssembly({ ...next, revisions: assembly.revisions });
     setStep(null); setSelected(""); setPast([]);
   }
+  const actualWires = wiresToPlace(assembly);
+  const actualAssembly = { ...assembly, wires: actualWires };
   const result = analyze(assembly);
-  const routing = routingMetrics(assembly);
+  const routing = routingMetrics(actualAssembly);
   const holes = Array.from({ length: assembly.board.rows }, (_, i) => [..."ABCDEFGHIJ"].map(c => `${c}${i + 1}`)).flat();
   const allContacts = contacts(assembly.board);
   const focusNet = (end: string) => { setSelected(end); setStep(null); setInspector(null); };
@@ -90,10 +92,10 @@ export function Hardware() {
     setQuery({ banco: id, ...(["nfc", "ambiente"].includes(id) ? { guia: id } : {}) });
   };
   const exportSvg = () => {
-    const svg = renderToStaticMarkup(<AssemblyBoard assembly={assembly} wires={assembly.wires} selected="" onSelect={() => {}} connected={() => false} />);
+    const svg = renderToStaticMarkup(<AssemblyBoard assembly={assembly} wires={actualWires} selected="" onSelect={() => {}} connected={() => false} />);
     const url = URL.createObjectURL(new Blob([svg], { type: "image/svg+xml" }));
     const a = document.createElement("a"); a.href = url; a.download = isNfc ? "classai-nfc-fisico.svg" : "classai-montaje-fisico.svg"; a.click(); URL.revokeObjectURL(url);
-    setMessage("Dibujo completo exportado; incluye todos los cables aunque estés recorriendo un paso.");
+    setMessage("Dibujo exportado con los cables que debes colocar.");
   };
   const save = () => {
     try {
@@ -117,7 +119,7 @@ export function Hardware() {
     const wire: Wire = { ...previous, ...draft, jumper: previous?.jumper ?? (draft.from.startsWith("bb:") && draft.to.startsWith("bb:") ? "M–M" : "M–H"), bends: previous?.from === draft.from && previous?.to === draft.to ? previous.bends : undefined, id: editing ?? `w-${crypto.randomUUID().slice(0, 8)}` };
     update({ ...assembly, wires: editing ? assembly.wires.map(w => w.id === editing ? wire : w) : [...assembly.wires, wire] });
   };
-  const visibleWires = step === null ? assembly.wires : assembly.wires.slice(0, step);
+  const visibleWires = step === null ? actualWires : actualWires.slice(0, step);
   const errors = result.findings.filter(f => f.level === "error");
   const exportDiagram = () => {
     if (physicalBank) return exportSvg();
@@ -138,22 +140,24 @@ export function Hardware() {
       </header>
       <div className="flex flex-wrap items-center justify-between gap-2 border-b border-line px-4 py-2 text-caption">
         <span className={mission.id === "nfc" ? "text-ok-text" : "text-muted"}>{mission.id === "nfc" ? "Referencia NFC probada · RF intermitente" : mission.state}</span>
-        <span className="text-muted">{physicalBank ? `${assembly.wires.length} cables · ${assembly.wires.filter(w=>w.pending).length} NO CONECTAR · ${routing.turns} giros` : `${mission.links.length} conexiones propuestas`}</span>
+        <span className="text-muted">{physicalBank ? `${actualWires.length} cables · ${routing.turns} giros` : `${mission.links.length} conexiones propuestas`}</span>
       </div>
       <div ref={diagram} className={`hardware-canvas ${zoom === 1 ? "hardware-canvas-fit" : ""}`} aria-label={physicalBank ? "Distribución y conexiones" : "Conexiones lógicas"}>
-        {physicalBank ? <AssemblyBoard pirBack={pirBack} zoom={zoom} assembly={assembly} wires={visibleWires} selected={step !== null && step > 0 ? assembly.wires[step-1]!.from : selected} onSelect={end => {setSelected(end);setInspector("pines");}} connected={analyze({ ...assembly, wires: visibleWires }).connected}/> : <MissionDiagram mission={mission} selected={logicalStep} onSelect={setLogicalStep}/>}
+        {physicalBank
+          ? <AssemblyBoard pirBack={pirBack} zoom={zoom} assembly={assembly} wires={visibleWires} selected={step !== null && step > 0 ? actualWires[step-1]!.from : selected} onSelect={end => {setSelected(end);setInspector("pines");}} connected={analyze({ ...assembly, wires: visibleWires }).connected}/>
+          : <MissionDiagram mission={mission} selected={logicalStep} onSelect={setLogicalStep}/>}
       </div>
       <footer className="shrink-0 border-t border-line bg-surface">
         <div className="flex flex-wrap items-center justify-between gap-2 px-3 py-2" aria-label="Pasos de armado">
           <div className="flex items-center gap-1">
             <Button size="sm" variant={step !== null || logicalStep !== null ? "secondary" : "primary"} onClick={()=>physicalBank?setStep(0):setLogicalStep(0)}>Recorrer armado</Button>
             <Button size="sm" aria-label="Anterior" icon={<ChevronLeft size={15}/>} disabled={physicalBank ? step === null || step === 0 : logicalStep === null || logicalStep === 0} onClick={()=>physicalBank?setStep(s=>Math.max(0,(s??0)-1)):setLogicalStep(s=>Math.max(0,(s??0)-1))}/>
-            <Button size="sm" aria-label="Siguiente" icon={<ChevronRight size={15}/>} disabled={physicalBank ? step === null || step >= assembly.wires.length : logicalStep === null || logicalStep >= mission.links.length-1} onClick={()=>physicalBank?setStep(s=>Math.min(assembly.wires.length,(s??0)+1)):setLogicalStep(s=>Math.min(mission.links.length-1,(s??0)+1))}/>
+            <Button size="sm" aria-label="Siguiente" icon={<ChevronRight size={15}/>} disabled={physicalBank ? step === null || step >= actualWires.length : logicalStep === null || logicalStep >= mission.links.length-1} onClick={()=>physicalBank?setStep(s=>Math.min(actualWires.length,(s??0)+1)):setLogicalStep(s=>Math.min(mission.links.length-1,(s??0)+1))}/>
             <Button size="sm" variant="ghost" onClick={()=>{setStep(null);setLogicalStep(null);setSelected("");}}>Ver todo</Button>
           </div>
           {physicalBank && <div className="flex items-center gap-2"><select aria-label="Escala del montaje" className="rounded border border-line bg-surface px-1 py-1 text-caption" value={zoom} onChange={e=>setZoom(Number(e.target.value))}><option value={1}>Ajustar</option>{[0.6,0.8,1.2].map(z=><option key={z} value={z}>{Math.round(z*100)} %</option>)}</select><Button size="sm" aria-label="Ajustar dibujo" icon={<Maximize2 size={14}/>} onClick={()=>setZoom(1)}/></div>}
         </div>
-        <p className="truncate border-t border-line-subtle px-4 py-2 text-caption text-fg-2" aria-live="polite">{physicalBank ? step === null ? "Selecciona un pin para ver su red o recorre el armado cable por cable." : step === 0 ? "Coloca los componentes con el USB desconectado." : `${step}/${assembly.wires.length} · ${assembly.wires[step-1]?.note || `${assembly.wires[step-1]?.from} → ${assembly.wires[step-1]?.to}`}` : logicalStep === null ? mission.summary : `${logicalStep+1}/${mission.links.length} · ${mission.links[logicalStep]?.from} → ${mission.links[logicalStep]?.to}`}</p>
+        <p className="truncate border-t border-line-subtle px-4 py-2 text-caption text-fg-2" aria-live="polite">{physicalBank ? step === null ? "Selecciona un pin para ver su red o recorre el armado cable por cable." : step === 0 ? "Coloca los componentes con el USB desconectado." : `${step}/${actualWires.length} · ${actualWires[step-1]?.note || `${actualWires[step-1]?.from} → ${actualWires[step-1]?.to}`}` : logicalStep === null ? mission.summary : `${logicalStep+1}/${mission.links.length} · ${mission.links[logicalStep]?.from} → ${mission.links[logicalStep]?.to}`}</p>
       </footer>
       <div className="flex shrink-0 flex-wrap gap-1 border-t border-line px-3 py-2" aria-label="Herramientas del banco">{inspectorTabs.filter(([id])=>physicalBank || !["editar","historial"].includes(id)).map(([id,label,Icon])=><Button key={id} size="sm" variant="ghost" icon={<Icon size={14}/>} onClick={()=>setInspector(id)}>{label}</Button>)}</div>
     </article>
@@ -164,7 +168,7 @@ export function Hardware() {
         <div className="min-h-0 flex-1 overflow-auto p-4">
           {inspector === "guia" && <div className="space-y-4 text-small"><p className="text-fg-2">{mission.summary}</p><section><h2 className="mb-2 text-label">Antes de conectar</h2><ol className="list-decimal space-y-2 pl-5 text-fg-2">{mission.checks.map(c=><li key={c}>{c}</li>)}</ol></section><p><strong>Resultado esperado:</strong> {mission.test}</p><p className="break-words"><strong>Firmware:</strong> {mission.firmware}</p><p className="text-regular-text">{mission.conflicts}</p>{physicalBank && (isNfc ? <NfcGuide onLoad={loadGuide} onSignal={focusNet}/> : mission.id === "ambiente" ? <WiringReference onSignal={()=>focusNet("esp1:GPIO4")}/> : null)}{physicalBank && <BenchGuidePanel guide={benches[mission.id]!}/>}<div className="space-y-2">{mission.sources.map(s=><a key={s.url} className="block text-link underline" href={s.url}>{s.title}</a>)}</div></div>}
           {inspector === "materiales" && <div className="space-y-5"><section><h2 className="mb-3 text-heading">Módulos</h2>{mission.modules.map(m=><div key={m.name} className="flex justify-between gap-3 border-b border-line py-3 text-small"><span>{m.name}</span><span className="text-muted">{m.inventory}</span></div>)}</section><section><h2 className="mb-3 text-heading">Materiales de este banco</h2><ul className="list-disc space-y-2 pl-5 text-small text-fg-2">{mission.materials.map(m=><li key={m}>{m}</li>)}</ul><p className="mt-4 text-small"><strong>Cables:</strong> {mission.jumpers}</p></section></div>}
-          {inspector === "pines" && <div className="space-y-4"><p className="text-small text-fg-2">{physicalBank ? `Contacto seleccionado: ${selected ? terminalLabel(selected,assembly) : "ninguno"}. Selecciona una conexión para resaltar su red.` : "Mapa por función. La posición física de los conectores sigue pendiente."}</p>{physicalBank && <h2 className="text-label">Redes de referencia de la receta</h2>}<div className="overflow-x-auto"><table aria-label="Mapeo de pines del banco" className="w-full text-left text-small"><thead className="text-muted"><tr><th className="py-2">Desde</th><th>Hasta</th><th>Por</th></tr></thead><tbody>{mission.links.map((link,i)=><tr key={i} className="border-t border-line"><td className="py-3 pr-2">{link.from}</td><td className="pr-2">{link.to}</td><td className="text-muted">{link.via??"Directo"}{link.pending?" · pendiente":""}</td></tr>)}</tbody></table></div>{physicalBank && <div className="space-y-1"><h2 className="mb-2 text-label">Tu montaje · cables actuales</h2>{assembly.wires.map((w,i)=><button key={w.id} className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-small hover:bg-hover" onClick={()=>{setSelected(w.from);setStep(i+1);setInspector(null);}}><span className="h-1.5 w-5 shrink-0 rounded" style={{background:wireColors[w.color??"blue"].hex}}/><span>{i+1}. {terminalLabel(w.from,assembly)} → {terminalLabel(w.to,assembly)}<span className="block text-caption text-muted">{w.jumper ?? (w.note.includes("M–M") ? "M–M" : "M–H")} · {w.pending ? `No conectar: ${w.pending}` : w.note}</span></span></button>)}</div>}</div>}
+          {inspector === "pines" && <div className="space-y-4"><p className="text-small text-fg-2">{physicalBank ? `Contacto seleccionado: ${selected ? terminalLabel(selected,assembly) : "ninguno"}. Selecciona una conexión para resaltar su red.` : "Mapa por función. La posición física de los conectores sigue pendiente."}</p>{physicalBank && <h2 className="text-label">Redes de referencia de la receta</h2>}<div className="overflow-x-auto"><table aria-label="Mapeo de pines del banco" className="w-full text-left text-small"><thead className="text-muted"><tr><th className="py-2">Desde</th><th>Hasta</th><th>Por</th></tr></thead><tbody>{mission.links.filter(link=>!link.pending).map((link,i)=><tr key={i} className="border-t border-line"><td className="py-3 pr-2">{link.from}</td><td className="pr-2">{link.to}</td><td className="text-muted">{link.via??"Directo"}</td></tr>)}</tbody></table></div>{physicalBank && <div className="space-y-1"><h2 className="mb-2 text-label">Tu montaje · cables actuales</h2>{actualWires.map((w,i)=><button key={w.id} className="flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-small hover:bg-hover" onClick={()=>{setSelected(w.from);setStep(i+1);setInspector(null);}}><span className="h-1.5 w-5 shrink-0 rounded" style={{background:wireColors[w.color??"blue"].hex}}/><span>{i+1}. {terminalLabel(w.from,assembly)} → {terminalLabel(w.to,assembly)}<span className="block text-caption text-muted">{w.jumper ?? (w.note.includes("M–M") ? "M–M" : "M–H")} · {w.note}</span></span></button>)}</div>}</div>}
           {physicalBank && inspector === "editar" && <>
             <div className="mb-4 flex flex-wrap gap-2"><Button size="sm" icon={<Undo2 size={13}/>} disabled={!past.length} onClick={()=>{const previous=past.at(-1);if(previous){setAssembly({...previous,revisions:assembly.revisions});setPast(p=>p.slice(0,-1));setStep(null);}}}>Deshacer</Button><Button size="sm" onClick={loadGuide}>Cargar guía completa</Button><Button size="sm" onClick={exportSvg}>Exportar dibujo SVG</Button></div>
             <div className="space-y-3"><label className="block text-small">Nombre del montaje<input className={field} value={assembly.name} maxLength={120} onChange={e=>update({...assembly,name:e.target.value})}/></label><label className="block text-small">Observaciones y pendientes<input className={field} value={assembly.note} maxLength={2000} onChange={e=>update({...assembly,note:e.target.value})}/></label><label className="block text-small">Filas<select aria-label="Filas de protoboard" className={field} value={assembly.board.rows} onChange={e=>update({...assembly,board:{...assembly.board,rows:Number(e.target.value)}})}>{[30,63].map(n=><option key={n}>{n}</option>)}</select></label><label className="block text-small"><input type="checkbox" checked={!!assembly.board.rails} onChange={e=>update({...assembly,board:{...assembly.board,rails:e.target.checked}})}/> Mostrar rieles</label><label className="block text-small"><input type="checkbox" checked={!!assembly.board.splitRails} onChange={e=>update({...assembly,board:{...assembly.board,splitRails:e.target.checked}})}/> Rieles cortados a mitad</label>{assembly.parts.some(p=>p.definition==="pir")&&<Button size="sm" onClick={()=>{setPirBack(b=>!b);setInspector(null);}}>{pirBack?"Ver lente del PIR":"Ver reverso del PIR"}</Button>}</div>
