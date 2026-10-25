@@ -1,7 +1,8 @@
+import { benches, type BenchGuide } from "./benches";
 export type LinkKind = "power" | "ground" | "signal" | "speaker" | "flow";
 export interface MissionLink { from: string; to: string; kind: LinkKind; via?: string; pending?: boolean }
 export interface Mission {
-  id: string; code: string; title: string; group: string; state: string; summary: string;
+  physical?: BenchGuide; id: string; code: string; title: string; group: string; state: string; summary: string;
   modules: { name: string; inventory: string; shape: string }[];
   materials: string[]; jumpers: string; links: MissionLink[]; checks: string[];
   test: string; firmware: string; conflicts: string; sources: { title: string; url: string }[];
@@ -120,3 +121,20 @@ export const missions: Mission[] = [
     test: "Comparar evento en cada tramo, config y reconexión; PubSubClient publica QoS 0, sin garantía de persistencia física.", firmware: "Perfil aislado de transporte pendiente; smoke de host existente no prueba hardware.", conflicts: "No habilita por sí solo tres nodos de una misma aula.", sources: [],
   },
 ];
+
+const ambientMission = missions.find(m=>m.id === "ambiente")!;
+for (const [id,code,title,part] of [["dht11","M-04","DHT11 aislado","DHT11"],["pir","M-05","PIR aislado","PIR"]]) {
+  missions.push({...ambientMission,id:id!,code:code!,title:title!,summary:`Ensayo ${title} sin inicializar el otro sensor.`,modules:[ambientMission.modules[0]!,{name:part!,inventory:id==="dht11"?"B-03":"B-04 o D-06",shape:"sensor"}],materials:id==="dht11"?["B-03: DHT11", "C-02: 10 kΩ", "Protoboard y jumpers recibidos"]:["B-04 o D-06: un PIR identificado", "Protoboard y jumpers recibidos", "Fuente compatible pendiente"],links:ambientMission.links.filter(l=>`${l.from} ${l.to}`.includes(part!)),firmware:`ambient_bench, perfil ${id==="dht11"?"BENCH_DHT_ONLY":"BENCH_PIR_ONLY"}; Serial 115200.`});
+}
+missions.push({id:"leds",code:"M-01B",title:"LEDs de estado",group:"Preparación",state:"Diseño y sketch; ensayo físico pendiente",summary:"Rojo, amarillo y verde separados, cada uno con resistencia de 1 kΩ. Ensayo aislado.",modules:[{name:"ESP32",inventory:"A-01 por identificar",shape:"esp32"},{name:"Tres LEDs",inventory:"C-05 / B-06 / B-05",shape:"led"}],materials:["C-05 rojo", "B-06 amarillo", "B-05 verde", "C-01: tres resistencias de 1 kΩ; confirmar cantidad", "Protoboard y jumpers recibidos"],jumpers:"4 M–H + 3 M–M; cero H–H",links:[link("ESP32 · GPIO25","LED rojo · A","signal","1 kΩ en serie"),link("ESP32 · GPIO26","LED amarillo · A","signal","1 kΩ en serie"),link("ESP32 · GPIO27","LED verde · A","signal","1 kΩ en serie"),link("LEDs · K","ESP32 · GND","ground")],checks:["Confirmar tres resistencias libres y polaridad de cada LED.","USB desconectado al armar; A-01 identificada y respaldo preservado antes de carga."],test:benches.leds!.expected,firmware:"firmware/status_led_bench; comandos red/yellow/green/off.",conflicts:"GPIO26/27 compartidos con otros bancos; ensayos separados.",sources:[chipSource]});
+missions.push({id:"iluminacion",code:"M-11",title:"Iluminación · material pendiente",group:"Ambiente / actuación",state:"Sin sensor recibido",summary:"No hay BH1750 ni LDR recibido en el inventario. Los LEDs son salidas, no sensores de lux.",modules:[{name:"Sensor de luz",inventory:"No recibido",shape:"sensor"}],materials:["Falta un sensor de iluminación identificado y su breakout; para #5 se requiere BH1750.","La posible LDR del kit pedido no está recibida ni mide lux sin caracterización."],jumpers:"Pendiente de identificar sensor; no reservar cables",links:[link("Sensor por recibir","ESP32 · interfaz por definir","signal","No conectar",true)],checks:["Confirmar recepción y variante antes de asignar VCC/GPIO o librería."],test:"Pendiente: respuesta a tres condiciones de iluminación con sensor identificado.",firmware:"Sin sketch de hardware no recibido.",conflicts:"No completar #5 ni generar lux sintéticos como evidencia física.",sources:[]});
+for (const mission of missions) {
+  const physical=benches[mission.id];
+  if (!physical) continue;
+  mission.physical=physical;
+  if (mission.id!=="nfc") mission.state=physical.assembly.wires.some(w=>w.pending)||!physical.firmware?"Montaje condicionado · revisar pendientes":"Diseño y sketch · ensayo físico pendiente";
+  const wires=physical.assembly.wires;
+  mission.jumpers=`${wires.filter(w=>w.jumper==="M–H" || (!w.jumper && !w.note.includes("M–M"))).length} M–H + ${wires.filter(w=>w.jumper==="M–M" || (!w.jumper && w.note.includes("M–M"))).length} M–M dibujados; cero H–H${["matriz","buzzer","ventilador"].includes(mission.id)?". Circuito incompleto; conteo final pendiente de etapa/fuente":""}`;
+  mission.checks=[...new Set([...mission.checks,...physical.blockers])];
+  if(physical.firmware && mission.id!=="nfc") mission.firmware=`firmware/${physical.firmware}${physical.profile?` · perfil ${physical.profile}`:""}; compilar sin carga; Serial 115200. Ver guía física.`;
+}

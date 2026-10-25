@@ -2,11 +2,11 @@
 
 B-09 tiene polaridad + visible. No dibujar alimentación directa desde GPIO mientras se desconozca el consumo.
 
-**Propuesta, sin ensayo físico. Tipo y corriente pendientes.**
+**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
 
-![Esquema de referencia](buzzer.svg)
+![Distribución física de referencia](buzzer.svg)
 
-Mapa eléctrico por nombres: las posiciones se ordenan por función, no corresponden a una fotografía ni certifican el orden físico de los conectores. Las líneas representan redes o tramos, no cables H–H obligatorios. Los tramos discontinuos son pendientes.
+[JSON de montaje importable](buzzer-fisico.json) · [SVG físico](buzzer-fisico.svg). ESP32 USB abajo; orientación de referencia, cotejar serigrafía. Terminales rotulados por función donde el conector aún no está identificado.
 
 ## Materiales
 
@@ -14,28 +14,68 @@ Mapa eléctrico por nombres: las posiciones se ordenan por función, no correspo
 - Tipo activo/pasivo, tensión y consumo por identificar
 - Etapa de accionamiento/protección por dimensionar si corresponde
 
-Cables: Conteo pendiente del circuito de accionamiento; 0 H–H previsto. No reservar material ya usado en otro banco.
+Cables: 0 M–H + 0 M–M dibujados; cero H–H. Circuito incompleto; conteo final pendiente de etapa/fuente. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
-## Conexiones
+## Conexiones funcionales
 
-| Desde | Hasta | Vía / condición | Estado |
+| Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| ESP32 · GPIO17 | Etapa · control | No directo a buzzer | Resolver antes de energizar |
-| Etapa · salida | Buzzer · circuito de carga | Circuito por dimensionar | Resolver antes de energizar |
-| Fuente adecuada · + | Buzzer · + | Tensión/corriente pendientes | Resolver antes de energizar |
-| Etapa · referencia | ESP32 / fuente · GND | Según etapa elegida | Resolver antes de energizar |
+| ESP32 · GPIO17 | Etapa · control | No directo a buzzer | Pendiente; no conectar |
+| Etapa · salida | Buzzer · circuito de carga | Circuito por dimensionar | Pendiente; no conectar |
+| Fuente adecuada · + | Buzzer · + | Tensión/corriente pendientes | Pendiente; no conectar |
+| Etapa · referencia | ESP32 / fuente · GND | Según etapa elegida | Pendiente; no conectar |
 
-## Antes de conectar
+## Armado cable por cable · USB desconectado
+
+Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.
+
+| Nº | Color | Tipo | Origen | Destino | Condición |
+|---|---|---|---|---|---|
+
+
+Sin cableado ejecutable: faltan datos del circuito. Consultar conexiones funcionales y faltantes; no suplir etapas de adaptación con cables.
+
+LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: módulos externos, conectores por verificar.
+
+Cruces no unen redes. Las líneas discontinuas están pendientes y no cuentan como continuidad confirmada. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
+
+## Antes de energizar
 
 1. No asumir buzzer activo ni usar tone() hasta identificarlo.
 2. Etapa, retorno de carga, resistencias y protección no están dimensionados: este esquema es funcional, no cableado ejecutable.
+3. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
+4. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
+5. Faltan tensión, consumo, tipo y etapa de accionamiento/protección.
 
-Resultado esperado: Un aviso corto y controlado, solo tras cerrar el circuito y consumo.
+Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
 Firmware: Nodo contempla GPIO17; no habilitarlo sobre el buzzer sin adaptar el hardware.
 
+## Prueba guiada y fallos
+
+Acción: Identificar modelo y tipo antes de elegir driver.
+
+Aprobación esperada: Aviso breve y parada pendientes de circuito dimensionado.
+
+Diagnóstico: No aplicar tone ni tensión por ensayo/error.
+
 Conflictos: GPIO17 puede depender del módulo ESP32; no usar referencia WROVER sin revisar.
+
+Faltantes/confirmaciones:
+- Identificar A-01/puerto y preservar respaldo privado antes de cargar.
+- Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
+- Faltan tensión, consumo, tipo y etapa de accionamiento/protección.
+
+## Registro de resultado
+
+| Etapa | Resultado observado | Evidencia |
+|---|---|---|
+| Diseño | Referencia física; conservar condiciones | SVG/JSON y guía |
+| Compilación | Consultar [resultados de esta entrega](../bancos-fisicos.md); no inferir PASS del comando | Log y tamaños por perfil |
+| Simulación nueva | No ejecutada | — |
+| Ensayo físico nuevo | Pendiente | Completar acción, salida, reinicios y evidencia tras ensayo |
+| Desmontaje | Pendiente | Registrar qué cables/piezas quedan conectados |
 
 - [Espressif · ESP32](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
 
-[Volver al índice](README.md). Generado por web/scripts/export-hardware-missions.mjs desde web/src/hardware/missions.ts.
+[Índice](README.md). Generado desde missions.ts y sus registros físicos mediante web/scripts/export-hardware-missions.mjs.

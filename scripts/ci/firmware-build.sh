@@ -24,3 +24,7 @@ if [[ "$profile" != normal ]]; then
   fi
   "${nfc_command[@]}" "$build_dir/classai_node"
 fi
+
+if [[ "$profile" == all ]]; then
+  bash scripts/ci/benches-build.sh
+fi

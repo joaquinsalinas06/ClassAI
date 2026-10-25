@@ -1,0 +1,338 @@
+{
+  "version": 1,
+  "bankId": "ruido",
+  "layout": "breadboard",
+  "name": "M-06 · Detector B-08",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ruido",
+      "name": "M-06 · Detector B-08",
+      "pending": "Orden AO/G/+/DO reportado en foto, orientar la misma cara. Identificar modelo, VCC y máximo AO. DO libre; no es INMP441.",
+      "pins": [
+        {
+          "id": "AO",
+          "kind": "signal"
+        },
+        {
+          "id": "G",
+          "kind": "ground"
+        },
+        {
+          "id": "VCC",
+          "kind": "power"
+        },
+        {
+          "id": "DO",
+          "kind": "signal",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "module1",
+      "definition": "ruido",
+      "inventory": "B-08 · AO/G/+/DO; modelo pendiente",
+      "holes": {},
+      "placement": {
+        "x": 1010,
+        "y": 150
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:3V3",
+      "to": "bb:LP28",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.",
+      "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. NO conectar: Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.",
+      "bends": [
+        [
+          335,
+          546
+        ],
+        [
+          335,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:LP5",
+      "to": "module1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar variante y VCC de B-08.",
+      "note": "Cable 2 · M–H · bb:LP5 → module1:VCC. NO conectar: Confirmar variante y VCC de B-08.",
+      "bends": [
+        [
+          837,
+          222
+        ],
+        [
+          837,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          357,
+          519
+        ],
+        [
+          357,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:LN7",
+      "to": "module1:G",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · bb:LN7 → module1:G. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          861,
+          258
+        ],
+        [
+          861,
+          216
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "module1:AO",
+      "to": "bb:A10",
+      "color": "green",
+      "jumper": "M–H",
+      "pending": "Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.",
+      "note": "Cable 5 · M–H · module1:AO → bb:A10. NO conectar: Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.",
+      "bends": [
+        [
+          873,
+          192
+        ],
+        [
+          873,
+          312
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "esp1:GPIO34",
+      "to": "bb:B10",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 6 · M–H · esp1:GPIO34 → bb:B10. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          30,
+          249
+        ],
+        [
+          30,
+          805
+        ],
+        [
+          390,
+          805
+        ],
+        [
+          390,
+          312
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}

@@ -217,3 +217,23 @@ LOW observado; HIGH/retorno pendientes. No valida el DHT11 físico ni sustituye
 el firmware `ambient_bench`. Ver R-007 y el extracto serial de simulación.
 
 [Adafruit: tiras de cinco contactos de la protoboard](https://learn.adafruit.com/breadboards-for-beginners/breadboards). Las parejas F20/H20 y G24/J24 usan ese principio; no se ha certificado la continuidad del ejemplar físico.
+
+## Ensayos separados y pendientes explícitos · R-025
+
+El visor ofrece ahora **DHT11 aislado**, **PIR aislado** y el conjunto. Las guías
+[DHT11](esquemas/dht11.md) y [PIR](esquemas/pir.md) incluyen JSON/SVG físicos,
+extremos y comandos exactos con los flags `BENCH_DHT_ONLY` / `BENCH_PIR_ONLY`.
+El primero no inicializa/lee PIR; el segundo no incluye/inicializa DHT.
+El perfil sin flags conserva el conjunto. Muestreo de 2,5 s y espera PIR de 60 s.
+
+Las alimentaciones/terminales pendientes se dibujan discontinuos y se excluyen de
+la continuidad modelada. El mapa histórico completo de esta guía sigue siendo
+referencia, **no habilitación de VIN o del PIR real**. No hace falta comprar
+multímetro para continuar el diseño: si etiquetas/documentación exacta no resuelven
+un dato, se mantiene esa conexión desconectada. B-03 sigue requiriendo identificar
+breakout y pull-up; ninguna simulación resuelve esa identificación.
+
+Probar con A-01 solo tras identificar placa/puerto, preservar respaldo y registrar
+cableado real; B-02 sigue en NFC. Dibujos conservan las redes previstas del banco
+anterior al retirar las condiciones, comprobadas para todas las parejas de
+terminales. [Resultados de compilación y materiales](bancos-fisicos.md).

@@ -1,0 +1,268 @@
+{
+  "version": 1,
+  "bankId": "ventilador",
+  "layout": "breadboard",
+  "name": "M-09 · Relé doble y ventilador",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "name": "B-11 · relé doble 5VDC",
+      "pending": "Panel de terminales por función; identificar jumper JD-VCC/VCC/GND, lógica y adaptación IN1. Canal 2 libre.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "JD_VCC",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "IN1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "IN2",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "COM1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NO1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NC1",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "fan",
+      "name": "D-05 · ventilador DC 5 V",
+      "pending": "Fuente, corriente de arranque, polaridad y conector pendientes; no usar Dupont como cable de potencia por defecto.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "relay1",
+      "definition": "relay",
+      "inventory": "B-11",
+      "holes": {},
+      "placement": {
+        "x": 920,
+        "y": 140
+      }
+    },
+    {
+      "id": "fan1",
+      "definition": "fan",
+      "inventory": "D-05",
+      "holes": {},
+      "placement": {
+        "x": 1200,
+        "y": 140
+      }
+    }
+  ],
+  "wires": [],
+  "revisions": []
+}

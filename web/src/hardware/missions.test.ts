@@ -4,7 +4,7 @@ import { missions } from "./missions";
 const bank = (id: string) => missions.find(m=>m.id===id)!;
 describe("bank reference library", () => {
   it("covers every hardware mission without inventing a received third ESP32", () => {
-    expect(missions).toHaveLength(12);
+    expect(missions).toHaveLength(16);
     expect(new Set(missions.map(m=>m.id)).size).toBe(missions.length);
     for (const m of missions) {
       expect(m.links.length).toBeGreaterThan(0);

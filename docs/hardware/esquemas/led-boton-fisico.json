@@ -1,0 +1,390 @@
+{
+  "version": 1,
+  "bankId": "led-boton",
+  "layout": "breadboard",
+  "name": "M-01 · LED rojo y pulsador",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    },
+    {
+      "id": "led",
+      "name": "LED · ánodo A / cátodo K",
+      "pending": "Confirmar A/K por encapsulado y patas; no omitir resistencia serie de 1 kΩ.",
+      "pins": [
+        {
+          "id": "A",
+          "kind": "passive"
+        },
+        {
+          "id": "K",
+          "kind": "passive"
+        }
+      ]
+    },
+    {
+      "id": "button",
+      "name": "Pulsador de cuatro patas",
+      "pending": "Parejas A1/A2 y B1/B2 de referencia: identificar internamente el pulsador real antes de conectar.",
+      "pins": [
+        {
+          "id": "A1",
+          "kind": "passive",
+          "bus": "A",
+          "required": false
+        },
+        {
+          "id": "A2",
+          "kind": "passive",
+          "bus": "A",
+          "required": false
+        },
+        {
+          "id": "B1",
+          "kind": "passive",
+          "bus": "B",
+          "required": false
+        },
+        {
+          "id": "B2",
+          "kind": "passive",
+          "bus": "B",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "r1",
+      "definition": "resistor",
+      "inventory": "C-01 · 1 kΩ",
+      "resistance": 1000,
+      "holes": {
+        "1": "C8",
+        "2": "G8"
+      }
+    },
+    {
+      "id": "led1",
+      "definition": "led",
+      "inventory": "C-05 · rojo",
+      "holes": {
+        "A": "H8",
+        "K": "H11"
+      }
+    },
+    {
+      "id": "button1",
+      "definition": "button",
+      "inventory": "C-04",
+      "holes": {
+        "A1": "E18",
+        "A2": "E20",
+        "B1": "F18",
+        "B2": "F20"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          335,
+          519
+        ],
+        [
+          335,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "esp1:GPIO25",
+      "to": "bb:A8",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 2 · M–H · esp1:GPIO25 → bb:A8. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          26,
+          357
+        ],
+        [
+          26,
+          757
+        ],
+        [
+          346,
+          757
+        ],
+        [
+          346,
+          276
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "bb:J11",
+      "to": "bb:LN11",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 3 · M–M · bb:J11 → bb:LN11. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          357,
+          330
+        ],
+        [
+          357,
+          330
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "esp1:GPIO32",
+      "to": "bb:A18",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · esp1:GPIO32 → bb:A18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          18,
+          303
+        ],
+        [
+          18,
+          781
+        ],
+        [
+          368,
+          781
+        ],
+        [
+          368,
+          456
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:J18",
+      "to": "bb:LN18",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 5 · M–M · bb:J18 → bb:LN18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          795,
+          456
+        ],
+        [
+          795,
+          558
+        ],
+        [
+          470,
+          558
+        ],
+        [
+          470,
+          456
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}

@@ -198,3 +198,13 @@ orden funcional. El dibujo conserva 12 cables numerados y seis redes, pasos,
 resaltado e historial. Exportar dibujo SVG siempre incluye todos los cables,
 sin resaltado, aunque la vista esté en un paso parcial. SVG/JSON estáticos:
 `node web/scripts/export-nfc-assembly.mjs` desde raíz. Véase [guía NFC](banco-nfc.md).
+
+## Extensión R-025
+
+El catálogo tiene 16 entradas, 11 con referencia de distribución/piezas. Las
+referencias de matriz/buzzer/fan siguen eléctricamente incompletas; pantalla/audio
+continúan como esquemas. Se conservan JSON v1 anteriores, guardados e historial.
+Campos opcionales: `bankId`, `parts[].placement`, `wires[].jumper` y
+`wires[].pending`. Un cable pendiente es discontinuo y no une redes en el
+analizador. Importar valida estos campos antes de tocar el borrador.
+[Detalle y evidencia](bancos-fisicos.md).

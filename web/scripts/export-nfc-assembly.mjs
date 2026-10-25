@@ -7,7 +7,8 @@ import { createServer } from "vite";
 const root = fileURLToPath(new URL("../", import.meta.url));
 const server = await createServer({ root, server: { middlewareMode: true }, logLevel: "error" });
 try {
-  const { nfcAssembly } = await server.ssrLoadModule("/src/hardware/nfc.ts");
+  const { benches } = await server.ssrLoadModule("/src/hardware/benches.ts");
+  const nfcAssembly = benches.nfc.assembly;
   const { AssemblyBoard } = await server.ssrLoadModule("/src/hardware/AssemblyBoard.tsx");
   const svg = renderToStaticMarkup(createElement(AssemblyBoard, { assembly:nfcAssembly, wires:nfcAssembly.wires, selected:"", onSelect:()=>{}, connected:()=>false }));
   const out = `${root}../docs/hardware/esquemas/nfc-fisico`;

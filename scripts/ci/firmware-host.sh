@@ -10,3 +10,6 @@ for name in comfort nfc_protocol; do
 done
 
 python3 scripts/ci/nfc-profile-host.py
+
+bash scripts/ci/bench-host.sh
+bash scripts/ci/sensor-benches-host.sh

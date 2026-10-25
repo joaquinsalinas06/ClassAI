@@ -80,3 +80,13 @@ No se cargó firmware, no se leyó flash ni se alteró un respaldo privado.
 Cada banco debe registrar criterio, resultado real, fallo, qué queda conectado
 y desmontaje en [montajes.md](montajes.md). Los códigos M-07A/B y M-08A/B son
 subensayos de las recetas existentes, no inventario ni cantidades nuevas.
+
+## Orden actualizado · R-025
+
+Consultar [bancos físicos](bancos-fisicos.md): preparar DHT11/PIR separados antes
+del conjunto; LED/pulsador es el primer candidato práctico de menor incertidumbre.
+B-08 e INMP441 ya tienen sketches aislados compilados, sin aprobar identificación
+ni hardware. Tres LEDs tienen dibujo/Serial propio, condicionado al conteo de
+resistencias. Matriz/buzzer/fan siguen bloqueados eléctricamente; pantalla/audio
+conservan alcance de Lando #91–#93. Iluminación carece de sensor recibido.
+Cables reutilizados entre ensayos; no reservar los 16 bancos simultáneamente.

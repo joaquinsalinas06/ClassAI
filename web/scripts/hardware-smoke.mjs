@@ -90,13 +90,39 @@ try {
   await page.keyboard.press('Escape');
 
   const ids=await page.locator('[data-bank-id]').evaluateAll(xs=>xs.map(x=>x.dataset.bankId));
-  assert.equal(ids.length,12);
+  assert.equal(ids.length,16);
   for(const id of ids){
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();
-    if(['nfc','ambiente'].includes(id)) assert.equal(await canvas.locator('[data-assembly-board]').count(),1);
+    if(['nfc','ambiente','dht11','pir','led-boton','leds','ruido','microfono','matriz','buzzer','ventilador'].includes(id)) assert.equal(await canvas.locator('[data-assembly-board]').count(),1);
     else {await canvas.locator(`[data-mission-diagram="${id}"]`).waitFor();assert.equal(await canvas.locator('[data-assembly-board]').count(),0);}
   }
+  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds']) {
+    await page.locator(`[data-bank-id="${id}"]`).click();
+    await page.locator(`[data-mission="${id}"]`).waitFor();
+    await page.getByRole('button',{name:'Historial',exact:true}).click();
+    const download=page.waitForEvent('download');
+    await dialog.getByRole('button',{name:'Exportar JSON',exact:true}).click();
+    const bank=JSON.parse(await readFile(await (await download).path(),'utf8'));
+    assert.equal(bank.bankId,id);
+    await page.getByLabel('Importar montaje JSON').setInputFiles({name:`${id}.json`,mimeType:'application/json',buffer:Buffer.from(JSON.stringify(bank))});
+    assert.equal(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1')),saved);
+    await page.keyboard.press('Escape');
+    await page.screenshot({path:`screenshots/montajes-${id}-desktop.png`});
+  }
+  await page.locator('[data-bank-id="led-boton"]').click();
+  await page.getByRole('button',{name:'Editar',exact:true}).click();
+  await page.getByLabel('Nombre del montaje').fill('LED draft kept');
+  await page.keyboard.press('Escape');
+  await page.locator('[data-bank-id="microfono"]').click();
+  await page.goBack();
+  await page.locator('[data-mission="led-boton"]').waitFor();
+  await page.getByRole('button',{name:'Editar',exact:true}).click();
+  assert.equal(await page.getByLabel('Nombre del montaje').inputValue(),'LED draft kept');
+  await page.keyboard.press('Escape');
+  await page.goForward();
+  await page.locator('[data-mission="microfono"]').waitFor();
+  assert.ok(!(await canvas.textContent()).includes('DHT11'));
   await page.locator('[data-bank-id="nfc"]').click();
   await page.locator('[data-mission="nfc"]').waitFor();
   await page.locator('[data-bank-id="ambiente"]').click();
@@ -139,6 +165,33 @@ try {
   await page.screenshot({path:'screenshots/montajes-nfc-mobile-details.png'});
   await page.keyboard.press('Escape');
   await page.screenshot({path:'screenshots/montajes-nfc-mobile.png'});
+  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','iluminacion']) {
+    await page.getByLabel('Elegir banco de prueba').selectOption(id);
+    await page.locator(`[data-mission="${id}"]`).waitFor();
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+    assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),true);
+    await page.screenshot({path:`screenshots/montajes-${id}-mobile.png`});
+  }
+  // Editing a conditional wire must preserve its electrical blocker.
+  await page.getByLabel('Elegir banco de prueba').selectOption('ruido');
+  await page.getByRole('button',{name:'Editar',exact:true}).click();
+  await dialog.getByRole('button',{name:'Editar',exact:true}).nth(1).click();
+  await page.getByLabel('Color del cable').selectOption('purple');
+  await page.getByRole('button',{name:'Aplicar cable',exact:true}).click();
+  await dialog.getByRole('button',{name:'Historial',exact:true}).click();
+  const changedEvent=page.waitForEvent('download');
+  await dialog.getByRole('button',{name:'Exportar JSON',exact:true}).click();
+  const changed=JSON.parse(await readFile(await(await changedEvent).path(),'utf8'));
+  assert.ok(changed.wires[0].pending);
+  assert.equal(changed.wires[0].jumper,'M–H');
+  assert.equal(changed.wires[0].color,'purple');
+  await page.getByLabel('Descripción de la revisión').fill('B-08 QA; condiciones eléctricas conservadas');
+  await page.getByRole('button',{name:'Guardar revisión local',exact:true}).click();
+  await page.reload();
+  await page.locator('[data-mission="ruido"]').waitFor();
+  assert.ok(!(await canvas.textContent()).includes('DHT11'));
+  assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).bankId,'ruido');
+  assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).revisions.length,2);
   assert.deepEqual(errors,[]);
-  console.log('PASS: 12 isolated banks, physical NFC/ambient, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
+  console.log('PASS: 16 isolated banks, 11 physical references, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
 } finally {await browser.close();}

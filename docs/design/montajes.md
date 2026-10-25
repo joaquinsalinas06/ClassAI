@@ -72,3 +72,18 @@ Revisión final sobre build de producción (`vite preview`, 5190 temporal): smok
 de navegador aprobado y Taste Skill sin FAIL con la excepción de colores de
 conductores indicada. Conserva un aviso de margen de texto en móvil (15 px frente
 a 16 px recomendado). No se presenta como una certificación automática del diseño.
+
+## Bancos físicos sucesivos · R-025
+
+La selección se resuelve por ID de banco, conservando los enlaces anteriores.
+DHT11/PIR pueden probarse por separado; LED/pulsador, LEDs de estado, B-08 e
+INMP441 tienen sus referencias físicas. Matriz/buzzer/relé-fan muestran piezas
+identificables y paneles por función donde el orden de conectores está pendiente;
+no se presentan como circuitos terminados. Iluminación declara material ausente.
+Se conserva la composición y los tokens, sin dependencias web nuevas.
+
+Los cables tienen número/color/tipo y las condiciones aparecen en el inspector;
+los discontinuos se excluyen de continuidad confirmada. Los recorridos nuevos
+salen por fuera del cuerpo ESP32 y rodean el pulsador; las longitudes SVG siguen
+sin equivalencia en centímetros. Campos nuevos son opcionales en JSON v1;
+se conserva localStorage, historia anterior y borradores por banco.

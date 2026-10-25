@@ -2,7 +2,7 @@
   "version": 1,
   "layout": "breadboard",
   "name": "M-10 · NFC físico · PN532 SPI",
-  "note": "12 M–H, cabecera macho confirmada por Joaquín; soldadura terminada por revisar. DIP 1 OFF / 2 ON sin alimentación. 3V3, no VIN. IRQ/RSTO libres; riel izquierdo + a 3V3 y − a GND, solo mitad superior. Rieles derechos libres. Placa/puerto/respaldo por asociar antes de cargar. Sin ensayo físico.",
+  "note": "Referencia B-02/D-01 conservada: HCE físico y asistencia persistida R-023, con RF intermitente. 12 M–H, seis redes; no hubo nuevo ensayo ni carga. IRQ/RSTO libres. Ver banco-nfc.md.",
   "board": {
     "rows": 30,
     "rails": true,
@@ -447,5 +447,6 @@
       ]
     }
   ],
-  "revisions": []
+  "revisions": [],
+  "bankId": "nfc"
 }

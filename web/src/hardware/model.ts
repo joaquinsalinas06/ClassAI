@@ -1,10 +1,10 @@
 export interface Pin { id: string; kind: "source" | "ground" | "power" | "signal" | "passive"; voltage?: number; function?: string; required?: boolean; bus?: string }
 export interface Definition { id: string; name: string; pending: string; pins: Pin[] }
-export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; resistance?: number }
-export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][] }
+export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; placement?: { x: number; y: number }; resistance?: number }
+export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][]; jumper?: "M–H" | "M–M"; pending?: string }
 export type WireColor = "red" | "black" | "orange" | "green" | "yellow" | "blue" | "purple";
 export interface Revision { at: string; note: string; snapshot: string }
-export interface Assembly { version: 1; layout?: "compact" | "breadboard"; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
+export interface Assembly { version: 1; bankId?: string; layout?: "compact" | "breadboard"; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
 export interface Finding { level: "error" | "pending"; text: string }
 const idPattern = /^[a-zA-Z0-9_-]{1,60}$/;
 export function holeValid(hole: string, rows: number) {
@@ -35,6 +35,7 @@ export function parseAssembly(raw: string): Assembly {
   if (!a || a.version !== 1 || !str(a.name, 120) || !str(a.note) || !Number.isInteger(a.board?.rows) || a.board.rows < 1 || a.board.rows > 63 || !Array.isArray(a.catalog) || !a.catalog.length || a.catalog.length > 40 || !Array.isArray(a.parts) || a.parts.length > 20 || !Array.isArray(a.wires) || a.wires.length > 150 || !Array.isArray(a.revisions) || a.revisions.length > 50) fail();
   if ((a.board.rails !== undefined && typeof a.board.rails !== "boolean") || (a.board.splitRails !== undefined && typeof a.board.splitRails !== "boolean")) fail();
   if (a.layout !== undefined && a.layout !== "compact" && a.layout !== "breadboard") fail();
+  if (a.bankId !== undefined && (!str(a.bankId, 60) || !idPattern.test(a.bankId))) fail();
   if (!ids(a.catalog) || !ids(a.parts) || !ids(a.wires)) fail();
   for (const d of a.catalog) {
     if (!str(d.name, 120) || !str(d.pending) || !Array.isArray(d.pins) || d.pins.length > 50 || !ids(d.pins)) fail();
@@ -45,13 +46,16 @@ export function parseAssembly(raw: string): Assembly {
     const d = a.catalog.find(d => d.id === p.definition);
     if (!d || !str(p.inventory, 120) || !p.holes || typeof p.holes !== "object" || Array.isArray(p.holes)) fail();
     if (p.resistance !== undefined && (!Number.isFinite(p.resistance) || p.resistance <= 0 || p.resistance > 1e9)) fail();
-    if (p.definition !== "resistor" && Object.keys(p.holes).length) fail();
+    if (!["resistor", "led", "button"].includes(p.definition) && Object.keys(p.holes).length) fail();
+    if (p.placement !== undefined && (!p.placement || Object.keys(p.placement).sort().join() !== "x,y" || [p.placement.x,p.placement.y].some(n => !Number.isFinite(n) || n < 0 || n > 5000))) fail();
     for (const [pin, hole] of Object.entries(p.holes)) if (!d!.pins.some(x => x.id === pin) || typeof hole !== "string" || !holeValid(hole, a.board.rows)) fail();
   }
   const ends = new Set(terminals(a));
   const validEnd = (s: unknown) => typeof s === "string" && (ends.has(s) || (s.startsWith("bb:") && contactValid(s.slice(3), a.board)));
   for (const w of a.wires) {
     if (!validEnd(w.from) || !validEnd(w.to) || !str(w.note)) fail();
+    if (w.pending !== undefined && !str(w.pending)) fail();
+    if (w.jumper !== undefined && !["M–H", "M–M"].includes(w.jumper)) fail();
     if (w.color !== undefined && !["red", "black", "orange", "green", "yellow", "blue", "purple"].includes(w.color)) fail();
     if (w.bends !== undefined && (!Array.isArray(w.bends) || w.bends.length > 12 || w.bends.some(p => !Array.isArray(p) || p.length !== 2 || p.some(n => !Number.isFinite(n) || n < 0 || n > 5000)))) fail();
   }
@@ -78,8 +82,9 @@ export function analyze(a: Assembly) {
     occupied.set(hole, [...(occupied.get(hole) ?? []), end]);
   }
   for (const w of a.wires) {
-    join(w.from, w.to);
     for (const end of [w.from, w.to]) if (end.startsWith("bb:")) occupied.set(end.slice(3), [...(occupied.get(end.slice(3)) ?? []), w.id]);
+    if (w.pending) findings.push({ level: "pending", text: `${w.id}: ${w.pending}` });
+    else join(w.from, w.to);
   }
   for (const [hole, entries] of occupied) if (entries.length > 1) findings.push({ level: "error", text: `${hole}: ${entries.join(", ")} ocupan el mismo agujero. Usa otro contacto de la misma tira.` });
   const groups = new Map<string, { end: string; pin: Pin }[]>();

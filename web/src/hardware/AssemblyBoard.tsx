@@ -36,7 +36,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
     {text && <text x={labelX} y={labelY} textAnchor="middle" fontSize="12" fontWeight="600" fill="#26344a">{text}</text>}<title>{terminalLabel(end)}</title>
   </g>;
   const nfc = assembly.parts.some(p => p.definition === "pn532");
-  return <svg xmlns="http://www.w3.org/2000/svg" data-assembly-board width={width * zoom} height={height * zoom} viewBox={`0 0 ${width} ${height}`} className="block max-w-none" aria-label={nfc ? "Montaje físico NFC: ESP32, protoboard y PN532 V3, 12 cables M–H" : "Protoboard con rieles, ESP32 de 30 pines, DHT11 y PIR; guía de referencia"}>
+  return <svg xmlns="http://www.w3.org/2000/svg" data-assembly-board width={width * zoom} height={height * zoom} viewBox={`0 0 ${width} ${height}`} className="block max-w-none" aria-label={`Montaje físico: ${assembly.name}`}>
     <defs>
       <linearGradient id="metal" x2="1" y2="1"><stop stopColor="#f2f4f5"/><stop offset=".5" stopColor="#b0bbc6"/><stop offset="1" stopColor="#e2e6e9"/></linearGradient>
       <radialGradient id="lens" cx="35%" cy="25%"><stop stopColor="#fff"/><stop offset="1" stopColor="#d6e0e7"/></radialGradient>
@@ -113,8 +113,14 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x} y={y+431} fill="#526276" fontSize="12">Tarjeta / llavero sobre la antena; sin metal debajo.</text>
       </g>;
       if (type !== "dht11" && type !== "pir") return <g key={id}>
-        <rect x={x-8} y={y+6} width="185" height={50+definition(assembly,p).pins.length*24} rx="6" fill="#dce6ef" stroke="#9aafc0"/>
-        <text x={x+5} y={y+25} fill="#26344a" fontSize="12">{definition(assembly,p).name.slice(0,23)}</text>
+        <rect x={x-8} y={y+6} width="230" height={50+definition(assembly,p).pins.length*24} rx="6" fill="#dce6ef" stroke="#9aafc0"/>
+        <text x={x+5} y={y-12} fill="#26344a" fontWeight="600" fontSize="14">{p.inventory}</text><text x={x+5} y={y+25} fill="#26344a" fontSize="12">{definition(assembly,p).name.slice(0,23)}</text><text x={x+5} y={y+80+definition(assembly,p).pins.length*24} fill="#526276" fontSize="12">{type==="ruido" ? "Orden reportado; cotejar cara" : "Terminales por función"}</text><text x={x+5} y={y+100+definition(assembly,p).pins.length*24} fill="#526276" fontSize="12">{type==="ruido" ? "DO queda libre" : "Orden físico pendiente"}</text>
+        {type === "ruido" && <g><circle cx={x+170} cy={y+60} r="20" fill="url(#metal)" stroke="#39434b"/><circle cx={x+170} cy={y+60} r="12" fill="#404a52"/><rect x={x+158} y={y+100} width="24" height="24" fill="#316b9f"/><text x={x+170} y={y+117} textAnchor="middle" fill="white" fontSize="11">VR1</text></g>}
+        {type === "microfono" && <g><rect x={x+145} y={y+55} width="55" height="70" fill="#236d69" stroke="#26344a"/><circle cx={x+172} cy={y+86} r="12" fill="url(#metal)"/><circle cx={x+172} cy={y+86} r="3" fill="#28343b"/></g>}
+        {type === "matriz" && <g><rect x={x+136} y={y+48} width="82" height="82" fill="#20272a"/>{Array.from({length:64},(_,i)=><circle key={i} cx={x+145+(i%8)*9} cy={y+57+Math.floor(i/8)*9} r="3" fill="#7e353b"/>)}</g>}
+        {type === "buzzer" && <g><circle cx={x+170} cy={y+58} r="26" fill="#263034"/><circle cx={x+170} cy={y+58} r="5" fill="#101719"/><text x={x+180} y={y+48} fill="white" fontSize="12">+</text></g>}
+        {type === "relay" && <g>{[0,1].map(i=><rect key={i} x={x+145} y={y+46+i*62} width="65" height="54" fill="#326c9b" stroke="#26344a"/>)}</g>}
+        {type === "fan" && <g><rect x={x+135} y={y+36} width="80" height="80" rx="4" fill="#303c40"/><circle cx={x+175} cy={y+76} r="30" fill="#536368"/><circle cx={x+175} cy={y+76} r="12" fill="#20292c"/></g>}
         {definition(assembly,p).pins.map(pin=>{const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id}>{pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={pt[0]+12} y={pt[1]+4} fill="#26344a" fontSize="12">{pin.id.slice(0,20)}</text></g>;})}
       </g>;
       const isDht = type === "dht11";
@@ -144,7 +150,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       const c = wireColors[w.color ?? "blue"].hex;
       const across = (a[0] < 400 && b[0] > 850) || (b[0] < 400 && a[0] > 850);
       const d = w.bends !== undefined ? `M${a} ${w.bends.map(p=>`L${p}`).join(" ")} L${b}` : across ? `M${a} H${330 + i * 3} V${760 + (i%3)*16} H875 V${b[1]} H${b[0]}` : a[0] > 850 || b[0] > 850 ? `M${a} H${850 + (i%4)*12} V${b[1]} H${b[0]}` : `M${a} H${350 + (i%4)*12} V${b[1]} H${b[0]}`;
-      return <g key={w.id} data-wire={w.id} onClick={() => onSelect(w.from)} style={{cursor:"pointer"}}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?10:8} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeWidth={active(w.from)?5.5:4} strokeLinecap="round" strokeLinejoin="round" filter="url(#wire-shadow)" fill="none"><title>{`${terminalLabel(w.from)} → ${terminalLabel(w.to)}`}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/>{nfc && <g data-wire-number={i+1}><rect x={(w.bends?.[0]?.[0]??a[0])+5} y={a[1]-17} width="25" height="17" rx="5" fill="#fffefa" stroke={c}/><text x={(w.bends?.[0]?.[0]??a[0])+17.5} y={a[1]-4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#26344a">{i+1}</text></g>}</g>;
+      return <g key={w.id} data-wire={w.id} onClick={() => onSelect(w.from)} style={{cursor:"pointer"}}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?10:8} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeDasharray={w.pending ? "9 6" : undefined} strokeWidth={active(w.from)?5.5:4} strokeLinecap="round" strokeLinejoin="round" filter="url(#wire-shadow)" fill="none"><title>{`${i+1}. ${terminalLabel(w.from)} → ${terminalLabel(w.to)} · ${w.jumper ?? "ver guía"}${w.pending ? ` · NO conectar: ${w.pending}` : ""}`}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/>{<g data-wire-number={i+1}><rect x={(w.bends?.[0]?.[0]??a[0])+5} y={a[1]-17} width="25" height="17" rx="5" fill="#fffefa" stroke={c}/><text x={(w.bends?.[0]?.[0]??a[0])+17.5} y={a[1]-4} textAnchor="middle" fontSize="11" fontWeight="700" fill="#26344a">{i+1}</text></g>}</g>;
     })}
 
     {[...origin].filter(([,o]) => o.type === "dht11" || o.type === "pir").map(([id]) => {
@@ -157,6 +163,18 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
     })}
     {assembly.parts.filter(p=>Object.keys(p.holes).length).map(p=>{
       const entries=Object.entries(p.holes),a=entries[0]&&point(entries[0][1]),b=entries[1]&&point(entries[1][1]);if(!a||!b)return null;
+      if(p.definition === "led") return <g key={p.id}>
+        <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b6b3a8" strokeWidth="3"/>
+        <circle cx={a[0]} cy={(a[1]+b[1])/2} r="12" fill={p.inventory.includes("verde")?"#15855e":p.inventory.includes("amarillo")?"#d4a51c":"#db3345"} stroke="#354550" strokeWidth="2"/>
+        <text x={840} y={(a[1]+b[1])/2+4} fill="#26344a" fontSize="12">{p.inventory}</text>
+        {entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y,pin,x+15,y+4);})}
+      </g>;
+      if(p.definition === "button") {const c=point(p.holes.B2!); return <g key={p.id}>
+        <rect x={a[0]-8} y={a[1]-8} width={c[0]-a[0]+16} height={c[1]-a[1]+16} rx="3" fill="#596069" stroke="#20272a"/>
+        <circle cx={(a[0]+c[0])/2} cy={(a[1]+c[1])/2} r="11" fill="#20272a"/>
+        {entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y);})}
+        <text x={500} y={735} fill="#26344a" fontSize="12">A1/A2 izquierda · B1/B2 derecha</text><text x={500} y={753} fill="#526276" fontSize="11">Confirmar parejas del pulsador real</text>
+      </g>;}
       const cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,angle=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI,value=p.resistance??1000;
       const bands=value===10000?["#764124","#202020","#e77a20","#c3a243"]:value===1000?["#764124","#202020","#d92f36","#c3a243"]:null;
       return <g key={p.id}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b6b3a8" strokeWidth="3"/><g transform={`translate(${cx} ${cy}) rotate(${angle})`}><rect x="-29" y="-9" width="58" height="18" rx="7" fill="#dfc79c" stroke="#a99470"/>{bands?.map((color,i)=><rect key={i} x={-18+i*12} y="-9" width="5" height="18" fill={color}/>)}</g><text x={cx} y={cy-20} textAnchor="middle" fontSize="12" fontWeight="600" fill="#344255">{p.id} · {value>=1000?`${value/1000} kΩ`:`${value} Ω`}</text>{entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y);})}</g>;

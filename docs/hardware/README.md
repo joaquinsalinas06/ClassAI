@@ -82,3 +82,5 @@ claves de API, contenido de flash/NVS ni números de pedidos privados aquí.
 Se fotografiaron y asociaron a sus IDs sin duplicar stock: **D-05 ventilador 5 V**, **D-04 TFT ST7789 Ver:1.1**, **D-01 PN532 V3 serigrafiado Elechouse**, **B-10 matriz LED 8×8**, **B-11 módulo con dos relés TONG LING 5VDC**, **B-09 buzzer polarizado** y **B-08 detector AO/G/+/DO**. **No se ha ejecutado ninguna prueba eléctrica**; revisar [identificacion-fisica.md](identificacion-fisica.md) y [conexiones.md](conexiones.md) antes de montar.
 
 La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. Las compras E-01 a E-04 siguen pendientes de recepción física.
+
+[Bancos físicos, materiales y evidencia R-025](bancos-fisicos.md): ensayos sucesivos con la otra placa, sin desmontar NFC automáticamente.

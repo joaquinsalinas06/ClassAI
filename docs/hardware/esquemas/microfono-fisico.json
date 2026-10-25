@@ -1,0 +1,454 @@
+{
+  "version": 1,
+  "bankId": "microfono",
+  "layout": "breadboard",
+  "name": "M-07A · INMP441",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "microfono",
+      "name": "M-07A · INMP441",
+      "pending": "INMP441 según inventario; cotejar etiquetas/cabecera y desacoplo. Terminales mostrados por función: orden del breakout pendiente, no trasladar posiciones.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3
+        },
+        {
+          "id": "GND",
+          "kind": "ground"
+        },
+        {
+          "id": "SD",
+          "kind": "signal"
+        },
+        {
+          "id": "LR",
+          "kind": "passive"
+        },
+        {
+          "id": "WS",
+          "kind": "signal"
+        },
+        {
+          "id": "SCK",
+          "kind": "signal"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "module1",
+      "definition": "microfono",
+      "inventory": "D-07 · INMP441",
+      "holes": {},
+      "placement": {
+        "x": 1010,
+        "y": 150
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:3V3",
+      "to": "bb:LP28",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          335,
+          546
+        ],
+        [
+          335,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:LP4",
+      "to": "module1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Cotejar VCC, cabecera y desacoplo del breakout real.",
+      "note": "Cable 2 · M–H · bb:LP4 → module1:VCC. NO conectar: Cotejar VCC, cabecera y desacoplo del breakout real.",
+      "bends": [
+        [
+          837,
+          204
+        ],
+        [
+          837,
+          192
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          357,
+          519
+        ],
+        [
+          357,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:LN6",
+      "to": "module1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · bb:LN6 → module1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          861,
+          240
+        ],
+        [
+          861,
+          216
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:LN8",
+      "to": "module1:LR",
+      "color": "black",
+      "jumper": "M–H",
+      "pending": "Identificar L/R real; fijar canal izquierdo a GND.",
+      "note": "Cable 5 · M–H · bb:LN8 → module1:LR. NO conectar: Identificar L/R real; fijar canal izquierdo a GND.",
+      "bends": [
+        [
+          873,
+          276
+        ],
+        [
+          873,
+          264
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "esp1:GPIO26",
+      "to": "bb:A12",
+      "color": "blue",
+      "jumper": "M–H",
+      "note": "Cable 6 · M–H · esp1:GPIO26 → bb:A12. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          30,
+          384
+        ],
+        [
+          30,
+          805
+        ],
+        [
+          390,
+          805
+        ],
+        [
+          390,
+          348
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "bb:B12",
+      "to": "module1:SCK",
+      "color": "blue",
+      "jumper": "M–H",
+      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "note": "Cable 7 · M–H · bb:B12 → module1:SCK. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "bends": [
+        [
+          897,
+          348
+        ],
+        [
+          897,
+          312
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "esp1:GPIO25",
+      "to": "bb:A16",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 8 · M–H · esp1:GPIO25 → bb:A16. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          22,
+          357
+        ],
+        [
+          22,
+          829
+        ],
+        [
+          335,
+          829
+        ],
+        [
+          335,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "bb:B16",
+      "to": "module1:WS",
+      "color": "yellow",
+      "jumper": "M–H",
+      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "note": "Cable 9 · M–H · bb:B16 → module1:WS. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "bends": [
+        [
+          825,
+          420
+        ],
+        [
+          825,
+          288
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "esp1:GPIO33",
+      "to": "bb:A20",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 10 · M–H · esp1:GPIO33 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          14,
+          330
+        ],
+        [
+          14,
+          853
+        ],
+        [
+          357,
+          853
+        ],
+        [
+          357,
+          492
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "bb:B20",
+      "to": "module1:SD",
+      "color": "green",
+      "jumper": "M–H",
+      "pending": "Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "note": "Cable 11 · M–H · bb:B20 → module1:SD. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
+      "bends": [
+        [
+          849,
+          492
+        ],
+        [
+          849,
+          240
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}
