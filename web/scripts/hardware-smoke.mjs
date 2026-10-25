@@ -114,7 +114,7 @@ try {
   await page.locator('[data-mission="ruido"]').waitFor();
   assert.equal(await canvas.locator('svg[data-assembly-board] > title').count(),0,'blank-canvas hover must not cover the circuit');
   for(const label of ['AO','G','+','DO'])assert.ok((await canvas.textContent()).includes(label));
-  assert.equal(await canvas.locator('[data-wire]').count(),2,'only the confirmed ground network is drawn');
+  assert.equal(await canvas.locator('[data-wire]').count(),6,'B-08 draws 3V3, GND and AO end to end');
   assert.ok(!/(NO CONECTAR|SIN CABLE|ESPERA|Libre)/.test(await canvas.textContent()));
 
   await page.locator('[data-bank-id="ventilador"]').click();
@@ -205,7 +205,7 @@ try {
     }
   }
   await page.setViewportSize({width:390,height:844});
-  // Editing a conditional wire must preserve its electrical blocker.
+  // Editing a B-08 wire must preserve the executable 3.3 V recipe.
   await page.getByLabel('Elegir banco de prueba').selectOption('ruido');
   await page.getByRole('button',{name:'Editar',exact:true}).click();
   await dialog.getByRole('button',{name:'Editar',exact:true}).nth(1).click();
@@ -215,10 +215,10 @@ try {
   const changedEvent=page.waitForEvent('download');
   await dialog.getByRole('button',{name:'Exportar JSON',exact:true}).click();
   const changed=JSON.parse(await readFile(await(await changedEvent).path(),'utf8'));
-  assert.ok(changed.wires[0].pending);
+  assert.equal(changed.wires[0].pending,undefined);
   assert.equal(changed.wires[0].jumper,'M–H');
   assert.equal(changed.wires[0].color,'purple');
-  await page.getByLabel('Descripción de la revisión').fill('B-08 QA; condiciones eléctricas conservadas');
+  await page.getByLabel('Descripción de la revisión').fill('B-08 QA; receta 3,3 V conservada');
   await page.getByRole('button',{name:'Guardar revisión local',exact:true}).click();
   await page.reload();
   await page.locator('[data-mission="ruido"]').waitFor();

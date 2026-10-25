@@ -51,15 +51,13 @@ describe("physical banks and compatibility",()=>{
   const s=analyze(benches.leds!.assembly);
   for(const [i,pin] of [25,26,27].entries()) {expect(s.connected(`esp1:GPIO${pin}`,`r${i+1}:1`)).toBe(true);expect(s.connected(`r${i+1}:2`,`led${i+1}:A`)).toBe(true);}
  });
- it("does not include conditional wires in confirmed continuity",()=>{
+ it("connects the B-08 3V3, GND and AO34 recipe",()=>{
   const a=benches.ruido!.assembly,r=analyze(a);
-  expect(r.connected("module1:AO","esp1:GPIO34")).toBe(false);
-  expect(r.connected("module1:VCC","esp1:3V3")).toBe(false);
-  expect(r.findings.some(f=>f.text.includes("Confirmar tensión AO"))).toBe(true);
+  expect(r.connected("module1:AO","esp1:GPIO34")).toBe(true);
+  expect(r.connected("module1:VCC","esp1:3V3")).toBe(true);
+  expect(r.connected("module1:G","esp1:GND")).toBe(true);
   const duplicate={...a,wires:[...a.wires,{id:"duplicate",from:"esp1:GND",to:"bb:A10",note:"",pending:"No conectar"}]};
   expect(analyze(duplicate).findings.some(f=>f.level==="error"&&f.text.includes("A10"))).toBe(true);
-  const confirmed={...a,wires:a.wires.map(w=>({...w,pending:undefined}))};
-  expect(analyze(confirmed).connected("module1:AO","esp1:GPIO34")).toBe(true);
  });
  it("isolates DHT and PIR footprints and preserves each intended net when conditions resolve",()=>{
   for(const id of ["dht11","pir"]) {

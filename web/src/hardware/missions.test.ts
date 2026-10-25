@@ -45,7 +45,7 @@ describe("bank reference library", () => {
   });
   it("keeps analog sound off DO and requires matrix signal adaptation", () => {
     expect(bank("ruido").links.some(w=>w.from.endsWith("· DO"))).toBe(false);
-    expect(bank("ruido").links.find(w=>w.to.includes("GPIO34"))?.pending).toBe(true);
+    expect(bank("ruido").links.find(w=>w.to.includes("GPIO34"))?.pending).not.toBe(true);
     expect(bank("matriz").physical!.adaptation!.assembly.parts.some(p=>p.definition==="ahct125")).toBe(true);
     expect(bank("matriz").physical!.assembly.wires.some(w=>w.from.startsWith("esp1:GPIO")&&w.to.startsWith("matrix1:"))).toBe(false);
   });

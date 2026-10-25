@@ -1,8 +1,8 @@
 # M-06 · Sonido relativo · AO
 
-B-08 tiene AO/G/+/DO fotografiados. Es una entrada analógica relativa, no un sonómetro.
+B-08 a 3,3 V con AO por GPIO34. Es una entrada analógica relativa, no un sonómetro.
 
-**Copia los cables numerados.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](ruido.svg)
 
@@ -12,7 +12,7 @@ B-08 tiene AO/G/+/DO fotografiados. Es una entrada analógica relativa, no un so
 
 - B-08: detector ×1
 - B-01 o A-04: protoboard
-- Adaptación de señal si AO excede lógica admitida; no inventariada
+- Tres redes: 3V3, GND y AO34
 
 Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
@@ -20,9 +20,9 @@ Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no 
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| Alimentación B-08 · pendiente | Detector · + | No asumir 5 V | Pendiente; no conectar |
+| ESP32 · 3V3 | Detector · + | 3,3 V | Referencia |
 | Detector · G | ESP32 · GND | — | Referencia |
-| Detector · AO | ESP32 · GPIO34 / ADC1 | Solo tras validar nivel o adaptar | Pendiente; no conectar |
+| Detector · AO | ESP32 · GPIO34 / ADC1 | — | Referencia |
 
 ## Armado cable por cable · USB desconectado
 
@@ -30,11 +30,11 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
-| 1 | red | M–H | esp1:3V3 | bb:LP28 | NO conectar: Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido. |
-| 2 | red | M–H | bb:LP5 | module1:VCC | NO conectar: Confirmar variante y VCC de B-08. |
+| 1 | red | M–H | esp1:3V3 | bb:LP28 | Cable 1 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 2 | red | M–H | bb:LP5 | module1:VCC | Cable 2 · M–H · bb:LP5 → module1:VCC. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 3 | black | M–H | esp1:GND | bb:LN28 | Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 4 | black | M–H | bb:LN7 | module1:G | Cable 4 · M–H · bb:LN7 → module1:G. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 5 | green | M–H | module1:AO | bb:A10 | NO conectar: Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta. |
+| 5 | green | M–H | module1:AO | bb:A10 | Cable 5 · M–H · module1:AO → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros. |
 | 6 | green | M–H | esp1:GPIO34 | bb:B10 | Cable 6 · M–H · esp1:GPIO34 → bb:B10. Conectar sin USB; comprobar etiquetas y agujeros. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
@@ -45,12 +45,12 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 
 ## Antes de energizar
 
-1. DO se deja sin conectar; no se le asigna GPIO por inferencia.
-2. Si se alimenta a 5 V, AO/DO podrían exceder lo admitido por ESP32.
-3. No sustituir este módulo por INMP441: interfaces distintas.
+1. Cotejar AO/G/+/DO mirando la misma cara del módulo.
+2. Alimentar desde 3V3, nunca desde 5 V en este banco.
+3. DO no participa; no sustituir este módulo por INMP441.
 4. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 5. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-6. Modelo B-08, VCC y máximo AO sin confirmar; adaptación si procede.
+6. Cotejar AO/G/+/DO sobre la misma cara de la pieza y usar únicamente 3,3 V.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -80,14 +80,14 @@ Acción: Comparar silencio relativo, conversación y palmada durante varias vent
 
 Aprobación esperada: min/max, pico a pico y noise_rel varían; no son dB ni garantizan tres niveles sin ensayo.
 
-Diagnóstico: Saturación: desconectar, revisar alimentación/niveles; DO queda libre.
+Diagnóstico: Saturación: retirar USB y revisar + a 3V3, G a GND y AO a GPIO34.
 
 Conflictos: GPIO34 es solo entrada en ESP32 clásico; no usarlo como salida.
 
 Faltantes/confirmaciones:
 - Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-- Modelo B-08, VCC y máximo AO sin confirmar; adaptación si procede.
+- Cotejar AO/G/+/DO sobre la misma cara de la pieza y usar únicamente 3,3 V.
 
 ## Registro de resultado
 
@@ -99,7 +99,6 @@ Faltantes/confirmaciones:
 | Ensayo físico nuevo | Pendiente | Completar acción, salida, reinicios y evidencia tras ensayo |
 | Desmontaje | Pendiente | Registrar qué cables/piezas quedan conectados |
 
-- [Joy-IT · referencia KY-038](https://sensorkit.joy-it.net/en/sensors/ky-038)
 - [Espressif · ESP32](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)
 
 [Índice](README.md). Generado desde missions.ts y sus registros físicos mediante web/scripts/export-hardware-missions.mjs.

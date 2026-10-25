@@ -38,13 +38,13 @@ wire(status,"esp1:GND","bb:LN28","black");
 function moduleBench(id: string, name: string, inventory: string, pins: Definition["pins"], pending: string) {
   return base(id,name,[{id,name,pending,pins}], [{id:"module1",definition:id,inventory,holes:{},placement:{x:1010,y:150}}]);
 }
-const sound=moduleBench("ruido","M-06 · Detector B-08","B-08 · AO/G/+/DO; modelo pendiente",[
+const sound=moduleBench("ruido","M-06 · Detector B-08","B-08 · AO/G/+/DO",[
   {id:"AO",kind:"signal"},{id:"G",kind:"ground"},{id:"VCC",kind:"power"},{id:"DO",kind:"signal",required:false}
-],"Orden AO/G/+/DO reportado en foto, orientar la misma cara. Identificar modelo, VCC y máximo AO. DO libre; no es INMP441.");
-wire(sound,"esp1:3V3","bb:LP28","red","Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.");
-wire(sound,"bb:LP5","module1:VCC","red","Confirmar variante y VCC de B-08.");
+],"Orden AO/G/+/DO reportado en foto, orientar la misma cara. Banco de ensayo a 3,3 V; AO va a ADC34 y DO no participa.");
+wire(sound,"esp1:3V3","bb:LP28","red");
+wire(sound,"bb:LP5","module1:VCC","red");
 wire(sound,"esp1:GND","bb:LN28","black");wire(sound,"bb:LN7","module1:G","black");
-wire(sound,"module1:AO","bb:A10","green","Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.");
+wire(sound,"module1:AO","bb:A10","green");
 wire(sound,"esp1:GPIO34","bb:B10","green");
 
 const mic=moduleBench("microfono","M-07A · INMP441","D-07 · INMP441",[
@@ -76,7 +76,7 @@ export const benches: Record<string,BenchGuide> = {
  pir:guide(pir,"ambient_bench","Esperar 60 s, moverse, retirarse y volver a entrar.","Calentamiento motion:null; después cambios sin repetición continua.","HIGH fijo: esperar retardo, revisar H/L y sensibilidad apagado; no cambiar pines por apariencia.",["Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT."],"pir"),
  "led-boton":guide(route(ledButton),"led_button_bench","Pulsar, mantener y soltar; repetir.","Una alternancia del LED por pulsación; mantener no repite. Serial 115200.","LED apagado: A/K, R1 y filas. Botón fijo: identificar parejas; no puentear las dos entradas."),
  leds:guide(route(status),"status_led_bench","Enviar red, yellow, green y off por Serial.","Solo un LED activo; off apaga los tres.","Color equivocado: cotejar GPIO25/26/27 y extremos de cada resistencia.",["Confirmar tres resistencias C-01 de 1 kΩ libres; cantidad no contada."]),
- ruido:guide(route(sound),"sound_bench","Comparar silencio relativo, conversación y palmada durante varias ventanas.","min/max, pico a pico y noise_rel varían; no son dB ni garantizan tres niveles sin ensayo.","Saturación: desconectar, revisar alimentación/niveles; DO queda libre.",["Modelo B-08, VCC y máximo AO sin confirmar; adaptación si procede."]),
+ ruido:guide(route(sound),"sound_bench","Comparar silencio relativo, conversación y palmada durante varias ventanas.","min/max, pico a pico y noise_rel varían; no son dB ni garantizan tres niveles sin ensayo.","Saturación: retirar USB y revisar + a 3V3, G a GND y AO a GPIO34.",["Cotejar AO/G/+/DO sobre la misma cara de la pieza y usar únicamente 3,3 V."]),
  microfono:guide(route(mic),"inmp441_bench","Hablar y dar una palmada cerca del micrófono; no soplar sobre él.","Ventanas con muestras, pico/RMS relativos; error o timeout explícito.","Ceros: cotejar L/R, canal y SD; revisar SCK/WS y soldadura sin USB.",["Confirmar cabecera, orden real y desacoplo de D-07."]),
 };
 completeActuatorBenches(benches);

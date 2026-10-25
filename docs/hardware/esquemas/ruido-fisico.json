@@ -173,7 +173,7 @@
     {
       "id": "ruido",
       "name": "M-06 · Detector B-08",
-      "pending": "Orden AO/G/+/DO reportado en foto, orientar la misma cara. Identificar modelo, VCC y máximo AO. DO libre; no es INMP441.",
+      "pending": "Orden AO/G/+/DO reportado en foto, orientar la misma cara. Banco de ensayo a 3,3 V; AO va a ADC34 y DO no participa.",
       "pins": [
         {
           "id": "AO",
@@ -205,7 +205,7 @@
     {
       "id": "module1",
       "definition": "ruido",
-      "inventory": "B-08 · AO/G/+/DO; modelo pendiente",
+      "inventory": "B-08 · AO/G/+/DO",
       "holes": {},
       "placement": {
         "x": 1010,
@@ -220,8 +220,7 @@
       "to": "bb:LP28",
       "color": "red",
       "jumper": "M–H",
-      "pending": "Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.",
-      "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. NO conectar: Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.",
+      "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           435,
@@ -235,8 +234,7 @@
       "to": "module1:VCC",
       "color": "red",
       "jumper": "M–H",
-      "pending": "Confirmar variante y VCC de B-08.",
-      "note": "Cable 2 · M–H · bb:LP5 → module1:VCC. NO conectar: Confirmar variante y VCC de B-08.",
+      "note": "Cable 2 · M–H · bb:LP5 → module1:VCC. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           1010,
@@ -278,8 +276,7 @@
       "to": "bb:A10",
       "color": "green",
       "jumper": "M–H",
-      "pending": "Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.",
-      "note": "Cable 5 · M–H · module1:AO → bb:A10. NO conectar: Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.",
+      "note": "Cable 5 · M–H · module1:AO → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
           500,

@@ -10,7 +10,7 @@ La tabla y los conteos iniciales de abajo se conservan como estado histórico de
 |---|---|---|
 | DHT11 / PIR / conjunto | Tres perfiles aislados; DHT11 con pull-up integrado según Anexo X; PIR por VIN/5V de USB solo tras identificar A-01 | Etiquetas reales, variante PIR/OUT y confirmar que el pin VIN/5V de A-01 expone VBUS |
 | LED/pulsador | Pulsador arriba, LED debajo; GPIO25/32 conservados, masas cercanas; 3 M–H + 3 M–M | A-01/puerto/respaldo, A/K y parejas de contacto |
-| B-08 / INMP441 / LEDs | Guías físicas y sketches aislados | Alimentación/niveles B-08; cabecera INMP441; resistencias de LEDs |
+| B-08 / INMP441 / LEDs | Guías físicas y sketches aislados | B-08 preparado a 3,3 V; confirmar cabecera INMP441 y resistencias de LEDs |
 | Matriz | Módulo MAX7219, dibujo simple sin fuente ficticia y alternativa AHCT; sketch DIN13/CLK14/CS27 | VIN/5V USB y presupuesto; compatibilidad lógica o buffer |
 | Buzzer | Dos cables y buzzer sobre protoboard; sketch activo/pasivo; alternativa con transistor separada | Tipo/consumo admisible desde GPIO |
 | Relé/ventilador | Vista principal de prueba del relé por USB; COM/NO/NC y fan completamente desconectados. Etapa completa en Compatibilidad | Para el fan: fuente real 5 V, corriente de arranque, polaridad y adaptador; para el relé: VIN/5V, IN1 y JD-VCC |
@@ -27,7 +27,7 @@ Compilación de la actualización: `bash scripts/ci/benches-build.sh`, Arduino C
 |---|---|---|---|
 | 1 | [DHT11](esquemas/dht11.md), [PIR](esquemas/pir.md), [conjunto](esquemas/ambiente.md) | Dibujos, tabla de agujeros y firmware compilados en tres perfiles | B-03: identificar breakout/pull-up a 3,3 V. PIR: ID, etiquetas, fuente y nivel OUT pendientes. VIN no habilitado por el dibujo |
 | 2 | [LED/pulsador](esquemas/led-boton.md) | Dibujo completo y sketch compilado; debounce y mantenimiento probados en host | Primer candidato de menor incertidumbre: confirmar A-01, respaldo, A/K, parejas del pulsador y protoboard |
-| 3 | [B-08 analógico](esquemas/ruido.md) | Dibujo condicionado + sketch ADC34 compilado y ventanas probadas en host | Modelo, VCC y nivel máximo AO pendientes. DO libre; no usar ficha de KY-038 como identificación |
+| 3 | [B-08 analógico](esquemas/ruido.md) | Montaje directo 3V3/GND/AO34 + sketch ADC34 compilado y ventanas probadas en host | Cotejar AO/G/+/DO en la misma cara; DO no participa y no se dibuja |
 | 4 | [INMP441](esquemas/microfono.md) | Dibujo condicionado + RX I²S compilado; estadística signed24 probada en host | D-07: cabecera, orden del breakout y desacoplo por confirmar. No se capturó audio real |
 | 5 | [Tres LEDs](esquemas/leds.md) | Dibujo completo y comandos Serial compilados/probados en host | Confirmar tres C-01 de 1 kΩ libres, polaridades y placa |
 | 6 | [Matriz](esquemas/matriz.md), [buzzer](esquemas/buzzer.md), [relé/fan](esquemas/ventilador.md) | Piezas/terminales y mapa funcional visibles; diseño eléctrico incompleto y sin sketch nuevo de carga | No energizar; faltantes abajo |
@@ -47,7 +47,7 @@ No se carga A-01 hasta asociar su placa y puerto, revisar cableado real y conser
 ## Qué falta confirmar o conseguir
 
 - **Ambiente:** lectura de etiquetas y variante del PIR; alimentación que cumpla su ficha, con OUT compatible. Sin multímetro, usar documentación exacta/etiquetas; si no resuelven la ruta USB–VIN, mantener VCC del PIR desconectado. El puente H/L no alimenta. B-03 requiere identificación de breakout y pull-up; el pull-up externo es una rama DATA→10 kΩ→3,3 V, nunca serie con VCC ni divisor.
-- **B-08:** modelo de la placa AO/G/+/DO y alimentación admisible; máximo AO y adaptación si corresponde. No subir a 5 V por ensayo/error ni conectar DO por inferencia. El sketch produce señal relativa sin calibración en dB.
+- **B-08:** copiar `+ → 3V3`, `G → GND` y `AO → GPIO34`; no usar 5 V. DO no participa. El sketch produce señal relativa sin calibración en dB.
 - **D-07:** confirmar cabecera montada, etiquetas VCC/GND/SD/LR/WS/SCK y desacoplo. Datos I²S distintos de AO; SD es salida del micrófono. L/R se fija a GND para seleccionar izquierdo.
 - **LEDs:** contar tres resistencias C-01 de 1 kΩ libres; si solo hay una, probar los LEDs sucesivamente con LED/pulsador, no omitir resistencias.
 - **B-10:** leer el controlador. Si es MAX7219 a 5 V, hace falta buffer 3,3→5 V compatible (familia AHCT como candidato; encapsulado/pinout/decoupling todavía por elegir) y fuente 5 V dimensionada. No se ha inventariado ese buffer ni se cierra un conteo ficticio de cables. No conectar directamente GPIO13/14/15 al módulo.

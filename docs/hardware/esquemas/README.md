@@ -11,7 +11,7 @@ Fuentes: missions.ts y registros físicos enlazados. Dibujos de referencia, sin 
 | M-07B · Audio · una bocina | Copia los cables numerados | [Guía](audio-salida.md) · [SVG](audio-salida.svg) · [JSON](audio-salida-fisico.json) |
 | M-02 · Pantalla · mascota | Copia los cables numerados | [Guía](pantalla.md) · [SVG](pantalla.svg) · [JSON](pantalla-fisico.json) |
 | M-07A · Micrófono digital | Copia los cables numerados | [Guía](microfono.md) · [SVG](microfono.svg) · [JSON](microfono-fisico.json) |
-| M-06 · Sonido relativo · AO | Copia los cables numerados | [Guía](ruido.md) · [SVG](ruido.svg) · [JSON](ruido-fisico.json) |
+| M-06 · Sonido relativo · AO | Diseño y sketch · ensayo físico pendiente | [Guía](ruido.md) · [SVG](ruido.svg) · [JSON](ruido-fisico.json) |
 | M-08A · Matriz 8 × 8 | Copia los cables numerados | [Guía](matriz.md) · [SVG](matriz.svg) · [JSON](matriz-fisico.json) |
 | M-08B · Buzzer | Copia los cables numerados | [Guía](buzzer.md) · [SVG](buzzer.svg) · [JSON](buzzer-fisico.json) |
 | M-09 · Ventilador + relé | Copia los cables numerados | [Guía](ventilador.md) · [SVG](ventilador.svg) · [JSON](ventilador-fisico.json) |
