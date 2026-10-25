@@ -1,6 +1,6 @@
 # M-08A · Matriz 8 × 8
 
-B-10 parece MAX7219; si se confirma a 5 V, la adaptación de señales se dibuja como requisito.
+Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop apaga y desarma.
 
 **Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
 
@@ -10,26 +10,28 @@ B-10 parece MAX7219; si se confirma a 5 V, la adaptación de señales se dibuja 
 
 ## Materiales
 
-- B-10: una matriz ×1
-- Chip por confirmar
-- Buffer compatible, por ejemplo AHCT: no inventariado
-- Fuente 5 V adecuada, pendiente
+- esp1: A-01 · identificar antes de cargar
+- matrix1: B-10 · matriz 8×8
+- ps1: PROPUESTA · 5 V DC / 2 A
 
-Cables: 0 M–H + 0 M–M dibujados; cero H–H. Circuito incompleto; conteo final pendiente de etapa/fuente. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 9 M–H + 1 M–M dibujados; cero H–H. 2 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| ESP32 · GPIO13 | Adaptador · entrada DIN | GPIO reservado en firmware | Pendiente; no conectar |
-| Adaptador · salida DIN | Matriz · DIN | Nivel 5 V compatible | Pendiente; no conectar |
-| ESP32 · GPIO14 | Adaptador · entrada CLK | — | Pendiente; no conectar |
-| Adaptador · salida CLK | Matriz · CLK | — | Pendiente; no conectar |
-| ESP32 · GPIO15 | Adaptador · entrada CS | — | Pendiente; no conectar |
-| Adaptador · salida CS | Matriz · CS | — | Pendiente; no conectar |
-| Fuente 5 V DC · + | Matriz · VCC | Chip / fuente por validar | Pendiente; no conectar |
-| Fuente 5 V DC · + | Adaptador · VCC | Según el buffer elegido | Pendiente; no conectar |
-| Matriz / adaptador · GND | Fuente − / ESP32 GND | — | Referencia |
+| ESP32 · GND_L | Protoboard · RN21 | c1 · M–H | Referencia |
+| Fuente 5 V DC · GND | Protoboard · LN28 | c2 · potencia | Referencia |
+| Fuente 5 V DC · PLUS | Protoboard · LP26 | c3 · potencia | Pendiente; no conectar |
+| Protoboard · LP12 | Matriz · VCC | c4 · M–H | Referencia |
+| Protoboard · LN11 | Matriz · GND | c5 · M–H | Referencia |
+| Protoboard · LN30 | Protoboard · RN30 | c6 · M–M | Referencia |
+| ESP32 · GPIO13 | Protoboard · J9 | c7 · M–H | Referencia |
+| Protoboard · H9 | Matriz · DIN | c8 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO14 | Protoboard · J5 | c9 · M–H | Referencia |
+| Protoboard · H5 | Matriz · CLK | c10 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO27 | Protoboard · J7 | c11 · M–H | Referencia |
+| Protoboard · H7 | Matriz · CS | c12 · M–H | Pendiente; no conectar |
 
 ## Armado cable por cable · USB desconectado
 
@@ -37,41 +39,71 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
+| 1 | black | M–H | esp1:GND_L | bb:RN21 | Cable 1 · M–H · esp1:GND_L → bb:RN21. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 2 | black | potencia | ps1:GND | bb:LN28 | Cable 2 · potencia DC por bornes · ps1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 3 | orange | potencia | ps1:PLUS | bb:LP26 | NO conectar: Fuente externa 5 V propuesta; confirmar salida antes de energizar. |
+| 4 | orange | M–H | bb:LP12 | matrix1:VCC | Cable 4 · M–H · bb:LP12 → matrix1:VCC. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 5 | black | M–H | bb:LN11 | matrix1:GND | Cable 5 · M–H · bb:LN11 → matrix1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 6 | black | M–M | bb:LN30 | bb:RN30 | Cable 6 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 7 | green | M–H | esp1:GPIO13 | bb:J9 | Cable 7 · M–H · esp1:GPIO13 → bb:J9. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 8 | green | M–H | bb:H9 | matrix1:DIN | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
+| 9 | blue | M–H | esp1:GPIO14 | bb:J5 | Cable 9 · M–H · esp1:GPIO14 → bb:J5. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 10 | blue | M–H | bb:H5 | matrix1:CLK | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
+| 11 | yellow | M–H | esp1:GPIO27 | bb:J7 | Cable 11 · M–H · esp1:GPIO27 → bb:J7. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 12 | yellow | M–H | bb:H7 | matrix1:CS | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
 
-
-Sin cableado ejecutable: faltan datos del circuito. Consultar conexiones funcionales y faltantes; no suplir etapas de adaptación con cables.
+M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
 LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: módulos externos, conectores por verificar.
 
-Cruces no unen redes. Las líneas discontinuas están pendientes y no cuentan como continuidad confirmada. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
+Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un cable por verificar no cuenta como continuidad confirmada aunque se dibuje continuo. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
+
+## Compatibilidad eléctrica
+
+[Montaje alternativo con adaptación](matriz-adaptado.md). No se muestra como material obligatorio del montaje principal; usarlo si los niveles o la carga exigen esa etapa.
 
 ## Antes de energizar
 
-1. No puentear el adaptador: MAX7219 a 5 V no garantiza HIGH de 3,3 V.
-2. Pinout/OE del buffer se define al elegirlo; este bloque no es un circuito de adaptación terminado.
-3. Entrada DIN y salida DOUT pertenecen a una sola matriz; DOUT queda libre.
-4. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
-5. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-6. Leer controlador; faltan buffer compatible con pinout y desacoplo, fuente 5 V dimensionada y cables de potencia.
+1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+2. Fuente externa regulada 5 V/2 A propuesta. Entrada DIN y salida DOUT no se intercambian.
+3. La ruta directa es referencia condicionada: MAX7219 estándar no garantiza HIGH con 3,3 V. Si ese es el controlador, usar el montaje alternativo con AHCT; no se elimina la protección.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
-Firmware: GPIO13/14/15 reservados en comentarios; driver integrado no implementado.
+Firmware: firmware/matrix_bench; compilar sin carga; Serial 115200. Ver guía física.
+
+## Compilar y cargar manualmente
+
+Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unified Sensor 1.1.15 solo si el perfil utiliza DHT11. Actuadores usan ClassAIBench local y pantalla Adafruit GFX 1.12.6 + ST7735/ST7789 1.12.0.
+
+```sh
+arduino-cli compile --libraries firmware/libraries --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --output-dir /tmp/classai-matriz-build firmware/matrix_bench
+```
+
+Antes de cargar: identificar A-01 y puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
+
+```sh
+# Sustituir PUERTO_A01 por el puerto reidentificado; no usar el de B-02/NFC.
+arduino-cli upload --fqbn esp32:esp32:esp32doit-devkit-v1 --port PUERTO_A01 --input-dir /tmp/classai-matriz-build firmware/matrix_bench
+arduino-cli monitor --port PUERTO_A01 --config baudrate=115200
+```
+
+Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfil entre compile/upload. Abrir Serial puede reiniciar la placa. No se ejecutaron estos comandos de carga/monitor durante esta entrega.
 
 ## Prueba guiada y fallos
 
-Acción: Identificar chip y preparar adaptación/fuente antes del barrido.
+Acción: Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop apaga y desarma.
 
-Aprobación esperada: Patrón de baja intensidad pendiente; no se energiza con este diseño incompleto.
+Aprobación esperada: Patrón de baja intensidad y un LED por paso; paro inmediato y sin otros periféricos inicializados.
 
-Diagnóstico: No omitir adaptación para intentar hacerlo funcionar.
+Diagnóstico: Enviar stop ante un fallo. Desconectar ambas fuentes antes de revisar cada extremo, polaridad, masa común y material faltante; no cambiar pines en caliente.
 
-Conflictos: GPIO14 coincide con SCK TFT; GPIO15 afecta arranque y exige revisión.
+Conflictos: Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita el pin de arranque GPIO15; ensayo aislado de PIR/TFT. DOUT no recibe datos del ESP32.
 
 Faltantes/confirmaciones:
-- Identificar A-01/puerto y preservar respaldo privado antes de cargar.
-- Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-- Leer controlador; faltan buffer compatible con pinout y desacoplo, fuente 5 V dimensionada y cables de potencia.
+- Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+- Fuente externa regulada 5 V/2 A propuesta. Entrada DIN y salida DOUT no se intercambian.
+- La ruta directa es referencia condicionada: MAX7219 estándar no garantiza HIGH con 3,3 V. Si ese es el controlador, usar el montaje alternativo con AHCT; no se elimina la protección.
 
 ## Registro de resultado
 
@@ -84,5 +116,6 @@ Faltantes/confirmaciones:
 | Desmontaje | Pendiente | Registrar qué cables/piezas quedan conectados |
 
 - [Analog Devices · MAX7219](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX7219-MAX7221.pdf)
+- [Material de la U y criterios de armado](https://github.com/joaquinsalinas06/ClassAI/blob/codex/physical-benches/docs/hardware/circuitos-referencia.md)
 
 [Índice](README.md). Generado desde missions.ts y sus registros físicos mediante web/scripts/export-hardware-missions.mjs.

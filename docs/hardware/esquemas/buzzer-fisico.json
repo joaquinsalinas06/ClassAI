@@ -2,8 +2,8 @@
   "version": 1,
   "bankId": "buzzer",
   "layout": "breadboard",
-  "name": "M-08B · Buzzer polarizado",
-  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "name": "M-08B · Buzzer sobre protoboard",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H. Buzzer insertado en dos tiras distintas: ajustar filas al paso real sin forzar las patas ni unir + y −. Dibujo no métrico.",
   "board": {
     "rows": 30,
     "rails": true
@@ -172,16 +172,18 @@
     },
     {
       "id": "buzzer",
-      "name": "M-08B · Buzzer polarizado",
-      "pending": "Signo + reportado; activo/pasivo, tensión y corriente pendientes. Driver y protección por dimensionar; sin conexión a GPIO.",
+      "name": "Buzzer de dos patas",
+      "pending": "Referencia directa de dos cables como en clase; alimentación a 3,3 V reportada. Antes de conectar al GPIO, confirmar piezo/entrada de alta impedancia o consumo compatible. Si es una carga mayor, usar la alternativa con transistor.",
       "pins": [
         {
           "id": "PLUS",
-          "kind": "passive"
+          "kind": "passive",
+          "required": false
         },
         {
           "id": "MINUS",
-          "kind": "passive"
+          "kind": "passive",
+          "required": false
         }
       ]
     }
@@ -194,16 +196,40 @@
       "holes": {}
     },
     {
-      "id": "module1",
+      "id": "bz1",
       "definition": "buzzer",
-      "inventory": "B-09",
-      "holes": {},
-      "placement": {
-        "x": 1010,
-        "y": 150
+      "inventory": "B-09 · dos patas",
+      "holes": {
+        "PLUS": "G14",
+        "MINUS": "G17"
       }
     }
   ],
-  "wires": [],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GPIO17",
+      "to": "bb:J14",
+      "color": "yellow",
+      "jumper": "M–H",
+      "pending": "Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación.",
+      "note": "Cable 1 · M–H · esp1:GPIO17 → bb:J14. NO conectar: Conexión directa condicionada a tipo y consumo compatibles con GPIO 3,3 V; si no, usar adaptación.",
+      "bends": []
+    },
+    {
+      "id": "c2",
+      "from": "esp1:GND",
+      "to": "bb:J17",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 2 · M–H · esp1:GND → bb:J17. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          519
+        ]
+      ]
+    }
+  ],
   "revisions": []
 }

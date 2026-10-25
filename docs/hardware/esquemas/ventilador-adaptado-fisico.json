@@ -1,0 +1,729 @@
+{
+  "version": 1,
+  "bankId": "ventilador",
+  "layout": "breadboard",
+  "name": "M-09 · Relé/fan y fuente de referencia",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "supply5",
+      "name": "Fuente externa regulada 5 V / 2 A",
+      "pending": "PROPUESTA AUTORIZADA, no recibida ni medida: adaptador DC 5 V / 2 A, salida por bornera/distribuidor. ESP32 solo por USB; no conectar a VIN/3V3.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "voltage": 0,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "name": "B-11 · relé doble 5 V",
+      "pending": "REFERENCIA: módulo de disparo LOW, VCC/JD-VCC unidos y GND común. Confirmar etiquetas/puente reales; no se presume aislamiento. Q1 hunde IN1 y evita aplicar 5 V al GPIO. IN2 desactivado por pull-up; canal 2 sin carga.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "JD_VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "IN1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "IN2",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "COM1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NO1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NC1",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "fan",
+      "name": "D-05 · brushless DC 5 V",
+      "pending": "Fuente genérica 5 V/2 A asumida para diseñar; comprobar corriente/arranque real y presupuesto antes de energizar. Conector blanco requiere adaptador de paso/polaridad confirmados; no forzar Dupont.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "flyback",
+      "name": "D2 · 1N5819 · banda K a +",
+      "pending": "FALTANTE: 1N5819 paralelo al fan, cátodo al + y ánodo al −; no sustituye protección interna del relé ni valida motor/fuente.",
+      "pins": [
+        {
+          "id": "A",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "K",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "capacitor",
+      "name": "Condensador de desacoplo",
+      "pending": "FALTANTE salvo componente verificado en módulo. Electrolítico: + a tensión positiva; − a GND. No omitir desacoplo de la ficha.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "npn",
+      "name": "Q1 · onsemi 2N3904 TO-92",
+      "pending": "FALTANTE: 2N3904 onsemi TO-92. Vista de ficha: 1=E, 2=B, 3=C; verificar encapsulado, no copiar a PN2222/otro transistor. Ic de diseño ≤10 mA, no motor directo.",
+      "pins": [
+        {
+          "id": "E",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "B",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "C",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "relay1",
+      "definition": "relay",
+      "inventory": "B-11 · solo canal 1",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 160
+      }
+    },
+    {
+      "id": "fan1",
+      "definition": "fan",
+      "inventory": "D-05 · DC 5 V",
+      "holes": {},
+      "placement": {
+        "x": 1240,
+        "y": 520
+      }
+    },
+    {
+      "id": "d2",
+      "definition": "flyback",
+      "inventory": "FALTANTE · 1N5819",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 600
+      }
+    },
+    {
+      "id": "c1",
+      "definition": "capacitor",
+      "inventory": "FALTANTE · 100 µF/≥10 V",
+      "holes": {},
+      "placement": {
+        "x": 1240,
+        "y": 800
+      }
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "PROPUESTA · fuente DC 5 V/2 A + distribuidor; no inventariada",
+      "holes": {},
+      "placement": {
+        "x": 1240,
+        "y": 120
+      }
+    },
+    {
+      "id": "q1",
+      "definition": "npn",
+      "inventory": "FALTANTE · onsemi 2N3904",
+      "holes": {
+        "E": "C18",
+        "B": "C19",
+        "C": "C20"
+      }
+    },
+    {
+      "id": "rb",
+      "definition": "resistor",
+      "inventory": "C-01 · 1 kΩ",
+      "resistance": 1000,
+      "holes": {
+        "1": "G19",
+        "2": "D19"
+      }
+    },
+    {
+      "id": "rp",
+      "definition": "resistor",
+      "inventory": "C-02 · 10 kΩ",
+      "resistance": 10000,
+      "holes": {
+        "1": "B19",
+        "2": "B22"
+      }
+    },
+    {
+      "id": "r2",
+      "definition": "resistor",
+      "inventory": "C-02 · 10 kΩ adicional",
+      "resistance": 10000,
+      "holes": {
+        "1": "G6",
+        "2": "G9"
+      }
+    },
+    {
+      "id": "r3",
+      "definition": "resistor",
+      "inventory": "C-02 · 10 kΩ adicional",
+      "resistance": 10000,
+      "holes": {
+        "1": "G23",
+        "2": "G26"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "ps1:GND",
+      "to": "bb:LN26",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 2 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:LN26. Solo referencia de lógica; motor/altavoz retornan al distribuidor, no a la protoboard.",
+      "bends": [
+        [
+          1229,
+          186
+        ],
+        [
+          1229,
+          421
+        ],
+        [
+          457,
+          421
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "esp1:GPIO26",
+      "to": "bb:J19",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 3 · M–H · esp1:GPIO26 → bb:J19. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          632
+        ],
+        [
+          708,
+          632
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:A18",
+      "to": "bb:LN18",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 4 · M–M · bb:A18 → bb:LN18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c5",
+      "from": "bb:A22",
+      "to": "bb:LN22",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 5 · M–M · bb:A22 → bb:LN22. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "ps1:PLUS",
+      "to": "bb:J6",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 6 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → bb:J6. 5 V solo para pull-ups de IN1/IN2.",
+      "bends": [
+        [
+          708,
+          162
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "ps1:PLUS",
+      "to": "bb:J23",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 7 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → bb:J23. 5 V solo para segundo pull-up.",
+      "bends": [
+        [
+          708,
+          162
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "bb:J9",
+      "to": "bb:D20",
+      "color": "green",
+      "jumper": "M–M",
+      "note": "Cable 8 · M–M · bb:J9 → bb:D20. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          663,
+          294
+        ],
+        [
+          663,
+          492
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "bb:A20",
+      "to": "relay1:IN1",
+      "color": "green",
+      "jumper": "M–H",
+      "pending": "Confirmar disparo LOW, IN1 ≤10 mA y puente VCC/JD-VCC real.",
+      "note": "Cable 9 · M–H · bb:A20 → relay1:IN1. NO conectar: Confirmar disparo LOW, IN1 ≤10 mA y puente VCC/JD-VCC real.",
+      "bends": [
+        [
+          500,
+          435
+        ],
+        [
+          1230,
+          435
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "bb:J26",
+      "to": "relay1:IN2",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Referencia LOW-trigger: mantener canal 2 apagado a 5 V mediante 10 kΩ.",
+      "note": "Cable 10 · M–H · bb:J26 → relay1:IN2. NO conectar: Referencia LOW-trigger: mantener canal 2 apagado a 5 V mediante 10 kΩ.",
+      "bends": [
+        [
+          990,
+          600
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "ps1:PLUS",
+      "to": "relay1:VCC",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Fuente propuesta y configuración real del módulo por confirmar.",
+      "note": "Cable 11 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → relay1:VCC. 5 V externo. NO energizar: Fuente propuesta y configuración real del módulo por confirmar.",
+      "bends": [
+        [
+          1230,
+          162
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "ps1:PLUS",
+      "to": "relay1:JD_VCC",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Confirmar puente del módulo con alimentación retirada.",
+      "note": "Cable 12 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → relay1:JD_VCC. Referencia no aislada con VCC/JD-VCC unidos; seguir serigrafía real. NO energizar: Confirmar puente del módulo con alimentación retirada.",
+      "bends": [
+        [
+          1230,
+          162
+        ]
+      ]
+    },
+    {
+      "id": "c13",
+      "from": "ps1:GND",
+      "to": "relay1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 13 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → relay1:GND. Retorno de bobinas directo al distribuidor.",
+      "bends": [
+        [
+          1230,
+          186
+        ]
+      ]
+    },
+    {
+      "id": "c14",
+      "from": "ps1:PLUS",
+      "to": "relay1:COM1",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 14 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → relay1:COM1. Rama de carga 22 AWG y bornera, no riel de protoboard.",
+      "bends": [
+        [
+          990,
+          162
+        ]
+      ]
+    },
+    {
+      "id": "c15",
+      "from": "relay1:NO1",
+      "to": "fan1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Comprobar arranque/corriente y conector. Referencia de diseño: fan ≤1 A de pico, rama/fuente deben admitirlo.",
+      "note": "Cable 15 · potencia DC por bornera, 22 AWG de referencia · relay1:NO1 → fan1:PLUS. Adaptador al conector blanco, + confirmado. NO energizar: Comprobar arranque/corriente y conector. Referencia de diseño: fan ≤1 A de pico, rama/fuente deben admitirlo.",
+      "bends": [
+        [
+          990,
+          420
+        ],
+        [
+          1240,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c16",
+      "from": "fan1:MINUS",
+      "to": "ps1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 16 · potencia DC por bornera, 22 AWG de referencia · fan1:MINUS → ps1:GND. Retorno motor directo al distribuidor.",
+      "bends": []
+    },
+    {
+      "id": "c17",
+      "from": "d2:K",
+      "to": "fan1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 17 · potencia DC por bornera, 22 AWG de referencia · d2:K → fan1:PLUS. Banda del 1N5819 al + del fan.",
+      "bends": [
+        [
+          990,
+          587
+        ],
+        [
+          1240,
+          587
+        ]
+      ]
+    },
+    {
+      "id": "c18",
+      "from": "d2:A",
+      "to": "fan1:MINUS",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 18 · potencia DC por bornera, 22 AWG de referencia · d2:A → fan1:MINUS. Ánodo al − del fan.",
+      "bends": [
+        [
+          990,
+          586
+        ]
+      ]
+    },
+    {
+      "id": "c19",
+      "from": "ps1:PLUS",
+      "to": "c1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 19 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → c1:PLUS. 100 µF/≥10 V cerca del módulo, positivo a +5 V.",
+      "bends": []
+    },
+    {
+      "id": "c20",
+      "from": "ps1:GND",
+      "to": "c1:MINUS",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 20 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → c1:MINUS. Negativo a GND.",
+      "bends": []
+    }
+  ],
+  "revisions": []
+}

@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "M-05 · PIR aislado",
-  "note": "12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico.",
+  "note": "12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. R-026 sustituye USB–VIN por fuente externa regulada 5 V/2 A propuesta, masa común. VIN queda desconectado. La fuente no se ha recibido ni medido.",
   "board": {
     "rows": 30,
     "rails": true,
@@ -220,6 +220,25 @@
           "kind": "passive"
         }
       ]
+    },
+    {
+      "id": "supply5",
+      "name": "Fuente externa regulada 5 V / 2 A",
+      "pending": "PROPUESTA AUTORIZADA, no recibida ni medida: adaptador DC 5 V / 2 A, salida por bornera/distribuidor. ESP32 solo por USB; no conectar a VIN/3V3.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "voltage": 0,
+          "required": false
+        }
+      ]
     }
   ],
   "parts": [
@@ -234,6 +253,16 @@
       "definition": "pir",
       "inventory": "Elegir D-06 o B-04",
       "holes": {}
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "PROPUESTA · fuente DC 5 V/2 A + distribuidor; no inventariada",
+      "holes": {},
+      "placement": {
+        "x": 1240,
+        "y": 120
+      }
     }
   ],
   "wires": [
@@ -245,12 +274,8 @@
       "note": "GND derecho del ESP32 → RN28. Riel derecho − para ambos sensores; comprobar continuidad, USB apagado.",
       "bends": [
         [
-          350,
+          785,
           519
-        ],
-        [
-          350,
-          636
         ]
       ],
       "jumper": "M–H"
@@ -272,26 +297,26 @@
     },
     {
       "id": "w11",
-      "from": "esp1:VIN",
+      "from": "ps1:PLUS",
       "to": "bb:F20",
       "color": "orange",
-      "note": "Solo tras confirmar alimentación: VIN → F20 con M–H. Tira F20–J20 reservada exclusivamente para VCC del PIR.",
+      "note": "Fuente externa +5 V → F20; VIN ESP32 queda libre. No alimentar ESP32 por esta fuente.",
       "bends": [
         [
-          36,
-          546
+          1086,
+          162
         ],
         [
-          36,
-          738
+          1086,
+          331
         ],
         [
           628,
-          738
+          331
         ]
       ],
-      "jumper": "M–H",
-      "pending": "Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún."
+      "jumper": "potencia",
+      "pending": "Fuente externa regulada 5 V propuesta, no recibida; cotejar VCC del PIR."
     },
     {
       "id": "w13",
@@ -300,12 +325,8 @@
       "color": "orange",
       "bends": [
         [
-          668,
-          690
-        ],
-        [
           940,
-          690
+          492
         ]
       ],
       "note": "H20 → VCC identificado del PIR, M–H. F20 y H20 comparten cobre; no añadir puente ni unir con 3,3 V.",
@@ -320,16 +341,12 @@
       "note": "D27 / GPIO27 → G24, M–H. Tira F24–J24 exclusiva de señal, separada de F20–J20.",
       "bends": [
         [
-          18,
-          411
-        ],
-        [
-          18,
-          760
+          62,
+          650
         ],
         [
           648,
-          760
+          650
         ]
       ],
       "jumper": "M–H"
@@ -341,17 +358,35 @@
       "color": "yellow",
       "bends": [
         [
-          708,
-          710
-        ],
-        [
           990,
-          710
+          564
         ]
       ],
       "note": "J24 → OUT identificado del PIR, M–H; solo con señal compatible 3,3 V. G24 y J24 comparten cobre. Sin H–H.",
       "jumper": "M–H",
       "pending": "Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún."
+    },
+    {
+      "id": "c7",
+      "from": "ps1:GND",
+      "to": "bb:RN26",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 7 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:RN26. Referencia común de sensores y ESP32; no conecta el positivo a VIN.",
+      "bends": [
+        [
+          1079,
+          186
+        ],
+        [
+          1079,
+          324
+        ],
+        [
+          785,
+          324
+        ]
+      ]
     }
   ],
   "revisions": [],

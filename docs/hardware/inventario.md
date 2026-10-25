@@ -33,15 +33,15 @@ comunicados**. Todos los registros B están pendientes de devolución.
 |---|---|---|---|---|
 | B-01 | Protoboard con A–J, 30 posiciones numeradas y rieles ± laterales | 1 placa | en mano | Probablemente 30 filas; no equivale a 30 puntos. Tamaño total y continuidad de rieles por confirmar |
 | B-02 | ESP32 con micro USB, parecido a A-01 | 1 placa | en mano | Segunda placa disponible; modelo/pinout propios por confirmar |
-| B-03 | Módulo DHT11 | 1 módulo | en mano | Temperatura/humedad; NO es DHT22. Joaquín reporta etiquetas − / OUT / + (24/10); orientación de lectura, tensión/pull-up y prueba física pendientes |
+| B-03 | Módulo DHT11 | 1 módulo | en mano | Temperatura/humedad; NO es DHT22. Joaquín reporta etiquetas − / OUT / + (24/10); Anexo X aportado el 25/10: módulo con pull-up integrado de 10 kΩ y alimentación desde 3 V; cotejar orientación real; ensayo pendiente |
 | B-04 | PIR parecido a D-06, de otro color | 1 módulo | en mano | Movimiento; HC-SR501 probable, modelo y orden de pines sin confirmar |
 | B-05 | LED verde | 1 LED | en mano | Señalización con resistencia en serie |
 | B-06 | LED amarillo | 1 LED | en mano | Señalización con resistencia en serie |
 | B-07 | LED blanco | 2 LEDs | en mano | Lote propio de B, separado de C-06 |
 | B-08 | Detector analógico/digital de sonido: AO/G/+/DO, micrófono electret y potenciómetro W104/VR1 | 1 módulo | en mano; fotografiado 24/10 | LED1/LED2 y U1 de 8 patas visibles; tipo KY-038 semejante, **no confirmado**. AO y DO no probadas eléctricamente; ninguna medición de dB ni nivel de salida validado |
 | B-09 | Buzzer cilíndrico con orificio acústico, dos patas y signo + | 1 unidad | en mano; fotografiado 24/10 | Polaridad + visible; tipo activo/pasivo, modelo, tensión y corriente **sin confirmar**. No alimentarlo desde GPIO sin validar |
-| B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 probable, chip ilegible; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos |
-| B-11 | Relé doble: 2 × TONG LING JQC-3FF-S-Z **5VDC**; COM1/NO1/NC1 y COM2/NO2/NC2 | 1 módulo, 2 canales | en mano; fotografiado 24/10 | Control GND/IN1/IN2/VCC; bloque JD-VCC/VCC/GND con puente amarillo. Bobina 5 V confirmada; lógica de disparo, corriente de placa, aislamiento y compatibilidad GPIO 3,3 V **pendientes** |
+| B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 identificado por la guía de laboratorio Anexo K aportada por Joaquín el 25/10; no se leyó físicamente el chip; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos |
+| B-11 | Relé doble: 2 × TONG LING JQC-3FF-S-Z **5VDC**; COM1/NO1/NC1 y COM2/NO2/NC2 | 1 módulo, 2 canales | en mano; fotografiado 24/10 | Control GND/IN1/IN2/VCC; bloque JD-VCC/VCC/GND con puente amarillo. Bobina 5 V confirmada; Anexo V del laboratorio describe disparo LOW y lógica 5 V; cotejar variante/puente. Corriente de placa, aislamiento y compatibilidad GPIO 3,3 V **pendientes** |
 
 ## C — Material temporal facilitado por el profesor
 
@@ -191,3 +191,5 @@ Para NFC con cabecera macho, la receta por cuatro tiras de señal y rieles +/−
 cabecera hembra, usa 6 M–H + 6 M–M. Ambas evitan H–H. Confirmar tipo al terminar,
 no pedir más cables antes de revisar C-07/C-08 y material libre. Una sola bocina
 D-09 se ensaya en la salida mono de D-08; la segunda queda sin conectar.
+
+Revisión documental 25/10/2026: [componentes de laboratorio y límites](circuitos-referencia.md). No cambia recepción, propiedad ni evidencia de funcionamiento. B-09 sigue sin modelo/consumo confirmado; el uso a 3,3 V es un reporte del usuario.

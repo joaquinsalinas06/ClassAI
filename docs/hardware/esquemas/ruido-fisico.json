@@ -224,12 +224,8 @@
       "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. NO conectar: Confirmar alimentación de B-08 a 3,3 V; no adoptar la ficha de un KY-038 parecido.",
       "bends": [
         [
-          335,
+          435,
           546
-        ],
-        [
-          335,
-          636
         ]
       ]
     },
@@ -243,12 +239,8 @@
       "note": "Cable 2 · M–H · bb:LP5 → module1:VCC. NO conectar: Confirmar variante y VCC de B-08.",
       "bends": [
         [
-          837,
+          1010,
           222
-        ],
-        [
-          837,
-          240
         ]
       ]
     },
@@ -261,12 +253,8 @@
       "note": "Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          357,
+          457,
           519
-        ],
-        [
-          357,
-          636
         ]
       ]
     },
@@ -279,12 +267,8 @@
       "note": "Cable 4 · M–H · bb:LN7 → module1:G. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          861,
+          1010,
           258
-        ],
-        [
-          861,
-          216
         ]
       ]
     },
@@ -298,12 +282,8 @@
       "note": "Cable 5 · M–H · module1:AO → bb:A10. NO conectar: Confirmar tensión AO compatible con ADC; dimensionar adaptación si hace falta.",
       "bends": [
         [
-          873,
+          500,
           192
-        ],
-        [
-          873,
-          312
         ]
       ]
     },
@@ -316,20 +296,12 @@
       "note": "Cable 6 · M–H · esp1:GPIO34 → bb:B10. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          30,
-          249
+          62,
+          128
         ],
         [
-          30,
-          805
-        ],
-        [
-          390,
-          805
-        ],
-        [
-          390,
-          312
+          520,
+          128
         ]
       ]
     }

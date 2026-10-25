@@ -1,0 +1,501 @@
+{
+  "version": 1,
+  "bankId": "pantalla",
+  "layout": "breadboard",
+  "name": "M-02 · ST7789 patrón de prueba",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "tft",
+      "name": "D-04 · 1.54 ST7789 V1.1",
+      "pending": "Referencia de ensayo 3,3 V, no 5 V. Confirmar VCC y BL de D-04. BL con 1 kΩ serie a 3V3 limita corriente; puede verse tenue. Si la variante exige otra conexión, no puentear R sin ficha.",
+      "pins": [
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3,
+          "required": false
+        },
+        {
+          "id": "SCL",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "SDA",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "RST",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "DC",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CS",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "BL",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive"
+        },
+        {
+          "id": "2",
+          "kind": "passive"
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "tft1",
+      "definition": "tft",
+      "inventory": "D-04 · GND/VCC/SCL/SDA/RST/DC/CS/BL",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 150
+      }
+    },
+    {
+      "id": "rbl",
+      "definition": "resistor",
+      "inventory": "C-01 · 1 kΩ para BL",
+      "resistance": 1000,
+      "holes": {
+        "1": "C25",
+        "2": "G25"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:LN6",
+      "to": "tft1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 2 · M–H · bb:LN6 → tft1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          240
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "esp1:3V3",
+      "to": "bb:LP28",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "Cable 3 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          435,
+          546
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:LP8",
+      "to": "tft1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar VCC del breakout D-04 a 3,3 V.",
+      "note": "Cable 4 · M–H · bb:LP8 → tft1:VCC. NO conectar: Confirmar VCC del breakout D-04 a 3,3 V.",
+      "bends": [
+        [
+          990,
+          276
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:LP25",
+      "to": "bb:A25",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "Cable 5 · M–M · bb:LP25 → bb:A25. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "bb:J25",
+      "to": "tft1:BL",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar BL admite referencia 3,3 V con R serie 1 kΩ; no usar GPIO ni puentear R.",
+      "note": "Cable 6 · M–H · bb:J25 → tft1:BL. NO conectar: Confirmar BL admite referencia 3,3 V con R serie 1 kΩ; no usar GPIO ni puentear R.",
+      "bends": [
+        [
+          990,
+          582
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "esp1:GPIO14",
+      "to": "bb:A10",
+      "color": "blue",
+      "jumper": "M–H",
+      "note": "Cable 7 · M–H · esp1:GPIO14 → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          137
+        ],
+        [
+          500,
+          137
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "bb:B10",
+      "to": "tft1:SCL",
+      "color": "blue",
+      "jumper": "M–H",
+      "note": "Cable 8 · M–H · bb:B10 → tft1:SCL. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          312
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "esp1:GPIO23",
+      "to": "bb:A12",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 9 · M–H · esp1:GPIO23 → bb:A12. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          500,
+          168
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "bb:B12",
+      "to": "tft1:SDA",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 10 · M–H · bb:B12 → tft1:SDA. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          348
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "esp1:GPIO26",
+      "to": "bb:A14",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "Cable 11 · M–H · esp1:GPIO26 → bb:A14. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          622
+        ],
+        [
+          500,
+          622
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "bb:B14",
+      "to": "tft1:RST",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "Cable 12 · M–H · bb:B14 → tft1:RST. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c13",
+      "from": "esp1:GPIO27",
+      "to": "bb:A16",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 13 · M–H · esp1:GPIO27 → bb:A16. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          621
+        ],
+        [
+          500,
+          621
+        ]
+      ]
+    },
+    {
+      "id": "c14",
+      "from": "bb:B16",
+      "to": "tft1:DC",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 14 · M–H · bb:B16 → tft1:DC. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c15",
+      "from": "esp1:GPIO5",
+      "to": "bb:A18",
+      "color": "orange",
+      "jumper": "M–H",
+      "note": "Cable 15 · M–H · esp1:GPIO5 → bb:A18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          500,
+          357
+        ]
+      ]
+    },
+    {
+      "id": "c16",
+      "from": "bb:B18",
+      "to": "tft1:CS",
+      "color": "orange",
+      "jumper": "M–H",
+      "note": "Cable 16 · M–H · bb:B18 → tft1:CS. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          990,
+          456
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}

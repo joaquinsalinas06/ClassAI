@@ -1,8 +1,27 @@
 # Bancos físicos: entrega y ensayo sucesivo
 
-Corte: 24/10/2026, America/Lima. Esta entrega añade diseño/software; **no hubo upload, lectura de flash, apertura de Serial ni ensayo físico**. R-023 de B-02/PN532 sigue siendo la referencia física anterior, con errores RF intermitentes. Respaldos, configuraciones privadas y credenciales conservados.
+Corte inicial: 24/10/2026, America/Lima. Esta entrega añade diseño/software; **no hubo upload, lectura de flash, apertura de Serial ni ensayo físico**. R-023 de B-02/PN532 sigue siendo la referencia física anterior, con errores RF intermitentes. Respaldos, configuraciones privadas y credenciales conservados.
 
-## Orden y estado
+## Actualización del 25/10/2026
+
+La tabla y los conteos iniciales de abajo se conservan como estado histórico de R-025. **Los sustituyen las guías regeneradas y R-026:**
+
+| Banco | Entrega actual | Pendiente físico |
+|---|---|---|
+| DHT11 / PIR / conjunto | Tres perfiles aislados; DHT11 con pull-up integrado según Anexo X, sin resistencia externa; PIR con fuente externa propuesta | Etiquetas reales, variante PIR/OUT y fuente; VIN desconectado |
+| LED/pulsador | Pulsador arriba, LED debajo; GPIO25/32 conservados, masas cercanas; 3 M–H + 3 M–M | A-01/puerto/respaldo, A/K y parejas de contacto |
+| B-08 / INMP441 / LEDs | Guías físicas y sketches aislados | Alimentación/niveles B-08; cabecera INMP441; resistencias de LEDs |
+| Matriz | Módulo MAX7219, dibujo simple y alternativa AHCT; sketch DIN13/CLK14/CS27 | Fuente 5 V y compatibilidad lógica o buffer |
+| Buzzer | Dos cables y buzzer sobre protoboard; sketch activo/pasivo; alternativa con transistor separada | Tipo/consumo admisible desde GPIO |
+| Relé/ventilador | Módulo doble y fuente genérica 5 V/2 A; sketch LOW-trigger y perfil NPN separado | IN1 de 3,3 V, JD-VCC, corriente de arranque, polaridad y conector |
+| Pantalla/audio | Ensayos aislados ST7789 y MAX98357A, un altavoz; patrones/tono y apagado | Variante, alimentación, terminales y montaje; integración Lando pendiente |
+| Iluminación | Material requerido explícito | Sensor de luz no recibido |
+
+Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. Los trazos son continuos para facilitar su lectura; la condición pendiente se conserva en el inspector y el modelo. La vista principal ya no amontona las piezas propuestas de adaptación.
+
+Compilación de la actualización: `bash scripts/ci/benches-build.sh`, Arduino CLI 1.5.1, core ESP32 3.3.12. Se añaden Adafruit GFX 1.12.6 y ST7735/ST7789 1.12.0 fijadas en instalación. Resultados de memoria nuevos se registran en R-026. No hubo carga, Serial físico, simulación nueva ni ensayo eléctrico. B-02/NFC y respaldos conservados.
+
+## Orden y estado inicial (R-025)
 
 | Orden | Banco | Diseño/software | Condición física |
 |---|---|---|---|
@@ -67,7 +86,7 @@ Las guías generadas incluyen comandos con `--output-dir` / `--input-dir` para c
 
 Extensiones opcionales de `version:1`: `bankId`, `parts[].placement` (coordenadas SVG), `wires[].jumper` y `wires[].pending`. Los JSON antiguos conservan lectura: PN532→NFC, otros JSON v1 anteriores→ambiente. La clave local `classai.hardware.v1` se mantiene; no hay migración/escritura automática. Solo Guardar revisión persiste. Borradores por banco en memoria, importación/revisión recuperada seleccionan su banco. Historial previo conservado incluso al navegar entre bancos.
 
-Una conexión `pending` se dibuja discontinua y **se excluye de continuidad modelada**. El inspector explica el bloqueo. El analizador comprueba las redes declaradas, no tensión real, dimensiones, continuidad medida o permiso para energizar. Los footprints del LED/pulsador son referencias que deben cotejarse con las piezas.
+En la revisión inicial una conexión `pending` se dibujaba discontinua; desde R-026 se dibuja continua para poder seguir el cable y **se excluye de continuidad modelada**. El inspector explica el bloqueo. El analizador comprueba las redes declaradas, no tensión real, dimensiones, continuidad medida o permiso para energizar. Los footprints del LED/pulsador son referencias que deben cotejarse con las piezas.
 
 Capturas de navegador locales ignoradas por Git: `web/screenshots/montajes-*-desktop.png` y `*-mobile.png`. Revisar números, agujeros, cruces, USB y ausencia de cables a través de PCBs; escala ampliable para inspección. SVG exporta todos los cables incluso durante un paso.
 

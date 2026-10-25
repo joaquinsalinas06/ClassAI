@@ -16,7 +16,7 @@ Rojo, amarillo y verde separados, cada uno con resistencia de 1 kΩ. Ensayo aisl
 - C-01: tres resistencias de 1 kΩ; confirmar cantidad
 - Protoboard y jumpers recibidos
 
-Cables: 4 M–H + 3 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 4 M–H + 4 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
@@ -33,19 +33,20 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
-| 1 | red | M–H | esp1:GPIO25 | bb:A6 | Cable 1 · M–H · esp1:GPIO25 → bb:A6. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 2 | black | M–M | bb:J9 | bb:LN9 | Cable 2 · M–M · bb:J9 → bb:LN9. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 3 | yellow | M–H | esp1:GPIO26 | bb:A13 | Cable 3 · M–H · esp1:GPIO26 → bb:A13. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 4 | black | M–M | bb:J16 | bb:LN16 | Cable 4 · M–M · bb:J16 → bb:LN16. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 5 | green | M–H | esp1:GPIO27 | bb:A20 | Cable 5 · M–H · esp1:GPIO27 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 6 | black | M–M | bb:J23 | bb:LN23 | Cable 6 · M–M · bb:J23 → bb:LN23. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 7 | black | M–H | esp1:GND | bb:LN28 | Cable 7 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 1 | red | M–H | esp1:GPIO25 | bb:J6 | Cable 1 · M–H · esp1:GPIO25 → bb:A6. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 2 | black | M–M | bb:A9 | bb:LN9 | Cable 2 · M–M · bb:J9 → bb:LN9. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 3 | yellow | M–H | esp1:GPIO26 | bb:J13 | Cable 3 · M–H · esp1:GPIO26 → bb:A13. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 4 | black | M–M | bb:A16 | bb:LN16 | Cable 4 · M–M · bb:J16 → bb:LN16. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 5 | green | M–H | esp1:GPIO27 | bb:J20 | Cable 5 · M–H · esp1:GPIO27 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 6 | black | M–M | bb:A23 | bb:LN23 | Cable 6 · M–M · bb:J23 → bb:LN23. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 7 | black | M–H | esp1:GND_L | bb:RN28 | M–H negro: GND izquierdo del ESP32 al riel negativo derecho cercano RN28. |
+| 8 | black | M–M | bb:LN30 | bb:RN30 | M–M negro: puente corto LN30–RN30 para compartir masa entre rieles; no rodear ESP32 ni pulsador. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
-LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: r1 (C-01 · confirmar tres unidades): 1→C6, 2→G6; led1 (C-05 · rojo): A→H6, K→H9; r2 (C-01 · confirmar tres unidades): 1→C13, 2→G13; led2 (B-06 · amarillo): A→H13, K→H16; r3 (C-01 · confirmar tres unidades): 1→C20, 2→G20; led3 (B-05 · verde): A→H20, K→H23.
+LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: r1 (C-01 · confirmar tres unidades): 1→G6, 2→C6; led1 (C-05 · rojo): A→B6, K→B9; r2 (C-01 · confirmar tres unidades): 1→G13, 2→C13; led2 (B-06 · amarillo): A→B13, K→B16; r3 (C-01 · confirmar tres unidades): 1→G20, 2→C20; led3 (B-05 · verde): A→B20, K→B23.
 
-Cruces no unen redes. Las líneas discontinuas están pendientes y no cuentan como continuidad confirmada. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
+Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un cable por verificar no cuenta como continuidad confirmada aunque se dibuje continuo. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
 
 ## Antes de energizar
 
@@ -61,10 +62,10 @@ Firmware: firmware/status_led_bench; compilar sin carga; Serial 115200. Ver guí
 
 ## Compilar y cargar manualmente
 
-Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unified Sensor 1.1.15 solo si el perfil utiliza DHT11. Otros sketches nuevos usan el core sin bibliotecas adicionales.
+Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unified Sensor 1.1.15 solo si el perfil utiliza DHT11. Actuadores usan ClassAIBench local y pantalla Adafruit GFX 1.12.6 + ST7735/ST7789 1.12.0.
 
 ```sh
-arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --output-dir /tmp/classai-leds-build firmware/status_led_bench
+arduino-cli compile --libraries firmware/libraries --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --output-dir /tmp/classai-leds-build firmware/status_led_bench
 ```
 
 Antes de cargar: identificar A-01 y puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:

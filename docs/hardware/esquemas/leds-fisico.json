@@ -206,7 +206,11 @@
       "id": "esp1",
       "definition": "esp32",
       "inventory": "A-01 · identificar antes de cargar",
-      "holes": {}
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
     },
     {
       "id": "r1",
@@ -214,8 +218,8 @@
       "inventory": "C-01 · confirmar tres unidades",
       "resistance": 1000,
       "holes": {
-        "1": "C6",
-        "2": "G6"
+        "1": "G6",
+        "2": "C6"
       }
     },
     {
@@ -223,8 +227,8 @@
       "definition": "led",
       "inventory": "C-05 · rojo",
       "holes": {
-        "A": "H6",
-        "K": "H9"
+        "A": "B6",
+        "K": "B9"
       }
     },
     {
@@ -233,8 +237,8 @@
       "inventory": "C-01 · confirmar tres unidades",
       "resistance": 1000,
       "holes": {
-        "1": "C13",
-        "2": "G13"
+        "1": "G13",
+        "2": "C13"
       }
     },
     {
@@ -242,8 +246,8 @@
       "definition": "led",
       "inventory": "B-06 · amarillo",
       "holes": {
-        "A": "H13",
-        "K": "H16"
+        "A": "B13",
+        "K": "B16"
       }
     },
     {
@@ -252,8 +256,8 @@
       "inventory": "C-01 · confirmar tres unidades",
       "resistance": 1000,
       "holes": {
-        "1": "C20",
-        "2": "G20"
+        "1": "G20",
+        "2": "C20"
       }
     },
     {
@@ -261,8 +265,8 @@
       "definition": "led",
       "inventory": "B-05 · verde",
       "holes": {
-        "A": "H20",
-        "K": "H23"
+        "A": "B20",
+        "K": "B23"
       }
     }
   ],
@@ -270,152 +274,94 @@
     {
       "id": "c1",
       "from": "esp1:GPIO25",
-      "to": "bb:A6",
+      "to": "bb:J6",
       "color": "red",
       "jumper": "M–H",
       "note": "Cable 1 · M–H · esp1:GPIO25 → bb:A6. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          30,
+          708,
           357
-        ],
-        [
-          30,
-          745
-        ],
-        [
-          335,
-          745
-        ],
-        [
-          335,
-          240
         ]
       ]
     },
     {
       "id": "c2",
-      "from": "bb:J9",
+      "from": "bb:A9",
       "to": "bb:LN9",
       "color": "black",
       "jumper": "M–M",
       "note": "Cable 2 · M–M · bb:J9 → bb:LN9. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          346,
-          294
-        ],
-        [
-          346,
-          294
-        ]
-      ]
+      "bends": []
     },
     {
       "id": "c3",
       "from": "esp1:GPIO26",
-      "to": "bb:A13",
+      "to": "bb:J13",
       "color": "yellow",
       "jumper": "M–H",
       "note": "Cable 3 · M–H · esp1:GPIO26 → bb:A13. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          22,
+          708,
           384
-        ],
-        [
-          22,
-          769
-        ],
-        [
-          357,
-          769
-        ],
-        [
-          357,
-          366
         ]
       ]
     },
     {
       "id": "c4",
-      "from": "bb:J16",
+      "from": "bb:A16",
       "to": "bb:LN16",
       "color": "black",
       "jumper": "M–M",
       "note": "Cable 4 · M–M · bb:J16 → bb:LN16. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          368,
-          420
-        ],
-        [
-          368,
-          420
-        ]
-      ]
+      "bends": []
     },
     {
       "id": "c5",
       "from": "esp1:GPIO27",
-      "to": "bb:A20",
+      "to": "bb:J20",
       "color": "green",
       "jumper": "M–H",
       "note": "Cable 5 · M–H · esp1:GPIO27 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          14,
+          708,
           411
-        ],
-        [
-          14,
-          793
-        ],
-        [
-          379,
-          793
-        ],
-        [
-          379,
-          492
         ]
       ]
     },
     {
       "id": "c6",
-      "from": "bb:J23",
+      "from": "bb:A23",
       "to": "bb:LN23",
       "color": "black",
       "jumper": "M–M",
       "note": "Cable 6 · M–M · bb:J23 → bb:LN23. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c7",
+      "from": "esp1:GND_L",
+      "to": "bb:RN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "M–H negro: GND izquierdo del ESP32 al riel negativo derecho cercano RN28.",
       "bends": [
         [
-          390,
-          546
-        ],
-        [
-          390,
-          546
+          785,
+          519
         ]
       ]
     },
     {
-      "id": "c7",
-      "from": "esp1:GND",
-      "to": "bb:LN28",
+      "id": "c8",
+      "from": "bb:LN30",
+      "to": "bb:RN30",
       "color": "black",
-      "jumper": "M–H",
-      "note": "Cable 7 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          401,
-          519
-        ],
-        [
-          401,
-          636
-        ]
-      ]
+      "jumper": "M–M",
+      "note": "M–M negro: puente corto LN30–RN30 para compartir masa entre rieles; no rodear ESP32 ni pulsador.",
+      "bends": []
     }
   ],
   "revisions": []

@@ -1,7 +1,7 @@
 export interface Pin { id: string; kind: "source" | "ground" | "power" | "signal" | "passive"; voltage?: number; function?: string; required?: boolean; bus?: string }
 export interface Definition { id: string; name: string; pending: string; pins: Pin[] }
-export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; placement?: { x: number; y: number }; resistance?: number }
-export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][]; jumper?: "M–H" | "M–M"; pending?: string }
+export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; placement?: { x: number; y: number }; rotation?: 0 | 180; resistance?: number }
+export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][]; jumper?: "M–H" | "M–M" | "potencia" | "altavoz"; pending?: string }
 export type WireColor = "red" | "black" | "orange" | "green" | "yellow" | "blue" | "purple";
 export interface Revision { at: string; note: string; snapshot: string }
 export interface Assembly { version: 1; bankId?: string; layout?: "compact" | "breadboard"; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
@@ -46,7 +46,8 @@ export function parseAssembly(raw: string): Assembly {
     const d = a.catalog.find(d => d.id === p.definition);
     if (!d || !str(p.inventory, 120) || !p.holes || typeof p.holes !== "object" || Array.isArray(p.holes)) fail();
     if (p.resistance !== undefined && (!Number.isFinite(p.resistance) || p.resistance <= 0 || p.resistance > 1e9)) fail();
-    if (!["resistor", "led", "button"].includes(p.definition) && Object.keys(p.holes).length) fail();
+    // Any declared component may have a verified footprint; validate each terminal below.
+    if (p.rotation !== undefined && p.rotation !== 0 && p.rotation !== 180) fail();
     if (p.placement !== undefined && (!p.placement || Object.keys(p.placement).sort().join() !== "x,y" || [p.placement.x,p.placement.y].some(n => !Number.isFinite(n) || n < 0 || n > 5000))) fail();
     for (const [pin, hole] of Object.entries(p.holes)) if (!d!.pins.some(x => x.id === pin) || typeof hole !== "string" || !holeValid(hole, a.board.rows)) fail();
   }
@@ -55,7 +56,7 @@ export function parseAssembly(raw: string): Assembly {
   for (const w of a.wires) {
     if (!validEnd(w.from) || !validEnd(w.to) || !str(w.note)) fail();
     if (w.pending !== undefined && !str(w.pending)) fail();
-    if (w.jumper !== undefined && !["M–H", "M–M"].includes(w.jumper)) fail();
+    if (w.jumper !== undefined && !["M–H", "M–M", "potencia", "altavoz"].includes(w.jumper)) fail();
     if (w.color !== undefined && !["red", "black", "orange", "green", "yellow", "blue", "purple"].includes(w.color)) fail();
     if (w.bends !== undefined && (!Array.isArray(w.bends) || w.bends.length > 12 || w.bends.some(p => !Array.isArray(p) || p.length !== 2 || p.some(n => !Number.isFinite(n) || n < 0 || n > 5000)))) fail();
   }

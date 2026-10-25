@@ -94,10 +94,10 @@ try {
   for(const id of ids){
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();
-    if(['nfc','ambiente','dht11','pir','led-boton','leds','ruido','microfono','matriz','buzzer','ventilador'].includes(id)) assert.equal(await canvas.locator('[data-assembly-board]').count(),1);
+    if(['nfc','ambiente','dht11','pir','led-boton','leds','ruido','microfono','matriz','buzzer','ventilador','pantalla','audio-salida'].includes(id)) assert.equal(await canvas.locator('[data-assembly-board]').count(),1);
     else {await canvas.locator(`[data-mission-diagram="${id}"]`).waitFor();assert.equal(await canvas.locator('[data-assembly-board]').count(),0);}
   }
-  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds']) {
+  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','pantalla','audio-salida']) {
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();
     await page.getByRole('button',{name:'Historial',exact:true}).click();
@@ -165,13 +165,27 @@ try {
   await page.screenshot({path:'screenshots/montajes-nfc-mobile-details.png'});
   await page.keyboard.press('Escape');
   await page.screenshot({path:'screenshots/montajes-nfc-mobile.png'});
-  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','iluminacion']) {
+  for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','iluminacion','pantalla','audio-salida']) {
     await page.getByLabel('Elegir banco de prueba').selectOption(id);
     await page.locator(`[data-mission="${id}"]`).waitFor();
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
     assert.equal(await page.evaluate(()=>document.documentElement.scrollHeight<=innerHeight+1),true);
     await page.screenshot({path:`screenshots/montajes-${id}-mobile.png`});
   }
+  // Inspect all physical banks at tablet width in both themes, preserving saved data.
+  await page.setViewportSize({width:768,height:1024});
+  for(const theme of ['dark','light']) {
+    if(theme==='light')await page.getByRole('button',{name:'Usar tema claro',exact:true}).click();
+    for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','pantalla','audio-salida']) {
+      await page.getByLabel('Elegir banco de prueba').selectOption(id);
+      await page.locator(`[data-mission="${id}"]`).waitFor();
+      assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+      // SVG filters with zero-height/width bounding boxes hide straight conductors.
+      assert.equal(await canvas.locator('[data-wire-color][filter]').count(),0);
+      await page.screenshot({path:`screenshots/montajes-${id}-tablet-${theme}.png`});
+    }
+  }
+  await page.setViewportSize({width:390,height:844});
   // Editing a conditional wire must preserve its electrical blocker.
   await page.getByLabel('Elegir banco de prueba').selectOption('ruido');
   await page.getByRole('button',{name:'Editar',exact:true}).click();
@@ -193,5 +207,5 @@ try {
   assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).bankId,'ruido');
   assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).revisions.length,2);
   assert.deepEqual(errors,[]);
-  console.log('PASS: 16 isolated banks, 11 physical references, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
+  console.log('PASS: 16 isolated banks, 13 physical references, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
 } finally {await browser.close();}

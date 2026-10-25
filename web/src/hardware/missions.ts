@@ -124,7 +124,7 @@ export const missions: Mission[] = [
 
 const ambientMission = missions.find(m=>m.id === "ambiente")!;
 for (const [id,code,title,part] of [["dht11","M-04","DHT11 aislado","DHT11"],["pir","M-05","PIR aislado","PIR"]]) {
-  missions.push({...ambientMission,id:id!,code:code!,title:title!,summary:`Ensayo ${title} sin inicializar el otro sensor.`,modules:[ambientMission.modules[0]!,{name:part!,inventory:id==="dht11"?"B-03":"B-04 o D-06",shape:"sensor"}],materials:id==="dht11"?["B-03: DHT11", "C-02: 10 kΩ", "Protoboard y jumpers recibidos"]:["B-04 o D-06: un PIR identificado", "Protoboard y jumpers recibidos", "Fuente compatible pendiente"],links:ambientMission.links.filter(l=>`${l.from} ${l.to}`.includes(part!)),firmware:`ambient_bench, perfil ${id==="dht11"?"BENCH_DHT_ONLY":"BENCH_PIR_ONLY"}; Serial 115200.`});
+  missions.push({...ambientMission,id:id!,code:code!,title:title!,summary:`Ensayo ${title} sin inicializar el otro sensor.`,modules:[ambientMission.modules[0]!,{name:part!,inventory:id==="dht11"?"B-03":"B-04 o D-06",shape:"sensor"}],materials:id==="dht11"?["B-03: DHT11 con pull-up integrado", "Protoboard y jumpers recibidos"]:["B-04 o D-06: un PIR identificado", "Protoboard y jumpers recibidos", "Fuente compatible pendiente"],links:ambientMission.links.filter(l=>`${l.from} ${l.to}`.includes(part!)),firmware:`ambient_bench, perfil ${id==="dht11"?"BENCH_DHT_ONLY":"BENCH_PIR_ONLY"}; Serial 115200.`});
 }
 missions.push({id:"leds",code:"M-01B",title:"LEDs de estado",group:"Preparación",state:"Diseño y sketch; ensayo físico pendiente",summary:"Rojo, amarillo y verde separados, cada uno con resistencia de 1 kΩ. Ensayo aislado.",modules:[{name:"ESP32",inventory:"A-01 por identificar",shape:"esp32"},{name:"Tres LEDs",inventory:"C-05 / B-06 / B-05",shape:"led"}],materials:["C-05 rojo", "B-06 amarillo", "B-05 verde", "C-01: tres resistencias de 1 kΩ; confirmar cantidad", "Protoboard y jumpers recibidos"],jumpers:"4 M–H + 3 M–M; cero H–H",links:[link("ESP32 · GPIO25","LED rojo · A","signal","1 kΩ en serie"),link("ESP32 · GPIO26","LED amarillo · A","signal","1 kΩ en serie"),link("ESP32 · GPIO27","LED verde · A","signal","1 kΩ en serie"),link("LEDs · K","ESP32 · GND","ground")],checks:["Confirmar tres resistencias libres y polaridad de cada LED.","USB desconectado al armar; A-01 identificada y respaldo preservado antes de carga."],test:benches.leds!.expected,firmware:"firmware/status_led_bench; comandos red/yellow/green/off.",conflicts:"GPIO26/27 compartidos con otros bancos; ensayos separados.",sources:[chipSource]});
 missions.push({id:"iluminacion",code:"M-11",title:"Iluminación · material pendiente",group:"Ambiente / actuación",state:"Sin sensor recibido",summary:"No hay BH1750 ni LDR recibido en el inventario. Los LEDs son salidas, no sensores de lux.",modules:[{name:"Sensor de luz",inventory:"No recibido",shape:"sensor"}],materials:["Falta un sensor de iluminación identificado y su breakout; para #5 se requiere BH1750.","La posible LDR del kit pedido no está recibida ni mide lux sin caracterización."],jumpers:"Pendiente de identificar sensor; no reservar cables",links:[link("Sensor por recibir","ESP32 · interfaz por definir","signal","No conectar",true)],checks:["Confirmar recepción y variante antes de asignar VCC/GPIO o librería."],test:"Pendiente: respuesta a tres condiciones de iluminación con sensor identificado.",firmware:"Sin sketch de hardware no recibido.",conflicts:"No completar #5 ni generar lux sintéticos como evidencia física.",sources:[]});
@@ -132,9 +132,34 @@ for (const mission of missions) {
   const physical=benches[mission.id];
   if (!physical) continue;
   mission.physical=physical;
+  if(mission.id==="dht11"||mission.id==="ambiente") {
+    mission.materials=mission.materials.filter(m=>!m.includes("10 kΩ"));
+    mission.links=mission.links.filter(l=>!l.via?.includes("pull-up"));
+    mission.checks=mission.checks.filter(c=>!c.includes("pull-up incorporado"));
+    mission.checks.push("Guía UTEC Anexo X: DHT11 de tres pines con pull-up integrado; sin resistencia externa. ESP32: alimentar a 3,3 V y cotejar +/OUT/−.");
+  }
+  if(mission.id==="ambiente"||mission.id==="pir") {
+    mission.links=mission.links.map(l=>l.from==="ESP32 · VIN"?{...l,from:"Fuente externa 5 V DC · +",via:"Fuente propuesta, no recibida; VIN queda libre",pending:true}:l);
+    mission.materials.push("PROPUESTA: fuente externa regulada 5 V/2 A y salida DC por bornera, masa común");
+    mission.checks=mission.checks.filter(s=>!s.includes("VIN no es salida regulada"));
+  }
+  if(["matriz","buzzer","ventilador","pantalla","audio-salida"].includes(mission.id)) {
+    const a=physical.assembly;
+    const names:Record<string,string>={esp32:"ESP32",supply5:"Fuente 5 V DC",amp:"MAX98357A",speaker:"Bocina",matriz:"Matriz",ahct125:"SN74AHCT125N",relay:"Relé",fan:"Ventilador",tft:"TFT"};
+    const label=(end:string)=>{if(end.startsWith("bb:"))return `Protoboard · ${end.slice(3)}`;const [part,pin]=end.split(":");const p=a.parts.find(p=>p.id===part)!;return `${names[p.definition]??p.id} · ${pin}`;};
+    mission.modules=a.parts.map(p=>({name:`${p.id} · ${a.catalog.find(d=>d.id===p.definition)!.name}`,inventory:p.inventory,shape:p.definition}));
+    mission.materials=a.parts.map(p=>`${p.id}: ${p.inventory}`);
+    mission.summary=physical.action;
+    mission.checks=physical.blockers;
+    mission.test=physical.expected;
+    mission.links=a.wires.map(w=>({from:label(w.from),to:label(w.to),kind:w.jumper==="altavoz"?"speaker":w.from.includes(":GPIO")||w.to.includes(":GPIO")?"signal":w.jumper==="potencia"||w.color==="red"||w.color==="orange"?"power":w.color==="black"?"ground":"signal",via:`${w.id} · ${w.jumper}`,pending:!!w.pending}));
+    if(mission.id==="audio-salida")mission.conflicts="BCLK33/WS25/DIN22/SD21; perfil mínimo separado de micrófono, TFT y mascota de Lando. GAIN libre = 9 dB bajo referencia MAX98357A.";
+    if(mission.id==="matriz")mission.conflicts="Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita el pin de arranque GPIO15; ensayo aislado de PIR/TFT. DOUT no recibe datos del ESP32.";
+    mission.sources.push({title:"Material de la U y criterios de armado",url:"https://github.com/joaquinsalinas06/ClassAI/blob/codex/physical-benches/docs/hardware/circuitos-referencia.md"});
+  }
   if (mission.id!=="nfc") mission.state=physical.assembly.wires.some(w=>w.pending)||!physical.firmware?"Montaje condicionado · revisar pendientes":"Diseño y sketch · ensayo físico pendiente";
   const wires=physical.assembly.wires;
-  mission.jumpers=`${wires.filter(w=>w.jumper==="M–H" || (!w.jumper && !w.note.includes("M–M"))).length} M–H + ${wires.filter(w=>w.jumper==="M–M" || (!w.jumper && w.note.includes("M–M"))).length} M–M dibujados; cero H–H${["matriz","buzzer","ventilador"].includes(mission.id)?". Circuito incompleto; conteo final pendiente de etapa/fuente":""}`;
+  mission.jumpers=`${wires.filter(w=>w.jumper==="M–H" || (!w.jumper && !w.note.includes("M–M"))).length} M–H + ${wires.filter(w=>w.jumper==="M–M" || (!w.jumper && w.note.includes("M–M"))).length} M–M dibujados; cero H–H${wires.some(w=>w.jumper==="potencia")?`. ${wires.filter(w=>w.jumper==="potencia").length} tramos de potencia por bornera`:""}${wires.some(w=>w.jumper==="altavoz")?" y un par de altavoz":""}`;
   mission.checks=[...new Set([...mission.checks,...physical.blockers])];
   if(physical.firmware && mission.id!=="nfc") mission.firmware=`firmware/${physical.firmware}${physical.profile?` · perfil ${physical.profile}`:""}; compilar sin carga; Serial 115200. Ver guía física.`;
 }

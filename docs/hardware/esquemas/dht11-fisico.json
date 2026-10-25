@@ -1,7 +1,7 @@
 {
   "version": 1,
   "name": "M-04 · DHT11 aislado",
-  "note": "12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico.",
+  "note": "12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. Guía UTEC aportada: breakout DHT11 con pull-up integrado; se elimina R externa.",
   "board": {
     "rows": 30,
     "rails": true,
@@ -167,7 +167,7 @@
     {
       "id": "dht11",
       "name": "DHT11 · módulo − OUT +",
-      "pending": "B-03: etiquetas − / OUT / + reportadas, orientación de lectura por confirmar. VCC propuesta a 3,3 V, DATA a GPIO4 y pull-up 10 kΩ a 3,3 V; comprobar que esta variante funciona a esa tensión.",
+      "pending": "Módulo DHT11 de tres pines del laboratorio UTEC, Anexo X: pull-up de 10 kΩ integrado y alimentación 3–5,5 V. Para ESP32 usar 3,3 V; cotejar +/OUT/−, no trasladar la orientación de otra foto.",
       "pins": [
         {
           "id": "GND",
@@ -234,16 +234,6 @@
       "definition": "dht11",
       "inventory": "B-03",
       "holes": {}
-    },
-    {
-      "id": "r1",
-      "definition": "resistor",
-      "inventory": "C-02 · 10 kΩ ±5 %, verificar",
-      "holes": {
-        "1": "C8",
-        "2": "G8"
-      },
-      "resistance": 10000
     }
   ],
   "wires": [
@@ -255,12 +245,8 @@
       "note": "GND derecho del ESP32 → RN28. Riel derecho − para ambos sensores; comprobar continuidad, USB apagado.",
       "bends": [
         [
-          350,
+          785,
           519
-        ],
-        [
-          350,
-          636
         ]
       ],
       "jumper": "M–H"
@@ -273,12 +259,8 @@
       "note": "3V3 → LP29. Riel izquierdo + solo 3,3 V; riel izquierdo − queda libre.",
       "bends": [
         [
-          358,
+          435,
           546
-        ],
-        [
-          358,
-          654
         ]
       ],
       "jumper": "M–H"
@@ -291,11 +273,11 @@
       "note": "RN5 → − del DHT11. M–H: hembra al módulo y macho a RN5.",
       "bends": [
         [
-          850,
+          889,
           222
         ],
         [
-          850,
+          889,
           331
         ]
       ],
@@ -306,15 +288,14 @@
       "from": "bb:LP15",
       "to": "dht1:VCC",
       "color": "red",
-      "note": "LP15 (+3,3 V) → + del DHT11. No alimentar este sensor desde VIN.",
+      "note": "M–H rojo: + del módulo DHT11 a 3,3 V. Pull-up integrado, según guía UTEC aportada.",
       "bends": [
         [
           1040,
           402
         ]
       ],
-      "jumper": "M–H",
-      "pending": "Confirmar B-03 a 3,3 V y pull-up a esa tensión."
+      "jumper": "M–H"
     },
     {
       "id": "w7",
@@ -324,12 +305,8 @@
       "note": "Terminal OUT del DHT11 → A8. A8 y C8 pertenecen a la misma tira, lado A–E.",
       "bends": [
         [
-          990,
-          370
-        ],
-        [
           500,
-          370
+          331
         ]
       ],
       "jumper": "M–H"
@@ -342,37 +319,11 @@
       "note": "GPIO4 del ESP32 → B8; misma red de OUT y pata 1 de R1.",
       "bends": [
         [
-          376,
-          438
-        ],
-        [
-          376,
-          303
-        ],
-        [
           520,
-          303
+          438
         ]
       ],
       "jumper": "M–H"
-    },
-    {
-      "id": "w9",
-      "from": "bb:LP8",
-      "to": "bb:J8",
-      "color": "red",
-      "note": "Riel +3,3 V → J8; comparte la tira F–J con pata 2 de R1. Pull-up 10 kΩ entre DATA y 3,3 V.",
-      "bends": [
-        [
-          435,
-          240
-        ],
-        [
-          708,
-          240
-        ]
-      ],
-      "jumper": "M–M"
     }
   ],
   "revisions": [],

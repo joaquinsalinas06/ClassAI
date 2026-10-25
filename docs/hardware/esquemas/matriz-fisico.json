@@ -2,7 +2,7 @@
   "version": 1,
   "bankId": "matriz",
   "layout": "breadboard",
-  "name": "M-08A · Matriz 8×8",
+  "name": "M-08A · Matriz · montaje simple",
   "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
   "board": {
     "rows": 30,
@@ -171,38 +171,77 @@
       ]
     },
     {
-      "id": "matriz",
-      "name": "M-08A · Matriz 8×8",
-      "pending": "Conector de entrada VCC/GND/DIN/CS/CLK reportado; leer chip. Buffer 3,3→5 V y fuente no inventariados. No cablear GPIO directo.",
+      "id": "supply5",
+      "name": "Fuente DC 5 V / 2 A",
+      "pending": "Fuente genérica propuesta por petición del usuario; no recibida ni medida. ESP32 se alimenta por USB, no por VIN.",
       "pins": [
         {
-          "id": "VCC",
-          "kind": "power",
-          "required": true
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
         },
         {
           "id": "GND",
           "kind": "ground",
-          "required": true
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "matriz",
+      "name": "Módulo matriz 8×8",
+      "pending": "MAX7219 del laboratorio, Anexo K aportado; dos conectores de cinco pines. Entrada DIN recibe datos; DOUT es salida para cascada. Conexión directa solo si el módulo admite HIGH de 3,3 V; MAX7219 estándar a 5 V requiere adaptación. Ver alternativa en Compatibilidad.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
         },
         {
           "id": "DIN",
           "kind": "signal",
-          "required": true
+          "required": false
         },
         {
           "id": "CS",
           "kind": "signal",
-          "required": true
+          "required": false
         },
         {
           "id": "CLK",
           "kind": "signal",
-          "required": true
+          "required": false
+        },
+        {
+          "id": "VCC_OUT",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "GND_OUT",
+          "kind": "passive",
+          "required": false
         },
         {
           "id": "DOUT",
           "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CS_OUT",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "CLK_OUT",
+          "kind": "passive",
           "required": false
         }
       ]
@@ -213,19 +252,203 @@
       "id": "esp1",
       "definition": "esp32",
       "inventory": "A-01 · identificar antes de cargar",
-      "holes": {}
-    },
-    {
-      "id": "module1",
-      "definition": "matriz",
-      "inventory": "B-10 · controlador por leer",
       "holes": {},
       "placement": {
-        "x": 1010,
-        "y": 150
+        "x": 1000,
+        "y": 140
       }
+    },
+    {
+      "id": "matrix1",
+      "definition": "matriz",
+      "inventory": "B-10 · matriz 8×8",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 170
+      },
+      "rotation": 180
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "PROPUESTA · 5 V DC / 2 A",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 570
+      },
+      "rotation": 180
     }
   ],
-  "wires": [],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND_L",
+      "to": "bb:RN21",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND_L → bb:RN21. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          785,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "ps1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 2 · potencia DC por bornes · ps1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          612
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "ps1:PLUS",
+      "to": "bb:LP26",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Fuente externa 5 V propuesta; confirmar salida antes de energizar.",
+      "note": "Cable 3 · potencia DC por bornes · ps1:PLUS → bb:LP26. NO conectar: Fuente externa 5 V propuesta; confirmar salida antes de energizar.",
+      "bends": [
+        [
+          435,
+          636
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:LP12",
+      "to": "matrix1:VCC",
+      "color": "orange",
+      "jumper": "M–H",
+      "note": "Cable 4 · M–H · bb:LP12 → matrix1:VCC. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          310,
+          348
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:LN11",
+      "to": "matrix1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 5 · M–H · bb:LN11 → matrix1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          310,
+          330
+        ]
+      ]
+    },
+    {
+      "id": "c6",
+      "from": "bb:LN30",
+      "to": "bb:RN30",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 6 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c7",
+      "from": "esp1:GPIO13",
+      "to": "bb:J9",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 7 · M–H · esp1:GPIO13 → bb:J9. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          492
+        ]
+      ]
+    },
+    {
+      "id": "c8",
+      "from": "bb:H9",
+      "to": "matrix1:DIN",
+      "color": "green",
+      "jumper": "M–H",
+      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 8 · M–H · bb:H9 → matrix1:DIN. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "bends": [
+        [
+          310,
+          294
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "esp1:GPIO14",
+      "to": "bb:J5",
+      "color": "blue",
+      "jumper": "M–H",
+      "note": "Cable 9 · M–H · esp1:GPIO14 → bb:J5. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          438
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "bb:H5",
+      "to": "matrix1:CLK",
+      "color": "blue",
+      "jumper": "M–H",
+      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 10 · M–H · bb:H5 → matrix1:CLK. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "bends": [
+        [
+          310,
+          222
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "esp1:GPIO27",
+      "to": "bb:J7",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 11 · M–H · esp1:GPIO27 → bb:J7. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          708,
+          411
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "bb:H7",
+      "to": "matrix1:CS",
+      "color": "yellow",
+      "jumper": "M–H",
+      "pending": "Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "note": "Cable 12 · M–H · bb:H7 → matrix1:CS. NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo.",
+      "bends": [
+        [
+          310,
+          258
+        ]
+      ]
+    }
+  ],
   "revisions": []
 }

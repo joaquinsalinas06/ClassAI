@@ -1,5 +1,8 @@
 # Qué seguir armando
 
+> Actualización 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). DHT11 de laboratorio con pull-up integrado, sin resistencia externa; PIR con fuente externa propuesta, VIN desconectado. Matriz/buzzer/relé y pantalla/audio ya cuentan con sketches aislados. Los pendientes y conteos de esta versión anterior deben contrastarse con dichas guías.
+
+
 Corte del 24/10/2026. Propuesta según inventario y código; **ningún ensayo físico
 nuevo realizado**. Joaquín declara adaptadores de NFC y bocinas en soldadura,
 sin confirmar que hayan terminado. Los esquemas están en

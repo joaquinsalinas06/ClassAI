@@ -237,7 +237,11 @@
       "id": "esp1",
       "definition": "esp32",
       "inventory": "A-01 · identificar antes de cargar",
-      "holes": {}
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
     },
     {
       "id": "r1",
@@ -245,8 +249,8 @@
       "inventory": "C-01 · 1 kΩ",
       "resistance": 1000,
       "holes": {
-        "1": "C8",
-        "2": "G8"
+        "1": "G14",
+        "2": "C14"
       }
     },
     {
@@ -254,8 +258,8 @@
       "definition": "led",
       "inventory": "C-05 · rojo",
       "holes": {
-        "A": "H8",
-        "K": "H11"
+        "A": "B14",
+        "K": "B17"
       }
     },
     {
@@ -263,127 +267,82 @@
       "definition": "button",
       "inventory": "C-04",
       "holes": {
-        "A1": "E18",
-        "A2": "E20",
-        "B1": "F18",
-        "B2": "F20"
+        "A1": "E6",
+        "A2": "F6",
+        "B1": "E8",
+        "B2": "F8"
       }
     }
   ],
   "wires": [
     {
       "id": "c1",
-      "from": "esp1:GND",
-      "to": "bb:LN28",
+      "from": "esp1:GND_L",
+      "to": "bb:RN28",
       "color": "black",
       "jumper": "M–H",
-      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "M–H · esp1:GND_L → bb:RN28. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
       "bends": [
         [
-          335,
+          785,
           519
-        ],
-        [
-          335,
-          636
         ]
       ]
     },
     {
       "id": "c2",
       "from": "esp1:GPIO25",
-      "to": "bb:A8",
+      "to": "bb:J14",
       "color": "green",
       "jumper": "M–H",
-      "note": "Cable 2 · M–H · esp1:GPIO25 → bb:A8. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "M–H · esp1:GPIO25 → bb:J14. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
       "bends": [
         [
-          26,
+          708,
           357
-        ],
-        [
-          26,
-          757
-        ],
-        [
-          346,
-          757
-        ],
-        [
-          346,
-          276
         ]
       ]
     },
     {
       "id": "c3",
-      "from": "bb:J11",
-      "to": "bb:LN11",
+      "from": "bb:A17",
+      "to": "bb:LN17",
       "color": "black",
       "jumper": "M–M",
-      "note": "Cable 3 · M–M · bb:J11 → bb:LN11. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          357,
-          330
-        ],
-        [
-          357,
-          330
-        ]
-      ]
+      "note": "M–M · bb:A17 → bb:LN17. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
     },
     {
       "id": "c4",
       "from": "esp1:GPIO32",
-      "to": "bb:A18",
+      "to": "bb:J6",
       "color": "yellow",
       "jumper": "M–H",
-      "note": "Cable 4 · M–H · esp1:GPIO32 → bb:A18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "M–H · esp1:GPIO32 → bb:J6. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
       "bends": [
         [
-          18,
+          708,
           303
-        ],
-        [
-          18,
-          781
-        ],
-        [
-          368,
-          781
-        ],
-        [
-          368,
-          456
         ]
       ]
     },
     {
       "id": "c5",
-      "from": "bb:J18",
-      "to": "bb:LN18",
+      "from": "bb:J8",
+      "to": "bb:RN8",
       "color": "black",
       "jumper": "M–M",
-      "note": "Cable 5 · M–M · bb:J18 → bb:LN18. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          795,
-          456
-        ],
-        [
-          795,
-          558
-        ],
-        [
-          470,
-          558
-        ],
-        [
-          470,
-          456
-        ]
-      ]
+      "note": "M–M · bb:J8 → bb:RN8. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "bb:LN30",
+      "to": "bb:RN30",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "M–M · bb:LN30 → bb:RN30. Montar sin USB; el pulsador está arriba y el LED debajo para mantener el orden de GPIO y evitar cruces.",
+      "bends": []
     }
   ],
   "revisions": []

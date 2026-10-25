@@ -1,0 +1,762 @@
+{
+  "version": 1,
+  "bankId": "matriz",
+  "layout": "breadboard",
+  "name": "M-08A · Matriz con adaptación completa",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "supply5",
+      "name": "Fuente externa regulada 5 V / 2 A",
+      "pending": "PROPUESTA AUTORIZADA, no recibida ni medida: adaptador DC 5 V / 2 A, salida por bornera/distribuidor. ESP32 solo por USB; no conectar a VIN/3V3.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "voltage": 0,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ahct125",
+      "name": "U1 · SN74AHCT125N · PDIP-14",
+      "pending": "FALTANTE: TI SN74AHCT125N (AHCT, no HC). Muesca arriba, vista superior; entradas 3,3 V y alimentación 5 V. No hay continuidad pasiva entre A/Y.",
+      "pins": [
+        {
+          "id": "OE1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "A1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "Y1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "OE2",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "A2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "Y2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "Y3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "A3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "OE3",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "Y4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "A4",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "OE4",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "matriz",
+      "name": "B-10 · módulo matriz 8×8",
+      "pending": "MAX7219 identificado por el Anexo K del laboratorio aportado por Joaquín: dos conectores de cinco pines. Cotejar entrada sobre la pieza. IN/DIN recibe datos; OUT/DOUT encadena y queda libre. Si ambas cabeceras parecen decir DOUT, resolver cuál es entrada antes de conectar; no inferir por arriba/abajo ni por marca MH.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "DIN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CS",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CLK",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "VCC_OUT",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND_OUT",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "DOUT",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CS_OUT",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CLK_OUT",
+          "kind": "signal",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "capacitor",
+      "name": "Condensador de desacoplo",
+      "pending": "FALTANTE salvo componente verificado en módulo. Electrolítico: + a tensión positiva; − a GND. No omitir desacoplo de la ficha.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · identificar antes de cargar",
+      "holes": {}
+    },
+    {
+      "id": "u1",
+      "definition": "ahct125",
+      "inventory": "FALTANTE · TI SN74AHCT125N",
+      "holes": {
+        "OE1": "E10",
+        "A1": "E11",
+        "Y1": "E12",
+        "OE2": "E13",
+        "A2": "E14",
+        "Y2": "E15",
+        "GND": "E16",
+        "Y3": "F16",
+        "A3": "F15",
+        "OE3": "F14",
+        "Y4": "F13",
+        "A4": "F12",
+        "OE4": "F11",
+        "VCC": "F10"
+      }
+    },
+    {
+      "id": "matrix1",
+      "definition": "matriz",
+      "inventory": "B-10 · 8×8, dos cabeceras ×5",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 150
+      }
+    },
+    {
+      "id": "c1",
+      "definition": "capacitor",
+      "inventory": "FALTANTE · 100 nF cerámico",
+      "holes": {
+        "PLUS": "G10",
+        "MINUS": "G8"
+      }
+    },
+    {
+      "id": "c2",
+      "definition": "capacitor",
+      "inventory": "FALTANTE · 10 µF / ≥10 V; junto al módulo",
+      "holes": {},
+      "placement": {
+        "x": 990,
+        "y": 470
+      }
+    },
+    {
+      "id": "ps1",
+      "definition": "supply5",
+      "inventory": "PROPUESTA · fuente DC 5 V/2 A + distribuidor; no inventariada",
+      "holes": {},
+      "placement": {
+        "x": 1240,
+        "y": 120
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN28",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          457,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "ps1:GND",
+      "to": "bb:LN26",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 2 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:LN26. Solo referencia de lógica; motor/altavoz retornan al distribuidor, no a la protoboard.",
+      "bends": [
+        [
+          1229,
+          186
+        ],
+        [
+          1229,
+          447
+        ],
+        [
+          457,
+          447
+        ]
+      ]
+    },
+    {
+      "id": "c3",
+      "from": "ps1:PLUS",
+      "to": "bb:J10",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 3 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → bb:J10. 5 V a pin 14 de U1; no a ESP32.",
+      "bends": [
+        [
+          1240,
+          130
+        ],
+        [
+          708,
+          130
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "bb:J8",
+      "to": "bb:LN8",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 4 · M–M · bb:J8 → bb:LN8. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c5",
+      "from": "bb:A16",
+      "to": "bb:LN16",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 5 · M–M · bb:A16 → bb:LN16. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "bb:A10",
+      "to": "bb:LN10",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 6 · M–M · bb:A10 → bb:LN10. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c7",
+      "from": "bb:A13",
+      "to": "bb:LN13",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 7 · M–M · bb:A13 → bb:LN13. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c8",
+      "from": "bb:J14",
+      "to": "bb:LN14",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 8 · M–M · bb:J14 → bb:LN14. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          647,
+          384
+        ],
+        [
+          647,
+          450
+        ],
+        [
+          457,
+          450
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "bb:J11",
+      "to": "bb:J9",
+      "color": "orange",
+      "jumper": "M–M",
+      "note": "Cable 9 · M–M · bb:J11 → bb:J9. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c10",
+      "from": "bb:H9",
+      "to": "bb:H10",
+      "color": "orange",
+      "jumper": "M–M",
+      "note": "Cable 10 · M–M · bb:H9 → bb:H10. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
+    },
+    {
+      "id": "c11",
+      "from": "bb:J12",
+      "to": "bb:LN12",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 11 · M–M · bb:J12 → bb:LN12. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          621,
+          348
+        ],
+        [
+          621,
+          292
+        ],
+        [
+          457,
+          292
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "esp1:GPIO13",
+      "to": "bb:A11",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 12 · M–H · esp1:GPIO13 → bb:A11. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          629
+        ],
+        [
+          500,
+          629
+        ]
+      ]
+    },
+    {
+      "id": "c13",
+      "from": "bb:A12",
+      "to": "matrix1:DIN",
+      "color": "green",
+      "jumper": "M–H",
+      "pending": "Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "note": "Cable 13 · M–H · bb:A12 → matrix1:DIN. NO conectar: Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "bends": [
+        [
+          561,
+          348
+        ],
+        [
+          561,
+          278
+        ],
+        [
+          990,
+          278
+        ]
+      ]
+    },
+    {
+      "id": "c14",
+      "from": "esp1:GPIO14",
+      "to": "bb:B14",
+      "color": "blue",
+      "jumper": "M–H",
+      "note": "Cable 14 · M–H · esp1:GPIO14 → bb:B14. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          643
+        ],
+        [
+          520,
+          643
+        ]
+      ]
+    },
+    {
+      "id": "c15",
+      "from": "bb:B15",
+      "to": "matrix1:CLK",
+      "color": "blue",
+      "jumper": "M–H",
+      "pending": "Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "note": "Cable 15 · M–H · bb:B15 → matrix1:CLK. NO conectar: Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "bends": [
+        [
+          547,
+          402
+        ],
+        [
+          547,
+          436
+        ],
+        [
+          990,
+          436
+        ]
+      ]
+    },
+    {
+      "id": "c16",
+      "from": "esp1:GPIO27",
+      "to": "bb:J15",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "Cable 16 · M–H · esp1:GPIO27 → bb:J15. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          62,
+          622
+        ],
+        [
+          708,
+          622
+        ]
+      ]
+    },
+    {
+      "id": "c17",
+      "from": "bb:J16",
+      "to": "matrix1:CS",
+      "color": "yellow",
+      "jumper": "M–H",
+      "pending": "Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "note": "Cable 17 · M–H · bb:J16 → matrix1:CS. NO conectar: Cotejar cabecera de ENTRADA y confirmar controlador compatible MAX7219.",
+      "bends": [
+        [
+          990,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c18",
+      "from": "ps1:PLUS",
+      "to": "matrix1:VCC",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Fuente/materiales propuestos y controlador de B-10 por confirmar.",
+      "note": "Cable 18 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → matrix1:VCC. Cable de fuente al módulo, no al riel de 3,3 V. NO energizar: Fuente/materiales propuestos y controlador de B-10 por confirmar.",
+      "bends": [
+        [
+          1240,
+          130
+        ],
+        [
+          990,
+          130
+        ]
+      ]
+    },
+    {
+      "id": "c19",
+      "from": "ps1:GND",
+      "to": "matrix1:GND",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 19 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → matrix1:GND. Retorno de matriz directo al distribuidor.",
+      "bends": [
+        [
+          1240,
+          123
+        ],
+        [
+          990,
+          123
+        ]
+      ]
+    },
+    {
+      "id": "c20",
+      "from": "ps1:PLUS",
+      "to": "c2:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "note": "Cable 20 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → c2:PLUS. 10 µF junto a VCC matriz.",
+      "bends": [
+        [
+          1240,
+          468
+        ],
+        [
+          990,
+          468
+        ]
+      ]
+    },
+    {
+      "id": "c21",
+      "from": "ps1:GND",
+      "to": "c2:MINUS",
+      "color": "black",
+      "jumper": "potencia",
+      "note": "Cable 21 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → c2:MINUS. Negativo del electrolítico a GND.",
+      "bends": [
+        [
+          1236,
+          186
+        ],
+        [
+          1236,
+          440
+        ],
+        [
+          990,
+          440
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}

@@ -2,7 +2,7 @@
 
 Ensayo DHT11 aislado sin inicializar el otro sensor.
 
-**Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
+**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](dht11.svg)
 
@@ -10,11 +10,10 @@ Ensayo DHT11 aislado sin inicializar el otro sensor.
 
 ## Materiales
 
-- B-03: DHT11
-- C-02: 10 kΩ
+- B-03: DHT11 con pull-up integrado
 - Protoboard y jumpers recibidos
 
-Cables: 6 M–H + 1 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
@@ -23,37 +22,35 @@ Cables: 6 M–H + 1 M–M dibujados; cero H–H. Se reutilizan entre bancos; no 
 | ESP32 · 3V3 | DHT11 · + | 3,3 V | Pendiente; no conectar |
 | DHT11 · − | ESP32 · GND | — | Referencia |
 | DHT11 · OUT | ESP32 · GPIO4 | — | Referencia |
-| DHT11 · OUT | ESP32 · 3V3 | R1 · 10 kΩ, pull-up | Referencia |
 
 ## Armado cable por cable · USB desconectado
 
-12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico.
+12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. Guía UTEC aportada: breakout DHT11 con pull-up integrado; se elimina R externa.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
 | 1 | black | M–H | esp1:GND | bb:RN28 | GND derecho del ESP32 → RN28. Riel derecho − para ambos sensores; comprobar continuidad, USB apagado. |
 | 2 | red | M–H | esp1:3V3 | bb:LP29 | 3V3 → LP29. Riel izquierdo + solo 3,3 V; riel izquierdo − queda libre. |
 | 3 | black | M–H | bb:RN5 | dht1:GND | RN5 → − del DHT11. M–H: hembra al módulo y macho a RN5. |
-| 4 | red | M–H | bb:LP15 | dht1:VCC | NO conectar: Confirmar B-03 a 3,3 V y pull-up a esa tensión. |
+| 4 | red | M–H | bb:LP15 | dht1:VCC | M–H rojo: + del módulo DHT11 a 3,3 V. Pull-up integrado, según guía UTEC aportada. |
 | 5 | green | M–H | dht1:DATA | bb:A8 | Terminal OUT del DHT11 → A8. A8 y C8 pertenecen a la misma tira, lado A–E. |
 | 6 | green | M–H | esp1:GPIO4 | bb:B8 | GPIO4 del ESP32 → B8; misma red de OUT y pata 1 de R1. |
-| 7 | red | M–M | bb:LP8 | bb:J8 | Riel +3,3 V → J8; comparte la tira F–J con pata 2 de R1. Pull-up 10 kΩ entre DATA y 3,3 V. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
-LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: r1 (C-02 · 10 kΩ ±5 %, verificar): 1→C8, 2→G8.
+LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: módulos externos, conectores por verificar.
 
-Cruces no unen redes. Las líneas discontinuas están pendientes y no cuentan como continuidad confirmada. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
+Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un cable por verificar no cuenta como continuidad confirmada aunque se dibuje continuo. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
 
 ## Antes de energizar
 
 1. Distribución física de ambiente: VCC PIR en F20/H20 y OUT en G24/J24; no confundir tiras.
 2. Etiquetas del PIR no legibles en fotos: no inferir orden por lente o jumper amarillo.
-3. DHT11 + a 3,3 V según propuesta; confirmar variante y pull-up incorporado. No subir a 5 V por ensayo/error.
-4. VIN no es salida regulada garantizada; mantener esa alimentación pendiente hasta resolver la variante.
+3. VIN no es salida regulada garantizada; mantener esa alimentación pendiente hasta resolver la variante.
+4. Guía UTEC Anexo X: DHT11 de tres pines con pull-up integrado; sin resistencia externa. ESP32: alimentar a 3,3 V y cotejar +/OUT/−.
 5. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 6. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-7. Confirmar B-03, alimentación y pull-up del breakout.
+7. Cotejar etiquetas +/OUT/− del módulo DHT11 de laboratorio, alimentado a 3,3 V.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -61,10 +58,10 @@ Firmware: firmware/ambient_bench · perfil dht; compilar sin carga; Serial 11520
 
 ## Compilar y cargar manualmente
 
-Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unified Sensor 1.1.15 solo si el perfil utiliza DHT11. Otros sketches nuevos usan el core sin bibliotecas adicionales.
+Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unified Sensor 1.1.15 solo si el perfil utiliza DHT11. Actuadores usan ClassAIBench local y pantalla Adafruit GFX 1.12.6 + ST7735/ST7789 1.12.0.
 
 ```sh
-arduino-cli compile --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property 'compiler.cpp.extra_flags=-DBENCH_DHT_ONLY=1' --output-dir /tmp/classai-dht11-build firmware/ambient_bench
+arduino-cli compile --libraries firmware/libraries --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --build-property 'compiler.cpp.extra_flags=-DBENCH_DHT_ONLY=1' --output-dir /tmp/classai-dht11-build firmware/ambient_bench
 ```
 
 Antes de cargar: identificar A-01 y puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
@@ -90,7 +87,7 @@ Conflictos: PIR GPIO27 entra en conflicto con DC de la TFT.
 Faltantes/confirmaciones:
 - Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-- Confirmar B-03, alimentación y pull-up del breakout.
+- Cotejar etiquetas +/OUT/− del módulo DHT11 de laboratorio, alimentado a 3,3 V.
 
 ## Registro de resultado
 

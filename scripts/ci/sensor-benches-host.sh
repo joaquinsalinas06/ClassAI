@@ -12,6 +12,7 @@ cat > "$bench_tmp/Arduino.h" <<'CPP'
 #include <cstdio>
 #include <string>
 #include <initializer_list>
+#include <vector>
 constexpr int HIGH=1, LOW=0, OUTPUT=1, INPUT_PULLUP=2, INPUT=3, ADC_11db=3;
 inline uint32_t clockMs=0, clockUs=0;
 inline int modes[40]={}, written[40]={}, reads[40]={}, inputValue=0, adcValue=0;
@@ -19,7 +20,18 @@ inline uint32_t millis(){return clockMs;}
 inline uint32_t micros(){return clockUs;}
 inline void delay(unsigned ms){clockMs+=ms;clockUs+=1000*ms;}
 inline int digitalRead(unsigned pin){++reads[pin];return inputValue;}
-inline void digitalWrite(unsigned pin,int value){written[pin]=value;}
+inline std::vector<uint16_t> spiWords;
+inline uint16_t spiWord=0;inline unsigned spiBits=0;
+inline void digitalWrite(unsigned pin,int value){
+ if(pin==27&&value==LOW){spiWord=0;spiBits=0;}
+ if(pin==14&&value==HIGH&&written[27]==LOW){spiWord=static_cast<uint16_t>((spiWord<<1)|(written[13]?1:0));++spiBits;}
+ if(pin==27&&value==HIGH&&spiBits==16){spiWords.push_back(spiWord);spiBits=0;}
+ written[pin]=value;
+}
+inline bool pwmAttached=false;inline int pwmFrequency=0;
+inline bool ledcAttach(int,int,int){pwmAttached=true;return true;}
+inline void ledcDetach(int){pwmAttached=false;}
+inline void ledcWriteTone(int,int f){pwmFrequency=f;}
 inline void pinMode(unsigned pin,int mode){modes[pin]=mode;}
 inline void analogReadResolution(int){}
 inline void analogSetPinAttenuation(int,int){}
@@ -115,7 +127,7 @@ cat > "$bench_tmp/driver/i2s_std.h" <<'CPP'
 #include <cstdint>
 #include <cstring>
 using esp_err_t=int;using gpio_num_t=int;using i2s_chan_handle_t=void*;
-constexpr int ESP_OK=0,I2S_NUM_AUTO=-1,I2S_ROLE_MASTER=1,I2S_DATA_BIT_WIDTH_32BIT=32,I2S_SLOT_MODE_STEREO=2,I2S_GPIO_UNUSED=-1;
+constexpr int ESP_OK=0,I2S_NUM_AUTO=-1,I2S_ROLE_MASTER=1,I2S_DATA_BIT_WIDTH_16BIT=16,I2S_DATA_BIT_WIDTH_32BIT=32,I2S_SLOT_MODE_STEREO=2,I2S_GPIO_UNUSED=-1;
 struct i2s_chan_config_t {};
 struct i2s_std_config_t { struct Empty {} clk_cfg,slot_cfg;struct GPIO { int mclk,bclk,ws,dout,din; }gpio_cfg; };
 #define I2S_CHANNEL_DEFAULT_CONFIG(a,b) {}
@@ -124,8 +136,8 @@ struct i2s_std_config_t { struct Empty {} clk_cfg,slot_cfg;struct GPIO { int mcl
 inline int initError=0,readError=0,deleted=0;
 inline size_t frameBytes=512;
 inline int16_t sampleLeft=256,sampleRight=-32767;
-inline esp_err_t i2s_new_channel(i2s_chan_config_t*,void*,i2s_chan_handle_t* rx){*rx=reinterpret_cast<void*>(1);return initError;}
-inline esp_err_t i2s_channel_init_std_mode(i2s_chan_handle_t,i2s_std_config_t* config){assert(config->gpio_cfg.bclk==26&&config->gpio_cfg.ws==25&&config->gpio_cfg.din==33&&config->gpio_cfg.dout==I2S_GPIO_UNUSED);return 0;}
+inline esp_err_t i2s_new_channel(i2s_chan_config_t*,i2s_chan_handle_t* tx,i2s_chan_handle_t* rx){if(rx)*rx=reinterpret_cast<void*>(1);if(tx)*tx=reinterpret_cast<void*>(1);return initError;}
+inline esp_err_t i2s_channel_init_std_mode(i2s_chan_handle_t,i2s_std_config_t* config){if(config->gpio_cfg.din!=I2S_GPIO_UNUSED)assert(config->gpio_cfg.bclk==26&&config->gpio_cfg.ws==25&&config->gpio_cfg.din==33);else assert(config->gpio_cfg.bclk==33&&config->gpio_cfg.ws==25&&config->gpio_cfg.dout==22);return 0;}
 inline esp_err_t i2s_channel_enable(i2s_chan_handle_t){return 0;}
 inline esp_err_t i2s_del_channel(i2s_chan_handle_t){++deleted;return 0;}
 inline esp_err_t i2s_channel_read(i2s_chan_handle_t,void* out,size_t len,size_t* bytes,int timeout){
@@ -134,6 +146,88 @@ inline esp_err_t i2s_channel_read(i2s_chan_handle_t,void* out,size_t len,size_t*
  return readError;
 }
 CPP
+cat >> "$bench_tmp/driver/i2s_std.h" <<'CPP'
+inline int writeError=0;inline bool shortWrite=false;
+inline esp_err_t i2s_channel_write(i2s_chan_handle_t,const void* raw,size_t length,size_t* bytes,int timeout){
+ assert(timeout==20);*bytes=shortWrite?length-2:length;auto frames=static_cast<const int16_t*>(raw);
+ for(size_t i=0;i<length/sizeof(int16_t);i+=2){assert(frames[i]==frames[i+1]);assert(frames[i]>=-327&&frames[i]<=327);if(written[21]==LOW)assert(frames[i]==0);}
+ return writeError;
+}
+CPP
+cat > "$bench_tmp/Adafruit_GFX.h" <<'CPP'
+#pragma once
+CPP
+cat > "$bench_tmp/Adafruit_ST7789.h" <<'CPP'
+#pragma once
+constexpr uint16_t ST77XX_BLACK=0,ST77XX_RED=1,ST77XX_GREEN=2,ST77XX_BLUE=3,ST77XX_WHITE=4;
+inline int displayInits=0,displayPatterns=0,currentRotation=0;
+class Adafruit_ST7789 {public:
+ Adafruit_ST7789(int cs,int dc,int mosi,int clk,int rst){assert(cs==5&&dc==27&&mosi==23&&clk==14&&rst==26);}
+ void init(int w,int h){assert(w==240&&h==240);++displayInits;}
+ void fillScreen(int){} void setRotation(int r){currentRotation=r;}
+ void fillRect(int,int,int,int,int){++displayPatterns;} void drawRect(int,int,int,int,int){}
+ void setCursor(int,int){} void setTextSize(int){} void setTextColor(int){} void print(const char*){}
+};
+CPP
+cat > "$bench_tmp/matrix.cpp" <<'CPP'
+#include "matrix_bench.ino"
+int main(){
+ setup();assert(modes[13]==0&&modes[14]==0&&modes[27]==0);
+ Serial.input="pattern\n";loop();assert(!control.armed&&spiWords.empty());
+ Serial.input="arm\n";loop();assert(control.armed&&initialized);assert(spiWords[0]==0x0c00);
+ assert(spiWords[1]==0x0f00&&spiWords[2]==0x0900&&spiWords[3]==0x0b07&&spiWords[4]==0x0a00);
+ Serial.input="pattern\n";loop();assert(control.active&&spiWords.back()==0x0c01);
+ clockMs=5000;loop();assert(!control.active&&spiWords.back()==0x0c00);
+ Serial.input="scan\n";loop();assert(scanning&&cell==1);Serial.input="stop\n";loop();assert(!control.armed&&!scanning&&spiWords.back()==0x0c00);
+}
+CPP
+cat > "$bench_tmp/buzzer.cpp" <<'CPP'
+#include "buzzer_bench.ino"
+int main(){
+ setup();assert(written[17]==LOW);Serial.input="active\n";loop();assert(written[17]==LOW&&!control.armed);
+ Serial.input="arm\nactive\n";loop();assert(control.active&&written[17]==HIGH);
+ clockMs=119;loop();assert(written[17]==HIGH);clockMs=120;loop();assert(written[17]==LOW&&!control.active);
+ Serial.input="passive\n";loop();assert(pwmAttached&&pwmFrequency==2000);Serial.input="stop\n";loop();assert(!pwmAttached&&written[17]==LOW&&!control.armed);
+ Serial.input="arm\nxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx\n";loop();assert(!control.armed&&written[17]==LOW);
+ clockMs=UINT32_MAX-50;Serial.input="arm\nactive\n";loop();clockMs=68;loop();assert(written[17]==HIGH);clockMs=69;loop();assert(written[17]==LOW);
+}
+CPP
+cat > "$bench_tmp/fan.cpp" <<'CPP'
+#include "relay_fan_bench.ino"
+int main(){
+ setup();assert(written[26]==RELAY_OFF);Serial.input="on\n";loop();assert(written[26]==RELAY_OFF);
+ Serial.input="arm\non\n";loop();assert(written[26]==RELAY_ON&&control.active);
+ clockMs=1999;loop();assert(written[26]==RELAY_ON);clockMs=2000;loop();assert(written[26]==RELAY_OFF);
+ Serial.input="on\noff\n";loop();assert(written[26]==RELAY_OFF&&!control.active);
+ Serial.input="on\ninvalid\n";loop();assert(written[26]==RELAY_OFF&&!control.armed);
+ assert(modes[17]==0&&modes[25]==0&&modes[27]==0);
+}
+CPP
+cat > "$bench_tmp/audio.cpp" <<'CPP'
+#include "audio_output_bench.ino"
+int main(){
+ setup();assert(!ready&&written[21]==LOW);Serial.input="tone\n";loop();assert(!ready&&written[21]==LOW);
+ Serial.input="arm\ntone\n";loop();assert(ready&&control.active&&written[21]==HIGH);
+ clockMs=control.startedAt+299;loop();assert(written[21]==HIGH);clockMs=control.startedAt+300;loop();assert(written[21]==LOW&&!control.active);
+ Serial.input="tone\n";writeError=1;loop();assert(!control.armed&&written[21]==LOW);
+ writeError=0;shortWrite=true;Serial.input="arm\ntone\n";loop();assert(!control.armed&&written[21]==LOW);
+}
+CPP
+cat > "$bench_tmp/display.cpp" <<'CPP'
+#include "display_bench.ino"
+int main(){
+ setup();assert(displayInits==0);Serial.input="pattern\n";loop();assert(displayPatterns==0);
+ Serial.input="arm\npattern\nrot3\n";loop();assert(displayInits==1&&displayPatterns>0&&currentRotation==3);
+ Serial.input="stop\n";loop();assert(!control.armed);Serial.input="rot4\n";loop();assert(currentRotation==3);
+ assert(modes[17]==0&&modes[21]==0);
+}
+CPP
+for entry in matrix:matrix_bench buzzer:buzzer_bench fan:relay_fan_bench audio:audio_output_bench display:display_bench; do
+ "${CXX:-g++}" -std=c++17 -Wall -Wextra -Werror -I "$bench_tmp" -I firmware/libraries/ClassAIBench/src -I "firmware/${entry#*:}" "$bench_tmp/${entry%%:*}.cpp" -o "$bench_tmp/test"
+ "$bench_tmp/test"
+done
+"${CXX:-g++}" -std=c++17 -Wall -Wextra -Werror -DBENCH_RELAY_NPN_ONLY=1 -I "$bench_tmp" -I firmware/libraries/ClassAIBench/src -I firmware/relay_fan_bench "$bench_tmp/fan.cpp" -o "$bench_tmp/test"
+"$bench_tmp/test"
 cat > "$bench_tmp/mic_sketch.cpp" <<'CPP'
 #include "inmp441_bench.ino"
 int main(){
@@ -156,4 +250,4 @@ for entry in sound:sound_bench leds:status_led_bench mic:inmp441_bench; do
  "${CXX:-g++}" -std=c++17 -Wall -Wextra -Werror -I "$bench_tmp" -I "firmware/${entry#*:}" "$bench_tmp/${entry%%:*}.cpp" -o "$bench_tmp/test"
  "$bench_tmp/test"
 done
-printf '%s\n' 'PASS: isolated DHT/PIR/combined sketches, invalid readings/warmup/edges, ADC windows/clipping, LED commands/overflow, I2S left-slot/error/init guards and signed stats. Host stubs; no hardware.'
+printf '%s\n' 'PASS: isolated DHT/PIR/combined sketches, invalid readings/warmup/edges, ADC windows/clipping, LED commands/overflow, I2S guards/stats, arm/stop/overflow/wrap, MAX7219 packets, timed buzzer/fan/audio and display rotation. Host stubs; no hardware.'

@@ -1,5 +1,8 @@
 # Banco M-04/05: ESP32 de 30 pines + DHT11 + PIR
 
+> Actualización 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). DHT11 de laboratorio con pull-up integrado, sin resistencia externa; PIR con fuente externa propuesta, VIN desconectado. Matriz/buzzer/relé y pantalla/audio ya cuentan con sketches aislados. Los pendientes y conteos de esta versión anterior deben contrastarse con dichas guías.
+
+
 Diseño de referencia revisado el 24/10/2026. ESP32 **DEVKITV1 de 30 pines**
 observado en fotos 7/8, aún sin asociarlo a A-01/B-02 ni a un puerto USB. D4, D5,
 VP y VN son legibles. La otra placa conserva su pinout reportado. DHT11 B-03 con

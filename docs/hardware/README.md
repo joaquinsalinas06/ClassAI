@@ -15,7 +15,7 @@ préstamo, devolución o entrega se ha supuesto.
 | [nfc-hce-local.md](nfc-hce-local.md) | Unión teléfono HCE → PN532 → MQTT → backend/web locales, sin cambiar token |
 | [banco-nfc.md](banco-nfc.md) | NFC físico: ESP32 + PN532, 12 M–H, selector SPI y prueba tarjeta/llavero |
 | [banco-ambiente.md](banco-ambiente.md) | Primer circuito completo DHT11/PIR: alimentación, cableado, referencias y firmware de ensayo |
-| [esquemas/README.md](esquemas/README.md) | Colección de 12 esquemas SVG y guías por banco, exportables desde la web |
+| [esquemas/README.md](esquemas/README.md) | Colección de 16 guías, 13 montajes físicos y alternativas de compatibilidad, exportables desde la web |
 | [siguientes-bancos.md](siguientes-bancos.md) | Orden práctico, reparto de dos placas, presupuesto de cables y preparación tras soldadura |
 | [visualizador.md](visualizador.md) | Banco local, formato JSON y límites de validación |
 | [montajes.md](montajes.md) | Recetas con lista de materiales, orden de pruebas, propuesta de nodos y registro de montaje/desmontaje |
@@ -84,3 +84,5 @@ Se fotografiaron y asociaron a sus IDs sin duplicar stock: **D-05 ventilador 5 V
 La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. Las compras E-01 a E-04 siguen pendientes de recepción física.
 
 [Bancos físicos, materiales y evidencia R-025](bancos-fisicos.md): ensayos sucesivos con la otra placa, sin desmontar NFC automáticamente.
+
+Entrega actual: [bancos físicos](bancos-fisicos.md) y [componentes del laboratorio](circuitos-referencia.md), revisión R-026 del 25/10/2026.

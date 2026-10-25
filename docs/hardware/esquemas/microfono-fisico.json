@@ -208,7 +208,11 @@
       "id": "esp1",
       "definition": "esp32",
       "inventory": "A-01 · identificar antes de cargar",
-      "holes": {}
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
     },
     {
       "id": "module1",
@@ -216,9 +220,10 @@
       "inventory": "D-07 · INMP441",
       "holes": {},
       "placement": {
-        "x": 1010,
-        "y": 150
-      }
+        "x": 70,
+        "y": 170
+      },
+      "rotation": 180
     }
   ],
   "wires": [
@@ -231,12 +236,12 @@
       "note": "Cable 1 · M–H · esp1:3V3 → bb:LP28. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          335,
-          546
+          1238,
+          622
         ],
         [
-          335,
-          636
+          435,
+          622
         ]
       ]
     },
@@ -250,12 +255,8 @@
       "note": "Cable 2 · M–H · bb:LP4 → module1:VCC. NO conectar: Cotejar VCC, cabecera y desacoplo del breakout real.",
       "bends": [
         [
-          837,
+          310,
           204
-        ],
-        [
-          837,
-          192
         ]
       ]
     },
@@ -268,11 +269,7 @@
       "note": "Cable 3 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          357,
-          519
-        ],
-        [
-          357,
+          1238,
           636
         ]
       ]
@@ -286,12 +283,8 @@
       "note": "Cable 4 · M–H · bb:LN6 → module1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          861,
+          310,
           240
-        ],
-        [
-          861,
-          216
         ]
       ]
     },
@@ -305,12 +298,8 @@
       "note": "Cable 5 · M–H · bb:LN8 → module1:LR. NO conectar: Identificar L/R real; fijar canal izquierdo a GND.",
       "bends": [
         [
-          873,
+          310,
           276
-        ],
-        [
-          873,
-          264
         ]
       ]
     },
@@ -323,20 +312,8 @@
       "note": "Cable 6 · M–H · esp1:GPIO26 → bb:A12. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          30,
+          500,
           384
-        ],
-        [
-          30,
-          805
-        ],
-        [
-          390,
-          805
-        ],
-        [
-          390,
-          348
         ]
       ]
     },
@@ -350,12 +327,8 @@
       "note": "Cable 7 · M–H · bb:B12 → module1:SCK. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [
-          897,
+          310,
           348
-        ],
-        [
-          897,
-          312
         ]
       ]
     },
@@ -368,20 +341,8 @@
       "note": "Cable 8 · M–H · esp1:GPIO25 → bb:A16. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          22,
+          500,
           357
-        ],
-        [
-          22,
-          829
-        ],
-        [
-          335,
-          829
-        ],
-        [
-          335,
-          420
         ]
       ]
     },
@@ -395,12 +356,8 @@
       "note": "Cable 9 · M–H · bb:B16 → module1:WS. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [
-          825,
+          310,
           420
-        ],
-        [
-          825,
-          288
         ]
       ]
     },
@@ -413,20 +370,8 @@
       "note": "Cable 10 · M–H · esp1:GPIO33 → bb:A20. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          14,
+          500,
           330
-        ],
-        [
-          14,
-          853
-        ],
-        [
-          357,
-          853
-        ],
-        [
-          357,
-          492
         ]
       ]
     },
@@ -440,12 +385,8 @@
       "note": "Cable 11 · M–H · bb:B20 → module1:SD. NO conectar: Confirmar etiqueta del terminal; su posición dibujada no identifica el conector real.",
       "bends": [
         [
-          849,
+          310,
           492
-        ],
-        [
-          849,
-          240
         ]
       ]
     }
