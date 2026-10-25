@@ -98,9 +98,10 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             wait_for(connect, processes)
             publisher.loop_start()
             wait_for(connected.is_set, processes)
+            from nfc_lab import lab_environment
             env = {
-                **os.environ, "MQTT_HOST": "127.0.0.1", "MQTT_PORT": str(port),
-                "MQTT_TOPIC": "MLX90614/temperature", "MQTT_CLIENT_ID": "smoke-ingest",
+                **lab_environment(db_path, "127.0.0.1", port),
+                "MQTT_CLIENT_ID": "smoke-ingest",
                 "MQTT_USERNAME": "", "MQTT_PASSWORD": "", "PYTHONUNBUFFERED": "1",
             }
             # cwd is temporary: load_dotenv cannot pick up the repository's .env.

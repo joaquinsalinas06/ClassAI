@@ -51,7 +51,9 @@ bool nfcBegin() {
 }
 
 static bool exchange(const uint8_t* apdu, uint8_t len, uint8_t* resp, uint8_t* respLen) {
-  return nfc.inDataExchange(const_cast<uint8_t*>(apdu), len, resp, respLen);  // solo copia apdu
+  const bool ok = nfc.inDataExchange(const_cast<uint8_t*>(apdu), len, resp, respLen);
+  if (!ok) *respLen = 0;  // A transport failure has no APDU status word.
+  return ok;
 }
 
 // Target ya detectado: decide credencial. false = no emitir (ya logueado).

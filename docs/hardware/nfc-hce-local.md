@@ -31,6 +31,7 @@ uv venv --python 3.13 .venv
 uv pip install --python .venv/bin/python -r backend/requirements-ci.txt
 .venv/bin/python backend/nfc_lab.py prepare
 .venv/bin/python backend/nfc_lab.py doctor
+.venv/bin/python backend/nfc_lab.py mqtt-probe --broker-host IP_DEL_MAC
 .venv/bin/python backend/nfc_lab.py serve
 ```
 
@@ -40,6 +41,12 @@ estudiantes, nombres ya registrados, credenciales y sesiones existentes; no pide
 token. Si ya está creado, basta repetir sin cambiarlo. No usar `seed_demo --reset`.
 La base local está ignorada por Git. Si `.venv` ya existe, conservarla y omitir
 su creación; `uv pip install` sirve para completar dependencias.
+
+`mqtt-probe` abre publicador y suscriptor reales, espera SUBACK y recepción del
+mensaje QoS1 en un topic diagnóstico fuera de classai/v1; no crea asistencia.
+La variable MQTT_TOPIC de ingesta corresponde al formato legado MLX90614,
+**no** al topic de eventos del aula; ClassAI usa las suscripciones wildcard
+existentes. La prueba de integración usa el mismo entorno generado por el helper.
 
 `doctor` verifica CONNACK del broker existente en 127.0.0.1:1883 y muestra la IP
 del Mac. `serve` arranca **solo** ingesta, API en 0.0.0.0:8000 y web real en
@@ -194,3 +201,10 @@ estudiante esperado en **esa sesión**, no solo ver una animación o LED.
 No publicar tokens, UID, claves, DB, flash ni logs de payloads MQTT. El log nuevo
 del firmware muestra solo evento/id y publicación. Registrar en montajes por
 separado pruebas software y las físicas, con placa/puerto/commit/perfil y evidencia.
+
+
+Para aislar problemas de red, enviar `net` por Serial: muestra IP/gateway/máscara
+y prueba TCP al broker, API y descarga local, sin publicar eventos ni cambiar la
+sesión. Un pub/sub desde el Mac solo demuestra el broker desde ese host; no valida
+la comunicación ESP32→Mac. Tras cambiar de Wi-Fi, conservar el perfil anterior,
+actualizar el destino del firmware/APK y comprobar acceso desde la placa.

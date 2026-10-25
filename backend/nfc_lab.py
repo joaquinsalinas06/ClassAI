@@ -13,6 +13,7 @@ import subprocess
 import sys
 import threading
 import time
+import uuid
 from urllib.request import urlopen
 
 from backend import Database
@@ -111,10 +112,69 @@ def broker_ready(host, port):
         client.loop_stop()
 
 
+def broker_roundtrip(host, port):
+    """Two real clients; use an isolated diagnostic topic, never attendance events."""
+    import paho.mqtt.client as mqtt
+    probe = uuid.uuid4().hex
+    topic = f"classai/diagnostics/roundtrip/{probe}"
+    payload = f"local-probe:{probe}"
+    subscribed = threading.Event()
+    received = threading.Event()
+    failures = []
+    subscriber = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"lab-sub-{probe[:12]}")
+    publisher = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=f"lab-pub-{probe[:12]}")
+
+    def connected(client, userdata, flags, reason, properties):
+        if reason.is_failure:
+            failures.append("CONNACK rechazado")
+            subscribed.set()
+        else:
+            client.subscribe(topic, qos=1)
+
+    def subscription(client, userdata, mid, reasons, properties):
+        if any(reason.is_failure for reason in reasons):
+            failures.append("SUBACK rechazado")
+        subscribed.set()
+
+    def message(client, userdata, msg):
+        if msg.topic == topic and msg.payload == payload.encode():
+            received.set()
+
+    subscriber.on_connect = connected
+    subscriber.on_subscribe = subscription
+    subscriber.on_message = message
+    try:
+        for client in (subscriber, publisher):
+            if os.getenv("MQTT_USERNAME"):
+                client.username_pw_set(os.environ["MQTT_USERNAME"], os.getenv("MQTT_PASSWORD"))
+        subscriber.connect(host, port, keepalive=10)
+        subscriber.loop_start()
+        if not subscribed.wait(5) or failures:
+            raise RuntimeError(failures[0] if failures else "No se recibió SUBACK")
+        publisher.connect(host, port, keepalive=10)
+        publisher.loop_start()
+        publisher.publish(topic, payload, qos=1, retain=False).wait_for_publish(timeout=5)
+        if not received.wait(5):
+            raise RuntimeError("El suscriptor no recibió el mensaje de prueba")
+        print(f"PASS: publicador → broker {host}:{port} → suscriptor; mensaje recibido, sin crear asistencias")
+    finally:
+        for client in (publisher, subscriber):
+            client.disconnect()
+            client.loop_stop()
+
+
 def available(port):
     with socket.socket() as probe:
         probe.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         probe.bind(("0.0.0.0", port))
+
+
+def lab_environment(database, broker_host, broker_port):
+    return {**os.environ, "DATABASE_PATH": str(database), "LOCAL_TIMEZONE": "America/Lima",
+           "MQTT_HOST": broker_host, "MQTT_PORT": str(broker_port),
+           "MQTT_TOPIC": "MLX90614/temperature", "MQTT_CLIENT_ID": f"nfc-lab-ingest-{os.getpid()}",
+           "PYTHON_DOTENV_DISABLED": "1", "PYTHONUNBUFFERED": "1", "VITE_MOCK": "0",
+           "CLASSAI_API": "http://127.0.0.1:8000"}
 
 
 def serve(database, address, broker_host, broker_port):
@@ -124,11 +184,7 @@ def serve(database, address, broker_host, broker_port):
         raise RuntimeError("Falta pnpm")
     broker_ready(broker_host, broker_port)
     prepare(database)
-    env = {**os.environ, "DATABASE_PATH": str(database), "LOCAL_TIMEZONE": "America/Lima",
-           "MQTT_HOST": broker_host, "MQTT_PORT": str(broker_port),
-           "MQTT_TOPIC": f"classai/v1/{ROOM}/events", "MQTT_CLIENT_ID": f"nfc-lab-ingest-{os.getpid()}",
-           "PYTHON_DOTENV_DISABLED": "1", "PYTHONUNBUFFERED": "1", "VITE_MOCK": "0",
-           "CLASSAI_API": "http://127.0.0.1:8000"}
+    env = lab_environment(database, broker_host, broker_port)
     commands = [
         ([sys.executable, "backend.py"], ROOT / "backend"),
         ([sys.executable, "-m", "uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--timeout-graceful-shutdown", "3"], ROOT / "backend"),
@@ -179,7 +235,7 @@ def serve(database, address, broker_host, broker_port):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=("prepare", "serve", "configure-firmware", "doctor"))
+    parser.add_argument("command", choices=("prepare", "serve", "configure-firmware", "doctor", "mqtt-probe"))
     parser.add_argument("--code")
     parser.add_argument("--name")
     parser.add_argument("--database", type=Path, default=LAB_DB)
@@ -196,6 +252,8 @@ def main():
             print("Estudiante preparado; se conservan credenciales y datos existentes. Vincular desde la app con su mismo token.")
         elif args.command == "configure-firmware":
             configure_firmware(args.lan_ip, args.broker_port)
+        elif args.command == "mqtt-probe":
+            broker_roundtrip(args.broker_host, args.broker_port)
         elif args.command == "doctor":
             broker_ready(args.broker_host, args.broker_port)
             print(f"Broker disponible; app http://{args.lan_ip}:8000; web real http://127.0.0.1:5189")
