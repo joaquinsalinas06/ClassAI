@@ -31,7 +31,7 @@ Cables: 11 M–H + 1 M–M; 0 H–H, según guía física. No reservar material 
 
 ## Antes de conectar
 
-1. Abrir la guía física inferior: VCC PIR en F20/H20 y OUT en G24/J24; no confundir tiras.
+1. Distribución física de ambiente: VCC PIR en F20/H20 y OUT en G24/J24; no confundir tiras.
 2. Etiquetas del PIR no legibles en fotos: no inferir orden por lente o jumper amarillo.
 3. DHT11 + a 3,3 V según propuesta; confirmar variante y pull-up incorporado. No subir a 5 V por ensayo/error.
 4. VIN no es salida regulada garantizada; mantener esa alimentación pendiente hasta resolver la variante.

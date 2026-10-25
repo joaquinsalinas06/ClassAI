@@ -6,7 +6,7 @@ Referencias generadas desde web/src/hardware/missions.ts. No prueban un montaje 
 |---|---|---|---|
 | M-00 · Identificar y conservar | Preparación | Antes de cualquier carga | [Guía](identidad.md) · [SVG](identidad.svg) |
 | M-01 · LED + botón | Preparación | Preparar mientras sueldan | [Guía](led-boton.md) · [SVG](led-boton.svg) |
-| M-10 · NFC · tarjetas y llavero | NFC / sesión | Soldadura en curso | [Guía](nfc.md) · [SVG](nfc.svg) |
+| M-10 · NFC · tarjetas y llavero | NFC / sesión | HCE y asistencia física comprobados; regularidad RF pendiente | [Guía](nfc.md) · [SVG](nfc.svg) |
 | M-04/05 · DHT11 + PIR | Ambiente / actuación | Guía física disponible | [Guía](ambiente.md) · [SVG](ambiente.svg) |
 | M-07B · Audio · una bocina | Interfaz / audio | Soldadura y fuente pendientes | [Guía](audio-salida.md) · [SVG](audio-salida.svg) |
 | M-02 · Pantalla · mascota | Interfaz / audio | Revisar VCC / BL | [Guía](pantalla.md) · [SVG](pantalla.svg) |

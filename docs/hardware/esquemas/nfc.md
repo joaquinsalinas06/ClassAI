@@ -1,8 +1,8 @@
 # M-10 · NFC · tarjetas y llavero
 
-Montaje físico disponible: detectar versión y leer tarjeta/llavero antes de Android HCE, tras revisar soldadura.
+ESP32 B-02 y PN532 D-01: montaje con rieles usado en el ensayo HCE → MQTT → asistencia. Retirar y presentar puede requerir reintentos; regularidad RF pendiente.
 
-**Propuesta, sin ensayo físico. Soldadura en curso.**
+**Propuesta, sin ensayo físico. HCE y asistencia física comprobados; regularidad RF pendiente.**
 
 [Abrir guía física con 12 cables y diagnóstico](../banco-nfc.md).
 
@@ -15,7 +15,7 @@ Mapa eléctrico por nombres: las posiciones se ordenan por función, no correspo
 - D-01: PN532 V3 ×1
 - D-02: tarjeta ×1
 - D-03: llavero ×1
-- D-11: cabecera, soldadura en curso; contar
+- D-11: cabecera macho montada en el ensayo NFC
 - B-01 o A-04: protoboard
 
 Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes por protoboard, 0 H–H. No reservar material ya usado en otro banco.
@@ -40,7 +40,7 @@ Cables: Con cabecera macho: 12 M–H; con hembra: 6 M–H + 6 M–M. Seis redes 
 
 Resultado esperado: PN532 responde con versión; 20 detecciones con retirada entre lecturas. Después probar Android HCE por separado.
 
-Firmware: firmware/nfc_bench: sketch aislado de versión/detecciones, sin publicar UID. No prueba HCE ni asistencia integrada.
+Firmware: firmware/classai_node, perfil NFC_ONLY: SPI 18/19/23/5, Serial 115200, status/start/stop. HCE y asistencia persistida probados (R-023). firmware/nfc_bench queda para diagnóstico de tarjetas.
 
 Conflictos: TFT comparte GPIO5/23 y usa otro SCK; no conectar ambas recetas como si fueran compatibles.
 
