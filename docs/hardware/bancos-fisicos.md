@@ -2,22 +2,22 @@
 
 Corte inicial: 24/10/2026, America/Lima. Esta entrega añade diseño/software; **no hubo upload, lectura de flash, apertura de Serial ni ensayo físico**. R-023 de B-02/PN532 sigue siendo la referencia física anterior, con errores RF intermitentes. Respaldos, configuraciones privadas y credenciales conservados.
 
-## Actualización del 25/10/2026
+## Actualización del 25/10/2026 · R-027
 
-La tabla y los conteos iniciales de abajo se conservan como estado histórico de R-025. **Los sustituyen las guías regeneradas y R-026:**
+La tabla y los conteos iniciales de abajo se conservan como estado histórico de R-025. **Los sustituyen las guías regeneradas y R-027.** No se presupone una fuente que Joaquín no posee: las vistas principales usan USB/3,3 V o muestran la carga desconectada. Los circuitos de fuente separada permanecen únicamente en **Compatibilidad** como material futuro.
 
 | Banco | Entrega actual | Pendiente físico |
 |---|---|---|
-| DHT11 / PIR / conjunto | Tres perfiles aislados; DHT11 con pull-up integrado según Anexo X, sin resistencia externa; PIR con fuente externa propuesta | Etiquetas reales, variante PIR/OUT y fuente; VIN desconectado |
+| DHT11 / PIR / conjunto | Tres perfiles aislados; DHT11 con pull-up integrado según Anexo X; PIR por VIN/5V de USB solo tras identificar A-01 | Etiquetas reales, variante PIR/OUT y confirmar que el pin VIN/5V de A-01 expone VBUS |
 | LED/pulsador | Pulsador arriba, LED debajo; GPIO25/32 conservados, masas cercanas; 3 M–H + 3 M–M | A-01/puerto/respaldo, A/K y parejas de contacto |
 | B-08 / INMP441 / LEDs | Guías físicas y sketches aislados | Alimentación/niveles B-08; cabecera INMP441; resistencias de LEDs |
-| Matriz | Módulo MAX7219, dibujo simple y alternativa AHCT; sketch DIN13/CLK14/CS27 | Fuente 5 V y compatibilidad lógica o buffer |
+| Matriz | Módulo MAX7219, dibujo simple sin fuente ficticia y alternativa AHCT; sketch DIN13/CLK14/CS27 | VIN/5V USB y presupuesto; compatibilidad lógica o buffer |
 | Buzzer | Dos cables y buzzer sobre protoboard; sketch activo/pasivo; alternativa con transistor separada | Tipo/consumo admisible desde GPIO |
-| Relé/ventilador | Módulo doble y fuente genérica 5 V/2 A; sketch LOW-trigger y perfil NPN separado | IN1 de 3,3 V, JD-VCC, corriente de arranque, polaridad y conector |
-| Pantalla/audio | Ensayos aislados ST7789 y MAX98357A, un altavoz; patrones/tono y apagado | Variante, alimentación, terminales y montaje; integración Lando pendiente |
+| Relé/ventilador | Vista principal de prueba del relé por USB; COM/NO/NC y fan completamente desconectados. Etapa completa en Compatibilidad | Para el fan: fuente real 5 V, corriente de arranque, polaridad y adaptador; para el relé: VIN/5V, IN1 y JD-VCC |
+| Pantalla/audio | Ensayos aislados ST7789 y MAX98357A; audio principal por VIN/5V USB, una bocina y tono inicial al 1 % | Identificar A-01, variante, presupuesto USB, terminales y montaje; fuente separada solo para mayor potencia |
 | Iluminación | Material requerido explícito | Sensor de luz no recibido |
 
-Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. Los trazos son continuos para facilitar su lectura; la condición pendiente se conserva en el inspector y el modelo. La vista principal ya no amontona las piezas propuestas de adaptación.
+Ver [evidencia documental y alternativas](circuitos-referencia.md). Las guías actuales enlazan inventario, extremos, agujeros, tipos de cable, comandos y diagnóstico. `ESPERA` aparece dentro de cada cable condicionado; `LIBRE` identifica terminales que no deben conectarse. La vista principal ya no dibuja una fuente externa no disponible.
 
 Compilación de la actualización: `bash scripts/ci/benches-build.sh`, Arduino CLI 1.5.1, core ESP32 3.3.12. Se añaden Adafruit GFX 1.12.6 y ST7735/ST7789 1.12.0 fijadas en instalación. Resultados de memoria nuevos se registran en R-026. No hubo carga, Serial físico, simulación nueva ni ensayo eléctrico. B-02/NFC y respaldos conservados.
 
@@ -40,7 +40,7 @@ Los 16 bancos incluyen preparación/transporte y referencias condicionadas, **no
 
 Para LED/pulsador: **A-01**, su cable micro USB de datos **A-03 o D-10 libre**, protoboard **A-04 libre y apta** (o una recibida libre con contactos equivalentes), **C-05** LED rojo, **una C-01 de 1 kΩ**, **C-04** pulsador, **3 M–H + 2 M–M**. Confirmar dimensiones/filas de la protoboard y parejas del pulsador antes de trasladar los agujeros del dibujo. Las bandas café–negro–rojo–dorado corresponden a la referencia de 1 kΩ; no sustituir por C-03 sin identificar.
 
-Para el siguiente ensayo ambiental: **B-03**, **una C-02 de 10 kΩ**, **un PIR B-04 o D-06 identificado**, A-01/USB/protoboard y **11 M–H + 1 M–M** para el conjunto. DHT11 solo requiere **6 M–H + 1 M–M**; PIR solo, **6 M–H**. No compartir material reservado al NFC sin registrar desmontaje/rearmado; no se exige disponer de todos los bancos a la vez. No contar E-01/E-02/E-03/E-04 como recibidos.
+Para el siguiente ensayo ambiental: **B-03**, **un PIR B-04 o D-06 identificado**, A-01/USB/protoboard y los cables indicados por la guía regenerada. El módulo DHT11 del Anexo X ya incorpora el pull-up: no añadir C-02. No compartir material reservado al NFC sin registrar desmontaje/rearmado; no se exige disponer de todos los bancos a la vez. No contar E-01/E-02/E-03/E-04 como recibidos.
 
 No se carga A-01 hasta asociar su placa y puerto, revisar cableado real y conservar respaldo privado verificado. No copiar el puerto histórico de B-02 ni abrirlo para probar estos sketches. Un archivo de respaldo no demuestra restauración ensayada.
 
@@ -52,7 +52,7 @@ No se carga A-01 hasta asociar su placa y puerto, revisar cableado real y conser
 - **LEDs:** contar tres resistencias C-01 de 1 kΩ libres; si solo hay una, probar los LEDs sucesivamente con LED/pulsador, no omitir resistencias.
 - **B-10:** leer el controlador. Si es MAX7219 a 5 V, hace falta buffer 3,3→5 V compatible (familia AHCT como candidato; encapsulado/pinout/decoupling todavía por elegir) y fuente 5 V dimensionada. No se ha inventariado ese buffer ni se cierra un conteo ficticio de cables. No conectar directamente GPIO13/14/15 al módulo.
 - **B-09:** identificar activo/pasivo, tensión y consumo; solo entonces especificar transistor/etapa, resistencias y protección si procede. El símbolo + no aporta esos valores. No existe aún un circuito completo para energizar.
-- **B-11/D-05:** fuente DC regulada de 5 V de capacidad suficiente, cable de potencia y adaptador del conector blanco de dos posiciones (paso por identificar). Faltan corriente de arranque del fan, lógica/jumper del relé y adaptación IN1. COM/NO son contactos de carga; no IN1. Sin conmutación de red eléctrica ni motor/bobinas desde GPIO/3V3.
+- **B-11/D-05:** el relé puede ensayarse sin carga únicamente tras confirmar A-01 y su pin VIN/5V, la lógica LOW y la compatibilidad de IN1. El fan permanece desconectado: para moverlo falta una fuente DC regulada de 5 V con corriente de arranque suficiente, cable de potencia y adaptador del conector blanco. COM/NO son contactos de carga; no IN1. Sin conmutación de red eléctrica ni motor/bobinas desde GPIO/3V3.
 - **Luz:** para #5 falta un BH1750 con breakout identificado y compatible; no se compra ni selecciona variante automáticamente. LED no equivale a sensor y LDR sin caracterización no da lux.
 
 ## Firmware y evidencia reproducible

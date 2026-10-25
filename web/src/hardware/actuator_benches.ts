@@ -16,13 +16,12 @@ function addSwitch(a:Assembly,control:number){
 }
 function guide(a:Assembly,firmware:string,action:string,expected:string,blockers:string[]):BenchGuide{return {assembly:route(a),firmware,action,expected,diagnosis:"Enviar stop ante un fallo. Desconectar ambas fuentes antes de revisar cada extremo, polaridad, masa común y material faltante; no cambiar pines en caliente.",blockers:["A-01/puerto identificados y respaldo privado preservado; B-02/NFC conservado.",...blockers]};}
 export function completeActuatorBenches(benches:Record<string,BenchGuide>){
- // Replace the unverified USB->VIN route with the explicitly assumed external source.
+ // Reuse USB 5 V only as a documented, conditional route on an identified A-01.
  for(const id of ["ambiente","pir"]) {
-  const g=benches[id]!,a=g.assembly;a.catalog.push(supply);source(a);
-  for(const w of a.wires)if(w.from==="esp1:VIN") {w.from="ps1:PLUS";w.jumper="potencia";w.color="orange";w.pending="Fuente externa regulada 5 V propuesta, no recibida; cotejar VCC del PIR.";w.note="Fuente externa +5 V → F20; VIN ESP32 queda libre. No alimentar ESP32 por esta fuente.";}
-  power(a,"ps1:GND","bb:RN26","Referencia común de sensores y ESP32; no conecta el positivo a VIN.");
-  a.note+=" R-026 sustituye USB–VIN por fuente externa regulada 5 V/2 A propuesta, masa común. VIN queda desconectado. La fuente no se ha recibido ni medido.";
-  g.blockers=g.blockers.map(s=>s.replace("VIN no es salida 5 V garantizada.","Usar fuente externa propuesta, no VIN.")).concat("Fuente externa regulada 5 V/2 A de referencia; no recibida. Cotejar VCC/OUT/GND del PIR.");
+  const g=benches[id]!,a=g.assembly;
+  for(const w of a.wires)if(w.from==="esp1:VIN") {w.jumper="M–H";w.color="orange";w.pending="A-01 no está identificada: confirmar que el pin serigrafiado VIN/5V expone los 5 V del USB antes de conectar el PIR.";w.note="VIN/5V de A-01 → VCC del PIR, solo tras identificar la placa. No usar este supuesto para fan/motor.";}
+  a.note+=" R-027 elimina la fuente externa no disponible. PIR queda condicionado al pin VIN/5V alimentado por USB de una A-01 identificada.";
+  g.blockers=g.blockers.map(s=>s.replace("VIN no es salida 5 V garantizada.","Confirmar en A-01 que VIN/5V expone los 5 V del USB; no inferirlo por el dibujo.")).concat("No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.");
   g.assembly=route(a);
  }
 

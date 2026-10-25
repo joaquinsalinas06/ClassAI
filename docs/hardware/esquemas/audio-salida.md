@@ -11,72 +11,64 @@ Enviar arm y tone para 440 Hz durante 300 ms, a amplitud digital inicial del 1 %
 ## Materiales
 
 - esp1: A-01 · identificar antes de cargar
-- amp1: D-08 · MAX98357A según inventario
-- speaker1: D-09 · solo una de las dos · 4 Ω / 3 W
-- c1: FALTANTE · 100 µF/≥10 V junto a VIN
-- ps1: PROPUESTA · fuente DC 5 V/2 A + distribuidor; no inventariada
+- amp1: D-08 · MAX98357A
+- speaker1: D-09 · usar solo una · 4 Ω / 3 W
 - rsd: C-01 · 1 kΩ pull-down SD
 
-Cables: 9 M–H + 1 M–M dibujados; cero H–H. 5 tramos de potencia por bornera y un par de altavoz. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 8 M–H + 1 M–M dibujados; cero H–H y un par de altavoz. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| ESP32 · GND | Protoboard · LN28 | c1 · M–H | Referencia |
-| Fuente 5 V DC · GND | Protoboard · LN26 | c2 · potencia | Referencia |
-| Protoboard · A25 | Protoboard · LN25 | c3 · M–M | Referencia |
-| ESP32 · GPIO33 | Protoboard · A10 | c4 · M–H | Referencia |
-| Protoboard · B10 | MAX98357A · BCLK | c5 · M–H | Pendiente; no conectar |
-| ESP32 · GPIO25 | Protoboard · A14 | c6 · M–H | Referencia |
-| Protoboard · B14 | MAX98357A · LRC | c7 · M–H | Pendiente; no conectar |
-| ESP32 · GPIO22 | Protoboard · A18 | c8 · M–H | Referencia |
-| Protoboard · B18 | MAX98357A · DIN | c9 · M–H | Pendiente; no conectar |
-| ESP32 · GPIO21 | Protoboard · A22 | c10 · M–H | Referencia |
-| Protoboard · B22 | MAX98357A · SD | c11 · M–H | Pendiente; no conectar |
-| Fuente 5 V DC · PLUS | MAX98357A · VIN | c12 · potencia | Pendiente; no conectar |
-| Fuente 5 V DC · GND | MAX98357A · GND | c13 · potencia | Referencia |
-| Fuente 5 V DC · PLUS | c1 · PLUS | c14 · potencia | Referencia |
-| Fuente 5 V DC · GND | c1 · MINUS | c15 · potencia | Referencia |
-| MAX98357A · SPK_PLUS | Bocina · PLUS | c16 · altavoz | Pendiente; no conectar |
-| MAX98357A · SPK_MINUS | Bocina · MINUS | c17 · altavoz | Pendiente; no conectar |
+| ESP32 · GND_L | Protoboard · RN28 | c1 · M–H | Referencia |
+| Protoboard · RN20 | MAX98357A · GND | c2 · M–H | Referencia |
+| ESP32 · VIN | MAX98357A · VIN | c3 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO33 | MAX98357A · BCLK | c4 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO25 | MAX98357A · LRC | c5 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO22 | MAX98357A · DIN | c6 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO21 | Protoboard · J22 | c7 · M–H | Referencia |
+| Protoboard · H22 | MAX98357A · SD | c8 · M–H | Pendiente; no conectar |
+| Protoboard · J25 | Protoboard · RN25 | c9 · M–M | Referencia |
+| MAX98357A · SPK_PLUS | Bocina · PLUS | c10 · altavoz | Pendiente; no conectar |
+| MAX98357A · SPK_MINUS | Bocina · MINUS | c11 · altavoz | Pendiente; no conectar |
 
 ## Armado cable por cable · USB desconectado
 
-Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.
+Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H. R-027: la vista principal no supone una fuente externa. D-08 y D-09 quedan a la izquierda, con I²S directo y solo el pull-down SD en protoboard; el circuito de fuente separada se conserva en Compatibilidad.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
-| 1 | black | M–H | esp1:GND | bb:LN28 | Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 2 | black | potencia | ps1:GND | bb:LN26 | Cable 2 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:LN26. Solo referencia de lógica; motor/altavoz retornan al distribuidor, no a la protoboard. |
-| 3 | black | M–M | bb:A25 | bb:LN25 | Cable 3 · M–M · bb:A25 → bb:LN25. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 4 | blue | M–H | esp1:GPIO33 | bb:A10 | Cable 4 · M–H · esp1:GPIO33 → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 5 | blue | M–H | bb:B10 | amp1:BCLK | NO conectar: Cotejar terminal del breakout MAX98357A. |
-| 6 | yellow | M–H | esp1:GPIO25 | bb:A14 | Cable 6 · M–H · esp1:GPIO25 → bb:A14. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 7 | yellow | M–H | bb:B14 | amp1:LRC | NO conectar: Cotejar terminal del breakout MAX98357A. |
-| 8 | green | M–H | esp1:GPIO22 | bb:A18 | Cable 8 · M–H · esp1:GPIO22 → bb:A18. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 9 | green | M–H | bb:B18 | amp1:DIN | NO conectar: Cotejar terminal del breakout MAX98357A. |
-| 10 | purple | M–H | esp1:GPIO21 | bb:A22 | Cable 10 · M–H · esp1:GPIO21 → bb:A22. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 11 | purple | M–H | bb:B22 | amp1:SD | NO conectar: Confirmar SD de shutdown/selección, no SD de datos del micrófono. |
-| 12 | orange | potencia | ps1:PLUS | amp1:VIN | NO conectar: Confirmar D-08, fuente y cabecera montada. |
-| 13 | black | potencia | ps1:GND | amp1:GND | Cable 13 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → amp1:GND. Masa común de lógica/amplificador. |
-| 14 | orange | potencia | ps1:PLUS | c1:PLUS | Cable 14 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → c1:PLUS. Desacoplo junto a VIN. |
-| 15 | black | potencia | ps1:GND | c1:MINUS | Cable 15 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → c1:MINUS. Negativo a GND. |
-| 16 | purple | altavoz | amp1:SPK_PLUS | speaker1:PLUS | NO conectar: Revisar bornera y adaptador de bocina; ningún SPK a GND. |
-| 17 | purple | altavoz | amp1:SPK_MINUS | speaker1:MINUS | NO conectar: Revisar bornera y adaptador de bocina; ningún SPK a GND. |
+| 1 | black | M–H | esp1:GND_L | bb:RN28 | Cable 1 · M–H · esp1:GND_L → bb:RN28. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 2 | black | M–H | bb:RN20 | amp1:GND | Cable 2 · M–H · bb:RN20 → amp1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 3 | orange | M–H | esp1:VIN | amp1:VIN | NO conectar: Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión. |
+| 4 | blue | M–H | esp1:GPIO33 | amp1:BCLK | NO conectar: Cotejar terminal del breakout MAX98357A. |
+| 5 | yellow | M–H | esp1:GPIO25 | amp1:LRC | NO conectar: Cotejar terminal del breakout MAX98357A. |
+| 6 | green | M–H | esp1:GPIO22 | amp1:DIN | NO conectar: Cotejar terminal del breakout MAX98357A. |
+| 7 | purple | M–H | esp1:GPIO21 | bb:J22 | Cable 7 · M–H · esp1:GPIO21 → bb:J22. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 8 | purple | M–H | bb:H22 | amp1:SD | NO conectar: Confirmar SD de habilitación; no confundirlo con datos del micrófono. |
+| 9 | black | M–M | bb:J25 | bb:RN25 | Cable 9 · M–M · bb:J25 → bb:RN25. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 10 | purple | altavoz | amp1:SPK_PLUS | speaker1:PLUS | NO conectar: Salida diferencial: no unir a GND. |
+| 11 | purple | altavoz | amp1:SPK_MINUS | speaker1:MINUS | NO conectar: Salida diferencial: no unir a GND. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
-LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: rsd (C-01 · 1 kΩ pull-down SD): 1→C22, 2→C25.
+LP/LN: riel izquierdo +/−; RP/RN: derecho +/−. A–E y F–J son tiras separadas por fila. Confirmar continuidad/cortes de la protoboard real; los rieles opuestos no están unidos. Patas colocadas: rsd (C-01 · 1 kΩ pull-down SD): 1→G22, 2→G25.
 
 Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un cable por verificar no cuenta como continuidad confirmada aunque se dibuje continuo. Colores son identificadores del dibujo: elegir cables reales y anotar equivalencias. SVG no demuestra alcance físico.
 
+## Compatibilidad eléctrica
+
+[Montaje alternativo con adaptación](audio-salida-adaptado.md). No se muestra como material obligatorio del montaje principal; usarlo si los niveles o la carga exigen esa etapa.
+
 ## Antes de energizar
 
-1. A-01/puerto identificados y respaldo privado preservado; B-02/NFC conservado.
-2. Fuente 5 V/2 A propuesta y condensador 100 µF/≥10 V; revisar desacoplo de 100 nF del breakout y añadirlo si falta.
-3. Confirmar D-08 MAX98357A, cabecera y adaptación D-09. GAIN libre solo bajo referencia documentada del módulo; SD21 y pull-down 1 kΩ deben estar conectados para silencio al boot; contrastar el pull-up interno del breakout.
-4. Usa BCLK33, WS25, DIN22, alineado con #91; banco separado del micrófono. No modifica mascota/assets de Lando.
+1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+2. Sin fuente externa en la vista principal: confirmar A-01 y presupuesto USB antes de conectar VIN del MAX98357A.
+3. Ensayo inicial al 1 % con una sola bocina; detener ante reset, calentamiento o distorsión. El circuito de fuente separada queda solo en Compatibilidad.
+4. A-01/puerto identificados y respaldo privado preservado; B-02/NFC conservado.
+5. Confirmar D-08 MAX98357A, cabecera y adaptación D-09. GAIN libre solo bajo referencia documentada del módulo; SD21 y pull-down 1 kΩ deben estar conectados para silencio al boot; contrastar el pull-up interno del breakout.
+6. Usa BCLK33, WS25, DIN22, alineado con #91; banco separado del micrófono. No modifica mascota/assets de Lando.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -106,13 +98,15 @@ Acción: Enviar arm y tone para 440 Hz durante 300 ms, a amplitud digital inicia
 
 Aprobación esperada: Un tono breve en una sola bocina, sin sonido al arrancar; errores I²S explícitos.
 
-Diagnóstico: Enviar stop ante un fallo. Desconectar ambas fuentes antes de revisar cada extremo, polaridad, masa común y material faltante; no cambiar pines en caliente.
+Diagnóstico: Enviar stop ante un fallo y retirar USB. Revisar VIN/5V, GND, BCLK, LRC, DIN, SD y el par SPK±; no cambiar pines ni soldar con alimentación.
 
 Conflictos: BCLK33/WS25/DIN22/SD21; perfil mínimo separado de micrófono, TFT y mascota de Lando. GAIN libre = 9 dB bajo referencia MAX98357A.
 
 Faltantes/confirmaciones:
+- Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+- Sin fuente externa en la vista principal: confirmar A-01 y presupuesto USB antes de conectar VIN del MAX98357A.
+- Ensayo inicial al 1 % con una sola bocina; detener ante reset, calentamiento o distorsión. El circuito de fuente separada queda solo en Compatibilidad.
 - A-01/puerto identificados y respaldo privado preservado; B-02/NFC conservado.
-- Fuente 5 V/2 A propuesta y condensador 100 µF/≥10 V; revisar desacoplo de 100 nF del breakout y añadirlo si falta.
 - Confirmar D-08 MAX98357A, cabecera y adaptación D-09. GAIN libre solo bajo referencia documentada del módulo; SD21 y pull-down 1 kΩ deben estar conectados para silencio al boot; contrastar el pull-up interno del breakout.
 - Usa BCLK33, WS25, DIN22, alineado con #91; banco separado del micrófono. No modifica mascota/assets de Lando.
 

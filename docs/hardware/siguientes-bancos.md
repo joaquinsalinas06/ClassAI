@@ -1,6 +1,6 @@
 # Qué seguir armando
 
-> Actualización 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). DHT11 de laboratorio con pull-up integrado, sin resistencia externa; PIR con fuente externa propuesta, VIN desconectado. Matriz/buzzer/relé y pantalla/audio ya cuentan con sketches aislados. Los pendientes y conteos de esta versión anterior deben contrastarse con dichas guías.
+> Actualización R-027 · 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). No se presupone Arduino ni fuente externa: USB/3,3 V cubren los bancos de baja potencia; PIR, matriz, relé y audio quedan condicionados a confirmar VIN/5V de A-01. El fan permanece desconectado hasta conseguir su fuente real.
 
 
 Corte del 24/10/2026. Propuesta según inventario y código; **ningún ensayo físico
@@ -34,9 +34,9 @@ el mismo client ID MQTT; la sincronización multinodo no está implementada.
    Android HCE se comprueba después, no por leer una tarjeta.
 4. **Después del adaptador: M-07B audio mono.** D-08 + solo una D-09 entre SPK+
    y SPK−. Ninguno va a GND; no poner las dos de 4 Ω en paralelo. Revisar fuente,
-   polaridad/bornera, GAIN/SD y firmware I²S antes de alimentar. La soldadura no
-   valida fuente ni completa el driver. Fuente de carga independiente adecuada;
-   no colgar la bocina del regulador 3V3 o GPIO del ESP32.
+   polaridad/bornera, GAIN/SD y firmware I²S antes de alimentar. Para la prueba
+   inicial, confirmar VIN/5V de A-01 y usar el tono al 1 %. No alimentar el
+   amplificador desde 3V3 ni GPIO. La fuente separada es una ampliación futura.
 5. **Retomar M-04/05 ambiente** con la [guía física sin H–H](banco-ambiente.md).
    Se conservan pendientes de orden PIR, ruta VIN y niveles; no volver a pedir
    documentación de piezas ya identificadas salvo un dato concreto que falte.
@@ -44,8 +44,9 @@ el mismo client ID MQTT; la sincronización multinodo no está implementada.
    prototipo, con VCC/BL pendientes. INMP441 usa un mapa candidato I²S; no hay
    driver integrado. No unirlos automáticamente a los bancos anteriores.
 7. **Dejar al final potencia y piezas sin identificar:** M-06 sonido analógico,
-   M-08A matriz, M-08B buzzer y M-09 fan/relé. Los esquemas muestran condiciones
-   y adaptación pendiente, no un cableado final habilitado para energizar.
+   M-08A matriz, M-08B buzzer y M-09 fan/relé. En M-09 se puede comprobar solo
+   el clic del relé; COM/NO/NC y el fan quedan libres. Mover el fan exige conseguir
+   la fuente 5 V y el adaptador indicados en Compatibilidad.
 8. **M-03 transporte:** comparar serial → broker → BD → web cuando una lectura
    o evento local ya sea fiable. El smoke sintético no prueba un sensor real.
 

@@ -32,7 +32,7 @@ describe("bank reference library", () => {
     const out = audio.links.filter(w=>w.kind==="speaker");
     expect(out).toHaveLength(2);
     expect(out.every(w=>!`${w.from} ${w.to}`.includes("GND"))).toBe(true);
-    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"Fuente 5 V DC · PLUS", pending:true });
+    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"ESP32 · VIN", pending:true });
     expect(audio.materials.join(" ")).toContain("solo una");
   });
   it("requires hardware references and transistor isolation for relay and buzzer", () => {

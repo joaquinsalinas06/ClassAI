@@ -2,8 +2,8 @@
   "version": 1,
   "bankId": "audio-salida",
   "layout": "breadboard",
-  "name": "M-07B · Audio mono con fuente externa",
-  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "name": "M-07B · Audio mono por USB · nivel bajo",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H. R-027: la vista principal no supone una fuente externa. D-08 y D-09 quedan a la izquierda, con I²S directo y solo el pull-down SD en protoboard; el circuito de fuente separada se conserva en Compatibilidad.",
   "board": {
     "rows": 30,
     "rails": true
@@ -171,28 +171,9 @@
       ]
     },
     {
-      "id": "supply5",
-      "name": "Fuente externa regulada 5 V / 2 A",
-      "pending": "PROPUESTA AUTORIZADA, no recibida ni medida: adaptador DC 5 V / 2 A, salida por bornera/distribuidor. ESP32 solo por USB; no conectar a VIN/3V3.",
-      "pins": [
-        {
-          "id": "PLUS",
-          "kind": "source",
-          "voltage": 5,
-          "required": false
-        },
-        {
-          "id": "GND",
-          "kind": "ground",
-          "voltage": 0,
-          "required": false
-        }
-      ]
-    },
-    {
       "id": "amp",
       "name": "D-08 · MAX98357A mono",
-      "pending": "Referencia del chip MAX98357A: VIN 5 V externo; confirmar breakout/cabecera. SD controlado por GPIO21 a 3,3 V para habilitar izquierdo; LOW silencia; GAIN libre corresponde 9 dB según referencia. No aplicar estas opciones a otro amplificador.",
+      "pending": "D-08 · MAX98357A: confirmar breakout/cabecera. VIN/5V del USB solo después de identificar A-01 y únicamente para un tono inicial de nivel bajo; no demuestra margen de potencia. SD21 habilita y LOW silencia.",
       "pins": [
         {
           "id": "LRC",
@@ -260,23 +241,6 @@
       ]
     },
     {
-      "id": "capacitor",
-      "name": "Condensador de desacoplo",
-      "pending": "FALTANTE salvo componente verificado en módulo. Electrolítico: + a tensión positiva; − a GND. No omitir desacoplo de la ficha.",
-      "pins": [
-        {
-          "id": "PLUS",
-          "kind": "passive",
-          "required": false
-        },
-        {
-          "id": "MINUS",
-          "kind": "passive",
-          "required": false
-        }
-      ]
-    },
-    {
       "id": "resistor",
       "name": "Resistencia",
       "pending": "Leer bandas y comprobar patas en tiras distintas.",
@@ -297,47 +261,33 @@
       "id": "esp1",
       "definition": "esp32",
       "inventory": "A-01 · identificar antes de cargar",
-      "holes": {}
+      "holes": {},
+      "placement": {
+        "x": 1000,
+        "y": 140
+      }
     },
     {
       "id": "amp1",
       "definition": "amp",
-      "inventory": "D-08 · MAX98357A según inventario",
+      "inventory": "D-08 · MAX98357A",
       "holes": {},
       "placement": {
-        "x": 990,
+        "x": 70,
         "y": 150
-      }
+      },
+      "rotation": 180
     },
     {
       "id": "speaker1",
       "definition": "speaker",
-      "inventory": "D-09 · solo una de las dos · 4 Ω / 3 W",
+      "inventory": "D-09 · usar solo una · 4 Ω / 3 W",
       "holes": {},
       "placement": {
-        "x": 1240,
-        "y": 540
-      }
-    },
-    {
-      "id": "c1",
-      "definition": "capacitor",
-      "inventory": "FALTANTE · 100 µF/≥10 V junto a VIN",
-      "holes": {},
-      "placement": {
-        "x": 990,
-        "y": 600
-      }
-    },
-    {
-      "id": "ps1",
-      "definition": "supply5",
-      "inventory": "PROPUESTA · fuente DC 5 V/2 A + distribuidor; no inventariada",
-      "holes": {},
-      "placement": {
-        "x": 1240,
-        "y": 120
-      }
+        "x": 70,
+        "y": 510
+      },
+      "rotation": 180
     },
     {
       "id": "rsd",
@@ -345,299 +295,177 @@
       "inventory": "C-01 · 1 kΩ pull-down SD",
       "resistance": 1000,
       "holes": {
-        "1": "C22",
-        "2": "C25"
+        "1": "G22",
+        "2": "G25"
       }
     }
   ],
   "wires": [
     {
       "id": "c1",
-      "from": "esp1:GND",
-      "to": "bb:LN28",
+      "from": "esp1:GND_L",
+      "to": "bb:RN28",
       "color": "black",
       "jumper": "M–H",
-      "note": "Cable 1 · M–H · esp1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 1 · M–H · esp1:GND_L → bb:RN28. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          457,
+          785,
           519
         ]
       ]
     },
     {
       "id": "c2",
-      "from": "ps1:GND",
-      "to": "bb:LN26",
+      "from": "bb:RN20",
+      "to": "amp1:GND",
       "color": "black",
-      "jumper": "potencia",
-      "note": "Cable 2 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:LN26. Solo referencia de lógica; motor/altavoz retornan al distribuidor, no a la protoboard.",
+      "jumper": "M–H",
+      "note": "Cable 2 · M–H · bb:RN20 → amp1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          1229,
-          186
-        ],
-        [
-          1229,
-          435
-        ],
-        [
-          457,
-          435
+          310,
+          492
         ]
       ]
     },
     {
       "id": "c3",
-      "from": "bb:A25",
-      "to": "bb:LN25",
-      "color": "black",
-      "jumper": "M–M",
-      "note": "Cable 3 · M–M · bb:A25 → bb:LN25. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": []
+      "from": "esp1:VIN",
+      "to": "amp1:VIN",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión.",
+      "note": "Cable 3 · M–H · esp1:VIN → amp1:VIN. NO conectar: Identificar A-01 y confirmar que VIN/5V expone el USB; tono inicial al 1 % y detener ante reset, calentamiento o distorsión.",
+      "bends": [
+        [
+          687,
+          546
+        ],
+        [
+          687,
+          496
+        ],
+        [
+          310,
+          496
+        ]
+      ]
     },
     {
       "id": "c4",
       "from": "esp1:GPIO33",
-      "to": "bb:A10",
+      "to": "amp1:BCLK",
       "color": "blue",
       "jumper": "M–H",
-      "note": "Cable 4 · M–H · esp1:GPIO33 → bb:A10. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "pending": "Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 4 · M–H · esp1:GPIO33 → amp1:BCLK. NO conectar: Cotejar terminal del breakout MAX98357A.",
       "bends": [
         [
-          62,
-          123
-        ],
-        [
-          500,
-          123
+          310,
+          330
         ]
       ]
     },
     {
       "id": "c5",
-      "from": "bb:B10",
-      "to": "amp1:BCLK",
-      "color": "blue",
+      "from": "esp1:GPIO25",
+      "to": "amp1:LRC",
+      "color": "yellow",
       "jumper": "M–H",
       "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 5 · M–H · bb:B10 → amp1:BCLK. NO conectar: Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 5 · M–H · esp1:GPIO25 → amp1:LRC. NO conectar: Cotejar terminal del breakout MAX98357A.",
       "bends": [
         [
-          990,
-          312
+          310,
+          357
         ]
       ]
     },
     {
       "id": "c6",
-      "from": "esp1:GPIO25",
-      "to": "bb:A14",
-      "color": "yellow",
+      "from": "esp1:GPIO22",
+      "to": "amp1:DIN",
+      "color": "green",
       "jumper": "M–H",
-      "note": "Cable 6 · M–H · esp1:GPIO25 → bb:A14. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "pending": "Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 6 · M–H · esp1:GPIO22 → amp1:DIN. NO conectar: Cotejar terminal del breakout MAX98357A.",
       "bends": [
         [
-          62,
+          1238,
           128
         ],
         [
-          500,
+          310,
           128
         ]
       ]
     },
     {
       "id": "c7",
-      "from": "bb:B14",
-      "to": "amp1:LRC",
-      "color": "yellow",
+      "from": "esp1:GPIO21",
+      "to": "bb:J22",
+      "color": "purple",
       "jumper": "M–H",
-      "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 7 · M–H · bb:B14 → amp1:LRC. NO conectar: Cotejar terminal del breakout MAX98357A.",
+      "note": "Cable 7 · M–H · esp1:GPIO21 → bb:J22. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          990,
-          384
+          1238,
+          627
+        ],
+        [
+          708,
+          627
         ]
       ]
     },
     {
       "id": "c8",
-      "from": "esp1:GPIO22",
-      "to": "bb:A18",
-      "color": "green",
+      "from": "bb:H22",
+      "to": "amp1:SD",
+      "color": "purple",
       "jumper": "M–H",
-      "note": "Cable 8 · M–H · esp1:GPIO22 → bb:A18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "pending": "Confirmar SD de habilitación; no confundirlo con datos del micrófono.",
+      "note": "Cable 8 · M–H · bb:H22 → amp1:SD. NO conectar: Confirmar SD de habilitación; no confundirlo con datos del micrófono.",
       "bends": [
         [
-          500,
-          195
+          668,
+          496
+        ],
+        [
+          310,
+          496
         ]
       ]
     },
     {
       "id": "c9",
-      "from": "bb:B18",
-      "to": "amp1:DIN",
-      "color": "green",
-      "jumper": "M–H",
-      "pending": "Cotejar terminal del breakout MAX98357A.",
-      "note": "Cable 9 · M–H · bb:B18 → amp1:DIN. NO conectar: Cotejar terminal del breakout MAX98357A.",
-      "bends": [
-        [
-          990,
-          456
-        ]
-      ]
+      "from": "bb:J25",
+      "to": "bb:RN25",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "Cable 9 · M–M · bb:J25 → bb:RN25. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": []
     },
     {
       "id": "c10",
-      "from": "esp1:GPIO21",
-      "to": "bb:A22",
-      "color": "purple",
-      "jumper": "M–H",
-      "note": "Cable 10 · M–H · esp1:GPIO21 → bb:A22. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": [
-        [
-          500,
-          276
-        ]
-      ]
-    },
-    {
-      "id": "c11",
-      "from": "bb:B22",
-      "to": "amp1:SD",
-      "color": "purple",
-      "jumper": "M–H",
-      "pending": "Confirmar SD de shutdown/selección, no SD de datos del micrófono.",
-      "note": "Cable 11 · M–H · bb:B22 → amp1:SD. NO conectar: Confirmar SD de shutdown/selección, no SD de datos del micrófono.",
-      "bends": [
-        [
-          520,
-          510
-        ],
-        [
-          990,
-          510
-        ]
-      ]
-    },
-    {
-      "id": "c12",
-      "from": "ps1:PLUS",
-      "to": "amp1:VIN",
-      "color": "orange",
-      "jumper": "potencia",
-      "pending": "Confirmar D-08, fuente y cabecera montada.",
-      "note": "Cable 12 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → amp1:VIN. 5 V externo, no GPIO/3V3 ni VIN ESP32. NO energizar: Confirmar D-08, fuente y cabecera montada.",
-      "bends": [
-        [
-          1229,
-          162
-        ],
-        [
-          1229,
-          137
-        ],
-        [
-          990,
-          137
-        ]
-      ]
-    },
-    {
-      "id": "c13",
-      "from": "ps1:GND",
-      "to": "amp1:GND",
-      "color": "black",
-      "jumper": "potencia",
-      "note": "Cable 13 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → amp1:GND. Masa común de lógica/amplificador.",
-      "bends": [
-        [
-          1240,
-          130
-        ],
-        [
-          990,
-          130
-        ]
-      ]
-    },
-    {
-      "id": "c14",
-      "from": "ps1:PLUS",
-      "to": "c1:PLUS",
-      "color": "orange",
-      "jumper": "potencia",
-      "note": "Cable 14 · potencia DC por bornera, 22 AWG de referencia · ps1:PLUS → c1:PLUS. Desacoplo junto a VIN.",
-      "bends": [
-        [
-          1240,
-          449
-        ],
-        [
-          990,
-          449
-        ]
-      ]
-    },
-    {
-      "id": "c15",
-      "from": "ps1:GND",
-      "to": "c1:MINUS",
-      "color": "black",
-      "jumper": "potencia",
-      "note": "Cable 15 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → c1:MINUS. Negativo a GND.",
-      "bends": [
-        [
-          1240,
-          456
-        ],
-        [
-          990,
-          456
-        ]
-      ]
-    },
-    {
-      "id": "c16",
       "from": "amp1:SPK_PLUS",
       "to": "speaker1:PLUS",
       "color": "purple",
       "jumper": "altavoz",
-      "pending": "Revisar bornera y adaptador de bocina; ningún SPK a GND.",
-      "note": "Par de altavoz: SPK_PLUS → PLUS. Usar conductor/bornera adecuados, no GPIO ni GND.",
-      "bends": [
-        [
-          990,
-          428
-        ],
-        [
-          1240,
-          428
-        ]
-      ]
+      "pending": "Salida diferencial: no unir a GND.",
+      "note": "Cable 10 · M–H · amp1:SPK_PLUS → speaker1:PLUS. NO conectar: Salida diferencial: no unir a GND.",
+      "bends": []
     },
     {
-      "id": "c17",
+      "id": "c11",
       "from": "amp1:SPK_MINUS",
       "to": "speaker1:MINUS",
       "color": "purple",
       "jumper": "altavoz",
-      "pending": "Revisar bornera y adaptador de bocina; ningún SPK a GND.",
-      "note": "Par de altavoz: SPK_MINUS → MINUS. Usar conductor/bornera adecuados, no GPIO ni GND.",
-      "bends": [
-        [
-          990,
-          435
-        ],
-        [
-          1240,
-          435
-        ]
-      ]
+      "pending": "Salida diferencial: no unir a GND.",
+      "note": "Cable 11 · M–H · amp1:SPK_MINUS → speaker1:MINUS. NO conectar: Salida diferencial: no unir a GND.",
+      "bends": []
     }
   ],
   "revisions": []

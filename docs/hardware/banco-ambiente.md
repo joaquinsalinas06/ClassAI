@@ -1,6 +1,6 @@
 # Banco M-04/05: ESP32 de 30 pines + DHT11 + PIR
 
-> Actualización 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). DHT11 de laboratorio con pull-up integrado, sin resistencia externa; PIR con fuente externa propuesta, VIN desconectado. Matriz/buzzer/relé y pantalla/audio ya cuentan con sketches aislados. Los pendientes y conteos de esta versión anterior deben contrastarse con dichas guías.
+> Actualización R-027 · 25/10/2026: las conexiones actuales están en las [guías regeneradas](esquemas/README.md) y [evidencia documental](circuitos-referencia.md). DHT11 de laboratorio con pull-up integrado, sin resistencia externa; PIR por VIN/5V del USB únicamente tras identificar A-01. No se presupone una fuente externa. Los pendientes y conteos de esta versión anterior deben contrastarse con dichas guías.
 
 
 Diseño de referencia revisado el 24/10/2026. ESP32 **DEVKITV1 de 30 pines**
@@ -38,8 +38,8 @@ confirmarse en reverso. No intercambiarlo por el selector H/L.
 - DHT11 + → LP15 (3,3 V), − → RN5, OUT → A8; GPIO4 → B8. R1 10 kΩ entre
   C8 y G8, alimentada por LP8–J8. Confirmar pull-up incorporado y funcionamiento
   de B-03 a 3,3 V; no subir el módulo a 5 V por ensayo/error.
-- VIN → F20, H20 → VCC identificado del PIR: **F20–J20 son un solo nodo de
-  alimentación nominal 5 V pendiente de confirmar**. No unirlo con 3,3 V.
+- VIN/5V → F20, H20 → VCC identificado del PIR: **F20–J20 son un solo nodo de
+  alimentación USB nominal 5 V pendiente de confirmar en A-01**. No unirlo con 3,3 V ni añadir otra fuente mientras USB está conectado.
 - GPIO27 → G24, J24 → OUT identificado del PIR: **F24–J24 son otro nodo**,
   exclusivo de datos. No confundir fila 20 con 24 ni columna izquierda/derecha.
 - PIR GND → RN30, compartido con DHT11 mediante el riel derecho negativo.

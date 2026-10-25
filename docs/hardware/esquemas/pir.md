@@ -13,31 +13,29 @@ Ensayo PIR aislado sin inicializar el otro sensor.
 - B-04 o D-06: un PIR identificado
 - Protoboard y jumpers recibidos
 - Fuente compatible pendiente
-- PROPUESTA: fuente externa regulada 5 V/2 A y salida DC por bornera, masa común
 
-Cables: 5 M–H + 0 M–M dibujados; cero H–H. 2 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| Fuente externa 5 V DC · + | PIR · VCC | Fuente propuesta, no recibida; VIN queda libre | Pendiente; no conectar |
+| ESP32 · VIN/5V | PIR · VCC | 5 V del USB solo si A-01 confirma ese pin | Pendiente; no conectar |
 | PIR · GND | ESP32 · GND | — | Referencia |
 | PIR · OUT | ESP32 · GPIO27 | Orden y nivel pendientes | Pendiente; no conectar |
 
 ## Armado cable por cable · USB desconectado
 
-12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. R-026 sustituye USB–VIN por fuente externa regulada 5 V/2 A propuesta, masa común. VIN queda desconectado. La fuente no se ha recibido ni medido.
+12 jumpers: 11 macho–hembra y 1 macho–macho. PIR se conecta por nodos independientes de la protoboard; sin empalmes ni H–H. ESP32 DEVKITV1 30 pines fotografiado, ID A/B por asociar; terminales PIR aún no legibles y VIN sin medir. Propuesta, no ensayo físico. R-027 elimina la fuente externa no disponible. PIR queda condicionado al pin VIN/5V alimentado por USB de una A-01 identificada.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
 | 1 | black | M–H | esp1:GND | bb:RN28 | GND derecho del ESP32 → RN28. Riel derecho − para ambos sensores; comprobar continuidad, USB apagado. |
 | 2 | black | M–H | bb:RN30 | pir1:GND | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
-| 3 | orange | potencia | ps1:PLUS | bb:F20 | NO conectar: Fuente externa regulada 5 V propuesta, no recibida; cotejar VCC del PIR. |
+| 3 | orange | M–H | esp1:VIN | bb:F20 | NO conectar: A-01 no está identificada: confirmar que el pin serigrafiado VIN/5V expone los 5 V del USB antes de conectar el PIR. |
 | 4 | orange | M–H | bb:H20 | pir1:VCC | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
 | 5 | yellow | M–H | esp1:GPIO27 | bb:G24 | D27 / GPIO27 → G24, M–H. Tira F24–J24 exclusiva de señal, separada de F20–J20. |
 | 6 | yellow | M–H | bb:J24 | pir1:OUT | NO conectar: Identificar PIR y VCC/OUT/GND reales, fuente y niveles. VIN USB no confirmado; no conectar aún. |
-| 7 | black | potencia | ps1:GND | bb:RN26 | Cable 7 · potencia DC por bornera, 22 AWG de referencia · ps1:GND → bb:RN26. Referencia común de sensores y ESP32; no conecta el positivo a VIN. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -50,10 +48,11 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 1. Distribución física de ambiente: VCC PIR en F20/H20 y OUT en G24/J24; no confundir tiras.
 2. Etiquetas del PIR no legibles en fotos: no inferir orden por lente o jumper amarillo.
 3. DHT11 + a 3,3 V según propuesta; confirmar variante y pull-up incorporado. No subir a 5 V por ensayo/error.
-4. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
-5. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
-6. Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT.
-7. Fuente externa regulada 5 V/2 A de referencia; no recibida. Cotejar VCC/OUT/GND del PIR.
+4. Sin fuente externa: identificar A-01 y confirmar que VIN/5V expone VBUS antes de alimentar el PIR.
+5. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
+6. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
+7. Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT.
+8. No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -91,7 +90,7 @@ Faltantes/confirmaciones:
 - Identificar A-01/puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
 - Identificar B-04 o D-06, VCC/OUT/GND, fuente y nivel OUT.
-- Fuente externa regulada 5 V/2 A de referencia; no recibida. Cotejar VCC/OUT/GND del PIR.
+- No hace falta una fuente externa para esta referencia; sí identificar A-01 y cotejar VCC/OUT/GND del PIR.
 
 ## Registro de resultado
 

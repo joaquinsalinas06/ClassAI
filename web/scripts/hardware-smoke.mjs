@@ -110,6 +110,23 @@ try {
     await page.keyboard.press('Escape');
     await page.screenshot({path:`screenshots/montajes-${id}-desktop.png`});
   }
+  await page.locator('[data-bank-id="ruido"]').click();
+  await page.locator('[data-mission="ruido"]').waitFor();
+  assert.equal(await canvas.locator('svg[data-assembly-board] > title').count(),0,'blank-canvas hover must not cover the circuit');
+  for(const label of ['AO · señal hacia GPIO34','G · tierra / negativo','+ · alimentación 3,3 V','DO · no se usa'])assert.ok((await canvas.textContent()).includes(label));
+  assert.ok(await canvas.locator('[data-wire-pending="true"]').count()>0,'conditioned wires need visible ESPERA tags');
+
+  await page.locator('[data-bank-id="ventilador"]').click();
+  await page.locator('[data-mission="ventilador"]').waitFor();
+  const fanText=await canvas.textContent();
+  assert.ok(fanText.includes('FAN DESCONECTADO'));
+  assert.ok(fanText.includes('COM1 · LIBRE')&&fanText.includes('NO1 · LIBRE')&&fanText.includes('NC1 · LIBRE'));
+  assert.ok(!fanText.includes('Fuente externa propuesta'));
+  assert.equal(await canvas.locator('[data-wire]').count(),8);
+
+  await page.locator('[data-bank-id="audio-salida"]').click();
+  await page.locator('[data-mission="audio-salida"]').waitFor();
+  assert.ok(!(await canvas.textContent()).includes('Fuente externa regulada'));
   await page.locator('[data-bank-id="led-boton"]').click();
   await page.getByRole('button',{name:'Editar',exact:true}).click();
   await page.getByLabel('Nombre del montaje').fill('LED draft kept');

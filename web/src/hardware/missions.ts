@@ -139,9 +139,10 @@ for (const mission of missions) {
     mission.checks.push("Guía UTEC Anexo X: DHT11 de tres pines con pull-up integrado; sin resistencia externa. ESP32: alimentar a 3,3 V y cotejar +/OUT/−.");
   }
   if(mission.id==="ambiente"||mission.id==="pir") {
-    mission.links=mission.links.map(l=>l.from==="ESP32 · VIN"?{...l,from:"Fuente externa 5 V DC · +",via:"Fuente propuesta, no recibida; VIN queda libre",pending:true}:l);
-    mission.materials.push("PROPUESTA: fuente externa regulada 5 V/2 A y salida DC por bornera, masa común");
+    mission.links=mission.links.map(l=>l.from==="ESP32 · VIN"?{...l,from:"ESP32 · VIN/5V",via:"5 V del USB solo si A-01 confirma ese pin",pending:true}:l);
+    mission.materials=mission.materials.filter(m=>!m.toLowerCase().includes("fuente externa"));
     mission.checks=mission.checks.filter(s=>!s.includes("VIN no es salida regulada"));
+    mission.checks.push("Sin fuente externa: identificar A-01 y confirmar que VIN/5V expone VBUS antes de alimentar el PIR.");
   }
   if(["matriz","buzzer","ventilador","pantalla","audio-salida"].includes(mission.id)) {
     const a=physical.assembly;

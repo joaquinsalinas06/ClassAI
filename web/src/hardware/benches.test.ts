@@ -70,7 +70,7 @@ describe("physical banks and compatibility",()=>{
    const after=analyze({...a,wires:a.wires.map(w=>({...w,pending:undefined}))}),before=analyze(original);
    const shared=terminals(a).filter(t=>!t.startsWith("ps1:")&&t!=="esp1:VIN"&&t!=="pir1:VCC");
    for(const x of shared)for(const y of shared)expect(after.connected(x,y),`${id}:${x}/${y}`).toBe(before.connected(x,y));
-   if(id==="pir") {expect(after.connected("esp1:VIN","pir1:VCC")).toBe(false);expect(after.connected("ps1:PLUS","pir1:VCC")).toBe(true);}
+   if(id==="pir") {expect(after.connected("esp1:VIN","pir1:VCC")).toBe(true);expect(a.parts.some(p=>p.id==="ps1")).toBe(false);}
   }
  });
  it("keeps firmware assignments aligned with physical signals",()=>{
@@ -130,9 +130,9 @@ describe("complete reference circuits",()=>{
   for(const pin of ["SPK_PLUS","SPK_MINUS"])expect(r.connected(`amp1:${pin}`,"esp1:GND")).toBe(false);
   expect(r.connected("rsd:1","amp1:SD")).toBe(true);expect(r.connected("rsd:2","esp1:GND")).toBe(true);
  });
- it("keeps backlight current limiting in series and the PIR external supply off VIN",()=>{
+ it("keeps backlight current limiting in series and models PIR USB 5 V without an invented source",()=>{
   const {r}=intended("pantalla");expect(r.connected("esp1:3V3","rbl:1")).toBe(true);expect(r.connected("rbl:2","tft1:BL")).toBe(true);expect(r.connected("esp1:3V3","tft1:BL")).toBe(false);
-  for(const id of ["ambiente","pir"]){const {r:p}=intended(id);expect(p.connected("ps1:PLUS","pir1:VCC")).toBe(true);expect(p.connected("esp1:VIN","pir1:VCC")).toBe(false);expect(p.connected("ps1:GND","esp1:GND")).toBe(true);}
+  for(const id of ["ambiente","pir"]){const a=benchAssembly(id),p=analyze({...a,wires:a.wires.map(w=>({...w,pending:undefined}))});expect(p.connected("esp1:VIN","pir1:VCC")).toBe(true);expect(a.parts.some(part=>part.id==="ps1")).toBe(false);}
  });
 });
 
@@ -154,6 +154,22 @@ describe("readable minimal assemblies",()=>{
    expect(g.adaptation).toBeTruthy();expect(g.assembly.wires.some(w=>w.pending)).toBe(true);
   }
   expect(benches.matriz!.assembly.parts.filter(p=>p.definition==="matriz")).toHaveLength(1);
+ });
+ it("does not invent an owned 5 V source and leaves the fan load visibly open",()=>{
+  for(const id of ["ambiente","pir","matriz","ventilador","audio-salida"])expect(benches[id]!.assembly.parts.some(p=>p.definition==="supply5")).toBe(false);
+  const a=benches.ventilador!.assembly;
+  expect(a.wires.some(w=>w.from.startsWith("fan1:")||w.to.startsWith("fan1:"))).toBe(false);
+  expect(a.wires.some(w=>w.from==="esp1:VIN"&&w.pending)).toBe(true);
+  expect(benches.ventilador!.expected).toContain("no debe girar");
+ });
+ it("keeps relay-only terminal pairs explicit while COM/NO/fan remain isolated",()=>{
+  const a=benches.ventilador!.assembly,r=analyze({...a,wires:a.wires.map(w=>({...w,pending:undefined}))});
+  expect(r.connected("esp1:VIN","relay1:VCC")).toBe(true);
+  expect(r.connected("esp1:VIN","relay1:IN2")).toBe(true);
+  expect(r.connected("esp1:GND_L","relay1:GND")).toBe(true);
+  expect(r.connected("esp1:GPIO26","relay1:IN1")).toBe(true);
+  for(const pin of ["COM1","NO1","NC1"])expect(r.connected(`relay1:${pin}`,"esp1:VIN")).toBe(false);
+  for(const pin of ["PLUS","MINUS"])expect(a.wires.some(w=>w.from===`fan1:${pin}`||w.to===`fan1:${pin}`)).toBe(false);
  });
  it("uses the UTEC three-pin DHT module's integrated pull-up instead of an extra breadboard resistor",()=>{
   for(const id of ["ambiente","dht11"])expect(benches[id]!.assembly.parts.some(p=>p.definition==="resistor")).toBe(false);

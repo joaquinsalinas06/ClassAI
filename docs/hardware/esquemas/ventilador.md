@@ -1,6 +1,6 @@
 # M-09 · Ventilador + relé
 
-Primero sin fan: verificar que está apagado al arranque. Confirmado LOW-trigger, enviar arm y on; cada on dura como máximo 2 s. stop apaga y desarma.
+Dejar el fan desconectado. Tras identificar A-01 y el relé, enviar arm y on: escuchar un clic de hasta 2 s; stop apaga y desarma.
 
 **Montaje condicionado · revisar pendientes.** Diseño de referencia, sin ensayo físico nuevo.
 
@@ -12,25 +12,22 @@ Primero sin fan: verificar que está apagado al arranque. Confirmado LOW-trigger
 
 - esp1: A-01 · identificar antes de cargar
 - relay1: B-11 · módulo relé doble
-- fan1: D-05 · ventilador 5 V
-- ps1: PROPUESTA · 5 V DC / 2 A
+- fan1: D-05 · ventilador 5 V · NO CONECTAR
 
-Cables: 3 M–H + 0 M–M dibujados; cero H–H. 7 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 3 M–H + 1 M–M dibujados; cero H–H. 4 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
-| ESP32 · GND_L | Protoboard · LN28 | c1 · M–H | Referencia |
-| Fuente 5 V DC · GND | Protoboard · LN26 | c2 · potencia | Referencia |
-| ESP32 · GPIO26 | Protoboard · J12 | c3 · M–H | Referencia |
-| Protoboard · H12 | Relé · IN1 | c4 · M–H | Pendiente; no conectar |
-| Fuente 5 V DC · PLUS | Relé · VCC | c5 · potencia | Pendiente; no conectar |
-| Fuente 5 V DC · GND | Relé · GND | c6 · potencia | Referencia |
-| Fuente 5 V DC · PLUS | Relé · IN2 | c7 · potencia | Pendiente; no conectar |
-| Fuente 5 V DC · PLUS | Relé · COM1 | c8 · potencia | Referencia |
-| Relé · NO1 | Ventilador · PLUS | c9 · potencia | Pendiente; no conectar |
-| Ventilador · MINUS | Fuente 5 V DC · GND | c10 · potencia | Referencia |
+| ESP32 · GND_L | Protoboard · RN28 | c1 · M–H | Referencia |
+| Protoboard · LN30 | Protoboard · RN30 | c2 · M–M | Referencia |
+| ESP32 · VIN | Protoboard · LP26 | c3 · potencia | Pendiente; no conectar |
+| ESP32 · GPIO26 | Protoboard · J12 | c4 · M–H | Referencia |
+| Protoboard · H12 | Relé · IN1 | c5 · M–H | Pendiente; no conectar |
+| Protoboard · LP5 | Relé · VCC | c6 · potencia | Pendiente; no conectar |
+| Protoboard · LN7 | Relé · GND | c7 · potencia | Referencia |
+| Protoboard · LP9 | Relé · IN2 | c8 · potencia | Pendiente; no conectar |
 
 ## Armado cable por cable · USB desconectado
 
@@ -38,16 +35,14 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
-| 1 | black | M–H | esp1:GND_L | bb:LN28 | Cable 1 · M–H · esp1:GND_L → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 2 | black | potencia | ps1:GND | bb:LN26 | Cable 2 · potencia DC por bornes · ps1:GND → bb:LN26. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 3 | green | M–H | esp1:GPIO26 | bb:J12 | Cable 3 · M–H · esp1:GPIO26 → bb:J12. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 4 | green | M–H | bb:H12 | relay1:IN1 | NO conectar: Confirmar módulo LOW-trigger con lógica 3,3 V, sin 5 V retornando a GPIO. Si no es compatible, usar la alternativa NPN. |
-| 5 | orange | potencia | ps1:PLUS | relay1:VCC | NO conectar: Confirmar fuente y puente VCC/JD-VCC reales del módulo. |
-| 6 | black | potencia | ps1:GND | relay1:GND | Cable 6 · potencia DC por bornes · ps1:GND → relay1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 7 | orange | potencia | ps1:PLUS | relay1:IN2 | NO conectar: Solo bajo referencia LOW-trigger: canal 2 apagado a VCC; confirmar lógica real. |
-| 8 | orange | potencia | ps1:PLUS | relay1:COM1 | Cable 8 · potencia DC por bornes · ps1:PLUS → relay1:COM1. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 9 | orange | potencia | relay1:NO1 | fan1:PLUS | NO conectar: Polaridad, conector y capacidad de corriente por confirmar. |
-| 10 | black | potencia | fan1:MINUS | ps1:GND | Cable 10 · potencia DC por bornes · fan1:MINUS → ps1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 1 | black | M–H | esp1:GND_L | bb:RN28 | Cable 1 · M–H · esp1:GND_L → bb:RN28. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 2 | black | M–M | bb:LN30 | bb:RN30 | Cable 2 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 3 | orange | potencia | esp1:VIN | bb:LP26 | NO conectar: Usar como 5 V de USB solo si A-01 confirma pin VIN/5V unido a VBUS. Esta rama alimenta el relé sin fan. |
+| 4 | green | M–H | esp1:GPIO26 | bb:J12 | Cable 4 · M–H · esp1:GPIO26 → bb:J12. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 5 | green | M–H | bb:H12 | relay1:IN1 | NO conectar: Confirmar módulo LOW-trigger con lógica 3,3 V, sin 5 V retornando a GPIO. Si no es compatible, usar la alternativa NPN. |
+| 6 | orange | potencia | bb:LP5 | relay1:VCC | NO conectar: Confirmar pin VIN/5V de A-01 y puente VCC/JD-VCC reales del módulo. |
+| 7 | black | potencia | bb:LN7 | relay1:GND | Cable 7 · potencia DC por bornes · bb:LN7 → relay1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 8 | orange | potencia | bb:LP9 | relay1:IN2 | NO conectar: Solo bajo referencia LOW-trigger: canal 2 apagado a VCC; confirmar lógica real. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -62,9 +57,9 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 ## Antes de energizar
 
 1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-2. Fuente genérica externa 5 V/2 A propuesta; rama de potencia por borneras, no por GPIO/protoboard.
-3. Confirmar LOW-trigger y compatibilidad eléctrica 3,3 V de IN1. Si no se confirma, no conectar directo: usar la alternativa con transistor.
-4. El perfil por defecto usa control directo LOW-trigger; la alternativa NPN requiere BENCH_RELAY_NPN_ONLY. Revisar boot sin fan antes de cargar la rama de potencia.
+2. Prueba disponible ahora: solo clic del relé, sin conectar COM1, NO1, NC1 ni el ventilador.
+3. Para mover el fan falta una fuente regulada de 5 V con corriente de arranque suficiente; no se dibuja como si estuviera disponible.
+4. Confirmar pin VIN/5V de A-01, LOW-trigger y compatibilidad 3,3 V de IN1. La alternativa NPN y la etapa completa quedan como referencia para cuando exista la fuente.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -90,19 +85,19 @@ Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfi
 
 ## Prueba guiada y fallos
 
-Acción: Primero sin fan: verificar que está apagado al arranque. Confirmado LOW-trigger, enviar arm y on; cada on dura como máximo 2 s. stop apaga y desarma.
+Acción: Dejar el fan desconectado. Tras identificar A-01 y el relé, enviar arm y on: escuchar un clic de hasta 2 s; stop apaga y desarma.
 
-Aprobación esperada: Canal 1 conmuta, canal 2 permanece apagado; fan gira y se detiene sin reset. No reanuda tras boot/desconexión.
+Aprobación esperada: Solo el relé hace clic y vuelve a reposo; el ventilador no está conectado y no debe girar.
 
-Diagnóstico: Enviar stop ante un fallo. Desconectar ambas fuentes antes de revisar cada extremo, polaridad, masa común y material faltante; no cambiar pines en caliente.
+Diagnóstico: Sin clic: stop, retirar USB y revisar VIN/5V, GND, VCC, IN1 y trigger LOW. No conectar el fan para diagnosticar.
 
 Conflictos: GPIO26 coincide con RST TFT y propuesta BCLK I²S.
 
 Faltantes/confirmaciones:
 - Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-- Fuente genérica externa 5 V/2 A propuesta; rama de potencia por borneras, no por GPIO/protoboard.
-- Confirmar LOW-trigger y compatibilidad eléctrica 3,3 V de IN1. Si no se confirma, no conectar directo: usar la alternativa con transistor.
-- El perfil por defecto usa control directo LOW-trigger; la alternativa NPN requiere BENCH_RELAY_NPN_ONLY. Revisar boot sin fan antes de cargar la rama de potencia.
+- Prueba disponible ahora: solo clic del relé, sin conectar COM1, NO1, NC1 ni el ventilador.
+- Para mover el fan falta una fuente regulada de 5 V con corriente de arranque suficiente; no se dibuja como si estuviera disponible.
+- Confirmar pin VIN/5V de A-01, LOW-trigger y compatibilidad 3,3 V de IN1. La alternativa NPN y la etapa completa quedan como referencia para cuando exista la fuente.
 
 ## Registro de resultado
 

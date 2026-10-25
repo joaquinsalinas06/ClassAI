@@ -12,26 +12,24 @@ Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop
 
 - esp1: A-01 · identificar antes de cargar
 - matrix1: B-10 · matriz 8×8
-- ps1: PROPUESTA · 5 V DC / 2 A
 
-Cables: 9 M–H + 1 M–M dibujados; cero H–H. 2 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 9 M–H + 1 M–M dibujados; cero H–H. 1 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
 
 ## Conexiones funcionales
 
 | Desde | Hasta | Vía | Estado |
 |---|---|---|---|
 | ESP32 · GND_L | Protoboard · RN21 | c1 · M–H | Referencia |
-| Fuente 5 V DC · GND | Protoboard · LN28 | c2 · potencia | Referencia |
-| Fuente 5 V DC · PLUS | Protoboard · LP26 | c3 · potencia | Pendiente; no conectar |
-| Protoboard · LP12 | Matriz · VCC | c4 · M–H | Referencia |
-| Protoboard · LN11 | Matriz · GND | c5 · M–H | Referencia |
-| Protoboard · LN30 | Protoboard · RN30 | c6 · M–M | Referencia |
-| ESP32 · GPIO13 | Protoboard · J9 | c7 · M–H | Referencia |
-| Protoboard · H9 | Matriz · DIN | c8 · M–H | Pendiente; no conectar |
-| ESP32 · GPIO14 | Protoboard · J5 | c9 · M–H | Referencia |
-| Protoboard · H5 | Matriz · CLK | c10 · M–H | Pendiente; no conectar |
-| ESP32 · GPIO27 | Protoboard · J7 | c11 · M–H | Referencia |
-| Protoboard · H7 | Matriz · CS | c12 · M–H | Pendiente; no conectar |
+| ESP32 · VIN | Protoboard · LP26 | c2 · potencia | Pendiente; no conectar |
+| Protoboard · LP12 | Matriz · VCC | c3 · M–H | Referencia |
+| Protoboard · LN11 | Matriz · GND | c4 · M–H | Referencia |
+| Protoboard · LN30 | Protoboard · RN30 | c5 · M–M | Referencia |
+| ESP32 · GPIO13 | Protoboard · J9 | c6 · M–H | Referencia |
+| Protoboard · H9 | Matriz · DIN | c7 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO14 | Protoboard · J5 | c8 · M–H | Referencia |
+| Protoboard · H5 | Matriz · CLK | c9 · M–H | Pendiente; no conectar |
+| ESP32 · GPIO27 | Protoboard · J7 | c10 · M–H | Referencia |
+| Protoboard · H7 | Matriz · CS | c11 · M–H | Pendiente; no conectar |
 
 ## Armado cable por cable · USB desconectado
 
@@ -40,17 +38,16 @@ Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 so
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
 | 1 | black | M–H | esp1:GND_L | bb:RN21 | Cable 1 · M–H · esp1:GND_L → bb:RN21. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 2 | black | potencia | ps1:GND | bb:LN28 | Cable 2 · potencia DC por bornes · ps1:GND → bb:LN28. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 3 | orange | potencia | ps1:PLUS | bb:LP26 | NO conectar: Fuente externa 5 V propuesta; confirmar salida antes de energizar. |
-| 4 | orange | M–H | bb:LP12 | matrix1:VCC | Cable 4 · M–H · bb:LP12 → matrix1:VCC. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 5 | black | M–H | bb:LN11 | matrix1:GND | Cable 5 · M–H · bb:LN11 → matrix1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 6 | black | M–M | bb:LN30 | bb:RN30 | Cable 6 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 7 | green | M–H | esp1:GPIO13 | bb:J9 | Cable 7 · M–H · esp1:GPIO13 → bb:J9. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 8 | green | M–H | bb:H9 | matrix1:DIN | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
-| 9 | blue | M–H | esp1:GPIO14 | bb:J5 | Cable 9 · M–H · esp1:GPIO14 → bb:J5. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 10 | blue | M–H | bb:H5 | matrix1:CLK | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
-| 11 | yellow | M–H | esp1:GPIO27 | bb:J7 | Cable 11 · M–H · esp1:GPIO27 → bb:J7. Conectar sin USB; comprobar etiquetas y agujeros. |
-| 12 | yellow | M–H | bb:H7 | matrix1:CS | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
+| 2 | orange | potencia | esp1:VIN | bb:LP26 | NO conectar: Usar como 5 V de USB únicamente después de identificar A-01 y confirmar que su pin VIN/5V está unido a VBUS; no es una fuente externa ni alimenta un fan. |
+| 3 | orange | M–H | bb:LP12 | matrix1:VCC | Cable 3 · M–H · bb:LP12 → matrix1:VCC. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 4 | black | M–H | bb:LN11 | matrix1:GND | Cable 4 · M–H · bb:LN11 → matrix1:GND. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 5 | black | M–M | bb:LN30 | bb:RN30 | Cable 5 · M–M · bb:LN30 → bb:RN30. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 6 | green | M–H | esp1:GPIO13 | bb:J9 | Cable 6 · M–H · esp1:GPIO13 → bb:J9. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 7 | green | M–H | bb:H9 | matrix1:DIN | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
+| 8 | blue | M–H | esp1:GPIO14 | bb:J5 | Cable 8 · M–H · esp1:GPIO14 → bb:J5. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 9 | blue | M–H | bb:H5 | matrix1:CLK | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
+| 10 | yellow | M–H | esp1:GPIO27 | bb:J7 | Cable 10 · M–H · esp1:GPIO27 → bb:J7. Conectar sin USB; comprobar etiquetas y agujeros. |
+| 11 | yellow | M–H | bb:H7 | matrix1:CS | NO conectar: Confirmar entrada y compatibilidad 3,3 V del módulo. MAX7219 estándar: usar adaptación documentada; no conectar directo. |
 
 M–H: hembra al conector macho del módulo/ESP32 y macho al agujero. M–M: ambos extremos en agujeros distintos. Nunca dos puntas en un agujero.
 
@@ -65,8 +62,8 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 ## Antes de energizar
 
 1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-2. Fuente externa regulada 5 V/2 A propuesta. Entrada DIN y salida DOUT no se intercambian.
-3. La ruta directa es referencia condicionada: MAX7219 estándar no garantiza HIGH con 3,3 V. Si ese es el controlador, usar el montaje alternativo con AHCT; no se elimina la protección.
+2. No se presupone una fuente externa: la ruta VIN/5V solo reutiliza el 5 V del USB si la placa A-01 coincide con una variante que lo expone y el presupuesto USB alcanza.
+3. Entrada DIN y salida DOUT no se intercambian. MAX7219 estándar no garantiza HIGH con 3,3 V; usar la alternativa AHCT si corresponde.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -102,8 +99,8 @@ Conflictos: Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita 
 
 Faltantes/confirmaciones:
 - Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
-- Fuente externa regulada 5 V/2 A propuesta. Entrada DIN y salida DOUT no se intercambian.
-- La ruta directa es referencia condicionada: MAX7219 estándar no garantiza HIGH con 3,3 V. Si ese es el controlador, usar el montaje alternativo con AHCT; no se elimina la protección.
+- No se presupone una fuente externa: la ruta VIN/5V solo reutiliza el 5 V del USB si la placa A-01 coincide con una variante que lo expone y el presupuesto USB alcanza.
+- Entrada DIN y salida DOUT no se intercambian. MAX7219 estándar no garantiza HIGH con 3,3 V; usar la alternativa AHCT si corresponde.
 
 ## Registro de resultado
 
