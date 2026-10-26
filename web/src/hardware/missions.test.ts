@@ -3,6 +3,23 @@ import { describe, expect, it } from "vitest";
 import { missions } from "./missions";
 const bank = (id: string) => missions.find(m=>m.id===id)!;
 describe("bank reference library", () => {
+  it("records the two sound trials without approving untested banks or hiding their limits",()=>{
+    expect(missions.filter(m=>m.trial).map(m=>m.id).sort()).toEqual(["audio-salida","ruido"]);
+    for(const id of ["audio-salida","ruido"]){
+      const m=bank(id);expect(m.state).toContain("Ensayado");expect(m.trial?.date).toBe("25/10/2026");
+      expect(m.trial?.pending.length).toBeGreaterThan(60);
+      expect(m.physical?.assembly.parts.find(p=>p.id==="esp1")?.inventory).toContain("B-02");
+      expect(m.physical?.blockers.join(" ")).not.toContain("B-02/NFC se conserva");
+    }
+    expect(bank("ruido").trial?.observed).toContain("BENCH_CAPTURE_500MS");
+    expect(bank("ruido").trial?.pending).toContain("No mide dB");
+    expect(bank("audio-salida").trial?.pending).toContain("inestable");
+    expect(bank("audio-salida").trial?.pending).toContain("no un máximo");
+    expect(bank("nfc").state).toContain("comprobados");
+    const alternate=readFileSync(new URL("../../../docs/hardware/esquemas/audio-salida-adaptado.md",import.meta.url),"utf8");
+    expect(alternate).toContain("Alternativa de compatibilidad · sin ensayo físico");
+    expect(alternate).not.toContain("Ensayo físico del 25/10/2026");
+  });
   it("covers every hardware mission without inventing a received third ESP32", () => {
     expect(missions).toHaveLength(16);
     expect(new Set(missions.map(m=>m.id)).size).toBe(missions.length);
@@ -32,7 +49,8 @@ describe("bank reference library", () => {
     const out = audio.links.filter(w=>w.kind==="speaker");
     expect(out).toHaveLength(2);
     expect(out.every(w=>!`${w.from} ${w.to}`.includes("GND"))).toBe(true);
-    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"ESP32 · VIN", pending:false });
+    expect(audio.links.find(w=>w.from==="ESP32 · VIN")).toMatchObject({ to:"Protoboard · J6", pending:false });
+    expect(audio.links.find(w=>w.to==="MAX98357A · VIN")).toMatchObject({ from:"Protoboard · H6", pending:false });
     expect(audio.materials.join(" ")).toContain("solo una");
   });
   it("requires hardware references and transistor isolation for relay and buzzer", () => {

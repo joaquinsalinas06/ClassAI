@@ -2,11 +2,13 @@ import { benches, type BenchGuide } from "./benches";
 export type LinkKind = "power" | "ground" | "signal" | "speaker" | "flow";
 export interface MissionLink { from: string; to: string; kind: LinkKind; via?: string; pending?: boolean }
 export interface Mission {
+  trial?: { date: string; observed: string; pending: string; records: string };
   physical?: BenchGuide; id: string; code: string; title: string; group: string; state: string; summary: string;
   modules: { name: string; inventory: string; shape: string }[];
   materials: string[]; jumpers: string; links: MissionLink[]; checks: string[];
   test: string; firmware: string; conflicts: string; sources: { title: string; url: string }[];
 }
+
 const link = (from: string, to: string, kind: LinkKind = "signal", via?: string, pending = false): MissionLink => ({ from, to, kind, via, pending });
 const spiSource = { title: "Elechouse · PN532 V3", url: "https://www.elechouse.com/elechouse/images/product/PN532_module_V3/PN532_%20Manual_V3.pdf" };
 const audioSource = { title: "Adafruit · MAX98357", url: "https://learn.adafruit.com/adafruit-max98357-i2s-class-d-mono-amp/pinouts" };
@@ -163,4 +165,14 @@ for (const mission of missions) {
   mission.jumpers=`${wires.filter(w=>w.jumper==="M–H" || (!w.jumper && !w.note.includes("M–M"))).length} M–H + ${wires.filter(w=>w.jumper==="M–M" || (!w.jumper && w.note.includes("M–M"))).length} M–M dibujados; cero H–H${wires.some(w=>w.jumper==="potencia")?`. ${wires.filter(w=>w.jumper==="potencia").length} tramos de potencia por bornera`:""}${wires.some(w=>w.jumper==="altavoz")?" y un par de altavoz":""}`;
   mission.checks=[...new Set([...mission.checks,...physical.blockers])];
   if(physical.firmware && mission.id!=="nfc") mission.firmware=`firmware/${physical.firmware}${physical.profile?` · perfil ${physical.profile}`:""}; compilar sin carga; Serial 115200. Ver guía física.`;
+}
+
+
+for (const [id,state,observed,pending,records] of [
+  ["ruido","Ensayado · respuesta relativa observada","El sensor AO/G/+/DO respondió al sonido en dos rondas: medianas de pico a pico silencio/bajo/alto 283/305/418 y 259/267/330. El LED de umbral reaccionó tras ajustar el potenciómetro. Ensayo con ESP32 de la universidad, + a 3V3, G a GND y AO a GPIO34; perfil BENCH_CAPTURE_500MS.","No mide dB. El nivel bajo no se distinguió de forma fiable; faltan calibración y validación en aula. Variante y niveles eléctricos sin medir; DO no probado.","R-032–R-039"],
+  ["audio-salida","Ensayado · calidad de audio pendiente","Una bocina de 4 Ω reprodujo el pitido y el archivo completo de unos 20 s. A 15 % de amplitud digital Joaquín confirmó mejor volumen, sin calentamiento perceptible. Variante privada I²S de 32 kHz/32 bits; pitido de 5 s. Cableado revisado con ESP32 de la universidad, SD21 y pull-down de 1 kΩ.","El pitido fue algo inestable y el ruido del audio más evidente. Calidad, alimentación USB/VIN y potencia sin medir. El 15 % es un nivel ensayado, no un máximo validado. La variante con el archivo no está incluida en el sketch público de tonos.","R-040–R-048"],
+] as const) {
+  const mission=missions.find(m=>m.id===id)!;
+  mission.state=state;
+  mission.trial={date:"25/10/2026",observed,pending,records};
 }

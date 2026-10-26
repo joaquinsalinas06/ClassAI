@@ -2,11 +2,19 @@
 
 B-08 a 3,3 V con AO por GPIO34. Es una entrada analógica relativa, no un sonómetro.
 
-**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
+**Ensayado · respuesta relativa observada.** Ensayo físico del 25/10/2026; conservar los pendientes de calidad y medición.
 
 ![Distribución física de referencia](ruido.svg)
 
 [JSON de montaje importable](ruido-fisico.json) · [SVG físico](ruido-fisico.svg). ESP32 USB abajo; orientación de referencia, cotejar serigrafía. Terminales rotulados por función donde el conector aún no está identificado.
+
+## Resultado físico observado · 25/10/2026
+
+El sensor AO/G/+/DO respondió al sonido en dos rondas: medianas de pico a pico silencio/bajo/alto 283/305/418 y 259/267/330. El LED de umbral reaccionó tras ajustar el potenciómetro. Ensayo con ESP32 de la universidad, + a 3V3, G a GND y AO a GPIO34; perfil BENCH_CAPTURE_500MS.
+
+**Pendiente:** No mide dB. El nivel bajo no se distinguió de forma fiable; faltan calibración y validación en aula. Variante y niveles eléctricos sin medir; DO no probado.
+
+[Registro R-032–R-039](../montajes.md).
 
 ## Materiales
 
@@ -14,7 +22,7 @@ B-08 a 3,3 V con AO por GPIO34. Es una entrada analógica relativa, no un sonóm
 - B-01 o A-04: protoboard
 - Tres redes: 3V3, GND y AO34
 
-Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. B-02 fue reutilizada para estos ensayos; comprobar material libre y registrar cada cambio de banco.
 
 ## Conexiones funcionales
 
@@ -26,7 +34,7 @@ Cables: 6 M–H + 0 M–M dibujados; cero H–H. Se reutilizan entre bancos; no 
 
 ## Armado cable por cable · USB desconectado
 
-Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.
+Referencia física, sin escala métrica. USB desconectado al armar. Ensayo realizado con ESP32 de la universidad B-02. Reidentificar placa/puerto y preservar respaldo antes de reutilizarla. Cables reutilizados entre ensayos; cero H–H.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
@@ -48,7 +56,7 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 1. Cotejar AO/G/+/DO mirando la misma cara del módulo.
 2. Alimentar desde 3V3, nunca desde 5 V en este banco.
 3. DO no participa; no sustituir este módulo por INMP441.
-4. Identificar A-01/puerto y preservar respaldo privado antes de cargar.
+4. Identificar la placa elegida y su puerto y preservar respaldo privado antes de cargar.
 5. Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
 6. Cotejar AO/G/+/DO sobre la misma cara de la pieza y usar únicamente 3,3 V.
 
@@ -64,15 +72,15 @@ Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unifie
 arduino-cli compile --libraries firmware/libraries --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --output-dir /tmp/classai-ruido-build firmware/sound_bench
 ```
 
-Antes de cargar: identificar A-01 y puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
+Antes de cargar: reidentificar la placa elegida y su puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
 
 ```sh
-# Sustituir PUERTO_A01 por el puerto reidentificado; no usar el de B-02/NFC.
-arduino-cli upload --fqbn esp32:esp32:esp32doit-devkit-v1 --port PUERTO_A01 --input-dir /tmp/classai-ruido-build firmware/sound_bench
-arduino-cli monitor --port PUERTO_A01 --config baudrate=115200
+# Sustituir PUERTO_VERIFICADO por el puerto reidentificado; no copiar un puerto histórico sin identificar la placa.
+arduino-cli upload --fqbn esp32:esp32:esp32doit-devkit-v1 --port PUERTO_VERIFICADO --input-dir /tmp/classai-ruido-build firmware/sound_bench
+arduino-cli monitor --port PUERTO_VERIFICADO --config baudrate=115200
 ```
 
-Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfil entre compile/upload. Abrir Serial puede reiniciar la placa. No se ejecutaron estos comandos de carga/monitor durante esta entrega.
+Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfil entre compile/upload. Abrir Serial puede reiniciar la placa. El ensayo registrado puede utilizar otro perfil o una variante privada; no confundirlo con este comando de compilación.
 
 ## Prueba guiada y fallos
 
@@ -85,7 +93,7 @@ Diagnóstico: Saturación: retirar USB y revisar + a 3V3, G a GND y AO a GPIO34.
 Conflictos: GPIO34 es solo entrada en ESP32 clásico; no usarlo como salida.
 
 Faltantes/confirmaciones:
-- Identificar A-01/puerto y preservar respaldo privado antes de cargar.
+- Identificar la placa elegida y su puerto y preservar respaldo privado antes de cargar.
 - Comprobar protoboard real, tipos y alcance de jumpers, con USB desconectado.
 - Cotejar AO/G/+/DO sobre la misma cara de la pieza y usar únicamente 3,3 V.
 
@@ -96,7 +104,8 @@ Faltantes/confirmaciones:
 | Diseño | Referencia física; conservar condiciones | SVG/JSON y guía |
 | Compilación | Consultar [resultados de esta entrega](../bancos-fisicos.md); no inferir PASS del comando | Log y tamaños por perfil |
 | Simulación nueva | No ejecutada | — |
-| Ensayo físico nuevo | Pendiente | Completar acción, salida, reinicios y evidencia tras ensayo |
+| Ensayo físico | El sensor AO/G/+/DO respondió al sonido en dos rondas: medianas de pico a pico silencio/bajo/alto 283/305/418 y 259/267/330. El LED de umbral reaccionó tras ajustar el potenciómetro. Ensayo con ESP32 de la universidad, + a 3V3, G a GND y AO a GPIO34; perfil BENCH_CAPTURE_500MS. | [R-032–R-039](../montajes.md) |
+| Pendientes del ensayo | No mide dB. El nivel bajo no se distinguió de forma fiable; faltan calibración y validación en aula. Variante y niveles eléctricos sin medir; DO no probado. | No equivale a validación completa |
 | Desmontaje | Pendiente | Registrar qué cables/piezas quedan conectados |
 
 - [Espressif · ESP32](https://www.espressif.com/sites/default/files/documentation/esp32_datasheet_en.pdf)

@@ -82,5 +82,14 @@ export const benches: Record<string,BenchGuide> = {
 completeActuatorBenches(benches);
 simplifyBenches(benches);
 
+// These two isolated trials reused the university board after the NFC trial.
+for(const id of ["ruido","audio-salida"]) {
+ const g=benches[id]!,a=g.assembly;
+ a.parts.find(p=>p.id==="esp1")!.inventory="B-02 · ESP32 universidad · ensayado 25/10/2026";
+ a.catalog.find(d=>d.id==="esp32")!.pending="B-02 identificada en el ensayo; reidentificar placa/puerto y preservar respaldo antes de otra carga. VIN no certifica 5 V de salida.";
+ a.note=a.note.replace("Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado.","Ensayo realizado con ESP32 de la universidad B-02. Reidentificar placa/puerto y preservar respaldo antes de reutilizarla.");
+ g.blockers=g.blockers.map(s=>s.replaceAll("Identificar placa A-01/puerto","Identificar la placa elegida y su puerto").replaceAll("A-01/puerto identificados","Placa y puerto identificados").replaceAll("A-01/puerto","la placa elegida y su puerto").replaceAll("B-02/NFC se conserva.","B-02 fue reutilizada tras el ensayo NFC; registrar cada cambio de banco.").replaceAll("B-02/NFC conservado.","registrar cada cambio de banco en B-02."));
+}
+
 export function assemblyBank(a:Assembly):string { return a.bankId ?? (a.parts.some(p=>p.definition==="pn532")?"nfc":"ambiente"); }
 export function benchAssembly(id:string):Assembly { return copy(benches[id]?.assembly ?? nfcAssembly); }

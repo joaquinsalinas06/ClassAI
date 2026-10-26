@@ -2,7 +2,7 @@
 
 Alternativa de compatibilidad; no es el montaje principal ni material ya recibido.
 
-**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
+**Alternativa de compatibilidad · sin ensayo físico.** Diseño de referencia, sin ensayo físico nuevo.
 
 ![Distribución física de referencia](matriz-adaptado.svg)
 

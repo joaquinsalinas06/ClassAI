@@ -1,6 +1,7 @@
 import { base, wire, route, resistor } from "./bench_layout";
 import type { BenchGuide } from "./benches";
 import type { Assembly, Definition } from "./model";
+import { assemblyGeometry } from "./geometry";
 const pin=(id:string,kind:"source"|"ground"|"power"|"signal"|"passive"="passive",voltage?:number)=>({id,kind,voltage,required:false});
 function leftFacing(a:Assembly){a.parts.find(p=>p.id==="esp1")!.placement={x:1000,y:140};}
 function power(a:Assembly,from:string,to:string,color:"orange"|"black",pending?:string){wire(a,from,to,color,pending);a.wires.at(-1)!.jumper="potencia";a.wires.at(-1)!.note=a.wires.at(-1)!.note.replace("M–H","potencia DC por bornes");}
@@ -106,16 +107,31 @@ export function simplifyBenches(benches:Record<string,BenchGuide>){
   {id:"rsd",definition:"resistor",inventory:"C-01 · 1 kΩ pull-down SD",resistance:1000,holes:{"1":"G22","2":"G25"}},
  ]);leftFacing(audio);
  wire(audio,"esp1:GND_L","bb:RN28","black");wire(audio,"bb:RN20","amp1:GND","black");
- wire(audio,"esp1:VIN","amp1:VIN","orange");
- [[33,"BCLK","blue"],[25,"LRC","yellow"],[22,"DIN","green"]].forEach(([gpio,target,color])=>wire(audio,`esp1:GPIO${gpio}`,`amp1:${target}`,color as "blue"|"yellow"|"green"));
+ wire(audio,"esp1:VIN","bb:J6","orange");wire(audio,"bb:H6","amp1:VIN","orange");
+ [[33,"BCLK",10,"blue"],[25,"LRC",14,"yellow"],[22,"DIN",18,"green"]].forEach(([gpio,target,row,color])=>{
+  wire(audio,`esp1:GPIO${gpio}`,`bb:J${row}`,color as "blue"|"yellow"|"green");
+  wire(audio,`bb:H${row}`,`amp1:${target}`,color as "blue"|"yellow"|"green");
+ });
  wire(audio,"esp1:GPIO21","bb:J22","purple");wire(audio,"bb:H22","amp1:SD","purple");wire(audio,"bb:J25","bb:RN25","black");
- wire(audio,"amp1:SPK_PLUS","speaker1:PLUS","purple");audio.wires.at(-1)!.jumper="altavoz";
- wire(audio,"amp1:SPK_MINUS","speaker1:MINUS","purple");audio.wires.at(-1)!.jumper="altavoz";
- audio.note+=" R-027: la vista principal no supone una fuente externa. D-08 y D-09 quedan a la izquierda, con I²S directo y solo el pull-down SD en protoboard; el circuito de fuente separada se conserva en Compatibilidad.";
+ for(const [output,input] of [["SPK_PLUS","PLUS"],["SPK_MINUS","MINUS"]]){
+  wire(audio,`amp1:${output}`,`speaker1:${input}`,"purple");
+  const w=audio.wires.at(-1)!;w.jumper="altavoz";
+  w.note=`Conductor de bocina: ${output} → ${input}, mediante la bornera y el adaptador soldado, por revisar. No es un jumper H–H; ninguno de los dos conductores va a GND.`;
+ }
+ audio.note+=" Audio sin H–H: 12 M–H y 1 M–M, más los dos conductores de la bocina con su adaptador soldado por revisar. Cada M–H une un pin macho a un agujero. VIN usa H6/J6; BCLK H10/J10; LRC H14/J14; DIN H18/J18; SD H22/J22 y resistencia en G22/G25. H y J de la misma fila están unidos; filas distintas no. GND conserva RN28/RN20 y el puente J25/RN25. USB/VIN sigue condicionado a identificar la ruta de alimentación real; el circuito de fuente separada se conserva en Compatibilidad.";
  benches["audio-salida"]=simple(audio,fullAudio,[
   "MAX98357A: VIN al pin VIN/5V del ESP32 alimentado por USB, GND común, BCLK33, LRC25, DIN22 y SD21.",
+  "Usar solo 12 M–H y 1 M–M libres: señales y VIN por pares H/J de la misma fila. Contar disponibilidad y alcance reales antes de armar. El par de bocina requiere su bornera/adaptador soldado; no sustituirlo por empalmes al aire.",
   "Ensayo inicial al 1 % con una sola bocina; detener ante reset, calentamiento o distorsión. El circuito con fuente separada queda en Compatibilidad.",
   ...fullAudio.blockers.filter(s=>!s.startsWith("Fuente 5 V/2 A propuesta")),
  ]);
  benches["audio-salida"]!.diagnosis="Enviar stop ante un fallo y retirar USB. Revisar VIN/5V, GND, BCLK, LRC, DIN, SD y el par SPK±; no cambiar pines ni soldar con alimentación.";
+ // Separate the amplifier leads so a vertical route never runs along other pins.
+ const drawnAudio=benches["audio-salida"]!.assembly,{ends}=assemblyGeometry(drawnAudio);
+ const lanes:Record<string,number>={SPK_MINUS:330,SPK_PLUS:345,GND:360,BCLK:375,LRC:390,DIN:405,SD:420,VIN:435};
+ for(const w of drawnAudio.wires){
+  const amp=[w.from,w.to].find(end=>end.startsWith("amp1:"));if(!amp)continue;
+  const lane=lanes[amp.slice(5)]!,from=ends.get(w.from)!,to=ends.get(w.to)!;
+  w.bends=[[lane,from[1]],[lane,to[1]]];
+ }
 }

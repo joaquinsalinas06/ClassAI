@@ -22,3 +22,6 @@ mobile/android/.kotlin/
 mobile/android/**/build/
 .pytest_cache/
 .ruff_cache/
+
+# Local Arduino build output; keep firmware binaries outside Git
+firmware/**/build/

@@ -32,13 +32,13 @@ comunicados**. Todos los registros B están pendientes de devolución.
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
 | B-01 | Protoboard con A–J, 30 posiciones numeradas y rieles ± laterales | 1 placa | en mano | Probablemente 30 filas; no equivale a 30 puntos. Tamaño total y continuidad de rieles por confirmar |
-| B-02 | ESP32 con micro USB, parecido a A-01 | 1 placa | en mano | Segunda placa disponible; modelo/pinout propios por confirmar |
+| B-02 | ESP32 con micro USB, puente CP210x | 1 placa | en mano; identificada | ESP32-D0WDQ6 rev 1.0, flash 4 MiB; identidad/puerto y respaldo privado verificados antes de las cargas. Usada sucesivamente en NFC, M-06 y M-07B; no son montajes simultáneos. Último firmware: variante privada de audio, desarmada al terminar; ver montajes.md |
 | B-03 | Módulo DHT11 | 1 módulo | en mano | Temperatura/humedad; NO es DHT22. Joaquín reporta etiquetas − / OUT / + (24/10); Anexo X aportado el 25/10: módulo con pull-up integrado de 10 kΩ y alimentación desde 3 V; cotejar orientación real; ensayo pendiente |
 | B-04 | PIR parecido a D-06, de otro color | 1 módulo | en mano | Movimiento; HC-SR501 probable, modelo y orden de pines sin confirmar |
 | B-05 | LED verde | 1 LED | en mano | Señalización con resistencia en serie |
 | B-06 | LED amarillo | 1 LED | en mano | Señalización con resistencia en serie |
 | B-07 | LED blanco | 2 LEDs | en mano | Lote propio de B, separado de C-06 |
-| B-08 | Detector analógico/digital de sonido: AO/G/+/DO, micrófono electret y potenciómetro W104/VR1 | 1 módulo | en mano; fotografiado 24/10 | LED1/LED2 y U1 de 8 patas visibles; tipo KY-038 semejante, **no confirmado**. AO y DO no probadas eléctricamente; ninguna medición de dB ni nivel de salida validado |
+| B-08 | Detector analógico/digital de sonido: AO/G/+/DO, micrófono electret y potenciómetro W104/VR1 | 1 módulo | en mano; fotografiado 24/10 | LED1/LED2 y U1 de 8 patas visibles; tipo KY-038 semejante, **no confirmado**. AO respondió al ruido relativo en dos rondas del 25/10 (+3V3/G/AO34); LED de umbral reaccionó según Joaquín. DO no probado, sin dB ni niveles eléctricos medidos; ver R-032–R-039 |
 | B-09 | Buzzer cilíndrico con orificio acústico, dos patas y signo + | 1 unidad | en mano; fotografiado 24/10 | Polaridad + visible; tipo activo/pasivo, modelo, tensión y corriente **sin confirmar**. No alimentarlo desde GPIO sin validar |
 | B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 identificado por la guía de laboratorio Anexo K aportada por Joaquín el 25/10; no se leyó físicamente el chip; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos |
 | B-11 | Relé doble: 2 × TONG LING JQC-3FF-S-Z **5VDC**; COM1/NO1/NC1 y COM2/NO2/NC2 | 1 módulo, 2 canales | en mano; fotografiado 24/10 | Control GND/IN1/IN2/VCC; bloque JD-VCC/VCC/GND con puente amarillo. Bobina 5 V confirmada; Anexo V del laboratorio describe disparo LOW y lógica 5 V; cotejar variante/puente. Corriente de placa, aislamiento y compatibilidad GPIO 3,3 V **pendientes** |
@@ -79,8 +79,8 @@ no confundir con fabricante genuino o comportamiento ya probado.
 | D-05 | Ventilador brushless **PENGDALANTU / 鹏达蓝图 / DC 5V**, variante 4010 del anuncio | 1 ventilador | en mano; fotografiado 24/10 | 2 cables rojo/negro y ficha blanca de 2 posiciones. 5 V confirmado por etiqueta, **corriente no indicada**; paso del conector, polaridad y dimensiones físicas no medidos |
 | D-06 | PIR, variante HC-SR501-green | 1 módulo | en mano | Tres pines y jumper amarillo; leer VCC/OUT/GND y modo antes de alimentar |
 | D-07 | Micrófono digital INMP441 | 1 módulo | en mano | VCC/GND/SD/LR/WS/SCK; I²S, no ADC; no es B-08 |
-| D-08 | Amplificador I²S MAX98357A, identificación según anuncio | 1 módulo | en mano | LRC/BCLK/DIN/GAIN/SD/GND/VIN; pines/bornera por montar. Leer placa real |
-| D-09 | Altavoces pasivos 4 Ω, 3 W, ~40 mm | 2 altavoces (1 lote) | en mano | Conector anunciado PH de 2 pines, paso exacto por confirmar; no conectar directamente a GPIO |
+| D-08 | Amplificador I²S MAX98357A, identificación según anuncio | 1 módulo | en mano | LRC/BCLK/DIN/GAIN/SD/GND/VIN; cabecera/bornera y adaptación usadas en el ensayo M-07B según cableado confirmado. Archivo reproducido al 15 % digital; ruido/pitido inestable pendientes. Fuente USB/VIN y potencia sin medir; ver R-040–R-048 |
+| D-09 | Altavoces pasivos 4 Ω, 3 W, ~40 mm | 2 altavoces (1 lote) | en mano | Conector anunciado PH de 2 pines, paso exacto por confirmar; una bocina ensayada con D-08 el 25/10, segunda sin probar. No conectar directamente a GPIO |
 | D-10 | USB a micro USB | 1 cable | en mano | Compra del equipo, separado de A-03; longitud no medida |
 | D-11 | Tiras de pines / conectores suministrados | ? piezas | en mano | Accesorios del PN532/amplificador; contar tipo y paso, no inventar unidades |
 
