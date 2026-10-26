@@ -1,19 +1,27 @@
 # M-08A · Matriz 8 × 8
 
-Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop apaga y desarma.
+Serial 115200: arm, happy, sad, angry; cada cara dura 5 s, stop apaga y desarma. Vista frontal/cables de entrada a la izquierda: rotate0. Si se cambia el montaje sin alimentación: cables abajo rotate90, derecha rotate180, arriba rotate270; enviar giro antes de la cara. pattern y scan se conservan como diagnóstico sin giro.
 
-**Diseño y sketch · ensayo físico pendiente.** Diseño de referencia, sin ensayo físico nuevo.
+**Ensayado · caras 8 × 8 verificadas.** Ensayo físico del 26/10/2026; conservar los pendientes de calidad y medición.
 
 ![Distribución física de referencia](matriz.svg)
 
 [JSON de montaje importable](matriz-fisico.json) · [SVG físico](matriz-fisico.svg). ESP32 USB abajo; orientación de referencia, cotejar serigrafía. Terminales rotulados por función donde el conector aún no está identificado.
 
+## Resultado físico observado · 26/10/2026
+
+Joaquín confirmó las caras feliz, triste y enojada en B-10 con A-01 (Adrián). Vista frontal: cara derecha y cabecera de entrada/cables a la izquierda = giro 0°. VIN por USB, GND común, DIN13/CLK14/CS27 mediante protoboard; DOUT libre. Dos secuencias Serial de 5 s por cara y stop final confirmados.
+
+**Pendiente:** La conexión directa de 3,3 V funcionó en esta unidad; no garantiza el HIGH especificado del MAX7219 a 5 V. Alimentación USB/VIN sin medir; integración con confort y otros periféricos pendiente. Los giros nuevos se verifican en host; el firmware cargado en este ensayo usa orientación 0°.
+
+[Registro R-050–R-052](../montajes.md).
+
 ## Materiales
 
-- esp1: A-01 · identificar antes de cargar
+- esp1: A-01 · ESP32 de Adrián · identificado y ensayado 26/10/2026
 - matrix1: B-10 · matriz 8×8
 
-Cables: 9 M–H + 1 M–M dibujados; cero H–H. 1 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Preservar B-02/NFC; comprobar material libre en la otra placa.
+Cables: 9 M–H + 1 M–M dibujados; cero H–H. 1 tramos de potencia por bornera. Se reutilizan entre bancos; no se exige montarlos todos simultáneamente. Ensayo con A-01 de Adrián; preservar su respaldo propio y el de B-02 por separado.
 
 ## Conexiones funcionales
 
@@ -33,7 +41,7 @@ Cables: 9 M–H + 1 M–M dibujados; cero H–H. 1 tramos de potencia por borner
 
 ## Armado cable por cable · USB desconectado
 
-Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.
+Ensayo A-01/B-10 del 26/10/2026. Vista frontal: cara derecha con cabecera de entrada/cables a la izquierda (giro 0°). Esta referencia de píxeles es independiente de la distribución del dibujo. Desconectar USB antes de mover módulos o cables. Respaldo propio de A-01 verificado; B-02 es la otra identidad, no el mismo respaldo. Referencia física, sin escala métrica. USB desconectado al armar. Reidentificar A-01 y su puerto antes de otra carga; preservar ambos respaldos privados. Cables reutilizados entre ensayos; cero H–H.
 
 | Nº | Color | Tipo | Origen | Destino | Condición |
 |---|---|---|---|---|---|
@@ -61,9 +69,10 @@ Cruces no unen redes. Las condiciones de cada tramo aparecen en esta tabla; un c
 
 ## Antes de energizar
 
-1. Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+1. A-01 identificada y respaldo propio verificado en el ensayo; reidentificar placa/puerto antes de cargar otra vez.
 2. UTEC Anexo K: VCC a 5 V, GND común, DIN GPIO13, CLK GPIO14 y CS GPIO27 en este firmware.
 3. Cotejar la cabecera IN/DIN de la matriz; la cabecera OUT/DOUT es para cascada y no recibe el cable de datos.
+4. Orientación observada desde delante: cables de ENTRADA a la izquierda con la cara derecha. Giro de imagen: izquierda rotate0, abajo rotate90, derecha rotate180, arriba rotate270. Desconectar alimentación antes de mover el módulo; después arm, giro y cara.
 
 Revisar agujero por agujero con USB retirado, polaridad y separación de fuentes. Sin multímetro, identificar por etiquetas y documentación exacta; una tensión o pin dudoso se mantiene desconectado. VIN no garantiza salida regulada de 5 V.
 
@@ -77,28 +86,28 @@ Arduino CLI 1.5.1, ESP32 core 3.3.12; DHT sensor library 1.4.7 y Adafruit Unifie
 arduino-cli compile --libraries firmware/libraries --fqbn esp32:esp32:esp32doit-devkit-v1 --jobs 2 --output-dir /tmp/classai-matriz-build firmware/matrix_bench
 ```
 
-Antes de cargar: identificar A-01 y puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
+Antes de cargar: reidentificar la placa elegida y su puerto explícito, comprobar su FQBN, registrar cableado real y conservar respaldo privado verificado. Desconectar módulos ajenos y cerrar cualquier monitor. Solo después de resolver TODOS los pendientes eléctricos de esta receta:
 
 ```sh
-# Sustituir PUERTO_A01 por el puerto reidentificado; no usar el de B-02/NFC.
-arduino-cli upload --fqbn esp32:esp32:esp32doit-devkit-v1 --port PUERTO_A01 --input-dir /tmp/classai-matriz-build firmware/matrix_bench
-arduino-cli monitor --port PUERTO_A01 --config baudrate=115200
+# Sustituir PUERTO_VERIFICADO por el puerto reidentificado; no copiar un puerto histórico sin identificar la placa.
+arduino-cli upload --fqbn esp32:esp32:esp32doit-devkit-v1 --port PUERTO_VERIFICADO --input-dir /tmp/classai-matriz-build firmware/matrix_bench
+arduino-cli monitor --port PUERTO_VERIFICADO --config baudrate=115200
 ```
 
-Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfil entre compile/upload. Abrir Serial puede reiniciar la placa. No se ejecutaron estos comandos de carga/monitor durante esta entrega.
+Cargar utiliza el binario del perfil recién compilado; no recompilar otro perfil entre compile/upload. Abrir Serial puede reiniciar la placa. El ensayo registrado puede utilizar otro perfil o una variante privada; no confundirlo con este comando de compilación.
 
 ## Prueba guiada y fallos
 
-Acción: Tras confirmar MAX7219/adaptador, enviar arm y pattern; para barrido, scan. stop apaga y desarma.
+Acción: Serial 115200: arm, happy, sad, angry; cada cara dura 5 s, stop apaga y desarma. Vista frontal/cables de entrada a la izquierda: rotate0. Si se cambia el montaje sin alimentación: cables abajo rotate90, derecha rotate180, arriba rotate270; enviar giro antes de la cara. pattern y scan se conservan como diagnóstico sin giro.
 
-Aprobación esperada: Patrón de baja intensidad y un LED por paso; paro inmediato y sin otros periféricos inicializados.
+Aprobación esperada: Tres caras distinguibles a intensidad mínima; apagado tras 5 s o stop. Ensayo visual confirmado por Joaquín; integración con confort pendiente.
 
 Diagnóstico: Enviar stop ante un fallo. Desconectar ambas fuentes antes de revisar cada extremo, polaridad, masa común y material faltante; no cambiar pines en caliente.
 
-Conflictos: Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita el pin de arranque GPIO15; ensayo aislado de PIR/TFT. DOUT no recibe datos del ESP32.
+Conflictos: Ensayo aislado DIN13/CLK14/CS27; sin PIR/TFT. La conexión directa observada no certifica compatibilidad 3,3→5 V; conservar alternativa AHCT. La orientación física del visor no certifica el mapeo de píxeles de otra unidad.
 
 Faltantes/confirmaciones:
-- Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.
+- A-01 identificada y respaldo propio verificado en el ensayo; reidentificar placa/puerto antes de cargar otra vez.
 - UTEC Anexo K: VCC a 5 V, GND común, DIN GPIO13, CLK GPIO14 y CS GPIO27 en este firmware.
 - Cotejar la cabecera IN/DIN de la matriz; la cabecera OUT/DOUT es para cascada y no recibe el cable de datos.
 
@@ -109,7 +118,8 @@ Faltantes/confirmaciones:
 | Diseño | Referencia física; conservar condiciones | SVG/JSON y guía |
 | Compilación | Consultar [resultados de esta entrega](../bancos-fisicos.md); no inferir PASS del comando | Log y tamaños por perfil |
 | Simulación nueva | No ejecutada | — |
-| Ensayo físico nuevo | Pendiente | Completar acción, salida, reinicios y evidencia tras ensayo |
+| Ensayo físico | Joaquín confirmó las caras feliz, triste y enojada en B-10 con A-01 (Adrián). Vista frontal: cara derecha y cabecera de entrada/cables a la izquierda = giro 0°. VIN por USB, GND común, DIN13/CLK14/CS27 mediante protoboard; DOUT libre. Dos secuencias Serial de 5 s por cara y stop final confirmados. | [R-050–R-052](../montajes.md) |
+| Pendientes del ensayo | La conexión directa de 3,3 V funcionó en esta unidad; no garantiza el HIGH especificado del MAX7219 a 5 V. Alimentación USB/VIN sin medir; integración con confort y otros periféricos pendiente. Los giros nuevos se verifican en host; el firmware cargado en este ensayo usa orientación 0°. | No equivale a validación completa |
 | Desmontaje | Pendiente | Registrar qué cables/piezas quedan conectados |
 
 - [Analog Devices · MAX7219](https://www.analog.com/media/en/technical-documentation/data-sheets/MAX7219-MAX7221.pdf)

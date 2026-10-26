@@ -91,16 +91,17 @@ try {
 
   const ids=await page.locator('[data-bank-id]').evaluateAll(xs=>xs.map(x=>x.dataset.bankId));
   assert.equal(ids.length,16);
-  assert.equal(await page.locator('[data-trial-bank]').count(),2);
-  for(const id of ['ruido','audio-salida']) {
+  assert.equal(await page.locator('[data-trial-bank]').count(),3);
+  for(const id of ['ruido','audio-salida','matriz']) {
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-trial-status="${id}"]`).waitFor();
     assert.ok((await page.locator(`[data-bank-id="${id}"]`).textContent()).includes('Ensayado'));
+    assert.ok((await page.locator(`[data-bank-id="${id}"]`).textContent()).includes(id==='matriz'?'26/10':'25/10'));
     await page.getByRole('button',{name:'Detalles',exact:true}).click();
     const evidence=page.locator(`[data-trial-evidence="${id}"]`);
-    assert.ok((await evidence.textContent()).includes('25/10/2026'));
+    assert.ok((await evidence.textContent()).includes(id==='matriz'?'26/10/2026':'25/10/2026'));
     assert.ok((await evidence.textContent()).includes('Pendiente:'));
-    assert.ok((await evidence.textContent()).includes(id==='ruido'?'No mide dB':'no un máximo validado'));
+    assert.ok((await evidence.textContent()).includes(id==='ruido'?'No mide dB':id==='matriz'?'no garantiza':'no un máximo validado'));
     await page.waitForFunction(()=>document.querySelector('[role=dialog]').getAnimations().every(a=>a.playState!=='running'));
     await page.screenshot({path:`screenshots/montajes-${id}-ensayo-desktop.png`});
     await page.keyboard.press('Escape');

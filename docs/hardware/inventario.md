@@ -18,7 +18,7 @@ A están pendientes de devolución. Se conserva el alias sin inventar apellido.
 
 | ID | Pieza / modelo | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| A-01 | ESP32 con micro USB | 1 placa | en mano | Control y conectividad; primera placa reportada parece de 30 contactos, asociación a A-01 pendiente; confirmar D4/D14, D5/B5 y VN; ver banco-ambiente.md |
+| A-01 | ESP32 con micro USB | 1 placa | en mano; identificada por Joaquín 26/10 | Placa de Adrián según Joaquín; ESP32-D0WDQ6 rev 1.0, flash 4 MiB, identidad distinta de B-02 y respaldo propio privado verificado. M-08A/B-10: caras 8×8 observadas; último firmware aislado de caras. Puerto debe reidentificarse al cambiar placa; R-050–R-052 |
 | A-02 | Jumpers | ~14 cables | en mano | ~8 iniciales + ~6 posteriores; parte serían macho–hembra, tipos sin separar |
 | A-03 | USB a micro USB | 1 cable | en mano | Cable prestado junto con A-01; no duplicarlo como accesorio de la U |
 | A-04 | Protoboard descrita como doble/dividida o cortada a la mitad | 1 unidad/conjunto declarado | en mano | Montajes temporales; dimensiones, puntos y número de mitades útiles por confirmar |
@@ -40,7 +40,7 @@ comunicados**. Todos los registros B están pendientes de devolución.
 | B-07 | LED blanco | 2 LEDs | en mano | Lote propio de B, separado de C-06 |
 | B-08 | Detector analógico/digital de sonido: AO/G/+/DO, micrófono electret y potenciómetro W104/VR1 | 1 módulo | en mano; fotografiado 24/10 | LED1/LED2 y U1 de 8 patas visibles; tipo KY-038 semejante, **no confirmado**. AO respondió al ruido relativo en dos rondas del 25/10 (+3V3/G/AO34); LED de umbral reaccionó según Joaquín. DO no probado, sin dB ni niveles eléctricos medidos; ver R-032–R-039 |
 | B-09 | Buzzer cilíndrico con orificio acústico, dos patas y signo + | 1 unidad | en mano; fotografiado 24/10 | Polaridad + visible; tipo activo/pasivo, modelo, tensión y corriente **sin confirmar**. No alimentarlo desde GPIO sin validar |
-| B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 identificado por la guía de laboratorio Anexo K aportada por Joaquín el 25/10; no se leyó físicamente el chip; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos |
+| B-10 | Matriz LED 8×8, 1 DIP de 24 patas, entrada VCC/GND/DIN/CS/CLK y salida VCC/GND/DOUT/CS/CLK | 1 módulo/conjunto | en mano; fotografiado 24/10 | MAX7219 identificado por la guía de laboratorio Anexo K aportada por Joaquín el 25/10; no se leyó físicamente el chip; dos conectores son entrada y salida de **una misma matriz**, no dos dispositivos. Caras feliz/triste/enojada observadas con A-01 el 26/10; de frente y cara derecha, cables de entrada a la izquierda (giro 0°). Señales directas ensayadas sin garantizar niveles MAX7219; R-050–R-052 |
 | B-11 | Relé doble: 2 × TONG LING JQC-3FF-S-Z **5VDC**; COM1/NO1/NC1 y COM2/NO2/NC2 | 1 módulo, 2 canales | en mano; fotografiado 24/10 | Control GND/IN1/IN2/VCC; bloque JD-VCC/VCC/GND con puente amarillo. Bobina 5 V confirmada; Anexo V del laboratorio describe disparo LOW y lógica 5 V; cotejar variante/puente. Corriente de placa, aislamiento y compatibilidad GPIO 3,3 V **pendientes** |
 
 ## C — Material temporal facilitado por el profesor
