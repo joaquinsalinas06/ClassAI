@@ -19,6 +19,8 @@ inline int modes[40]={}, written[40]={}, reads[40]={}, inputValue=0, adcValue=0;
 inline uint32_t millis(){return clockMs;}
 inline uint32_t micros(){return clockUs;}
 inline void delay(unsigned ms){clockMs+=ms;clockUs+=1000*ms;}
+inline unsigned fractionalUs=0;
+inline void delayMicroseconds(unsigned us){clockUs+=us;fractionalUs+=us;clockMs+=fractionalUs/1000;fractionalUs%=1000;}
 inline int digitalRead(unsigned pin){++reads[pin];return inputValue;}
 inline std::vector<uint16_t> spiWords;
 inline uint16_t spiWord=0;inline unsigned spiBits=0;
@@ -35,7 +37,8 @@ inline void ledcWriteTone(int,int f){pwmFrequency=f;}
 inline void pinMode(unsigned pin,int mode){modes[pin]=mode;}
 inline void analogReadResolution(int){}
 inline void analogSetPinAttenuation(int,int){}
-inline int analogRead(int pin){++reads[pin];return adcValue;}
+inline bool alternateAdc=false;
+inline int analogRead(int pin){++reads[pin];return alternateAdc?(reads[pin]%2?1000:3000):adcValue;}
 struct SerialStub {
  std::string out, input;
  void begin(unsigned long){}
@@ -97,6 +100,23 @@ int main(){
  for(int p : {17,25,26,27})assert(modes[p]==0);
 }
 CPP
+cat > "$bench_tmp/sound_capture.cpp" <<'CPP'
+#include "sound_bench.ino"
+int main(){
+ setup();Serial.out.clear();alternateAdc=true;loop();
+ assert(modes[34]==INPUT && clockMs==500 && reads[34]==2000);
+ assert(Serial.out.find("\"min\":1000,\"max\":3000,\"mean\":2000,\"peak_to_peak\":2000,\"rail_samples\":0")!=std::string::npos);
+ alternateAdc=false;adcValue=0;Serial.out.clear();loop();
+ assert(Serial.out.find("\"min\":0,\"max\":0,\"mean\":0,\"peak_to_peak\":0,\"rail_samples\":2000")!=std::string::npos);
+ adcValue=4095;Serial.out.clear();loop();
+ assert(Serial.out.find("\"min\":4095,\"max\":4095,\"mean\":4095,\"peak_to_peak\":0,\"rail_samples\":2000")!=std::string::npos);
+ clockMs=0xffffff00u;Serial.out.clear();loop();
+ assert(clockMs==244 && Serial.out.find("\"samples\":2000")!=std::string::npos);
+ for(int p : {17,25,26,27})assert(modes[p]==0);
+}
+CPP
+"${CXX:-g++}" -std=c++17 -Wall -Wextra -Werror -DBENCH_CAPTURE_500MS=1 -I "$bench_tmp" -I firmware/sound_bench "$bench_tmp/sound_capture.cpp" -o "$bench_tmp/sound_capture"
+"$bench_tmp/sound_capture"
 cat > "$bench_tmp/leds.cpp" <<'CPP'
 #include "status_led_bench.ino"
 int main(){
