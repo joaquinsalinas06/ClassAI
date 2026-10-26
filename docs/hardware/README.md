@@ -86,3 +86,20 @@ La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulad
 [Bancos físicos, materiales y evidencia R-025](bancos-fisicos.md): ensayos sucesivos con la otra placa, sin desmontar NFC automáticamente.
 
 Entrega actual: [bancos físicos](bancos-fisicos.md) y [componentes del laboratorio](circuitos-referencia.md), revisión R-026 del 25/10/2026.
+
+
+## Ensayos de sonido · 25/10/2026
+
+Ambos bancos usaron sucesivamente el ESP32 **B-02 de la universidad** con
+identidad y respaldo revalidados; el NFC anterior no permanece activo en esa
+placa. El visor marca estos ensayos como realizados y muestra sus pendientes.
+
+| Banco | Resultado físico | Pendiente |
+|---|---|---|
+| M-06 · Sensor AO/G/+/DO | Respuesta analógica relativa observada en dos rondas; LED de umbral responde tras ajuste | No dB, nivel bajo no separable de forma fiable, DO sin probar y niveles eléctricos sin medir; [detalle](../../firmware/sound_bench/README.md) |
+| M-07B · Amplificador y una bocina | Tono y archivo completo audibles; mejor volumen al 15 % digital según Joaquín | Pitido inestable/ruido, calidad y alimentación USB/VIN sin medir; [detalle](../../firmware/audio_output_bench/README.md) |
+
+Ver R-032–R-048 en [montajes.md](montajes.md). Son ensayos parciales, no aprobación
+de todos los criterios del producto. Último estado conocido: audio desarmado y
+puerto cerrado. Para el siguiente módulo, retirar USB, registrar desmontaje y
+reutilizar materiales disponibles; volver a identificar la placa antes de cargar.

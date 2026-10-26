@@ -8,10 +8,10 @@ Fuentes: missions.ts y registros físicos enlazados. Dibujos de referencia, sin 
 | M-01 · LED + botón | Diseño y sketch · ensayo físico pendiente | [Guía](led-boton.md) · [SVG](led-boton.svg) · [JSON](led-boton-fisico.json) |
 | M-10 · NFC · tarjetas y llavero | HCE y asistencia física comprobados; regularidad RF pendiente | [Guía](nfc.md) · [SVG](nfc.svg) · [JSON](nfc-fisico.json) |
 | M-04/05 · DHT11 + PIR | Diseño y sketch · ensayo físico pendiente | [Guía](ambiente.md) · [SVG](ambiente.svg) · [JSON](ambiente-fisico.json) |
-| M-07B · Audio · una bocina | Diseño y sketch · ensayo físico pendiente | [Guía](audio-salida.md) · [SVG](audio-salida.svg) · [JSON](audio-salida-fisico.json) |
+| M-07B · Audio · una bocina | Ensayado · calidad de audio pendiente | [Guía](audio-salida.md) · [SVG](audio-salida.svg) · [JSON](audio-salida-fisico.json) |
 | M-02 · Pantalla · mascota | Diseño y sketch · ensayo físico pendiente | [Guía](pantalla.md) · [SVG](pantalla.svg) · [JSON](pantalla-fisico.json) |
 | M-07A · Micrófono digital | Diseño y sketch · ensayo físico pendiente | [Guía](microfono.md) · [SVG](microfono.svg) · [JSON](microfono-fisico.json) |
-| M-06 · Sonido relativo · AO | Diseño y sketch · ensayo físico pendiente | [Guía](ruido.md) · [SVG](ruido.svg) · [JSON](ruido-fisico.json) |
+| M-06 · Sonido relativo · AO | Ensayado · respuesta relativa observada | [Guía](ruido.md) · [SVG](ruido.svg) · [JSON](ruido-fisico.json) |
 | M-08A · Matriz 8 × 8 | Diseño y sketch · ensayo físico pendiente | [Guía](matriz.md) · [SVG](matriz.svg) · [JSON](matriz-fisico.json) |
 | M-08B · Buzzer | Diseño y sketch · ensayo físico pendiente | [Guía](buzzer.md) · [SVG](buzzer.svg) · [JSON](buzzer-fisico.json) |
 | M-09 · Ventilador + relé | Diseño y sketch · ensayo físico pendiente | [Guía](ventilador.md) · [SVG](ventilador.svg) · [JSON](ventilador-fisico.json) |

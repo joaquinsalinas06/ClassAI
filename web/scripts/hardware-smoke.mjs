@@ -91,7 +91,21 @@ try {
 
   const ids=await page.locator('[data-bank-id]').evaluateAll(xs=>xs.map(x=>x.dataset.bankId));
   assert.equal(ids.length,16);
-  const physicalWireCounts={nfc:12,ambiente:11,dht11:6,pir:6,'led-boton':6,leds:8,ruido:6,microfono:11,matriz:11,buzzer:2,ventilador:11,pantalla:16,'audio-salida':11};
+  assert.equal(await page.locator('[data-trial-bank]').count(),2);
+  for(const id of ['ruido','audio-salida']) {
+    await page.locator(`[data-bank-id="${id}"]`).click();
+    await page.locator(`[data-trial-status="${id}"]`).waitFor();
+    assert.ok((await page.locator(`[data-bank-id="${id}"]`).textContent()).includes('Ensayado'));
+    await page.getByRole('button',{name:'Detalles',exact:true}).click();
+    const evidence=page.locator(`[data-trial-evidence="${id}"]`);
+    assert.ok((await evidence.textContent()).includes('25/10/2026'));
+    assert.ok((await evidence.textContent()).includes('Pendiente:'));
+    assert.ok((await evidence.textContent()).includes(id==='ruido'?'No mide dB':'no un máximo validado'));
+    await page.waitForFunction(()=>document.querySelector('[role=dialog]').getAnimations().every(a=>a.playState!=='running'));
+    await page.screenshot({path:`screenshots/montajes-${id}-ensayo-desktop.png`});
+    await page.keyboard.press('Escape');
+  }
+  const physicalWireCounts={nfc:12,ambiente:11,dht11:6,pir:6,'led-boton':6,leds:8,ruido:6,microfono:11,matriz:11,buzzer:2,ventilador:11,pantalla:16,'audio-salida':15};
   for(const id of ids){
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();

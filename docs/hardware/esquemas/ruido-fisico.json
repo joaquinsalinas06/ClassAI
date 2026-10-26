@@ -3,7 +3,7 @@
   "bankId": "ruido",
   "layout": "breadboard",
   "name": "M-06 · Detector B-08",
-  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Ensayo realizado con ESP32 de la universidad B-02. Reidentificar placa/puerto y preservar respaldo antes de reutilizarla. Cables reutilizados entre ensayos; cero H–H.",
   "board": {
     "rows": 30,
     "rails": true
@@ -12,7 +12,7 @@
     {
       "id": "esp32",
       "name": "ESP32 DevKit V1 · 30 pines",
-      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pending": "B-02 identificada en el ensayo; reidentificar placa/puerto y preservar respaldo antes de otra carga. VIN no certifica 5 V de salida.",
       "pins": [
         {
           "id": "EN",
@@ -199,7 +199,7 @@
     {
       "id": "esp1",
       "definition": "esp32",
-      "inventory": "A-01 · identificar antes de cargar",
+      "inventory": "B-02 · ESP32 universidad · ensayado 25/10/2026",
       "holes": {}
     },
     {

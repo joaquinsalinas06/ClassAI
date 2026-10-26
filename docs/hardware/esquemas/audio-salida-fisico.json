@@ -3,7 +3,7 @@
   "bankId": "audio-salida",
   "layout": "breadboard",
   "name": "M-07B · Audio mono por USB · nivel bajo",
-  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H. R-027: la vista principal no supone una fuente externa. D-08 y D-09 quedan a la izquierda, con I²S directo y solo el pull-down SD en protoboard; el circuito de fuente separada se conserva en Compatibilidad.",
+  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Ensayo realizado con ESP32 de la universidad B-02. Reidentificar placa/puerto y preservar respaldo antes de reutilizarla. Cables reutilizados entre ensayos; cero H–H. Audio sin H–H: 12 M–H y 1 M–M, más los dos conductores de la bocina con su adaptador soldado por revisar. Cada M–H une un pin macho a un agujero. VIN usa H6/J6; BCLK H10/J10; LRC H14/J14; DIN H18/J18; SD H22/J22 y resistencia en G22/G25. H y J de la misma fila están unidos; filas distintas no. GND conserva RN28/RN20 y el puente J25/RN25. USB/VIN sigue condicionado a identificar la ruta de alimentación real; el circuito de fuente separada se conserva en Compatibilidad.",
   "board": {
     "rows": 30,
     "rails": true
@@ -12,7 +12,7 @@
     {
       "id": "esp32",
       "name": "ESP32 DevKit V1 · 30 pines",
-      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pending": "B-02 identificada en el ensayo; reidentificar placa/puerto y preservar respaldo antes de otra carga. VIN no certifica 5 V de salida.",
       "pins": [
         {
           "id": "EN",
@@ -260,7 +260,7 @@
     {
       "id": "esp1",
       "definition": "esp32",
-      "inventory": "A-01 · identificar antes de cargar",
+      "inventory": "B-02 · ESP32 universidad · ensayado 25/10/2026",
       "holes": {},
       "placement": {
         "x": 1000,
@@ -324,141 +324,227 @@
       "note": "Cable 2 · M–H · bb:RN20 → amp1:GND. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          310,
+          360,
           492
+        ],
+        [
+          360,
+          264
         ]
       ]
     },
     {
       "id": "c3",
       "from": "esp1:VIN",
-      "to": "amp1:VIN",
+      "to": "bb:J6",
       "color": "orange",
       "jumper": "M–H",
-      "note": "Cable 3 · M–H · esp1:VIN → amp1:VIN. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 3 · M–H · esp1:VIN → bb:J6. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          687,
+          708,
           546
-        ],
-        [
-          687,
-          496
-        ],
-        [
-          310,
-          496
         ]
       ]
     },
     {
       "id": "c4",
-      "from": "esp1:GPIO33",
-      "to": "amp1:BCLK",
-      "color": "blue",
+      "from": "bb:H6",
+      "to": "amp1:VIN",
+      "color": "orange",
       "jumper": "M–H",
-      "note": "Cable 4 · M–H · esp1:GPIO33 → amp1:BCLK. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 4 · M–H · bb:H6 → amp1:VIN. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          310,
-          330
+          435,
+          240
+        ],
+        [
+          435,
+          240
         ]
       ]
     },
     {
       "id": "c5",
-      "from": "esp1:GPIO25",
-      "to": "amp1:LRC",
-      "color": "yellow",
+      "from": "esp1:GPIO33",
+      "to": "bb:J10",
+      "color": "blue",
       "jumper": "M–H",
-      "note": "Cable 5 · M–H · esp1:GPIO25 → amp1:LRC. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 5 · M–H · esp1:GPIO33 → bb:J10. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          310,
-          357
+          708,
+          330
         ]
       ]
     },
     {
       "id": "c6",
-      "from": "esp1:GPIO22",
-      "to": "amp1:DIN",
-      "color": "green",
+      "from": "bb:H10",
+      "to": "amp1:BCLK",
+      "color": "blue",
       "jumper": "M–H",
-      "note": "Cable 6 · M–H · esp1:GPIO22 → amp1:DIN. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 6 · M–H · bb:H10 → amp1:BCLK. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          1238,
-          128
+          375,
+          312
         ],
         [
-          310,
-          128
+          375,
+          360
         ]
       ]
     },
     {
       "id": "c7",
-      "from": "esp1:GPIO21",
-      "to": "bb:J22",
-      "color": "purple",
+      "from": "esp1:GPIO25",
+      "to": "bb:J14",
+      "color": "yellow",
       "jumper": "M–H",
-      "note": "Cable 7 · M–H · esp1:GPIO21 → bb:J22. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 7 · M–H · esp1:GPIO25 → bb:J14. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          1238,
-          627
-        ],
-        [
           708,
-          627
+          357
         ]
       ]
     },
     {
       "id": "c8",
-      "from": "bb:H22",
-      "to": "amp1:SD",
-      "color": "purple",
+      "from": "bb:H14",
+      "to": "amp1:LRC",
+      "color": "yellow",
       "jumper": "M–H",
-      "note": "Cable 8 · M–H · bb:H22 → amp1:SD. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 8 · M–H · bb:H14 → amp1:LRC. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": [
         [
-          668,
-          496
+          390,
+          384
         ],
         [
-          310,
-          496
+          390,
+          384
         ]
       ]
     },
     {
       "id": "c9",
+      "from": "esp1:GPIO22",
+      "to": "bb:J18",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 9 · M–H · esp1:GPIO22 → bb:J18. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          1238,
+          123
+        ],
+        [
+          708,
+          123
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "bb:H18",
+      "to": "amp1:DIN",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "Cable 10 · M–H · bb:H18 → amp1:DIN. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          405,
+          456
+        ],
+        [
+          405,
+          336
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "esp1:GPIO21",
+      "to": "bb:J22",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "Cable 11 · M–H · esp1:GPIO21 → bb:J22. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          1238,
+          620
+        ],
+        [
+          708,
+          620
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "bb:H22",
+      "to": "amp1:SD",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "Cable 12 · M–H · bb:H22 → amp1:SD. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "bends": [
+        [
+          420,
+          528
+        ],
+        [
+          420,
+          288
+        ]
+      ]
+    },
+    {
+      "id": "c13",
       "from": "bb:J25",
       "to": "bb:RN25",
       "color": "black",
       "jumper": "M–M",
-      "note": "Cable 9 · M–M · bb:J25 → bb:RN25. Conectar sin USB; comprobar etiquetas y agujeros.",
+      "note": "Cable 13 · M–M · bb:J25 → bb:RN25. Conectar sin USB; comprobar etiquetas y agujeros.",
       "bends": []
     },
     {
-      "id": "c10",
+      "id": "c14",
       "from": "amp1:SPK_PLUS",
       "to": "speaker1:PLUS",
       "color": "purple",
       "jumper": "altavoz",
-      "note": "Cable 10 · M–H · amp1:SPK_PLUS → speaker1:PLUS. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": []
+      "note": "Conductor de bocina: SPK_PLUS → PLUS, mediante la bornera y el adaptador soldado, por revisar. No es un jumper H–H; ninguno de los dos conductores va a GND.",
+      "bends": [
+        [
+          345,
+          216
+        ],
+        [
+          345,
+          576
+        ]
+      ]
     },
     {
-      "id": "c11",
+      "id": "c15",
       "from": "amp1:SPK_MINUS",
       "to": "speaker1:MINUS",
       "color": "purple",
       "jumper": "altavoz",
-      "note": "Cable 11 · M–H · amp1:SPK_MINUS → speaker1:MINUS. Conectar sin USB; comprobar etiquetas y agujeros.",
-      "bends": []
+      "note": "Conductor de bocina: SPK_MINUS → MINUS, mediante la bornera y el adaptador soldado, por revisar. No es un jumper H–H; ninguno de los dos conductores va a GND.",
+      "bends": [
+        [
+          330,
+          192
+        ],
+        [
+          330,
+          552
+        ]
+      ]
     }
   ],
   "revisions": []

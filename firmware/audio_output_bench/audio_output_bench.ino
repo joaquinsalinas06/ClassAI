@@ -1,4 +1,4 @@
-// D-08 MAX98357A + one D-09. External 5 V; SPK+/- never ground.
+// D-08 MAX98357A + one D-09. Validate USB/VIN supply per guide; SPK+/- never ground.
 #include <Arduino.h>
 #include <driver/i2s_std.h>
 #include <ClassAIBench.h>
@@ -23,7 +23,7 @@ bool command(const char* text){
  if(strcmp(text,"tone")==0){phase=0;digitalWrite(AUDIO_SD,HIGH);control.start(300);return true;}
  return false;
 }
-void setup(){digitalWrite(AUDIO_SD,LOW);pinMode(AUDIO_SD,OUTPUT);Serial.begin(115200);Serial.println("MAX98357A BCLK33 WS25 DIN22 SD21; tono 440 Hz/300 ms al 1% digital. Fuente externa 5 V. arm, tone, stop. SD LOW al boot.");}
+void setup(){digitalWrite(AUDIO_SD,LOW);pinMode(AUDIO_SD,OUTPUT);Serial.begin(115200);Serial.println("MAX98357A BCLK33 WS25 DIN22 SD21; tono 440 Hz/300 ms al 1% digital. Validar alimentacion USB/VIN segun guia. arm, tone, stop. SD LOW al boot.");}
 void loop(){
  control.poll(command,stopOutput);control.tick(stopOutput);
  if(!ready){delay(1);return;}

@@ -135,6 +135,19 @@ describe("complete reference circuits",()=>{
 });
 
 describe("readable minimal assemblies",()=>{
+ it("connects audio male headers through distinct breadboard contacts with only M–H and M–M jumpers",()=>{
+  const a=benchAssembly("audio-salida");
+  expect(a.wires.filter(w=>w.jumper==="M–H")).toHaveLength(12);
+  expect(a.wires.filter(w=>w.jumper==="M–M")).toHaveLength(1);
+  for(const w of a.wires.filter(w=>w.jumper==="M–H"))expect(Number(w.from.startsWith("bb:"))+Number(w.to.startsWith("bb:")),w.id).toBe(1);
+  for(const row of [6,10,14,18,22]){
+   expect(a.wires.some(w=>w.from===`bb:H${row}`||w.to===`bb:H${row}`)).toBe(true);
+   expect(a.wires.some(w=>w.from===`bb:J${row}`||w.to===`bb:J${row}`)).toBe(true);
+  }
+  expect(analyze(a).findings.filter(f=>f.level==="error")).toEqual([]);
+  const speaker=a.wires.filter(w=>w.jumper==="altavoz");expect(speaker).toHaveLength(2);
+  for(const w of speaker)expect(w.note).toContain("adaptador soldado");
+ });
  it("preserves every LED/button terminal pair when adding the nearby ground rail bridge",()=>{
   const a=benchAssembly("led-boton"),old=structuredClone(a);
   old.parts.find(p=>p.id==="button1")!.holes={A1:"E18",A2:"E20",B1:"F18",B2:"F20"};
