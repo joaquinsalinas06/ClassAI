@@ -1,3 +1,7 @@
+// Historical physical capture profile; default remains cooperative 100 ms.
+#if defined(BENCH_CAPTURE_500MS)
+#include "capture_500ms.h"
+#else
 // B-08 AO/G/+/DO, exact variant/power unconfirmed. DO is intentionally unused.
 // Only ADC34 is configured; no network or actuator initialization.
 #include <Arduino.h>
@@ -29,3 +33,5 @@ void loop() {
   else Serial.println("{\"samples\":0,\"noise_rel\":null}");
   windowAt = now; samples = 0; minimum = 4095; maximum = 0;
 }
+
+#endif
