@@ -103,3 +103,8 @@ Ver R-032–R-048 en [montajes.md](montajes.md). Son ensayos parciales, no aprob
 de todos los criterios del producto. Último estado conocido: audio desarmado y
 puerto cerrado. Para el siguiente módulo, retirar USB, registrar desmontaje y
 reutilizar materiales disponibles; volver a identificar la placa antes de cargar.
+
+
+## Matriz 8 × 8 · 26/10/2026
+
+M-08A/B-10 ensayado con **A-01 (Adrián, identificado por Joaquín)** y respaldo propio de 4 MiB verificado. Joaquín confirmó caras feliz, triste y enojada. Referencia frontal: **cara derecha, cabecera de entrada/cables a la izquierda = giro 0°**. La [guía del firmware](../../firmware/matrix_bench/README.md) documenta giros para otros montajes; el ensayo físico usó 0°. Dos secuencias Serial finalizan en STOP y puerto cerrado; R-050–R-052. Señales directas mediante protoboard funcionaron en esta unidad, sin garantizar niveles MAX7219 ni certificar alimentación USB/VIN. Integración con confort y buzzer pendientes.

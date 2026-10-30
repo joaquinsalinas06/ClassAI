@@ -199,6 +199,25 @@ int main(){
  Serial.input="pattern\n";loop();assert(control.active&&spiWords.back()==0x0c01);
  clockMs=5000;loop();assert(!control.active&&spiWords.back()==0x0c00);
  Serial.input="scan\n";loop();assert(scanning&&cell==1);Serial.input="stop\n";loop();assert(!control.armed&&!scanning&&spiWords.back()==0x0c00);
+ Serial.input="happy\n";spiWords.clear();loop();assert(!control.armed&&spiWords.size()==1&&spiWords.back()==0x0c00);
+ const char* faces[]={"happy\n","sad\n","angry\n"};
+ const uint8_t expected[3][8]={{0,0x66,0x66,0,0x42,0x24,0x18,0},{0,0x66,0x66,0,0x18,0x24,0x42,0},{0x42,0x24,0x66,0,0x3c,0x42,0,0}};
+ for(unsigned face=0;face<3;++face){
+  Serial.input="arm\n";loop();spiWords.clear();Serial.input=faces[face];loop();
+  assert(control.active&&!scanning&&spiWords.size()==9);
+  for(unsigned row=0;row<8;++row)assert(spiWords[row]==((row+1)<<8|expected[face][row]));
+  clockMs+=5000;loop();assert(!control.active&&spiWords.back()==0x0c00);
+ }
+ const char* turns[]={"rotate0\n","rotate90\n","rotate180\n","rotate270\n"};
+ const unsigned cornerRow[]={0,0,7,7},cornerValue[]={0x80,1,1,0x80};
+ const uint8_t corner[8]={0x80,0,0,0,0,0,0,0};
+ for(unsigned turn=0;turn<4;++turn){
+  Serial.input=turns[turn];loop();assert(rotation==turn&&!control.active);
+  spiWords.clear();showFace(corner);assert(spiWords.size()==9);
+  for(unsigned row=0;row<8;++row)assert(spiWords[row]==((row+1)<<8|(row==cornerRow[turn]?cornerValue[turn]:0)));
+ }
+ Serial.input="stop\nrotate90\n";loop();assert(!control.armed&&!control.active&&rotation==3);
+ Serial.input="arm\nrotate45\n";loop();assert(!control.armed&&!control.active);
 }
 CPP
 cat > "$bench_tmp/buzzer.cpp" <<'CPP'

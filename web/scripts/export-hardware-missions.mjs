@@ -14,7 +14,7 @@ try {
  const {AssemblyBoard}=await server.ssrLoadModule("/src/hardware/AssemblyBoard.tsx");
  const {analyze}=await server.ssrLoadModule("/src/hardware/model.ts");
  await mkdir(out,{recursive:true});
- const exports=[...missions,...missions.filter(m=>m.physical?.adaptation).map(m=>({...m,trial:undefined,state:"Alternativa de compatibilidad · sin ensayo físico",id:`${m.id}-adaptado`,title:`${m.title} · adaptación condicional`,physical:m.physical.adaptation,materials:m.physical.adaptation.assembly.parts.map(p=>`${p.id}: ${p.inventory}`),checks:m.physical.adaptation.blockers,firmware:`firmware/${m.physical.adaptation.firmware}`,summary:"Alternativa de compatibilidad; no es el montaje principal ni material ya recibido.",links:[],jumpers:"Consultar tabla completa de cables de esta alternativa."}))];
+ const exports=[...missions,...missions.filter(m=>m.physical?.adaptation).map(m=>({...m,trial:undefined,state:"Alternativa de compatibilidad · sin ensayo físico",conflicts:m.id==="matriz"?"Referencia MAX7219 con SN74AHCT125N a 5 V; GPIO13/14/27, CS27 evita el pin de arranque GPIO15; ensayo aislado de PIR/TFT. DOUT no recibe datos del ESP32.":m.conflicts,id:`${m.id}-adaptado`,title:`${m.title} · adaptación condicional`,physical:m.physical.adaptation,materials:m.physical.adaptation.assembly.parts.map(p=>`${p.id}: ${p.inventory}`),checks:m.physical.adaptation.blockers,firmware:`firmware/${m.physical.adaptation.firmware}`,summary:"Alternativa de compatibilidad; no es el montaje principal ni material ya recibido.",links:[],jumpers:"Consultar tabla completa de cables de esta alternativa."}))];
  for(const m of exports){
   const g=m.physical,a=g?.assembly;
   const svg=renderToStaticMarkup(a?createElement(AssemblyBoard,{assembly:a,wires:a.wires,selected:"",onSelect:()=>{},connected:analyze(a).connected}):createElement(MissionDiagram,{mission:m}));
@@ -34,6 +34,7 @@ try {
     .replace("## Materiales",`## Resultado físico observado · ${m.trial.date}\n\n${m.trial.observed}\n\n**Pendiente:** ${m.trial.pending}\n\n[Registro ${m.trial.records}](../montajes.md).\n\n## Materiales`)
     .replace("| Ensayo físico nuevo | Pendiente | Completar acción, salida, reinicios y evidencia tras ensayo |",`| Ensayo físico | ${cell(m.trial.observed)} | [${m.trial.records}](../montajes.md) |\n| Pendientes del ensayo | ${cell(m.trial.pending)} | No equivale a validación completa |`);
   }
+  if(m.id==="matriz"&&m.trial)md=md.replace("B-02 fue reutilizada para estos ensayos; comprobar material libre y registrar cada cambio de banco.","Ensayo con A-01 de Adrián; preservar su respaldo propio y el de B-02 por separado.");
   await writeFile(`${out}${m.id}.md`,md);
  }
  await writeFile(`${out}README.md`,`# Bancos y montajes\n\nFuentes: missions.ts y registros físicos enlazados. Dibujos de referencia, sin validación eléctrica automática. [Resultados y orden](../bancos-fisicos.md).\n\n| Banco | Estado | Archivos |\n|---|---|---|\n${missions.map(m=>`| ${m.code} · ${m.title} | ${m.state} | [Guía](${m.id}.md) · [SVG](${m.id}.svg)${m.physical?` · [JSON](${m.id}-fisico.json)`:''} |`).join('\n')}\n\nRegenerar: \`node web/scripts/export-hardware-missions.mjs\`. Los JSON físicos son importables en el editor; la colección lógica es otro formato.\n`);

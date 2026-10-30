@@ -3,7 +3,7 @@
   "bankId": "matriz",
   "layout": "breadboard",
   "name": "M-08A · Matriz · montaje simple",
-  "note": "Referencia física, sin escala métrica. USB desconectado al armar. Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado. Cables reutilizados entre ensayos; cero H–H.",
+  "note": "Ensayo A-01/B-10 del 26/10/2026. Vista frontal: cara derecha con cabecera de entrada/cables a la izquierda (giro 0°). Esta referencia de píxeles es independiente de la distribución del dibujo. Desconectar USB antes de mover módulos o cables. Respaldo propio de A-01 verificado; B-02 es la otra identidad, no el mismo respaldo. Referencia física, sin escala métrica. USB desconectado al armar. Reidentificar A-01 y su puerto antes de otra carga; preservar ambos respaldos privados. Cables reutilizados entre ensayos; cero H–H.",
   "board": {
     "rows": 30,
     "rails": true
@@ -12,7 +12,7 @@
     {
       "id": "esp32",
       "name": "ESP32 DevKit V1 · 30 pines",
-      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pending": "A-01 identificada en el ensayo; reidentificar puerto y preservar su propio respaldo antes de otra carga. VIN no certifica 5 V regulados.",
       "pins": [
         {
           "id": "EN",
@@ -233,7 +233,7 @@
     {
       "id": "esp1",
       "definition": "esp32",
-      "inventory": "A-01 · identificar antes de cargar",
+      "inventory": "A-01 · ESP32 de Adrián · identificado y ensayado 26/10/2026",
       "holes": {},
       "placement": {
         "x": 1000,

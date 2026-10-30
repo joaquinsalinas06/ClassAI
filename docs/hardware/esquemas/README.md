@@ -12,7 +12,7 @@ Fuentes: missions.ts y registros físicos enlazados. Dibujos de referencia, sin 
 | M-02 · Pantalla · mascota | Diseño y sketch · ensayo físico pendiente | [Guía](pantalla.md) · [SVG](pantalla.svg) · [JSON](pantalla-fisico.json) |
 | M-07A · Micrófono digital | Diseño y sketch · ensayo físico pendiente | [Guía](microfono.md) · [SVG](microfono.svg) · [JSON](microfono-fisico.json) |
 | M-06 · Sonido relativo · AO | Ensayado · respuesta relativa observada | [Guía](ruido.md) · [SVG](ruido.svg) · [JSON](ruido-fisico.json) |
-| M-08A · Matriz 8 × 8 | Diseño y sketch · ensayo físico pendiente | [Guía](matriz.md) · [SVG](matriz.svg) · [JSON](matriz-fisico.json) |
+| M-08A · Matriz 8 × 8 | Ensayado · caras 8 × 8 verificadas | [Guía](matriz.md) · [SVG](matriz.svg) · [JSON](matriz-fisico.json) |
 | M-08B · Buzzer | Diseño y sketch · ensayo físico pendiente | [Guía](buzzer.md) · [SVG](buzzer.svg) · [JSON](buzzer-fisico.json) |
 | M-09 · Ventilador + relé | Diseño y sketch · ensayo físico pendiente | [Guía](ventilador.md) · [SVG](ventilador.svg) · [JSON](ventilador-fisico.json) |
 | M-03 · Transporte y registro | Flujo de software | [Guía](mqtt.md) · [SVG](mqtt.svg) |

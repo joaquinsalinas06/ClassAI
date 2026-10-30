@@ -3,8 +3,8 @@ import { describe, expect, it } from "vitest";
 import { missions } from "./missions";
 const bank = (id: string) => missions.find(m=>m.id===id)!;
 describe("bank reference library", () => {
-  it("records the two sound trials without approving untested banks or hiding their limits",()=>{
-    expect(missions.filter(m=>m.trial).map(m=>m.id).sort()).toEqual(["audio-salida","ruido"]);
+  it("records the physical trials without approving untested banks or hiding their limits",()=>{
+    expect(missions.filter(m=>m.trial).map(m=>m.id).sort()).toEqual(["audio-salida","matriz","ruido"]);
     for(const id of ["audio-salida","ruido"]){
       const m=bank(id);expect(m.state).toContain("Ensayado");expect(m.trial?.date).toBe("25/10/2026");
       expect(m.trial?.pending.length).toBeGreaterThan(60);
@@ -19,6 +19,18 @@ describe("bank reference library", () => {
     const alternate=readFileSync(new URL("../../../docs/hardware/esquemas/audio-salida-adaptado.md",import.meta.url),"utf8");
     expect(alternate).toContain("Alternativa de compatibilidad · sin ensayo físico");
     expect(alternate).not.toContain("Ensayo físico del 25/10/2026");
+  });
+  it("records upright matrix orientation separately from untested integration and adaptation",()=>{
+    const m=bank("matriz");
+    expect(m.state).toContain("Ensayado");expect(m.trial?.date).toBe("26/10/2026");
+    expect(m.trial?.observed).toContain("izquierda = giro 0°");
+    expect(m.trial?.pending).toContain("no garantiza");
+    expect(m.checks.join(" ")).toContain("abajo rotate90");
+    expect(m.physical?.assembly.parts.find(p=>p.id==="esp1")?.inventory).toContain("A-01");
+    expect(m.physical?.action).toContain("happy, sad, angry");
+    const alternate=readFileSync(new URL("../../../docs/hardware/esquemas/matriz-adaptado.md",import.meta.url),"utf8");
+    expect(alternate).toContain("Alternativa de compatibilidad · sin ensayo físico");
+    expect(alternate).not.toContain("Ensayo físico del 26/10/2026");
   });
   it("covers every hardware mission without inventing a received third ESP32", () => {
     expect(missions).toHaveLength(16);

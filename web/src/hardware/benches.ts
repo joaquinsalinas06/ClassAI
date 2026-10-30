@@ -93,3 +93,11 @@ for(const id of ["ruido","audio-salida"]) {
 
 export function assemblyBank(a:Assembly):string { return a.bankId ?? (a.parts.some(p=>p.definition==="pn532")?"nfc":"ambiente"); }
 export function benchAssembly(id:string):Assembly { return copy(benches[id]?.assembly ?? nfcAssembly); }
+
+const matrixTrial=benches.matriz!;
+matrixTrial.assembly.parts.find(p=>p.id==="esp1")!.inventory="A-01 · ESP32 de Adrián · identificado y ensayado 26/10/2026";
+matrixTrial.assembly.catalog.find(d=>d.id==="esp32")!.pending="A-01 identificada en el ensayo; reidentificar puerto y preservar su propio respaldo antes de otra carga. VIN no certifica 5 V regulados.";
+matrixTrial.assembly.note="Ensayo A-01/B-10 del 26/10/2026. Vista frontal: cara derecha con cabecera de entrada/cables a la izquierda (giro 0°). Esta referencia de píxeles es independiente de la distribución del dibujo. Desconectar USB antes de mover módulos o cables. Respaldo propio de A-01 verificado; B-02 es la otra identidad, no el mismo respaldo. "+matrixTrial.assembly.note.replace("Usar A-01 solo tras identificar placa/puerto y preservar respaldo; B-02/NFC permanece conservado.","Reidentificar A-01 y su puerto antes de otra carga; preservar ambos respaldos privados.");
+matrixTrial.action="Serial 115200: arm, happy, sad, angry; cada cara dura 5 s, stop apaga y desarma. Vista frontal/cables de entrada a la izquierda: rotate0. Si se cambia el montaje sin alimentación: cables abajo rotate90, derecha rotate180, arriba rotate270; enviar giro antes de la cara. pattern y scan se conservan como diagnóstico sin giro.";
+matrixTrial.expected="Tres caras distinguibles a intensidad mínima; apagado tras 5 s o stop. Ensayo visual confirmado por Joaquín; integración con confort pendiente.";
+matrixTrial.blockers=matrixTrial.blockers.map(s=>s.replace("Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.","A-01 identificada y respaldo propio verificado en el ensayo; reidentificar placa/puerto antes de cargar otra vez."));

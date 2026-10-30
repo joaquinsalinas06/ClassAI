@@ -176,3 +176,9 @@ for (const [id,state,observed,pending,records] of [
   mission.state=state;
   mission.trial={date:"25/10/2026",observed,pending,records};
 }
+
+const matrixMission=missions.find(m=>m.id==="matriz")!;
+matrixMission.state="Ensayado · caras 8 × 8 verificadas";
+matrixMission.trial={date:"26/10/2026",observed:"Joaquín confirmó las caras feliz, triste y enojada en B-10 con A-01 (Adrián). Vista frontal: cara derecha y cabecera de entrada/cables a la izquierda = giro 0°. VIN por USB, GND común, DIN13/CLK14/CS27 mediante protoboard; DOUT libre. Dos secuencias Serial de 5 s por cara y stop final confirmados.",pending:"La conexión directa de 3,3 V funcionó en esta unidad; no garantiza el HIGH especificado del MAX7219 a 5 V. Alimentación USB/VIN sin medir; integración con confort y otros periféricos pendiente. Los giros nuevos se verifican en host; el firmware cargado en este ensayo usa orientación 0°.",records:"R-050–R-052"};
+matrixMission.checks.push("Orientación observada desde delante: cables de ENTRADA a la izquierda con la cara derecha. Giro de imagen: izquierda rotate0, abajo rotate90, derecha rotate180, arriba rotate270. Desconectar alimentación antes de mover el módulo; después arm, giro y cara.");
+matrixMission.conflicts="Ensayo aislado DIN13/CLK14/CS27; sin PIR/TFT. La conexión directa observada no certifica compatibilidad 3,3→5 V; conservar alternativa AHCT. La orientación física del visor no certifica el mapeo de píxeles de otra unidad.";
