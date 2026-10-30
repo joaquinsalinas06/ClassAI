@@ -20,5 +20,8 @@ Fuentes: missions.ts y registros físicos enlazados. Dibujos de referencia, sin 
 | M-05 · PIR aislado | Diseño y sketch · ensayo físico pendiente | [Guía](pir.md) · [SVG](pir.svg) · [JSON](pir-fisico.json) |
 | M-01B · LEDs de estado | Diseño y sketch · ensayo físico pendiente | [Guía](leds.md) · [SVG](leds.svg) · [JSON](leds-fisico.json) |
 | M-11 · Iluminación · material pendiente | Sin sensor recibido | [Guía](iluminacion.md) · [SVG](iluminacion.svg) |
+| N1 · Acceso · NFC y confirmación | Propuesta integrada · ensayo conjunto pendiente | [Guía](nodo-acceso.md) · [SVG](nodo-acceso.svg) · [JSON](nodo-acceso-fisico.json) |
+| N2 · Ambiente · sensado y ventilación | Propuesta integrada · ensayo conjunto pendiente | [Guía](nodo-ambiente.md) · [SVG](nodo-ambiente.svg) · [JSON](nodo-ambiente-fisico.json) |
+| N3 · Asistente · pantalla y audio | Propuesta integrada · ensayo conjunto pendiente | [Guía](nodo-asistente.md) · [SVG](nodo-asistente.svg) · [JSON](nodo-asistente-fisico.json) |
 
 Regenerar: `node web/scripts/export-hardware-missions.mjs`. Los JSON físicos son importables en el editor; la colección lógica es otro formato.

@@ -13,7 +13,7 @@ describe("physical banks and compatibility",()=>{
    const a=parseAssembly(JSON.stringify(g.assembly)), geo=assemblyGeometry(a);
    expect(assemblyBank(a)).toBe(id);
    expect(analyze(a).findings.filter(f=>f.level==="error"),id).toEqual([]);
-   for(const w of a.wires) {expect(geo.ends.has(w.from),`${id}/${w.id} source`).toBe(true);expect(geo.ends.has(w.to)).toBe(true);expect(w.jumper??w.note).not.toContain("H–H");}
+   for(const w of a.wires) {expect(geo.ends.has(w.from),`${id}/${w.id} source`).toBe(true);expect(geo.ends.has(w.to)).toBe(true);if(!id.startsWith("nodo-"))expect(w.jumper??w.note).not.toContain("H–H");}
    if(!["nfc","ambiente","dht11","pir"].includes(id)&&a.wires.length)expect(routingMetrics(a).explicit).toBe(true);
   }
  });
@@ -81,7 +81,7 @@ describe("physical banks and compatibility",()=>{
  });
  it("rejects malformed optional metadata and footprints",()=>{
   const a=benchAssembly("led-boton");
-  for(const value of [{...a,bankId:"../bad"},{...a,wires:[{...a.wires[0],jumper:"H–H"}]},{...a,parts:[{...a.parts[0],placement:{x:NaN,y:0}}]}])expect(()=>parseAssembly(JSON.stringify(value))).toThrow();
+  for(const value of [{...a,bankId:"../bad"},{...a,wires:[{...a.wires[0],jumper:"X–X"}]},{...a,parts:[{...a.parts[0],placement:{x:NaN,y:0}}]}])expect(()=>parseAssembly(JSON.stringify(value))).toThrow();
  });
 });
 

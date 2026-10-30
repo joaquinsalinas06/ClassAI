@@ -1,0 +1,3511 @@
+{
+  "version": 1,
+  "bankId": "nodo-asistente",
+  "layout": "breadboard",
+  "name": "Asistente · E-01 · P3/P4",
+  "note": "Montaje integrado propuesto · Asistente · E-01 · P3/P4. Cuatro protoboards entre los tres nodos; no duplicar inventario. M–M/M–H/H–H admitidos para este diseño; contar disponibilidad y alcance antes de armar. H–H une dos cabeceras macho. LP=3,3 V, RP=5 V condicionado, LN/RN=GND local. Alimentación USB propia; no unir fuentes de nodos distintos. Cables pendientes visibles como discontinuos; no colocar ni energizar esas ramas hasta resolver su condición.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 · 38 pines · referencia DevKitC",
+      "pending": "Cotejar cada etiqueta real de E-01; el dibujo no identifica el pinout de su clon.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "tft",
+      "name": "D-04 · 1.54 ST7789 V1.1",
+      "pending": "Referencia de ensayo 3,3 V, no 5 V. Confirmar VCC y BL de D-04. BL con 1 kΩ serie a 3V3 limita corriente; puede verse tenue. Si la variante exige otra conexión, no puentear R sin ficha.",
+      "pins": [
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3,
+          "required": false
+        },
+        {
+          "id": "SCL",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "SDA",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "RST",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "DC",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "CS",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "BL",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "microfono",
+      "name": "M-07A · INMP441",
+      "pending": "INMP441 según inventario; cotejar etiquetas/cabecera y desacoplo. Terminales mostrados por función: orden del breakout pendiente, no trasladar posiciones.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "SD",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "LR",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "WS",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "SCK",
+          "kind": "signal",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "amp",
+      "name": "D-08 · MAX98357A mono",
+      "pending": "D-08 · MAX98357A: confirmar breakout/cabecera. VIN/5V del USB solo después de identificar A-01 y únicamente para un tono inicial de nivel bajo; no demuestra margen de potencia. SD21 habilita y LOW silencia.",
+      "pins": [
+        {
+          "id": "LRC",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "BCLK",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "DIN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GAIN",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "SD",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "SPK_PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "SPK_MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "speaker",
+      "name": "Una bocina 4 Ω / 3 W",
+      "pending": "D-09: usar solo una. Conectar entre SPK+ y SPK−, ninguno a masa. Adaptador/soldadura de bornera por confirmar.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "breadboard400",
+      "name": "P4 · protoboard 400 puntos",
+      "pending": "Referencia de 30 filas; comprobar continuidad real de rieles.",
+      "pins": [
+        {
+          "id": "A1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-L"
+        },
+        {
+          "id": "B1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-L"
+        },
+        {
+          "id": "C1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-L"
+        },
+        {
+          "id": "D1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-L"
+        },
+        {
+          "id": "E1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-L"
+        },
+        {
+          "id": "F1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-R"
+        },
+        {
+          "id": "G1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-R"
+        },
+        {
+          "id": "H1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-R"
+        },
+        {
+          "id": "I1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-R"
+        },
+        {
+          "id": "J1",
+          "kind": "passive",
+          "required": false,
+          "bus": "1-R"
+        },
+        {
+          "id": "LP1",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN1",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP1",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN1",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-L"
+        },
+        {
+          "id": "B2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-L"
+        },
+        {
+          "id": "C2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-L"
+        },
+        {
+          "id": "D2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-L"
+        },
+        {
+          "id": "E2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-L"
+        },
+        {
+          "id": "F2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-R"
+        },
+        {
+          "id": "G2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-R"
+        },
+        {
+          "id": "H2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-R"
+        },
+        {
+          "id": "I2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-R"
+        },
+        {
+          "id": "J2",
+          "kind": "passive",
+          "required": false,
+          "bus": "2-R"
+        },
+        {
+          "id": "LP2",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN2",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP2",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN2",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-L"
+        },
+        {
+          "id": "B3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-L"
+        },
+        {
+          "id": "C3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-L"
+        },
+        {
+          "id": "D3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-L"
+        },
+        {
+          "id": "E3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-L"
+        },
+        {
+          "id": "F3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-R"
+        },
+        {
+          "id": "G3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-R"
+        },
+        {
+          "id": "H3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-R"
+        },
+        {
+          "id": "I3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-R"
+        },
+        {
+          "id": "J3",
+          "kind": "passive",
+          "required": false,
+          "bus": "3-R"
+        },
+        {
+          "id": "LP3",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN3",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP3",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN3",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-L"
+        },
+        {
+          "id": "B4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-L"
+        },
+        {
+          "id": "C4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-L"
+        },
+        {
+          "id": "D4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-L"
+        },
+        {
+          "id": "E4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-L"
+        },
+        {
+          "id": "F4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-R"
+        },
+        {
+          "id": "G4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-R"
+        },
+        {
+          "id": "H4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-R"
+        },
+        {
+          "id": "I4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-R"
+        },
+        {
+          "id": "J4",
+          "kind": "passive",
+          "required": false,
+          "bus": "4-R"
+        },
+        {
+          "id": "LP4",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN4",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP4",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN4",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-L"
+        },
+        {
+          "id": "B5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-L"
+        },
+        {
+          "id": "C5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-L"
+        },
+        {
+          "id": "D5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-L"
+        },
+        {
+          "id": "E5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-L"
+        },
+        {
+          "id": "F5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-R"
+        },
+        {
+          "id": "G5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-R"
+        },
+        {
+          "id": "H5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-R"
+        },
+        {
+          "id": "I5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-R"
+        },
+        {
+          "id": "J5",
+          "kind": "passive",
+          "required": false,
+          "bus": "5-R"
+        },
+        {
+          "id": "LP5",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN5",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP5",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN5",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-L"
+        },
+        {
+          "id": "B6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-L"
+        },
+        {
+          "id": "C6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-L"
+        },
+        {
+          "id": "D6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-L"
+        },
+        {
+          "id": "E6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-L"
+        },
+        {
+          "id": "F6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-R"
+        },
+        {
+          "id": "G6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-R"
+        },
+        {
+          "id": "H6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-R"
+        },
+        {
+          "id": "I6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-R"
+        },
+        {
+          "id": "J6",
+          "kind": "passive",
+          "required": false,
+          "bus": "6-R"
+        },
+        {
+          "id": "LP6",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN6",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP6",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN6",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-L"
+        },
+        {
+          "id": "B7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-L"
+        },
+        {
+          "id": "C7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-L"
+        },
+        {
+          "id": "D7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-L"
+        },
+        {
+          "id": "E7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-L"
+        },
+        {
+          "id": "F7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-R"
+        },
+        {
+          "id": "G7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-R"
+        },
+        {
+          "id": "H7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-R"
+        },
+        {
+          "id": "I7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-R"
+        },
+        {
+          "id": "J7",
+          "kind": "passive",
+          "required": false,
+          "bus": "7-R"
+        },
+        {
+          "id": "LP7",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN7",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP7",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN7",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-L"
+        },
+        {
+          "id": "B8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-L"
+        },
+        {
+          "id": "C8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-L"
+        },
+        {
+          "id": "D8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-L"
+        },
+        {
+          "id": "E8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-L"
+        },
+        {
+          "id": "F8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-R"
+        },
+        {
+          "id": "G8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-R"
+        },
+        {
+          "id": "H8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-R"
+        },
+        {
+          "id": "I8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-R"
+        },
+        {
+          "id": "J8",
+          "kind": "passive",
+          "required": false,
+          "bus": "8-R"
+        },
+        {
+          "id": "LP8",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN8",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP8",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN8",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-L"
+        },
+        {
+          "id": "B9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-L"
+        },
+        {
+          "id": "C9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-L"
+        },
+        {
+          "id": "D9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-L"
+        },
+        {
+          "id": "E9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-L"
+        },
+        {
+          "id": "F9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-R"
+        },
+        {
+          "id": "G9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-R"
+        },
+        {
+          "id": "H9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-R"
+        },
+        {
+          "id": "I9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-R"
+        },
+        {
+          "id": "J9",
+          "kind": "passive",
+          "required": false,
+          "bus": "9-R"
+        },
+        {
+          "id": "LP9",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN9",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP9",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN9",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-L"
+        },
+        {
+          "id": "B10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-L"
+        },
+        {
+          "id": "C10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-L"
+        },
+        {
+          "id": "D10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-L"
+        },
+        {
+          "id": "E10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-L"
+        },
+        {
+          "id": "F10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-R"
+        },
+        {
+          "id": "G10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-R"
+        },
+        {
+          "id": "H10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-R"
+        },
+        {
+          "id": "I10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-R"
+        },
+        {
+          "id": "J10",
+          "kind": "passive",
+          "required": false,
+          "bus": "10-R"
+        },
+        {
+          "id": "LP10",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN10",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP10",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN10",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-L"
+        },
+        {
+          "id": "B11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-L"
+        },
+        {
+          "id": "C11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-L"
+        },
+        {
+          "id": "D11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-L"
+        },
+        {
+          "id": "E11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-L"
+        },
+        {
+          "id": "F11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-R"
+        },
+        {
+          "id": "G11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-R"
+        },
+        {
+          "id": "H11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-R"
+        },
+        {
+          "id": "I11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-R"
+        },
+        {
+          "id": "J11",
+          "kind": "passive",
+          "required": false,
+          "bus": "11-R"
+        },
+        {
+          "id": "LP11",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN11",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP11",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN11",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-L"
+        },
+        {
+          "id": "B12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-L"
+        },
+        {
+          "id": "C12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-L"
+        },
+        {
+          "id": "D12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-L"
+        },
+        {
+          "id": "E12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-L"
+        },
+        {
+          "id": "F12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-R"
+        },
+        {
+          "id": "G12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-R"
+        },
+        {
+          "id": "H12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-R"
+        },
+        {
+          "id": "I12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-R"
+        },
+        {
+          "id": "J12",
+          "kind": "passive",
+          "required": false,
+          "bus": "12-R"
+        },
+        {
+          "id": "LP12",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN12",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP12",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN12",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-L"
+        },
+        {
+          "id": "B13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-L"
+        },
+        {
+          "id": "C13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-L"
+        },
+        {
+          "id": "D13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-L"
+        },
+        {
+          "id": "E13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-L"
+        },
+        {
+          "id": "F13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-R"
+        },
+        {
+          "id": "G13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-R"
+        },
+        {
+          "id": "H13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-R"
+        },
+        {
+          "id": "I13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-R"
+        },
+        {
+          "id": "J13",
+          "kind": "passive",
+          "required": false,
+          "bus": "13-R"
+        },
+        {
+          "id": "LP13",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN13",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP13",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN13",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-L"
+        },
+        {
+          "id": "B14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-L"
+        },
+        {
+          "id": "C14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-L"
+        },
+        {
+          "id": "D14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-L"
+        },
+        {
+          "id": "E14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-L"
+        },
+        {
+          "id": "F14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-R"
+        },
+        {
+          "id": "G14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-R"
+        },
+        {
+          "id": "H14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-R"
+        },
+        {
+          "id": "I14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-R"
+        },
+        {
+          "id": "J14",
+          "kind": "passive",
+          "required": false,
+          "bus": "14-R"
+        },
+        {
+          "id": "LP14",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN14",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP14",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN14",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-L"
+        },
+        {
+          "id": "B15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-L"
+        },
+        {
+          "id": "C15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-L"
+        },
+        {
+          "id": "D15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-L"
+        },
+        {
+          "id": "E15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-L"
+        },
+        {
+          "id": "F15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-R"
+        },
+        {
+          "id": "G15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-R"
+        },
+        {
+          "id": "H15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-R"
+        },
+        {
+          "id": "I15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-R"
+        },
+        {
+          "id": "J15",
+          "kind": "passive",
+          "required": false,
+          "bus": "15-R"
+        },
+        {
+          "id": "LP15",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN15",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP15",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN15",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-L"
+        },
+        {
+          "id": "B16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-L"
+        },
+        {
+          "id": "C16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-L"
+        },
+        {
+          "id": "D16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-L"
+        },
+        {
+          "id": "E16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-L"
+        },
+        {
+          "id": "F16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-R"
+        },
+        {
+          "id": "G16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-R"
+        },
+        {
+          "id": "H16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-R"
+        },
+        {
+          "id": "I16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-R"
+        },
+        {
+          "id": "J16",
+          "kind": "passive",
+          "required": false,
+          "bus": "16-R"
+        },
+        {
+          "id": "LP16",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN16",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP16",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN16",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-L"
+        },
+        {
+          "id": "B17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-L"
+        },
+        {
+          "id": "C17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-L"
+        },
+        {
+          "id": "D17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-L"
+        },
+        {
+          "id": "E17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-L"
+        },
+        {
+          "id": "F17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-R"
+        },
+        {
+          "id": "G17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-R"
+        },
+        {
+          "id": "H17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-R"
+        },
+        {
+          "id": "I17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-R"
+        },
+        {
+          "id": "J17",
+          "kind": "passive",
+          "required": false,
+          "bus": "17-R"
+        },
+        {
+          "id": "LP17",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN17",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP17",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN17",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-L"
+        },
+        {
+          "id": "B18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-L"
+        },
+        {
+          "id": "C18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-L"
+        },
+        {
+          "id": "D18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-L"
+        },
+        {
+          "id": "E18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-L"
+        },
+        {
+          "id": "F18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-R"
+        },
+        {
+          "id": "G18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-R"
+        },
+        {
+          "id": "H18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-R"
+        },
+        {
+          "id": "I18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-R"
+        },
+        {
+          "id": "J18",
+          "kind": "passive",
+          "required": false,
+          "bus": "18-R"
+        },
+        {
+          "id": "LP18",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN18",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP18",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN18",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-L"
+        },
+        {
+          "id": "B19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-L"
+        },
+        {
+          "id": "C19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-L"
+        },
+        {
+          "id": "D19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-L"
+        },
+        {
+          "id": "E19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-L"
+        },
+        {
+          "id": "F19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-R"
+        },
+        {
+          "id": "G19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-R"
+        },
+        {
+          "id": "H19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-R"
+        },
+        {
+          "id": "I19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-R"
+        },
+        {
+          "id": "J19",
+          "kind": "passive",
+          "required": false,
+          "bus": "19-R"
+        },
+        {
+          "id": "LP19",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN19",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP19",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN19",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-L"
+        },
+        {
+          "id": "B20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-L"
+        },
+        {
+          "id": "C20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-L"
+        },
+        {
+          "id": "D20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-L"
+        },
+        {
+          "id": "E20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-L"
+        },
+        {
+          "id": "F20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-R"
+        },
+        {
+          "id": "G20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-R"
+        },
+        {
+          "id": "H20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-R"
+        },
+        {
+          "id": "I20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-R"
+        },
+        {
+          "id": "J20",
+          "kind": "passive",
+          "required": false,
+          "bus": "20-R"
+        },
+        {
+          "id": "LP20",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN20",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP20",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN20",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-L"
+        },
+        {
+          "id": "B21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-L"
+        },
+        {
+          "id": "C21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-L"
+        },
+        {
+          "id": "D21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-L"
+        },
+        {
+          "id": "E21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-L"
+        },
+        {
+          "id": "F21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-R"
+        },
+        {
+          "id": "G21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-R"
+        },
+        {
+          "id": "H21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-R"
+        },
+        {
+          "id": "I21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-R"
+        },
+        {
+          "id": "J21",
+          "kind": "passive",
+          "required": false,
+          "bus": "21-R"
+        },
+        {
+          "id": "LP21",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN21",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP21",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN21",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-L"
+        },
+        {
+          "id": "B22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-L"
+        },
+        {
+          "id": "C22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-L"
+        },
+        {
+          "id": "D22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-L"
+        },
+        {
+          "id": "E22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-L"
+        },
+        {
+          "id": "F22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-R"
+        },
+        {
+          "id": "G22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-R"
+        },
+        {
+          "id": "H22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-R"
+        },
+        {
+          "id": "I22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-R"
+        },
+        {
+          "id": "J22",
+          "kind": "passive",
+          "required": false,
+          "bus": "22-R"
+        },
+        {
+          "id": "LP22",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN22",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP22",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN22",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-L"
+        },
+        {
+          "id": "B23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-L"
+        },
+        {
+          "id": "C23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-L"
+        },
+        {
+          "id": "D23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-L"
+        },
+        {
+          "id": "E23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-L"
+        },
+        {
+          "id": "F23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-R"
+        },
+        {
+          "id": "G23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-R"
+        },
+        {
+          "id": "H23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-R"
+        },
+        {
+          "id": "I23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-R"
+        },
+        {
+          "id": "J23",
+          "kind": "passive",
+          "required": false,
+          "bus": "23-R"
+        },
+        {
+          "id": "LP23",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN23",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP23",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN23",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-L"
+        },
+        {
+          "id": "B24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-L"
+        },
+        {
+          "id": "C24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-L"
+        },
+        {
+          "id": "D24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-L"
+        },
+        {
+          "id": "E24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-L"
+        },
+        {
+          "id": "F24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-R"
+        },
+        {
+          "id": "G24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-R"
+        },
+        {
+          "id": "H24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-R"
+        },
+        {
+          "id": "I24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-R"
+        },
+        {
+          "id": "J24",
+          "kind": "passive",
+          "required": false,
+          "bus": "24-R"
+        },
+        {
+          "id": "LP24",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN24",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP24",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN24",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-L"
+        },
+        {
+          "id": "B25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-L"
+        },
+        {
+          "id": "C25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-L"
+        },
+        {
+          "id": "D25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-L"
+        },
+        {
+          "id": "E25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-L"
+        },
+        {
+          "id": "F25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-R"
+        },
+        {
+          "id": "G25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-R"
+        },
+        {
+          "id": "H25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-R"
+        },
+        {
+          "id": "I25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-R"
+        },
+        {
+          "id": "J25",
+          "kind": "passive",
+          "required": false,
+          "bus": "25-R"
+        },
+        {
+          "id": "LP25",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN25",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP25",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN25",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-L"
+        },
+        {
+          "id": "B26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-L"
+        },
+        {
+          "id": "C26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-L"
+        },
+        {
+          "id": "D26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-L"
+        },
+        {
+          "id": "E26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-L"
+        },
+        {
+          "id": "F26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-R"
+        },
+        {
+          "id": "G26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-R"
+        },
+        {
+          "id": "H26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-R"
+        },
+        {
+          "id": "I26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-R"
+        },
+        {
+          "id": "J26",
+          "kind": "passive",
+          "required": false,
+          "bus": "26-R"
+        },
+        {
+          "id": "LP26",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN26",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP26",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN26",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-L"
+        },
+        {
+          "id": "B27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-L"
+        },
+        {
+          "id": "C27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-L"
+        },
+        {
+          "id": "D27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-L"
+        },
+        {
+          "id": "E27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-L"
+        },
+        {
+          "id": "F27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-R"
+        },
+        {
+          "id": "G27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-R"
+        },
+        {
+          "id": "H27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-R"
+        },
+        {
+          "id": "I27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-R"
+        },
+        {
+          "id": "J27",
+          "kind": "passive",
+          "required": false,
+          "bus": "27-R"
+        },
+        {
+          "id": "LP27",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN27",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP27",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN27",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-L"
+        },
+        {
+          "id": "B28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-L"
+        },
+        {
+          "id": "C28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-L"
+        },
+        {
+          "id": "D28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-L"
+        },
+        {
+          "id": "E28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-L"
+        },
+        {
+          "id": "F28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-R"
+        },
+        {
+          "id": "G28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-R"
+        },
+        {
+          "id": "H28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-R"
+        },
+        {
+          "id": "I28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-R"
+        },
+        {
+          "id": "J28",
+          "kind": "passive",
+          "required": false,
+          "bus": "28-R"
+        },
+        {
+          "id": "LP28",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN28",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP28",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN28",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-L"
+        },
+        {
+          "id": "B29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-L"
+        },
+        {
+          "id": "C29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-L"
+        },
+        {
+          "id": "D29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-L"
+        },
+        {
+          "id": "E29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-L"
+        },
+        {
+          "id": "F29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-R"
+        },
+        {
+          "id": "G29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-R"
+        },
+        {
+          "id": "H29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-R"
+        },
+        {
+          "id": "I29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-R"
+        },
+        {
+          "id": "J29",
+          "kind": "passive",
+          "required": false,
+          "bus": "29-R"
+        },
+        {
+          "id": "LP29",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN29",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP29",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN29",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        },
+        {
+          "id": "A30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-L"
+        },
+        {
+          "id": "B30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-L"
+        },
+        {
+          "id": "C30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-L"
+        },
+        {
+          "id": "D30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-L"
+        },
+        {
+          "id": "E30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-L"
+        },
+        {
+          "id": "F30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-R"
+        },
+        {
+          "id": "G30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-R"
+        },
+        {
+          "id": "H30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-R"
+        },
+        {
+          "id": "I30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-R"
+        },
+        {
+          "id": "J30",
+          "kind": "passive",
+          "required": false,
+          "bus": "30-R"
+        },
+        {
+          "id": "LP30",
+          "kind": "passive",
+          "required": false,
+          "bus": "LP"
+        },
+        {
+          "id": "LN30",
+          "kind": "passive",
+          "required": false,
+          "bus": "LN"
+        },
+        {
+          "id": "RP30",
+          "kind": "passive",
+          "required": false,
+          "bus": "RP"
+        },
+        {
+          "id": "RN30",
+          "kind": "passive",
+          "required": false,
+          "bus": "RN"
+        }
+      ]
+    },
+    {
+      "id": "ldr",
+      "name": "Fotoresistencia · luz relativa",
+      "pending": "Modelo y orientación hacia el aula por comprobar; no mide lux sin calibración.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "2",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "2",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "E-01 · Joaquín · Type-C 38 pines",
+      "holes": {},
+      "pinout": "devkit38-reference"
+    },
+    {
+      "id": "p4",
+      "definition": "breadboard400",
+      "inventory": "Segunda protoboard · audio y potencia",
+      "holes": {},
+      "placement": {
+        "x": 1010,
+        "y": 110
+      }
+    },
+    {
+      "id": "tft1",
+      "definition": "tft",
+      "inventory": "D-04 · TFT ST7789",
+      "holes": {},
+      "placement": {
+        "x": 1590,
+        "y": 160
+      }
+    },
+    {
+      "id": "mic1",
+      "definition": "microfono",
+      "inventory": "D-07 · INMP441",
+      "holes": {},
+      "placement": {
+        "x": 70,
+        "y": 900
+      }
+    },
+    {
+      "id": "amp1",
+      "definition": "amp",
+      "inventory": "D-08 · MAX98357A",
+      "holes": {},
+      "placement": {
+        "x": 1590,
+        "y": 760
+      }
+    },
+    {
+      "id": "speaker1",
+      "definition": "speaker",
+      "inventory": "D-09 · una bocina",
+      "holes": {},
+      "placement": {
+        "x": 1590,
+        "y": 1160
+      }
+    },
+    {
+      "id": "rSD",
+      "definition": "resistor",
+      "inventory": "Pull-down SD · 1 kΩ",
+      "resistance": 1000,
+      "boardId": "p4",
+      "holes": {
+        "1": "C8",
+        "2": "C12"
+      }
+    },
+    {
+      "id": "ldr1",
+      "definition": "ldr",
+      "inventory": "Fotoresistencia · una de las disponibles",
+      "holes": {
+        "1": "C5",
+        "2": "C8"
+      }
+    },
+    {
+      "id": "rLight",
+      "definition": "resistor",
+      "inventory": "Resistencia 10 kΩ · caracterizar rango ADC",
+      "resistance": 10000,
+      "holes": {
+        "1": "E8",
+        "2": "E11"
+      }
+    },
+    {
+      "id": "rBL",
+      "definition": "resistor",
+      "inventory": "BL TFT · 1 kΩ en serie",
+      "resistance": 1000,
+      "boardId": "p4",
+      "holes": {
+        "1": "C20",
+        "2": "G20"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN2",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "1. Masa común del nodo · M–H · esp1 · GND → P · LN2 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c2",
+      "from": "bb:LN29",
+      "to": "bb:RN29",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "2. Unir solo los dos rieles negativos · M–M · P · LN29 → P · RN29 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c3",
+      "from": "esp1:3V3",
+      "to": "bb:LP2",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "3. Riel positivo izquierdo: 3,3 V · M–H · esp1 · 3V3 → P · LP2 · USB desconectado.",
+      "bends": [
+        [
+          62,
+          140
+        ],
+        [
+          435,
+          140
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "esp1:VIN",
+      "to": "bb:RP2",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "note": "4. Riel positivo derecho: 5 V USB · M–H · esp1 · VIN → P · RP2 · NO CONECTAR: Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "bends": [
+        [
+          62,
+          133
+        ],
+        [
+          763,
+          133
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:LP5",
+      "to": "bb:A5",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "5. Divisor LDR: extremo superior a 3,3 V · M–M · P · LP5 → P · A5 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "esp1:GPIO35",
+      "to": "bb:B8",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "6. Unión LDR/resistencia hacia ADC1 GPIO35 · M–H · esp1 · GPIO 35 → P · B8 · USB desconectado.",
+      "bends": [
+        [
+          66,
+          303
+        ],
+        [
+          66,
+          128
+        ],
+        [
+          520,
+          128
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "bb:A11",
+      "to": "bb:LN11",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "7. Divisor LDR: resistencia a GND · M–M · P · A11 → P · LN11 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c8",
+      "from": "bb:LP29",
+      "to": "p4:LP29",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "8. Llevar 3,3 V desde P3 a P4 · M–M · P · LP29 → p4 · LP29 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c9",
+      "from": "bb:LN28",
+      "to": "p4:LN28",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "9. Masa P3/P4 del mismo nodo · M–M · P · LN28 → p4 · LN28 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c10",
+      "from": "bb:RP29",
+      "to": "p4:RP29",
+      "color": "orange",
+      "jumper": "M–M",
+      "pending": "Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "note": "10. Llevar 5 V desde P3 a P4 · M–M · P · RP29 → p4 · RP29 · NO CONECTAR: Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "bends": []
+    },
+    {
+      "id": "c11",
+      "from": "bb:LP14",
+      "to": "tft1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "11. Alimentar tft1 a 3.3 V · M–H · P · LP14 → tft1 · VCC · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "bb:LN14",
+      "to": "tft1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "12. Retorno de tft1 · M–H · P · LN14 → tft1 · GND · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c13",
+      "from": "p4:LP20",
+      "to": "p4:A20",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "13. Retroiluminación TFT: entrada a resistencia de 1 kΩ · M–M · p4 · LP20 → p4 · A20 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c14",
+      "from": "p4:J20",
+      "to": "tft1:BL",
+      "color": "red",
+      "jumper": "M–H",
+      "pending": "Confirmar conexión BL de esta variante; no puentear la resistencia por ensayo/error.",
+      "note": "14. Retroiluminación con resistencia en serie · M–H · p4 · J20 → tft1 · BL · NO CONECTAR: Confirmar conexión BL de esta variante; no puentear la resistencia por ensayo/error.",
+      "bends": [
+        [
+          1590,
+          492
+        ]
+      ]
+    },
+    {
+      "id": "c15",
+      "from": "esp1:GPIO14",
+      "to": "tft1:SCL",
+      "color": "blue",
+      "jumper": "H–H",
+      "note": "15. TFT SPI · SCL · H–H · esp1 · GPIO 14 → tft1 · SCL · USB desconectado.",
+      "bends": [
+        [
+          62,
+          126
+        ],
+        [
+          1590,
+          126
+        ]
+      ]
+    },
+    {
+      "id": "c16",
+      "from": "esp1:GPIO23",
+      "to": "tft1:SDA",
+      "color": "green",
+      "jumper": "H–H",
+      "note": "16. TFT SPI · SDA · H–H · esp1 · GPIO 23 → tft1 · SDA · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          195
+        ]
+      ]
+    },
+    {
+      "id": "c17",
+      "from": "esp1:GPIO5",
+      "to": "tft1:CS",
+      "color": "yellow",
+      "jumper": "H–H",
+      "note": "17. TFT SPI · CS · H–H · esp1 · GPIO 5 → tft1 · CS · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          411
+        ]
+      ]
+    },
+    {
+      "id": "c18",
+      "from": "esp1:GPIO27",
+      "to": "tft1:DC",
+      "color": "purple",
+      "jumper": "H–H",
+      "note": "18. TFT SPI · DC · H–H · esp1 · GPIO 27 → tft1 · DC · USB desconectado.",
+      "bends": [
+        [
+          62,
+          140
+        ],
+        [
+          1590,
+          140
+        ]
+      ]
+    },
+    {
+      "id": "c19",
+      "from": "esp1:GPIO26",
+      "to": "tft1:RST",
+      "color": "yellow",
+      "jumper": "H–H",
+      "note": "19. TFT SPI · RST · H–H · esp1 · GPIO 26 → tft1 · RST · USB desconectado.",
+      "bends": [
+        [
+          62,
+          133
+        ],
+        [
+          1590,
+          133
+        ]
+      ]
+    },
+    {
+      "id": "c20",
+      "from": "bb:LP18",
+      "to": "mic1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "20. Alimentar mic1 a 3.3 V · M–H · P · LP18 → mic1 · VCC · USB desconectado.",
+      "bends": [
+        [
+          340,
+          456
+        ],
+        [
+          340,
+          726
+        ],
+        [
+          70,
+          726
+        ]
+      ]
+    },
+    {
+      "id": "c21",
+      "from": "bb:LN18",
+      "to": "mic1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "21. Retorno de mic1 · M–H · P · LN18 → mic1 · GND · USB desconectado.",
+      "bends": [
+        [
+          312,
+          456
+        ],
+        [
+          312,
+          730
+        ],
+        [
+          70,
+          730
+        ]
+      ]
+    },
+    {
+      "id": "c22",
+      "from": "bb:LN20",
+      "to": "mic1:LR",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "22. Fijar micrófono en canal izquierdo · M–H · P · LN20 → mic1 · LR · USB desconectado.",
+      "bends": [
+        [
+          319,
+          492
+        ],
+        [
+          319,
+          737
+        ],
+        [
+          70,
+          737
+        ]
+      ]
+    },
+    {
+      "id": "c23",
+      "from": "esp1:GPIO18",
+      "to": "mic1:SCK",
+      "color": "blue",
+      "jumper": "H–H",
+      "note": "23. Micrófono I²S0 · SCK · H–H · esp1 · GPIO 18 → mic1 · SCK · USB desconectado.",
+      "bends": [
+        [
+          308,
+          740
+        ],
+        [
+          70,
+          740
+        ]
+      ]
+    },
+    {
+      "id": "c24",
+      "from": "esp1:GPIO19",
+      "to": "mic1:WS",
+      "color": "yellow",
+      "jumper": "H–H",
+      "note": "24. Micrófono I²S0 · WS · H–H · esp1 · GPIO 19 → mic1 · WS · USB desconectado.",
+      "bends": [
+        [
+          308,
+          733
+        ],
+        [
+          70,
+          733
+        ]
+      ]
+    },
+    {
+      "id": "c25",
+      "from": "esp1:GPIO34",
+      "to": "mic1:SD",
+      "color": "green",
+      "jumper": "H–H",
+      "note": "25. Micrófono I²S0 · SD · H–H · esp1 · GPIO 34 → mic1 · SD · USB desconectado.",
+      "bends": [
+        [
+          70,
+          276
+        ]
+      ]
+    },
+    {
+      "id": "c26",
+      "from": "p4:RP5",
+      "to": "amp1:VIN",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "note": "26. Alimentar amp1 a 5 V · M–H · p4 · RP5 → amp1 · VIN · NO CONECTAR: Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "bends": [
+        [
+          1590,
+          222
+        ]
+      ]
+    },
+    {
+      "id": "c27",
+      "from": "p4:LN5",
+      "to": "amp1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "27. Retorno de amp1 · M–H · p4 · LN5 → amp1 · GND · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          222
+        ]
+      ]
+    },
+    {
+      "id": "c28",
+      "from": "esp1:GPIO33",
+      "to": "amp1:BCLK",
+      "color": "blue",
+      "jumper": "H–H",
+      "note": "28. Bocina I²S1 · BCLK · H–H · esp1 · GPIO 33 → amp1 · BCLK · USB desconectado.",
+      "bends": [
+        [
+          62,
+          740
+        ],
+        [
+          1590,
+          740
+        ]
+      ]
+    },
+    {
+      "id": "c29",
+      "from": "esp1:GPIO25",
+      "to": "amp1:LRC",
+      "color": "yellow",
+      "jumper": "H–H",
+      "note": "29. Bocina I²S1 · LRC · H–H · esp1 · GPIO 25 → amp1 · LRC · USB desconectado.",
+      "bends": [
+        [
+          62,
+          733
+        ],
+        [
+          1590,
+          733
+        ]
+      ]
+    },
+    {
+      "id": "c30",
+      "from": "esp1:GPIO22",
+      "to": "amp1:DIN",
+      "color": "green",
+      "jumper": "H–H",
+      "note": "30. Bocina I²S1 · DIN · H–H · esp1 · GPIO 22 → amp1 · DIN · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          222
+        ]
+      ]
+    },
+    {
+      "id": "c31",
+      "from": "esp1:GPIO21",
+      "to": "p4:A8",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "31. Control SD21 y pull-down · M–H · esp1 · GPIO 21 → p4 · A8 · USB desconectado.",
+      "bends": [
+        [
+          567,
+          303
+        ],
+        [
+          567,
+          267
+        ],
+        [
+          1100,
+          267
+        ]
+      ]
+    },
+    {
+      "id": "c32",
+      "from": "p4:B8",
+      "to": "amp1:SD",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "32. Unión SD21/pull-down hacia SD del amplificador · M–H · p4 · B8 → amp1 · SD · USB desconectado.",
+      "bends": [
+        [
+          1590,
+          276
+        ]
+      ]
+    },
+    {
+      "id": "c33",
+      "from": "p4:A12",
+      "to": "p4:LN12",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "33. Pull-down SD hacia masa · M–M · p4 · A12 → p4 · LN12 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c34",
+      "from": "amp1:SPK_PLUS",
+      "to": "speaker1:PLUS",
+      "color": "orange",
+      "jumper": "altavoz",
+      "pending": "Revisar bornera y una sola bocina antes de armar.",
+      "note": "34. Bocina diferencial · positivo · altavoz · amp1 · SPK_PLUS → speaker1 · PLUS · NO CONECTAR: Revisar bornera y una sola bocina antes de armar.",
+      "bends": []
+    },
+    {
+      "id": "c35",
+      "from": "amp1:SPK_MINUS",
+      "to": "speaker1:MINUS",
+      "color": "black",
+      "jumper": "altavoz",
+      "pending": "No conectar SPK− a masa.",
+      "note": "35. Bocina diferencial · negativo, nunca GND · altavoz · amp1 · SPK_MINUS → speaker1 · MINUS · NO CONECTAR: No conectar SPK− a masa.",
+      "bends": []
+    }
+  ],
+  "revisions": []
+}

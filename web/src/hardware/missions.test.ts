@@ -32,13 +32,13 @@ describe("bank reference library", () => {
     expect(alternate).toContain("Alternativa de compatibilidad · sin ensayo físico");
     expect(alternate).not.toContain("Ensayo físico del 26/10/2026");
   });
-  it("covers every hardware mission without inventing a received third ESP32", () => {
-    expect(missions).toHaveLength(16);
+  it("preserves isolated banks and adds the three integrated proposals", () => {
+    expect(missions).toHaveLength(19);
     expect(new Set(missions.map(m=>m.id)).size).toBe(missions.length);
     for (const m of missions) {
       expect(m.links.length).toBeGreaterThan(0);
       expect(m.checks.length).toBeGreaterThan(0);
-      expect(m.materials.join(" ")).not.toMatch(/E-01|E-03|E-04/);
+      if(!m.id.startsWith("nodo-"))expect(m.materials.join(" ")).not.toMatch(/E-01|E-03|E-04/);
     }
   });
   it("keeps NFC aligned with implemented SPI wiring and supplies", () => {

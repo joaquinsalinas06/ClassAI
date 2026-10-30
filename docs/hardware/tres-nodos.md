@@ -138,3 +138,38 @@ Guardar resultados reales con fecha y pendientes; host/compilación/MQTT simulad
 no prueban el NFC físico, la cobertura PIR, la calibración ni el margen eléctrico.
 
 [Resultados software y límites de esta entrega](tres-nodos-validacion.md).
+
+
+## Montajes visuales integrados · 30/10/2026
+
+En `/montajes`, la sección **ClassAI · tres nodos** contiene el conjunto real
+por rol, además de los 16 bancos aislados que se conservan:
+
+| Montaje | Ruta del visor | Guía y dibujo |
+|---|---|---|
+| Acceso · B-02 · P1 | `/montajes?banco=nodo-acceso` | [Guía](esquemas/nodo-acceso.md) · [SVG](esquemas/nodo-acceso.svg) |
+| Ambiente · A-01 · P2 | `/montajes?banco=nodo-ambiente` | [Guía](esquemas/nodo-ambiente.md) · [SVG](esquemas/nodo-ambiente.svg) |
+| Asistente · E-01 · P3/P4 | `/montajes?banco=nodo-asistente` | [Guía](esquemas/nodo-asistente.md) · [SVG](esquemas/nodo-asistente.svg) |
+
+**Recorrer armado** empieza sin cables y añade los listos uno a uno. Las ramas
+condicionadas se ven discontinuas en **Ver todo** y se pueden ocultar con
+**Ver conexiones pendientes**; no forman parte de los pasos ejecutables.
+**Materiales** cuenta M–M, M–H, H–H y los conductores de potencia/bocina.
+**Pines y cables** permite seleccionar redes y consultar cada extremo.
+Exportar SVG conserva las condiciones; JSON permite reimportar y guardar
+revisiones, sin sobrescribir automáticamente un montaje anterior.
+
+Joaquín autoriza usar **H–H en estas propuestas**: dos conectores macho pueden
+unirse directamente, evitando puentes innecesarios por protoboard. Esto no
+certifica unidades recibidas ni longitud; contar el presupuesto mostrado antes
+de armar. Las recetas aisladas conservan su diseño anterior sin H–H.
+
+P4 es otra protoboard independiente: no comparte tiras/rieles con P3 hasta
+colocar sus puentes explícitos. Los pasivos indican en qué placa van sus patas.
+La ESP32 de 38 pines usa la referencia DevKitC documentada; confirmar las
+etiquetas reales de E-01 antes de trasladar posiciones físicas del dibujo.
+
+Los bloques de adaptación de matriz/buzzer son funciones pendientes, no pinouts
+certificados ni compras nuevas. Los tres SVG son propuestas, sin ensayo físico
+conjunto. No se transforma una rama condicionada en cable directo para ahorrar
+jumpers. Los colores no sustituyen la lectura de las etiquetas de tensión.

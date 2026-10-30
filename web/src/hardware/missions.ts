@@ -182,3 +182,15 @@ matrixMission.state="Ensayado · caras 8 × 8 verificadas";
 matrixMission.trial={date:"26/10/2026",observed:"Joaquín confirmó las caras feliz, triste y enojada en B-10 con A-01 (Adrián). Vista frontal: cara derecha y cabecera de entrada/cables a la izquierda = giro 0°. VIN por USB, GND común, DIN13/CLK14/CS27 mediante protoboard; DOUT libre. Dos secuencias Serial de 5 s por cara y stop final confirmados.",pending:"La conexión directa de 3,3 V funcionó en esta unidad; no garantiza el HIGH especificado del MAX7219 a 5 V. Alimentación USB/VIN sin medir; integración con confort y otros periféricos pendiente. Los giros nuevos se verifican en host; el firmware cargado en este ensayo usa orientación 0°.",records:"R-050–R-052"};
 matrixMission.checks.push("Orientación observada desde delante: cables de ENTRADA a la izquierda con la cara derecha. Giro de imagen: izquierda rotate0, abajo rotate90, derecha rotate180, arriba rotate270. Desconectar alimentación antes de mover el módulo; después arm, giro y cara.");
 matrixMission.conflicts="Ensayo aislado DIN13/CLK14/CS27; sin PIR/TFT. La conexión directa observada no certifica compatibilidad 3,3→5 V; conservar alternativa AHCT. La orientación física del visor no certifica el mapeo de píxeles de otra unidad.";
+
+
+for(const [id,code,title] of [["nodo-acceso","N1","Acceso · NFC y confirmación"],["nodo-ambiente","N2","Ambiente · sensado y ventilación"],["nodo-asistente","N3","Asistente · pantalla y audio"]] as const){
+ const physical=benches[id]!,a=physical.assembly;
+ const counts=a.wires.reduce((all,w)=>{const type=w.jumper??"M–H";all[type]=(all[type]??0)+1;return all;},{} as Record<string,number>);
+ missions.push({id,code,title,group:"ClassAI · tres nodos",state:"Propuesta integrada · ensayo conjunto pendiente",physical,
+ summary:physical.action,modules:a.parts.map(p=>({name:`${p.id} · ${a.catalog.find(d=>d.id===p.definition)!.name}`,inventory:p.inventory,shape:p.definition})),
+ materials:a.parts.map(p=>`${p.id}: ${p.inventory}`),jumpers:Object.entries(counts).map(([type,count])=>`${count} ${type}`).join(" + ")+". Incluye ramas condicionadas; cantidad y alcance reales por comprobar",
+ links:a.wires.map(w=>({from:w.from,to:w.to,kind:w.jumper==="altavoz"?"speaker":w.color==="black"?"ground":w.color==="red"||w.color==="orange"?"power":"signal",via:`${w.id} · ${w.jumper}`,pending:!!w.pending})),
+ checks:physical.blockers,test:physical.expected,firmware:`firmware/classai_multinode · CLASSAI_ROLE=${physical.role}; scripts/ci/multinode-build.sh. Sin carga automática.`,
+ conflicts:"Roles en placas separadas; USB propio, MQTT común. No unir las salidas de alimentación entre nodos. Las conexiones discontinuas requieren resolver su condición antes de colocarlas.",sources:[]});
+}

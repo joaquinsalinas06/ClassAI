@@ -90,7 +90,7 @@ try {
   await page.keyboard.press('Escape');
 
   const ids=await page.locator('[data-bank-id]').evaluateAll(xs=>xs.map(x=>x.dataset.bankId));
-  assert.equal(ids.length,16);
+  assert.equal(ids.length,19);
   assert.equal(await page.locator('[data-trial-bank]').count(),3);
   for(const id of ['ruido','audio-salida','matriz']) {
     await page.locator(`[data-bank-id="${id}"]`).click();
@@ -110,7 +110,8 @@ try {
   for(const id of ids){
     await page.locator(`[data-bank-id="${id}"]`).click();
     await page.locator(`[data-mission="${id}"]`).waitFor();
-    if(id in physicalWireCounts) {assert.equal(await canvas.locator('[data-assembly-board]').count(),1);assert.equal(await canvas.locator('[data-wire]').count(),physicalWireCounts[id],`${id} must draw every cable in its executable recipe`);}
+    if(id.startsWith("nodo-")){assert.equal(await canvas.locator("[data-assembly-board]").count(),1);assert.ok(await canvas.locator("[data-wire]").count()>15);}
+    else if(id in physicalWireCounts) {assert.equal(await canvas.locator('[data-assembly-board]').count(),1);assert.equal(await canvas.locator('[data-wire]').count(),physicalWireCounts[id],`${id} must draw every cable in its executable recipe`);}
     else {await canvas.locator(`[data-mission-diagram="${id}"]`).waitFor();assert.equal(await canvas.locator('[data-assembly-board]').count(),0);}
   }
   for(const id of ['led-boton','dht11','pir','ruido','microfono','leds','matriz','buzzer','ventilador','pantalla','audio-salida']) {
@@ -242,5 +243,5 @@ try {
   assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).bankId,'ruido');
   assert.equal(JSON.parse(await page.evaluate(()=>localStorage.getItem('classai.hardware.v1'))).revisions.length,2);
   assert.deepEqual(errors,[]);
-  console.log('PASS: 16 isolated banks, 13 physical references, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
+  console.log('PASS: 16 isolated banks plus 3 integrated proposals, 16 physical references, steps, SVG, JSON, drafts, saved revisions, history navigation, drawer, dark theme, desktop/mobile; no hardware access');
 } finally {await browser.close();}

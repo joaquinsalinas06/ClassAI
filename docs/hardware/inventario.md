@@ -217,3 +217,8 @@ E-01 siguen por comprobar antes de carga o habilitación de potencia.
 Asignación lógica propuesta: B-02 acceso, A-01 ambiente, E-01 asistente.
 A/B siguen siendo préstamos y E-01 sigue siendo de Joaquín.
 [Receta integrada y aceptación](tres-nodos.md).
+
+
+30/10/2026: Joaquín autoriza incluir H–H en el diseño de los tres montajes
+integrados. No se registra una recepción ni cantidad nueva de cables por esa
+autorización; el visor presenta el presupuesto necesario por tipo.

@@ -10,7 +10,7 @@ Estado: tres perfiles preparados, sin carga ni montaje físico conjunto.
 - Ruff `--select E9,F63,F7,F82`: sin errores fatales; no es lint completo de estilo.
 - Filtros CI: ocho pruebas pasan. Firmware host: confort, NFC/APDU, bancos y
   política de GPIO/fan/CRC pasan; son stubs, no validación física.
-- Web: 97 pruebas Vitest y tres pruebas de tokens; typecheck/lint/build pasan.
+- Web: 100 pruebas Vitest y tres pruebas de tokens; typecheck/lint/build pasan.
   Prueba de navegador con datos sintéticos para zonas, luz relativa, desconexión
   independiente y móvil; capturas locales no versionadas.
 - Compilación de tres perfiles: ESP32 core3.3.12, partición estándar de4MiB;
@@ -28,3 +28,13 @@ matriz y control de potencia; flash/outbox ante cortes físicos; NFC y cobertura
 PIR del conjunto; calibración de LDR/ruido; palabra real20llamadas/30min; audio
 estable y convivencia60min; provisionar dominio/servidor/credenciales y medir
 latencia real del servicio de voz. Ningún resultado simulado cierra esos ensayos.
+
+
+Extensión visual del 30/10/2026: tres propuestas integradas en /montajes,
+P1/P2/P3/P4, H–H y huellas sobre segunda placa. Pruebas nuevas verifican
+referencias de terminales, rieles separados, divisores LDR, pull-down SD, BL en
+serie y ocupación de contactos P4. Se regeneran los tres nuevos SVG/JSON/guías;
+los dibujos de los 16 bancos anteriores permanecen iguales. Navegador verifica
+progresión, condiciones visibles, importación/exportación sin sobrescribir
+historial y escritorio/móvil; revisión visual de los tres planos completada.
+Detector mecánico de diseño sin hallazgos. No se ha armado hardware nuevo.

@@ -26,9 +26,9 @@ export function terminalLabel(end: string, assembly?: Assembly) {
 export function wiresToPlace(assembly: Assembly, wires: Wire[] = assembly.wires) {
   return wires.filter(w => !w.pending);
 }
-export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, zoom = 1, pirBack = false }: {
+export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, zoom = 1, pirBack = false, showPending = false }: {
   assembly: Assembly; wires: Wire[]; selected: string; onSelect: (s: string) => void;
-  connected: (x: string, y: string) => boolean; zoom?: number; pirBack?: boolean;
+  connected: (x: string, y: string) => boolean; zoom?: number; pirBack?: boolean; showPending?: boolean;
 }) {
   const { point, ends, origin, height, ys, width, offset } = assemblyGeometry(assembly);
   const active = (end: string) => connected(selected, end);
@@ -41,7 +41,9 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
   </g>;
   const left=assembly.bankId&&assembly.layout!=="compact"?Math.max(0,Math.min(410,...[...origin.values()].map(p=>p.x),...assembly.wires.flatMap(w=>w.bends?.map(p=>p[0])??[]))-30):0;
   const wireNumbers: {i:number;x:number;y:number;color:string;width:number}[]=[];
-  const placedWires = wiresToPlace(assembly, wires);
+  const placedWires = showPending ? wires : wiresToPlace(assembly, wires);
+  const integrated=assembly.bankId?.startsWith("nodo-");
+  const tall=assembly.parts.some(p=>p.pinout);
   const espLabelX=[...origin.values()].find(p=>p.type==="esp32")?.x ?? 70;
   const nfc = assembly.parts.some(p => p.definition === "pn532");
   return <svg xmlns="http://www.w3.org/2000/svg" data-assembly-board width={(width-left) * zoom} height={height * zoom} viewBox={`${left} 0 ${width-left} ${height}`} className="block max-w-none" aria-label={`Montaje físico: ${assembly.name}`}>
@@ -51,9 +53,9 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       <filter id="wire-shadow" x="-15%" y="-15%" width="130%" height="130%"><feDropShadow dx="0" dy="2" stdDeviation="1.2" floodOpacity=".18"/></filter>
     </defs>
     <rect width={width} height={height} fill="#edf2f5" />
-    <text x={espLabelX} y="65" fill="#28364b" fontSize="18" fontWeight="600">ESP32 · 30 pines</text>
-    <text x={espLabelX} y="88" fill="#62738a" fontSize="12">USB abajo · DevKit V1 de referencia</text>
-    <text x={420 + offset} y="65" fill="#28364b" fontSize="18" fontWeight="600">Protoboard · {assembly.board.rows} filas</text>
+    <text x={espLabelX} y="65" fill="#28364b" fontSize="18" fontWeight="600">{tall ? "ESP32 · 38 pines · referencia" : "ESP32 · 30 pines"}</text>
+    <text x={espLabelX} y="88" fill="#62738a" fontSize="12">{tall ? "Type-C · cotejar etiquetas reales de E-01" : "USB abajo · DevKit V1 de referencia"}</text>
+    <text x={420 + offset} y="65" fill="#28364b" fontSize="18" fontWeight="600">{integrated ? `${assembly.bankId === "nodo-acceso" ? "P1" : assembly.bankId === "nodo-ambiente" ? "P2" : "P3"} · protoboard 400 puntos` : `Protoboard · ${assembly.board.rows} filas`}</text>
     <text x={420 + offset} y="88" fill="#62738a" fontSize="12">A–E y F–J separados · rieles {assembly.board.splitRails ? "partidos a mitad" : "continuos, comprobar"}</text>
     <rect x={410 + offset} y="110" width="400" height={assembly.board.rows * 18 + 62} rx="18" fill="#fffefa" stroke="#c8d1d7" strokeWidth="2" />
     <rect x={585 + offset} y="140" width="38" height={assembly.board.rows * 18 + 6} rx="5" fill="#e2e7e8" />
@@ -72,9 +74,19 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       {active(`bb:${h}`) && <circle cx={x} cy={y} r="8" fill="#3b9edc" opacity=".3"/>}<rect x={x - 3.4} y={y - 3.4} width="6.8" height="6.8" rx="1.8" fill={active(`bb:${h}`) ? "#237db3" : "#737f8d"}/><title>{`${h} · ${contactStrip(h, assembly.board)}`}</title></g>; })}
     {[...origin].map(([id, { x, y, type }]) => {
       const p = assembly.parts.find(p => p.id === id)!;
+      if(type === "breadboard400")return <g key={id} data-extra-board={id}>
+        <text x={x} y={y-45} fill="#28364b" fontSize="18" fontWeight="600">{definition(assembly,p).name}</text>
+        <text x={x} y={y-23} fill="#62738a" fontSize="12">3,3 V / 5 V y GND · rieles independientes de P3</text>
+        <rect x={x} y={y} width="400" height={assembly.board.rows*18+62} rx="18" fill="#fffefa" stroke="#c8d1d7" strokeWidth="2"/>
+        <rect x={x+175} y={y+30} width="38" height={assembly.board.rows*18+6} fill="#e2e7e8"/>
+        {['LP','LN','RP','RN'].map(rail=>{const pt=ends.get(`${id}:${rail}1`)!;return <g key={rail}><line x1={pt[0]-9} x2={pt[0]-9} y1={pt[1]-5} y2={pt[1]+(assembly.board.rows-1)*18+8} stroke={rail.endsWith('N')?'#526276':rail==='LP'?'#db3345':'#dc7519'} strokeWidth="2"/><text x={pt[0]} y={y+25} textAnchor="middle" fontSize="14" fill="#26344a">{rail.endsWith('N')?'−':'+'}</text></g>;})}
+        {[..."ABCDEFGHIJ"].map(column=><text key={column} x={ends.get(`${id}:${column}1`)![0]} y={y+25} textAnchor="middle" fontSize="11" fill="#667081">{column}</text>)}
+        {Array.from({length:assembly.board.rows},(_,i)=><text key={i} x={x+70} y={y+44+i*18} textAnchor="end" fontSize="11" fill="#667081">{i+1}</text>)}
+        {definition(assembly,p).pins.map(pin=>{const pt=ends.get(`${id}:${pin.id}`)!;return <g key={pin.id} role="button" tabIndex={0} aria-label={`Contacto ${id} ${pin.id}`} onClick={()=>onSelect(`${id}:${pin.id}`)} onKeyDown={e=>key(e,`${id}:${pin.id}`)}><rect x={pt[0]-3.4} y={pt[1]-3.4} width="6.8" height="6.8" rx="1.8" fill={active(`${id}:${pin.id}`)?'#237db3':'#737f8d'}/><title>{`${id} · ${pin.id}`}</title></g>;})}
+      </g>;
       if (type === "esp32") return <g key={id}>
-        <rect x={x} y={y} width="230" height="470" rx="12" fill="#203b37" stroke="#102623" strokeWidth="3"/>
-        <rect x={x + 12} y={y + 8} width="14" height="422" rx="3" fill="#101a1b"/><rect x={x + 204} y={y + 8} width="14" height="422" rx="3" fill="#101a1b"/>
+        <rect x={x} y={y} width="230" height={p.pinout?578:470} rx="12" fill="#203b37" stroke="#102623" strokeWidth="3"/>
+        <rect x={x + 12} y={y + 8} width="14" height={p.pinout?530:422} rx="3" fill="#101a1b"/><rect x={x + 204} y={y + 8} width="14" height={p.pinout?530:422} rx="3" fill="#101a1b"/>
         <rect x={x + 44} y={y + 15} width="142" height="100" fill="#1d2526"/>
         <path d={`M${x+55} ${y+85} v-50 h12 v50 h12 v-50 h12 v50 h12 v-50 h12 v50 h12 v-50 h12`} stroke="#baac6b" fill="none" strokeWidth="4"/>
         <rect x={x + 52} y={y + 115} width="126" height="150" rx="3" fill="url(#metal)" stroke="#6a7781"/>
@@ -83,12 +95,12 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x + 115} y={y + 225} textAnchor="middle" fill="#535f69" fontSize="22">CE</text>
         <rect x={x + 92} y={y + 294} width="45" height="42" fill="#1c2328" stroke="#87929a"/>
         <text x={x + 115} y={y + 355} textAnchor="middle" fill="#dce6e1" fontSize="11">USB–UART</text>
-        <rect x={x + 66} y={y + 392} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 82} cy={y + 404} r="7" fill="#222c2a"/>
-        <rect x={x + 134} y={y + 392} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 150} cy={y + 404} r="7" fill="#222c2a"/>
-        <text x={x + 82} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="11">EN</text><text x={x + 150} y={y + 437} textAnchor="middle" fill="#dce6e1" fontSize="11">BOOT</text>
-        <rect x={x + 81} y={y + 439} width="68" height="40" rx="4" fill="url(#metal)" stroke="#6c7581" strokeWidth="2"/><rect x={x + 91} y={y + 467} width="48" height="9" rx="3" fill="#34414c"/>
-        {definition(assembly,p).pins.map(pin => { const pt = ends.get(`${id}:${pin.id}`)!; const left = pt[0] < x; return <g key={pin.id}>{pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={left ? x+31 : x+199} y={pt[1]+4} textAnchor={left?"start":"end"} fill={pin.id.startsWith("GND")?"#e0e4e1":pin.id==="3V3"||pin.id==="VIN"?"#f0ba77":"#d4ded9"} fontSize="11">{labelPin(pin.id)}</text></g>; })}
-        <path d={`M${x+115} ${y+480} v60 q0 25 35 25 h85`} stroke="#27313e" strokeWidth="12" fill="none"/><text x={x+115} y={y+590} textAnchor="middle" fill="#344255" fontSize="13">USB de datos → computadora</text>
+        <rect x={x + 66} y={y + (p.pinout?500:392)} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 82} cy={y + (p.pinout?512:404)} r="7" fill="#222c2a"/>
+        <rect x={x + 134} y={y + (p.pinout?500:392)} width="32" height="25" rx="3" fill="#c2c9c7"/><circle cx={x + 150} cy={y + (p.pinout?512:404)} r="7" fill="#222c2a"/>
+        <text x={x + 82} y={y + (p.pinout?545:437)} textAnchor="middle" fill="#dce6e1" fontSize="11">EN</text><text x={x + 150} y={y + (p.pinout?545:437)} textAnchor="middle" fill="#dce6e1" fontSize="11">BOOT</text>
+        <rect x={x + 81} y={y + (p.pinout?547:439)} width="68" height="40" rx="4" fill="url(#metal)" stroke="#6c7581" strokeWidth="2"/><rect x={x + 91} y={y + (p.pinout?575:467)} width="48" height="9" rx="3" fill="#34414c"/>
+        {definition(assembly,p).pins.map(pin => { const pt = ends.get(`${id}:${pin.id}`)!; const left = pt[0] < x; return <g key={pin.id}>{pinMark(`${id}:${pin.id}`,pt[0],pt[1])}<text x={left ? x+31 : x+199} y={pt[1]+4} textAnchor={left?"start":"end"} fill={pin.id.startsWith("GND")?"#e0e4e1":pin.id==="3V3"||pin.id==="VIN"?"#f0ba77":"#d4ded9"} fontSize="11">{p.pinout ? pin.id.replace("GND_L","GND") : labelPin(pin.id)}</text></g>; })}
+        <path d={`M${x+115} ${y+(p.pinout?588:480)} v60 q0 25 35 25 h85`} stroke="#27313e" strokeWidth="12" fill="none"/><text x={x+115} y={y+(p.pinout?698:590)} textAnchor="middle" fill="#344255" fontSize="13">USB de datos → computadora</text>
       </g>;
       if (type === "pn532") return <g key={id} data-pn532-physical>
         <text x={x} y={y-65} fill="#28364b" fontSize="18" fontWeight="600">PN532 V3 · D-01</text>
@@ -209,7 +221,8 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         <text x={x+65} y={y+(isDht?260:285)} textAnchor="middle" fontSize="11" fill="#64748b">{isDht ? "− · OUT · + · vista frontal" : "VCC · OUT · GND · vista frontal"}</text>
       </g>;
     })}
-    {placedWires.map((w, i) => {
+    {placedWires.map((w, visibleIndex) => {
+      const i=integrated ? assembly.wires.findIndex(candidate=>candidate.id===w.id) : visibleIndex;
       const a = ends.get(w.from), b = ends.get(w.to); if (!a || !b) return null;
       const c = wireColors[w.color ?? "blue"].hex;
       const across = (a[0] < 400 && b[0] > 850) || (b[0] < 400 && a[0] > 850);
@@ -223,7 +236,7 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
         if(!wireNumbers.some(n=>Math.abs(n.x-x)<(n.width+width)/2+10&&Math.abs(n.y-y)<24)){label=[x,y];break outer;}
       }
       wireNumbers.push({i:i+1,x:label[0],y:label[1],color:c,width:24});
-      return <g key={w.id} data-wire={w.id} onClick={() => onSelect(w.from)} style={{cursor:"pointer"}}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?9:7} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeWidth={active(w.from)?6:5} strokeLinecap="round" strokeLinejoin="round" fill="none"><title>{`${i+1}. ${terminalLabel(w.from,assembly)} → ${terminalLabel(w.to,assembly)} · ${w.jumper ?? "ver guía"}`}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/></g>;
+      return <g key={w.id} data-wire={w.id} data-wire-pending={w.pending?"true":undefined} onClick={() => onSelect(w.from)} style={{cursor:"pointer"}}><path d={d} stroke="#fffefa" strokeWidth={active(w.from)?9:7} strokeLinecap="round" strokeLinejoin="round" fill="none"/><path data-wire-color={w.color??"blue"} d={d} stroke={c} strokeDasharray={w.pending?"10 7":undefined} strokeWidth={active(w.from)?6:5} strokeLinecap="round" strokeLinejoin="round" fill="none"><title>{`${i+1}. ${terminalLabel(w.from,assembly)} → ${terminalLabel(w.to,assembly)} · ${w.jumper ?? "ver guía"}${w.pending?` · NO CONECTAR: ${w.pending}`:""}`}</title></path><circle cx={a[0]} cy={a[1]} r="4.2" fill={c}/><circle cx={b[0]} cy={b[1]} r="4.2" fill={c}/></g>;
     })}
 
     {wireNumbers.map(n=><g key={n.i} data-wire-number={n.i}><rect x={n.x-n.width/2} y={n.y-10} width={n.width} height="20" rx="5" fill="#fffefa" stroke={n.color}/><text x={n.x} y={n.y+4} textAnchor="middle" fontSize="11" fontWeight="800" fill="#26344a">{n.i}</text></g>)}
@@ -237,38 +250,46 @@ export function AssemblyBoard({ assembly, wires, selected, onSelect, connected, 
       })}</g>;
     })}
     {assembly.parts.filter(p=>Object.keys(p.holes).length).map(p=>{
-      const entries=Object.entries(p.holes),a=entries[0]&&point(entries[0][1]),b=entries[1]&&point(entries[1][1]);if(!a||!b)return null;
+      const localPoint=(h:string)=>p.boardId ? ends.get(`${p.boardId}:${h}`)! : point(h);
+      const entries=Object.entries(p.holes),a=entries[0]&&localPoint(entries[0][1]),b=entries[1]&&localPoint(entries[1][1]);if(!a||!b)return null;
+      if(p.definition === "ldr")return <g key={p.id}>
+        <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#a99470" strokeWidth="3"/>
+        <circle cx={(a[0]+b[0])/2} cy={(a[1]+b[1])/2} r="19" fill="#d9b77e" stroke="#8a603e" strokeWidth="2"/>
+        <path d={`M${a[0]-10} ${(a[1]+b[1])/2-10} h20 v5 h-20 v5 h20 v5 h-20`} stroke="#6e422d" strokeWidth="2" fill="none"/>
+        <text x={a[0]-28} y={(a[1]+b[1])/2} textAnchor="end" fontSize="12" fill="#344255">LDR · sin lux</text>
+        {entries.map(([pin,h])=>{const pt=localPoint(h);return pinMark(`${p.id}:${pin}`,pt[0],pt[1]);})}
+      </g>;
       if(p.definition === "led") return <g key={p.id}>
         <line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b6b3a8" strokeWidth="3"/>
         <circle cx={a[0]} cy={(a[1]+b[1])/2} r="12" fill={p.inventory.includes("verde")?"#15855e":p.inventory.includes("amarillo")?"#d4a51c":"#db3345"} stroke="#354550" strokeWidth="2"/>
         <text x={840} y={(a[1]+b[1])/2+4} fill="#26344a" fontSize="12">{p.inventory.slice(0,38)}</text>
-        {entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y,pin,x+15,y+4);})}
+        {entries.map(([pin,h])=>{const [x,y]=localPoint(h);return pinMark(`${p.id}:${pin}`,x,y,pin,x+15,y+4);})}
       </g>;
-      if(p.definition === "button") {const c=point(p.holes.B2!); return <g key={p.id}>
+      if(p.definition === "button") {const c=localPoint(p.holes.B2!); return <g key={p.id}>
         <rect x={a[0]-8} y={a[1]-8} width={c[0]-a[0]+16} height={c[1]-a[1]+16} rx="3" fill="#596069" stroke="#20272a"/>
         <circle cx={(a[0]+c[0])/2} cy={(a[1]+c[1])/2} r="11" fill="#20272a"/>
-        {entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y);})}
-        <text x={500} y={735} fill="#26344a" fontSize="12">Pareja A: E6/F6 · pareja B: E8/F8</text><text x={500} y={753} fill="#526276" fontSize="11">Confirmar parejas del pulsador real</text>
+        {entries.map(([pin,h])=>{const [x,y]=localPoint(h);return pinMark(`${p.id}:${pin}`,x,y);})}
+        <text x={500} y={735} fill="#26344a" fontSize="12">{integrated?`Pareja A: ${p.holes.A1}/${p.holes.A2} · B: ${p.holes.B1}/${p.holes.B2}`:"Pareja A: E6/F6 · pareja B: E8/F8"}</text><text x={500} y={753} fill="#526276" fontSize="11">Confirmar parejas del pulsador real</text>
       </g>;}
       if(p.definition === "buzzer"){
-        const plus=point(p.holes.PLUS!),minus=point(p.holes.MINUS!),cx=(plus[0]+minus[0])/2,cy=(plus[1]+minus[1])/2;
+        const plus=localPoint(p.holes.PLUS!),minus=localPoint(p.holes.MINUS!),cx=(plus[0]+minus[0])/2,cy=(plus[1]+minus[1])/2;
         return <g key={p.id}><line x1={plus[0]} y1={plus[1]} x2={minus[0]} y2={minus[1]} stroke="#b6b3a8" strokeWidth="3"/><circle cx={cx} cy={cy} r="22" fill="#1e292d" stroke="#101719" strokeWidth="2"/><ellipse cx={cx} cy={cy-4} rx="19" ry="16" fill="#303c40"/><circle cx={cx} cy={cy-4} r="4" fill="#0e171a"/><text x={cx+10} y={cy-12} fill="white" fontSize="13">+</text>{pinMark(`${p.id}:PLUS`,plus[0],plus[1],"+",plus[0]+15,plus[1]+4)}{pinMark(`${p.id}:MINUS`,minus[0],minus[1],"−",minus[0]+15,minus[1]+4)}<text x={cx+38} y={cy} fill="#26344a" fontSize="12">B-09 · buzzer</text></g>;
       }
       if(p.definition === "ahct125") {
-        const left=point(p.holes.OE1!),right=point(p.holes.VCC!),bottom=point(p.holes.GND!);
+        const left=localPoint(p.holes.OE1!),right=localPoint(p.holes.VCC!),bottom=localPoint(p.holes.GND!);
         const labels:Record<string,string>={OE1:"1 /OE1",A1:"2 1A",Y1:"3 1Y",OE2:"4 /OE2",A2:"5 2A",Y2:"6 2Y",GND:"7 GND",Y3:"8 3Y",A3:"9 3A",OE3:"10 /OE3",Y4:"11 3Y",A4:"12 4A",OE4:"13 /OE4",VCC:"14 VCC"};
         return <g key={p.id}><rect x={left[0]+7} y={left[1]-8} width={right[0]-left[0]-14} height={bottom[1]-left[1]+16} rx="3" fill="#263034"/><circle cx={(left[0]+right[0])/2} cy={left[1]-4} r="4" fill="#9da7ad"/>
-          {entries.map(([pin,h])=>{const [x,y]=point(h);return <g key={pin}>{pinMark(`${p.id}:${pin}`,x,y)}<text x={x<610?x-12:x+12} y={y-7} textAnchor={x<610?"end":"start"} fontSize="11" fill="#26344a">{labels[pin]}</text></g>;})}
+          {entries.map(([pin,h])=>{const [x,y]=localPoint(h);return <g key={pin}>{pinMark(`${p.id}:${pin}`,x,y)}<text x={x<610?x-12:x+12} y={y-7} textAnchor={x<610?"end":"start"} fontSize="11" fill="#26344a">{labels[pin]}</text></g>;})}
           <text x={605} y={left[1]-26} textAnchor="middle" fontSize="12" fill="#26344a">SN74AHCT125N · muesca arriba</text></g>;
       }
-      if(p.definition === "npn")return <g key={p.id}><circle cx={a[0]+25} cy={point(p.holes.B!)[1]} r="12" fill="#263034"/>{entries.map(([pin,h])=>{const [x,y]=point(h);return <g key={pin}><line x1={x} y1={y} x2={x+20} y2={point(p.holes.B!)[1]} stroke="#b6b3a8" strokeWidth="2"/>{pinMark(`${p.id}:${pin}`,x,y)}<text x={x-10} y={y-6} textAnchor="end" fill="#26344a" fontSize="11">{pin}</text></g>;})}<text x={a[0]+44} y={point(p.holes.B!)[1]} fill="#26344a" fontSize="11">Q1 · 2N3904</text></g>;
+      if(p.definition === "npn")return <g key={p.id}><circle cx={a[0]+25} cy={localPoint(p.holes.B!)[1]} r="12" fill="#263034"/>{entries.map(([pin,h])=>{const [x,y]=localPoint(h);return <g key={pin}><line x1={x} y1={y} x2={x+20} y2={point(p.holes.B!)[1]} stroke="#b6b3a8" strokeWidth="2"/>{pinMark(`${p.id}:${pin}`,x,y)}<text x={x-10} y={y-6} textAnchor="end" fill="#26344a" fontSize="11">{pin}</text></g>;})}<text x={a[0]+44} y={localPoint(p.holes.B!)[1]} fill="#26344a" fontSize="11">Q1 · 2N3904</text></g>;
       if(p.definition === "capacitor" || p.definition === "diode") {
         const cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,angle=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI;
-        return <g key={p.id}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#a4a39d" strokeWidth="3"/><g transform={`translate(${cx} ${cy}) rotate(${angle})`}><rect x="-10" y="-8" width="20" height="16" rx="3" fill={p.definition==="diode"?"#b76a3f":"#b99348"}/>{p.definition==="diode"&&<line x1="5" y1="-7" x2="5" y2="7" stroke="#263034" strokeWidth="3"/>}</g>{entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y,pin,x+15,y+4);})}<text x={840} y={cy-12} fontSize="11" fill="#26344a">{p.id} · {p.inventory}</text></g>;
+        return <g key={p.id}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#a4a39d" strokeWidth="3"/><g transform={`translate(${cx} ${cy}) rotate(${angle})`}><rect x="-10" y="-8" width="20" height="16" rx="3" fill={p.definition==="diode"?"#b76a3f":"#b99348"}/>{p.definition==="diode"&&<line x1="5" y1="-7" x2="5" y2="7" stroke="#263034" strokeWidth="3"/>}</g>{entries.map(([pin,h])=>{const [x,y]=localPoint(h);return pinMark(`${p.id}:${pin}`,x,y,pin,x+15,y+4);})}<text x={840} y={cy-12} fontSize="11" fill="#26344a">{p.id} · {p.inventory}</text></g>;
       }
       const cx=(a[0]+b[0])/2,cy=(a[1]+b[1])/2,angle=Math.atan2(b[1]-a[1],b[0]-a[0])*180/Math.PI,value=p.resistance??1000;
       const bands=value===10000?["#764124","#202020","#e77a20","#c3a243"]:value===1000?["#764124","#202020","#d92f36","#c3a243"]:null;
-      return <g key={p.id}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b6b3a8" strokeWidth="3"/><g transform={`translate(${cx} ${cy}) rotate(${angle})`}><rect x="-29" y="-9" width="58" height="18" rx="7" fill="#dfc79c" stroke="#a99470"/>{bands?.map((color,i)=><rect key={i} x={-18+i*12} y="-9" width="5" height="18" fill={color}/>)}</g><text x={cx} y={cy-20} textAnchor="middle" fontSize="12" fontWeight="600" fill="#344255">{p.id} · {value>=1000?`${value/1000} kΩ`:`${value} Ω`}</text>{entries.map(([pin,h])=>{const [x,y]=point(h);return pinMark(`${p.id}:${pin}`,x,y);})}</g>;
+      return <g key={p.id}><line x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]} stroke="#b6b3a8" strokeWidth="3"/><g transform={`translate(${cx} ${cy}) rotate(${angle})`}><rect x="-29" y="-9" width="58" height="18" rx="7" fill="#dfc79c" stroke="#a99470"/>{bands?.map((color,i)=><rect key={i} x={-18+i*12} y="-9" width="5" height="18" fill={color}/>)}</g><text x={cx} y={cy-20} textAnchor="middle" fontSize="12" fontWeight="600" fill="#344255">{p.id} · {value>=1000?`${value/1000} kΩ`:`${value} Ω`}</text>{entries.map(([pin,h])=>{const [x,y]=localPoint(h);return pinMark(`${p.id}:${pin}`,x,y);})}</g>;
     })}
   </svg>;
 }

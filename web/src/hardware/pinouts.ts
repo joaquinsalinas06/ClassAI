@@ -12,3 +12,8 @@ export const devkit38 = {
   right: ["GND", "IO23", "IO22", "TX", "RX", "IO21", "GND", "IO19", "IO18", "IO5", "IO17", "IO16", "IO4", "IO0", "IO2", "IO15", "D1", "D0", "CLK"],
 };
 export const silkscreen30 = (id: string) => ({ GPIO36: "VP", GPIO39: "VN", GPIO1: "TX0", GPIO3: "RX0", GPIO17: "TX2", GPIO16: "RX2", GND_L: "GND" }[id] ?? id.replace("GPIO", "D"));
+
+export const devkit38GPIO = {
+  left: devkit38.left.map(id => id === "GND" ? "GND_L" : id === "5V" ? "VIN" : id === "VP" ? "GPIO36" : id === "VN" ? "GPIO39" : id.replace(/^IO/, "GPIO")),
+  right: devkit38.right.map((id,i) => id === "GND" ? (i === 0 ? "GND" : "GND2") : id === "TX" ? "GPIO1" : id === "RX" ? "GPIO3" : id.replace(/^IO/, "GPIO")),
+};
