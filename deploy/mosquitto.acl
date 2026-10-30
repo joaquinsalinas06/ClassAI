@@ -1,0 +1,47 @@
+# Exactly one role identity per room. Clone these entries for another room.
+user a101-access
+topic write classai/v1/a101/nodes/a101-access/telemetry
+topic write classai/v1/a101/nodes/a101-access/status
+topic write classai/v1/a101/nodes/a101-access/commands
+topic write classai/v1/a101/nodes/a101-access/events
+topic read classai/v1/a101/nodes/a101-access/ack
+topic read classai/v1/a101/nodes/a101-environment/snapshot
+topic read classai/v1/a101/session
+topic read classai/v1/a101/config
+
+user a101-environment
+topic write classai/v1/a101/nodes/a101-environment/telemetry
+topic write classai/v1/a101/nodes/a101-environment/status
+topic read classai/v1/a101/session
+topic read classai/v1/a101/config
+
+user a101-assistant
+topic write classai/v1/a101/nodes/a101-assistant/telemetry
+topic write classai/v1/a101/nodes/a101-assistant/status
+topic read classai/v1/a101/session
+topic read classai/v1/a101/config
+
+user classai-ingest
+topic read classai/v1/+/nodes/+/telemetry
+topic read classai/v1/+/nodes/+/status
+topic read classai/v1/+/nodes/+/commands
+topic read classai/v1/+/nodes/+/events
+topic read classai/v1/+/telemetry
+topic read classai/v1/+/events
+topic read classai/v1/+/status
+topic read MLX90614/temperature
+topic write classai/v1/+/nodes/+/snapshot
+topic write classai/v1/+/nodes/+/ack
+topic write classai/v1/+/session
+topic write classai/v1/+/confirmed
+topic write classai/v1/+/config
+
+user classai-api
+topic read classai/v1/+/nodes/+/snapshot
+topic read classai/v1/+/session
+topic read classai/v1/+/confirmed
+topic read classai/v1/+/telemetry
+topic read classai/v1/+/events
+topic read classai/v1/+/status
+topic read classai/v1/+/config
+topic write classai/v1/+/config

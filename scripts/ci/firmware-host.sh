@@ -13,3 +13,6 @@ python3 scripts/ci/nfc-profile-host.py
 
 bash scripts/ci/bench-host.sh
 bash scripts/ci/sensor-benches-host.sh
+
+"${CXX:-g++}" -std=c++17 -Wall -Wextra -Werror firmware/classai_multinode/test/test_policy.cpp -o "$build_dir/multinode"
+"$build_dir/multinode"

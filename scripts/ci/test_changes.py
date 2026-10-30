@@ -10,6 +10,8 @@ class PathSelectionTest(unittest.TestCase):
 
     def test_components_and_shared_inputs(self):
         self.assertEqual(select(["backend/backend.py"]), {"backend", "mqtt"})
+        self.assertEqual(select(["tools/voice_agent/agent.py"]), {"backend", "mqtt"})
+        self.assertEqual(select(["deploy/compose.yaml"]), {"backend", "mqtt"})
         self.assertEqual(select(["web/pnpm-lock.yaml"]), {"web"})
         self.assertEqual(select(["mobile/android/app/build.gradle.kts"]), {"android"})
         self.assertEqual(select(["design/tokens.json"]), {"web", "android"})

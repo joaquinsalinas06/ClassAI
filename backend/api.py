@@ -17,6 +17,7 @@ from temperature_service import (
     normalize_credential,
     revoke_credential,
 )
+import voice_api
 
 
 app = FastAPI(
@@ -30,6 +31,7 @@ app = FastAPI(
         {"name": "credentials", "description": "Enrolamiento de credenciales (requiere X-API-Key)."},
     ],
 )
+app.include_router(voice_api.router)
 
 try:
     import tuner

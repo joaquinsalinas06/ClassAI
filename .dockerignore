@@ -1,0 +1,15 @@
+.git
+**/.env
+**/.env.*
+**/secrets.h
+**/.secrets
+**/.models
+**/.venv
+**/node_modules
+**/dist
+**/screenshots
+**/__pycache__
+**/data
+**/build
+raw
+*.mp3

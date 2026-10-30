@@ -3,6 +3,18 @@
 -- minutos como "YYYY-MM-DD HH:MM" (mismo formato que temperature_minutes).
 PRAGMA journal_mode = WAL;
 
+CREATE TABLE IF NOT EXISTS node_state (
+    room TEXT NOT NULL, device TEXT NOT NULL, role TEXT NOT NULL,
+    status TEXT NOT NULL, status_at TEXT, telemetry TEXT, received_at TEXT,
+    PRIMARY KEY(room, device)
+);
+CREATE TABLE IF NOT EXISTS room_runtime (
+    room TEXT PRIMARY KEY, revision INTEGER NOT NULL, session_id TEXT
+);
+CREATE TABLE IF NOT EXISTS session_requests (
+    request_id TEXT PRIMARY KEY, room TEXT NOT NULL, device TEXT NOT NULL, payload TEXT NOT NULL
+);
+
 CREATE TABLE IF NOT EXISTS rooms (
     id TEXT PRIMARY KEY,                 -- igual al {room} del tópico
     name TEXT,

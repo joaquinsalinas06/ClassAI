@@ -51,6 +51,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
     monkeypatch.setenv("LOCAL_TIMEZONE", "America/Lima")
     monkeypatch.setenv("PYTHON_DOTENV_DISABLED", "1")
     monkeypatch.setenv("MQTT_HOST", "127.0.0.1")
+    monkeypatch.setenv("MQTT_TLS", "0")
     monkeypatch.setenv("MQTT_PORT", str(port))
     monkeypatch.setenv("MQTT_USERNAME", "")
     monkeypatch.setenv("MQTT_PASSWORD", "")
@@ -183,6 +184,59 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                 summary = client.get("/sessions/a101-u1000/summary")
                 assert summary.status_code == 200
                 assert summary.json()["attendance_count"] == 3
+            # Three-node extension: same real broker/process, isolated identities.
+            snapshots = {}
+            coordinated = []
+            subscribed = threading.Event()
+            publisher.on_subscribe = lambda *args: subscribed.set()
+
+            def received_node(client, userdata, message):
+                try:
+                    body = json.loads(message.payload)
+                except ValueError:
+                    return
+                if message.topic.endswith('/snapshot'):
+                    snapshots[body['device']] = body
+                if message.topic.endswith('/session'):
+                    coordinated.append(body)
+
+            publisher.on_message = received_node
+            publisher.subscribe('classai/v1/a101/#', qos=1)
+            wait_for(subscribed.is_set, processes)
+            request = dict(v=1, room='a101', device='a101-access', role='access', request_id='three-start', action='start')
+            publish('nodes/a101-access/commands', request)
+            wait_for(lambda: bool(coordinated) and coordinated[-1]['session_id'], processes)
+            shared_session = coordinated[-1]['session_id']
+            publish('nodes/a101-access/commands', request)
+            for role in ('access', 'environment', 'assistant'):
+                body = dict(v=1, room='a101', device=f'a101-{role}', role=role, session_id=shared_session,
+                            ts=None, uptime_ms=100, lux=None, comfort=None, state='REGULAR', params_version=0)
+                if role == 'environment':
+                    body.update(temp_c=24, rh_pct=50, noise_rel=.2, comfort=85, light_rel=.6)
+                if role == 'assistant':
+                    body['light_rel'] = .3
+                publish(f'nodes/a101-{role}/telemetry', body)
+            wait_for(lambda: len(snapshots) == 3, processes)
+            fixture_type, fixture_token = TAPS[0]
+            tap = dict(v=1, room='a101', device='a101-access', role='access', session_id=shared_session,
+                       ts=None, uptime_ms=101, event='ATTENDANCE_RECORDED', event_id='three-tap',
+                       credential={'type': fixture_type, 'token': fixture_token})
+            publish('nodes/a101-access/events', tap)
+            publish('nodes/a101-access/events', tap)
+            wait_for(lambda: rows(f"SELECT COUNT(*) FROM attendance WHERE session_id='{shared_session}'") == [(1,)], processes)
+            publish('nodes/a101-access/status', dict(v=1, room='a101', device='a101-access', role='access', status='offline'))
+            wait_for(lambda: snapshots['a101-access']['status'] == 'offline', processes)
+            assert snapshots['a101-environment']['status'] == snapshots['a101-assistant']['status'] == 'online'
+            with TestClient(api.app) as client:
+                nodes = client.get('/rooms/a101/nodes')
+                assert nodes.status_code == 200 and len(nodes.json()) == 3
+                assert client.get('/classes/current?room=a101').json()['latest_reading']['temp_c'] == 24
+                assert 'credential' not in nodes.text and fixture_token not in nodes.text
+            publish('nodes/a101-access/commands', {**request, 'request_id': 'three-stop', 'action': 'stop', 'session_id': shared_session})
+            wait_for(lambda: coordinated[-1]['session_id'] is None, processes)
+            assert rows(f"SELECT COUNT(*) FROM sessions WHERE id='{shared_session}'") == [(1,)]
+            assert rows(f"SELECT attendance_count FROM session_summaries WHERE session_id='{shared_session}'") == [(1,)]
+
             # Check graceful shutdown flush/exit as well as live persisted state.
             ingest.terminate()
             assert ingest.wait(timeout=10) == 0

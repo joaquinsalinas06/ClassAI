@@ -27,4 +27,5 @@ fi
 
 if [[ "$profile" == all ]]; then
   bash scripts/ci/benches-build.sh
+  bash scripts/ci/multinode-build.sh
 fi

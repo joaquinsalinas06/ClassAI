@@ -109,3 +109,18 @@ secretos, persistencia/backups y migraciones de SQLite, health checks y rollback
 acordar distribución/firmas de Android y carga del firmware. Hasta definirlos,
 no publicar web/API, imágenes, APK ni firmware automáticamente. La validación
 física de ESP32/PN532/HCE y sensores es una etapa separada del CI.
+
+
+## Integración de tres nodos
+
+[Acceso, ambiente y asistente](docs/hardware/tres-nodos.md) se compilan desde
+`firmware/classai_multinode` con `scripts/ci/multinode-build.sh`. No se cargan placas.
+Cada nodo tiene identidad/estado propios; SQLite coordina una sesión compartida
+y confirma asistencia después del commit. La web conserva lecturas por zona,
+marca datos antiguos y muestra LDR como luz relativa, sin inventar lux.
+
+El [servidor persistente](deploy/README.md) se prepara con Mosquitto TLS,
+API/ingesta, SQLite y web. El [agente USB de voz](tools/voice_agent/README.md)
+detecta una palabra preentrenada en la laptop del profesor. Ni desplegar el
+servidor ni instalar modelos/consultar servicios LLM forman parte de CI.
+La puesta en marcha física y sus criterios siguen pendientes.

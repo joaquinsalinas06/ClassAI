@@ -93,7 +93,7 @@ confirmada. No publicar números de pedido, enlaces de cuenta o seguimiento.
 
 | ID | Pieza / variante comprada | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| E-01 | ESP32, variante **38Pin Type C** | 1 placa | pedido | 38 contactos físicos, no 38 GPIO libres. SoC/módulo, controlador USB y pinout exactos por verificar al recibir |
+| E-01 | ESP32, variante **38Pin Type C** | 1 placa | en mano; recepción declarada 29/10/2026 | 38 contactos físicos, no 38 GPIO libres. SoC/módulo, controlador USB y pinout exactos por verificar al recibir |
 | E-02 | Protoboard, variante **400 Points Breadboar** | 1 placa | pedido | Sin cables: confirmado por Joaquín. Es independiente de la mini del kit E-04 |
 | E-03 | Kit Dupont, variante **20cm KIT** | 1 kit | pedido | Se esperan macho–macho, macho–hembra y hembra–hembra; cantidades internas no fijadas. Las menciones 10/20/40 son aproximaciones, no conteos |
 | E-04 | Kit de inicio R3 | 1 kit | pedido | **NO incluye placa Arduino**, confirmado por Joaquín. Mini protoboard, LEDs, botones, jumpers, resistencias y posibles fotorresistencias; contenido y cantidades por verificar. No contarlos también como compras separadas |
@@ -193,3 +193,27 @@ no pedir más cables antes de revisar C-07/C-08 y material libre. Una sola bocin
 D-09 se ensaya en la salida mono de D-08; la segunda queda sin conectar.
 
 Revisión documental 25/10/2026: [componentes de laboratorio y límites](circuitos-referencia.md). No cambia recepción, propiedad ni evidencia de funcionamiento. B-09 sigue sin modelo/consumo confirmado; el uso a 3,3 V es un reporte del usuario.
+
+
+## Actualización declarada · 29/10/2026
+
+Joaquín confirma tres ESP32 disponibles, incluida E-01 Type-C de 38 contactos,
+y **cuatro protoboards de 400 puntos**, cada una con rieles ± a ambos lados.
+Este total reemplaza la disponibilidad histórica de dos placas; no añade otras
+tres ESP32 ni otras cuatro protoboards al inventario. La asociación individual
+entre las cuatro protoboards y A-04/B-01/E-02/el kit E-04 queda por identificar,
+sin cambiar su propiedad ni duplicar unidades.
+
+Declara los módulos probados por separado. Se conserva esa confirmación como
+reporte del usuario, sin convertirla en ensayo conjunto, medición eléctrica o
+nuevo log individual. Hay fotoresistencias suficientes y resistencias de diversos
+valores; cantidades y modelos no contados. Para la integración se reservan dos
+LDR y dos resistencias de 10 kΩ, ajustables tras caracterización.
+
+Cada nodo se alimentará por USB desde una laptop distinta. No hay multímetro.
+Fuente, capacidad por puerto, ruta USB–VIN, identidad/SoC exactos y respaldo de
+E-01 siguen por comprobar antes de carga o habilitación de potencia.
+
+Asignación lógica propuesta: B-02 acceso, A-01 ambiente, E-01 asistente.
+A/B siguen siendo préstamos y E-01 sigue siendo de Joaquín.
+[Receta integrada y aceptación](tres-nodos.md).

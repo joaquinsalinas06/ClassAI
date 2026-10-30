@@ -26,6 +26,13 @@ los montajes; no volver a crear una pieza con otro nombre. No renombrar un ID
 cuando cambie su ubicación o función. Un lote se puede dividir después en IDs
 individuales, dejando registrado el origen y evitando duplicar cantidades.
 
+## Actualización para integración · 29/10/2026
+
+Joaquín confirma tres ESP32 y cuatro protoboards de 400 puntos disponibles.
+El reparto acceso/ambiente/asistente se prepara en [tres-nodos.md](tres-nodos.md);
+las cantidades antiguas que siguen describen el estado histórico de sus ensayos.
+La integración física conjunta todavía no está aprobada.
+
 ## Propiedad y disponibilidad
 
 | Grupo | Procedencia | Destino al terminar |
@@ -37,7 +44,7 @@ individuales, dejando registrado el origen y evitando duplicar cantidades.
 | E | Compras exclusivamente personales de Joaquín | Joaquín conserva su propiedad aunque las use el proyecto |
 
 **No confundir D con E.** La pantalla usada en la mascota pertenece a D. El ESP32
-Type-C pertenece a E y su recepción todavía no está confirmada. No contar
+Type-C pertenece a E; su recepción fue confirmada el 29/10/2026. No contar
 pedidos pendientes como hardware disponible.
 
 ## Resumen de cantidades

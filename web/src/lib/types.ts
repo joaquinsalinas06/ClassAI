@@ -10,6 +10,7 @@ export interface Readings {
   temp_c?: number | null;
   rh_pct?: number | null;
   lux?: number | null;
+  light_rel?: number | null;
   noise_rel?: number | null;
   presence?: boolean | number | null;
   ir_object_c?: number | null;
@@ -27,6 +28,8 @@ export interface Telemetry extends Readings {
   state: ComfortState;
   params_version: number;
   received_at?: string;
+  fan_on?: boolean;
+  fan_enabled?: boolean;
 }
 
 export interface ConfigSource {
@@ -213,4 +216,24 @@ export interface LiveEvent {
 export interface LiveStatus {
   room: string;
   status: NodeStatus;
+}
+
+export interface NodeSnapshot {
+  v: number;
+  room: string;
+  device: string;
+  role: "access" | "environment" | "assistant";
+  status: NodeStatus;
+  status_at: string | null;
+  received_at: string | null;
+  telemetry: (Telemetry & { light_rel?: number | null; agent_online?: boolean; voice_state?: string }) | null;
+  stale?: boolean;
+}
+export interface SessionState {
+  v: number;
+  room: string;
+  revision: number;
+  session_id: string | null;
+  course?: string | null;
+  started_at?: string;
 }

@@ -4,6 +4,8 @@ on:
   pull_request:
     paths: &product-paths
       - 'backend/**'
+      - 'tools/voice_agent/**'
+      - 'deploy/**'
       - 'web/**'
       - 'firmware/**'
       - 'mobile/android/**'

@@ -1,0 +1,77 @@
+name: classai
+services:
+  broker:
+    image: eclipse-mosquitto:2
+    restart: unless-stopped
+    ports: ["8883:8883"]
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+      - ./mosquitto.acl:/mosquitto/config/acl:ro
+      - ./.secrets/mqtt:/mosquitto/config/private:ro
+      - broker-data:/mosquitto/data
+    networks: [classai]
+  ingest:
+    build: {context: .., dockerfile: deploy/Dockerfile.api}
+    restart: unless-stopped
+    init: true
+    env_file: .env
+    environment:
+      DATABASE_PATH: /app/data/classai.db
+      MQTT_HOST: broker
+      MQTT_PORT: "8883"
+      MQTT_TLS: "1"
+      MQTT_CA_FILE: /certs/ca.crt
+      MQTT_USERNAME: classai-ingest
+      MQTT_PASSWORD: ${MQTT_INGEST_PASSWORD}
+      MQTT_CLIENT_ID: classai-ingest
+      MQTT_TOPIC: MLX90614/temperature
+      LOCAL_TIMEZONE: America/Lima
+    volumes: ["database:/app/data", "./.secrets/mqtt/ca.crt:/certs/ca.crt:ro"]
+    depends_on: [broker]
+    networks: [classai]
+  api:
+    build: {context: .., dockerfile: deploy/Dockerfile.api}
+    restart: unless-stopped
+    init: true
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    env_file: .env
+    environment:
+      DATABASE_PATH: /app/data/classai.db
+      MQTT_HOST: broker
+      MQTT_PORT: "8883"
+      MQTT_TLS: "1"
+      MQTT_CA_FILE: /certs/ca.crt
+      MQTT_USERNAME: classai-api
+      MQTT_PASSWORD: ${MQTT_API_PASSWORD}
+      TEMPERATURE_API_BASE_URL: http://127.0.0.1:8000
+      LOCAL_TIMEZONE: America/Lima
+    volumes: ["database:/app/data", "./.secrets/mqtt/ca.crt:/certs/ca.crt:ro"]
+    depends_on: [ingest]
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request,json; assert json.load(urllib.request.urlopen('http://127.0.0.1:8000/health',timeout=3))['database']=='available'"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    networks: [classai]
+  web:
+    build: {context: .., dockerfile: deploy/Dockerfile.web}
+    restart: unless-stopped
+    environment: {WEB_HOST: "${WEB_HOST:?Set WEB_HOST}"}
+    ports: ["80:80", "443:443"]
+    volumes: ["caddy-data:/data", "caddy-config:/config"]
+    depends_on: [api]
+    networks: [classai]
+  speech:
+    profiles: [voice]
+    build: {context: .., dockerfile: deploy/speech/Dockerfile}
+    restart: unless-stopped
+    volumes: ["./.models:/models:ro"]
+    environment: {WHISPER_MODEL: /models/whisper-small}
+    networks: [classai]
+volumes:
+  database:
+  broker-data:
+  caddy-data:
+  caddy-config:
+networks:
+  classai:

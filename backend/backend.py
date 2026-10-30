@@ -22,12 +22,13 @@ import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
 
 from temperature_service import iso_utc, normalize_credential
+import multinode
 
 
 SCHEMA_PATH = Path(__file__).with_name("schema.sql")
-CLASSAI_TOPICS = ("classai/v1/+/telemetry", "classai/v1/+/events", "classai/v1/+/status")
+CLASSAI_TOPICS = ("classai/v1/+/telemetry", "classai/v1/+/events", "classai/v1/+/status", *multinode.TOPICS)
 TOPIC_PATTERN = re.compile(r"^classai/v1/([a-z0-9-]+)/(telemetry|events|status)$")
-METRICS = ("temp_c", "rh_pct", "lux", "noise_rel", "presence", "ir_object_c", "comfort")
+METRICS = ("temp_c", "rh_pct", "lux", "noise_rel", "presence", "ir_object_c", "comfort", "light_rel")
 EVENT_TYPES = ("SESSION_STARTED", "ATTENDANCE_RECORDED", "SESSION_ENDED")
 LEGACY_ROOM = "legacy"
 LEGACY_DEVICE = "mlx90614-legacy"
@@ -383,10 +384,12 @@ def save_sensor_minutes(connection: sqlite3.Connection, summaries: list[SensorMi
     return True
 
 
-def flush_sensor_pending(accumulator: SensorMinuteAccumulator, database: Database) -> None:
+def flush_sensor_pending(accumulator: SensorMinuteAccumulator, database: Database) -> bool:
     summaries = accumulator.take_pending()
     if summaries and database.write(lambda connection: save_sensor_minutes(connection, summaries)) is None:
         accumulator.restore_pending(summaries)
+        return False
+    return True
 
 
 def print_saved(summary: MinuteSummary) -> None:
@@ -481,6 +484,8 @@ def parse_telemetry(room: str, data: dict) -> tuple[str, Optional[str], dict[str
             raise ValueError(f"{metric} debe ser un número finito o null")
         else:
             values[metric] = float(value)
+        if metric == "light_rel" and not 0 <= values[metric] <= 1:
+            raise ValueError("light_rel debe estar entre 0 y 1")
     return data["device"], session_id, values
 
 
@@ -663,6 +668,8 @@ def handle_message(
 ) -> bool:
     """Procesa un mensaje. Devuelve False solo si SQLite no está disponible y hay que reintentar."""
     received_at = iso_utc(received)
+    if multinode.NODE_TOPIC.fullmatch(message.topic):
+        return multinode.handle(message, received, database, sensor_accumulator, client)
     if message.topic == settings.mqtt_topic:
         ambient, object_temperature = parse_temperature_message(message, settings.mqtt_topic)
         print(f"{received.strftime('%H:%M:%S')} | Ambiente: {ambient:.2f} C | Objeto: {object_temperature:.2f} C")
@@ -722,6 +729,7 @@ def main() -> None:
     inbox: deque[tuple[mqtt.MQTTMessage, datetime]] = deque()
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=settings.mqtt_client_id)
     client.reconnect_delay_set(min_delay=1, max_delay=60)
+    multinode.configure_tls(client)
     if settings.mqtt_username:
         client.username_pw_set(settings.mqtt_username, settings.mqtt_password)
 
@@ -736,6 +744,8 @@ def main() -> None:
             print(f"Escuchando: {', '.join(topic for topic, _ in topics)}")
         else:
             print(f"Error al suscribirse: código {result}")
+        # SQLite stays on the main thread; replay retained state after a reconnect.
+        replay_requested.set()
 
     def on_connect_fail(client: mqtt.Client, userdata: object) -> None:
         print("No se pudo conectar a MQTT. Se reintentará automáticamente.")
@@ -787,11 +797,18 @@ def main() -> None:
     print(f"Database: {settings.database_path}")
     print("===================================\n")
 
+    replay_requested = threading.Event()
     client.connect_async(settings.mqtt_host, settings.mqtt_port, keepalive=60)
     client.loop_start()
     next_purge = 0.0
     try:
         while not stop_requested.is_set():
+            if replay_requested.is_set():
+                messages = database.write(multinode.replay)
+                if messages is not None and messages is not False:
+                    for topic, body, retain in messages:
+                        multinode.publish(client, topic, body, retain)
+                    replay_requested.clear()
             while inbox:
                 message, received = inbox[0]
                 try:
