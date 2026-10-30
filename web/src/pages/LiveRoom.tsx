@@ -12,7 +12,7 @@ import { WhyRange } from "../features/WhyRange";
 import { ApiError, useFeedback } from "../lib/api";
 import { STATE_HINT, comfortState } from "../lib/comfort";
 import { formatDuration, formatNumber, formatRelative, formatTime, parseTime, withUnit } from "../lib/format";
-import type { ChartMetric, ComfortState, FeedbackKind } from "../lib/types";
+import type { ChartMetric, ComfortState, FeedbackKind, NodeSnapshot } from "../lib/types";
 import { Badge, StateBadge } from "../ui/Badge";
 import { buttonClass } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -135,13 +135,13 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
           </span>
           <div className="min-w-0">
             <dt className="text-caption text-muted">Presencia</dt>
-            <dd className="text-label font-medium text-fg">{presence == null ? "Sin dato" : presence ? "Detectada" : "Aula vacía"}</dd>
+            <dd className="text-label font-medium text-fg">{presence == null ? "Sin dato" : presence ? "Movimiento" : "Sin movimiento"}</dd>
           </div>
         </div>
       </dl>
       <p className="relative border-t border-line-subtle px-4 py-2.5 text-caption text-muted">
         {lastAt ? `Última lectura ${formatRelative(lastAt)} · ${formatTime(lastAt, true)}` : "Sin lecturas todavía"}
-        {!offline && " · ventilador estimado con la regla del nodo"}
+        {!offline && " · consultar disponibilidad del actuador en el nodo"}
       </p>
     </Card>
   );
@@ -180,6 +180,25 @@ function NodePanel({ device, uptimeMs, version, configVersion, irC, online }: {
   );
 }
 
+function ZoneNodes({ nodes, now }: { nodes: Record<string, NodeSnapshot>; now: number }) {
+  return <Card className="p-4">
+    <h2 className="text-label font-semibold text-fg">Nodos por zona</h2>
+    <div className="mt-2 flex flex-col gap-3">{Object.values(nodes).map(node => {
+      const at = parseTime(node.received_at);
+      const stale = !at || now - at > 15_000;
+      const label = node.role === "access" ? "Acceso" : node.role === "environment" ? "Ambiente" : "Asistente";
+      return <div key={node.device} className="border-b border-line-subtle pb-3 last:border-b-0">
+        <div className="flex items-center justify-between gap-2"><h3 className="text-label">{label}</h3>
+          <Badge size="sm" tone={node.status === "online" && !stale ? "ok" : "offline"}>{node.status === "offline" ? "Sin conexión" : stale ? "Sin datos recientes" : "En línea"}</Badge></div>
+        <p className="mt-1 break-all font-mono text-caption text-muted">{node.device}</p>
+        <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Movimiento de entrada; sin conteo de personas" : "Esperando mediciones"}</p>
+        {node.role === "assistant" && <p className="text-small text-muted">Agente: {node.telemetry?.agent_online ? node.telemetry.voice_state ?? "conectado" : "sin conexión"}</p>}
+        <p className="text-caption text-muted">{at ? `Última lectura ${formatRelative(at)}` : "Sin lecturas"}</p>
+      </div>;
+    })}</div>
+  </Card>;
+}
+
 export function LiveRoom() {
   const { room: routeRoom } = useRouteParams();
   const { room, rooms, live } = useApp();
@@ -191,7 +210,9 @@ export function LiveRoom() {
   if (routeRoom && routeRoom !== room) return null; // the shell syncs the selected room on the next tick
 
   const reading = state.latest ?? current.data?.latest_reading ?? null;
-  const offline = state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
+  const environment = Object.values(state.nodes).find(node => node.role === "environment");
+  const environmentAt = parseTime(environment?.received_at);
+  const offline = (environment != null && (!environmentAt || now - environmentAt > 15_000)) || state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
   const config = state.config ?? params.data?.current ?? null;
   const comfort = reading?.comfort ?? null;
   const stateNow: ComfortState | null = reading?.state ?? (comfort != null && config ? comfortState(config, comfort) : null);
@@ -235,7 +256,7 @@ export function LiveRoom() {
             okMin={config?.ok_min ?? 80}
             regularMin={config?.regular_min ?? 60}
             offline={offline}
-            fanOn={state.fan.on}
+            fanOn={state.latest?.fan_on ?? state.fan.on}
             presence={reading?.presence}
             lastAt={lastAt}
           />
@@ -288,6 +309,7 @@ export function LiveRoom() {
               </Card>
             )}
           </ErrorBoundary>
+          {Object.keys(state.nodes).length > 0 && <ZoneNodes nodes={state.nodes} now={now} />}
           <NodePanel
             device={state.latest?.device ?? `esp32-${room}`}
             uptimeMs={state.latest?.uptime_ms}

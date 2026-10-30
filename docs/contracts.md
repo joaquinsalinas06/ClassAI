@@ -146,3 +146,85 @@ y un token revocado devuelven 409; no se reactivan por reintento. Cambiar servid
 en Android conserva token/perfil pero invalida la vinculación hasta comprobar el
 nuevo destino. La lectura APDU no confirma persistencia: consultar attendance de
 la sesión. El perfil NFC_ONLY usa los eventos classai/v1 existentes, sin ACK nuevo.
+
+## Extensión multinodo v1 · acceso/ambiente/asistente
+
+Compatible con los tópicos legados anteriores. Nuevos nodos usan identidad
+estable `{room}-{role}`, con role `access`, `environment` o `assistant`; room
+hasta32caracteres y device hasta64. Una instancia de cada rol por aula. No usar
+MAC ni credenciales físicas como identificador público. ACL liga usuario a tópicos.
+
+| Tópico relativo a `classai/v1/{room}` | Emisor | Retain | Función |
+|---|---|---|---|
+|`nodes/{device}/telemetry`| nodo |no| Medición por zona, cada5s |
+|`nodes/{device}/status`| nodo/LWT |sí| JSON v1/room/device/role/status online u offline |
+|`nodes/{device}/commands`| acceso |no| Solicitud start/stop idempotente |
+|`nodes/{device}/events`| acceso |no| ATTENDANCE_RECORDED existente |
+|`nodes/{device}/ack`| ingesta |no| Resultado posterior al commit |
+|`nodes/{device}/snapshot`| ingesta |sí| Última lectura y estado persistidos por dispositivo |
+|`session`| ingesta |sí| Sesión compartida y revisión monotónica |
+|`confirmed`| ingesta |no| Evento persistido, sin credential/token; aceptado o rechazo |
+
+PubSubClient mantiene publicación QoS0, también con cola persistente. Backend
+publica QoS1; los eventos se reintentan hasta ACK. No confundir ACK MQTT,
+`stored:true` y `accepted:true`: el primero no demuestra SQLite, el segundo
+confirma persistencia incluso de un rechazo y el tercero acepta la asistencia.
+
+Telemetría conserva v/device/room/session_id/ts/uptime_ms y añade `role`.
+Ambiente es la única autoridad de temp_c/rh_pct/noise_rel/comfort/state; acceso
+y asistente envían comfort:null. Solo ambiente alimenta las métricas comunes
+de presencia/confort. Luz relativa de cada nodo se conserva por device:
+`light_rel` número0..1 o null. ADC35/4095 con divisor orientado para subir al
+iluminar; no es lux, porcentaje de iluminancia ni comparación calibrada entre
+unidades. Todos estos perfiles envían lux:null. Su peso queda fuera del confort
+hasta calibración explícita. Fan publica `fan_on` real y `fan_enabled`; el
+asistente añade `agent_online`, `voice_state` y `audio_error`.
+
+Snapshot: `{v,room,device,role,status,status_at,received_at,telemetry}`. received_at
+es la recepción de la última medición, no la del LWT. Un offline conserva esa
+medición. REST `GET /rooms/{room}/nodes` añade stale=true si no hay medición o
+supera15s. La web vuelve a calcular antigüedad aunque el broker siga disponible.
+SSE añade `node` por dispositivo y `session`; replay conserva todos los nodos,
+no solo el último del aula. GET /classes/current usa ambiente para la lectura
+principal. Los consumidores legados siguen aceptando tópicos v1 anteriores.
+
+### Sesión autoritativa
+
+Ejemplo comando: `{v:1,room:"a101",device:"a101-access",role:"access",
+request_id:"a101-access-3-r1",action:"start"}`. Stop añade `session_id` esperado.
+No existe toggle remoto. request_id se conserva en SQLite: repetirlo devuelve
+el mismo ACK sin repetir ni invertir la acción, incluso después de reiniciar.
+Start solo se acepta sin otra sesión multinodo abierta; stop solo si coincide
+la sesión vigente. Un rechazo también es idempotente.
+
+Después del commit se publica session retenida:
+`{v:1,room:"a101",revision:1,session_id:"a101-<uuid>",course:null,started_at:"…"}`.
+Al cerrar, session_id:null y revision aumenta. El backend reconstruye el
+retenido desde SQLite tras reconectar. SQLite es la autoridad, no el retenido
+que sobreviva por casualidad en el broker. No operar un emisor legado de
+SESSION_STARTED y la nueva coordinación simultáneamente sobre la misma aula;
+migrar cuando no exista clase abierta.
+
+ACK comando incluye request_id/stored/accepted; ACK asistencia incluye
+event_id/stored/accepted/reason y destino device/room/v. Solo después de ACK
+stored:true se borra su archivo de outbox. Reenvíos con igual event_id deben
+conservar payload; reutilizarlo con otro contenido se rechaza. Credencial,
+sesión desconocida/cerrada o token revocado producen accepted:false. No se
+publica token ni audio en snapshots/confirmed. Una sesión de otra aula no se
+puede usar para registrar asistencia.
+
+### Audio activado
+
+El agente local procesa continuamente el PCM del USB; solo envía tras palabra
+de activación `POST /assistant/voice`, Content-Type audio/wav, `X-Voice-Key`
+comparado con VOICE_API_KEY. WAV monoPCM16/16kHz entre0,1y15s, cuerpo limitado a
+480128bytes. Respuesta WAV y Cache-Control:no-store. Falta de configuración503,
+clave incorrecta401, audio inválido400, cuerpo excesivo413, fallo de voz502.
+La transcripción llama al mismo asistente textual configurado; sin proveedor
+LLM configurado conserva503. Pruebas no hacen llamadas pagadas.
+
+Worker opcional privado: POST /transcribe recibe WAV y devuelve `{text}`;
+POST /synthesize recibe `{text}` y devuelve WAV. El perfil de despliegue usa
+faster-whisper con modelo local y espeak-ng español; no expone su puerto a
+Internet ni descarga modelos al iniciar. El agente remuestrea a32kHz para el
+amplificador. Palabra inicial preentrenada, no reconocimiento de «ClassAI».

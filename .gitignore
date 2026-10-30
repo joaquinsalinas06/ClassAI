@@ -25,3 +25,10 @@ mobile/android/**/build/
 
 # Local Arduino build output; keep firmware binaries outside Git
 firmware/**/build/
+
+# Three-node private configuration and speech models
+firmware/classai_multinode/secrets.h
+deploy/.secrets/
+deploy/.models/
+tools/voice_agent/models/
+**/.venv/

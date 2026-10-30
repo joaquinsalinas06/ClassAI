@@ -1,6 +1,6 @@
 // Live room state: a pure reducer fed by the SSE stream (GET /live/{room}) and the REST backfill.
 import type {
-  AttendanceRow, ChartMetric, ComfortConfig, CredentialType, LiveEvent, LiveStatus, NodeStatus, RejectReason, Telemetry,
+  AttendanceRow, ChartMetric, ComfortConfig, CredentialType, LiveEvent, LiveStatus, NodeStatus, RejectReason, Telemetry, NodeSnapshot, SessionState,
 } from "./types";
 import { CHART_METRICS, nextFanState } from "./comfort";
 import { parseTime } from "./format";
@@ -29,6 +29,8 @@ export interface LiveState {
   connection: Connection;
   node: NodeStatus | "unknown";
   latest: Telemetry | null;
+  nodes: Record<string, NodeSnapshot>;
+  sessionRevision: number;
   lastAt: number | null;
   points: Record<ChartMetric, Point[]>;
   config: ComfortConfig | null;
@@ -42,6 +44,8 @@ export interface LiveState {
 
 export type LiveAction =
   | { type: "reset"; room: string }
+  | { type: "node"; data: NodeSnapshot }
+  | { type: "session"; data: SessionState }
   | { type: "connection"; value: Connection }
   | { type: "telemetry"; data: Telemetry; now?: number }
   | { type: "event"; data: LiveEvent; now?: number }
@@ -66,6 +70,8 @@ export function initialLive(room: string): LiveState {
     connection: "connecting",
     node: "unknown",
     latest: null,
+    nodes: {},
+    sessionRevision: -1,
     lastAt: null,
     points: emptyPoints(),
     config: null,
@@ -83,6 +89,31 @@ export function liveReducer(state: LiveState, action: LiveAction): LiveState {
     case "reset":
       return initialLive(action.room);
 
+    case "session": {
+      const data = action.data;
+      if (data.room !== state.room || data.revision < state.sessionRevision) return state;
+      const changed = data.session_id !== state.sessionId;
+      return { ...state, sessionRevision: data.revision, sessionId: data.session_id,
+        course: data.course ?? null, startedAt: parseTime(data.started_at),
+        arrivals: changed ? [] : state.arrivals, rejections: changed ? [] : state.rejections };
+    }
+    case "node": {
+      const data = action.data;
+      if (data.room !== state.room) return state;
+      const previous = state.nodes[data.device];
+      const at = parseTime(data.received_at) ?? 0;
+      if (previous && (at < (parseTime(previous.received_at) ?? 0) ||
+        (at === (parseTime(previous.received_at) ?? 0) && (parseTime(data.status_at) ?? 0) < (parseTime(previous.status_at) ?? 0)))) return state;
+      const next = { ...state, nodes: { ...state.nodes, [data.device]: data } };
+      if (data.role !== "environment") return next;
+      if (data.telemetry && at > (parseTime(previous?.received_at) ?? 0)) {
+        const updated = liveReducer(next, { type: "telemetry", data: data.telemetry });
+        updated.node = data.status;
+        if (typeof data.telemetry.fan_on === "boolean") updated.fan = { on: data.telemetry.fan_on, changedAt: at };
+        return updated;
+      }
+      return { ...next, node: data.status };
+    }
     case "connection":
       return state.connection === action.value ? state : { ...state, connection: action.value };
 
@@ -113,7 +144,7 @@ export function liveReducer(state: LiveState, action: LiveAction): LiveState {
         latest: data,
         lastAt: t,
         points,
-        sessionId: data.session_id ?? state.sessionId,
+        sessionId: state.sessionRevision >= 0 ? state.sessionId : data.session_id ?? state.sessionId,
         fan: nextFanState(state.fan, data.state, data.temp_c, tempMax, t),
       };
     }
@@ -142,7 +173,7 @@ export function liveReducer(state: LiveState, action: LiveAction): LiveState {
 
     case "seed": {
       const next: LiveState = { ...state };
-      if (action.session) {
+      if (action.session && state.sessionRevision < 0) {
         next.sessionId = action.session.id;
         next.course = action.session.course;
         next.startedAt = parseTime(action.session.started_at);

@@ -269,7 +269,8 @@ class TemperatureService:
             (room,),
         )
         reading = self._fetch_one(
-            "SELECT received_at, payload FROM readings_raw WHERE room = ? ORDER BY id DESC LIMIT 1",
+            "SELECT received_at, payload FROM readings_raw WHERE room = ? "
+            "AND COALESCE(json_extract(payload, '$.role'), 'environment')='environment' ORDER BY id DESC LIMIT 1",
             (room,),
         )
         result: dict[str, Any] = {"room": room, "session": None, "latest_reading": None}
@@ -290,7 +291,7 @@ class TemperatureService:
         """Tabla rooms ∪ aulas vistas en sesiones o sensor_minutes, con su sesión abierta."""
         rows = self._fetch_all(
             """
-            WITH ids AS (SELECT id FROM rooms UNION SELECT room FROM sessions UNION SELECT room FROM sensor_minutes)
+            WITH ids AS (SELECT id FROM rooms UNION SELECT room FROM sessions UNION SELECT room FROM sensor_minutes UNION SELECT room FROM node_state)
             SELECT ids.id, r.name, r.latitude, r.longitude,
                    (SELECT s.id FROM sessions s WHERE s.room = ids.id AND s.ended_at IS NULL
                     ORDER BY s.started_at DESC LIMIT 1) AS current_session_id

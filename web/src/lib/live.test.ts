@@ -87,3 +87,30 @@ describe("config versions", () => {
     expect(s.config?.params_version).toBe(6);
   });
 });
+
+
+describe("three node coordination", () => {
+  it("keeps zone readings and disconnects separate", () => {
+    const time = "2026-10-29T14:00:00Z";
+    const environment = { v: 1, room: "a101", device: "a101-environment", role: "environment" as const,
+      status: "online" as const, status_at: time, received_at: time,
+      telemetry: telemetry({ device: "a101-environment", received_at: time, light_rel: .6, fan_on: false }) };
+    let state = liveReducer(initialLive("a101"), { type: "node", data: environment });
+    state = liveReducer(state, { type: "node", data: { ...environment, role: "assistant", device: "a101-assistant",
+      telemetry: telemetry({ device: "a101-assistant", comfort: null, temp_c: null, light_rel: .2 }) } });
+    state = liveReducer(state, { type: "node", data: { ...environment, role: "access", device: "a101-access", status: "offline", telemetry: null } });
+    expect(Object.keys(state.nodes)).toHaveLength(3);
+    expect(state.latest?.device).toBe("a101-environment");
+    expect(state.latest?.light_rel).toBe(.6);
+    expect(state.node).toBe("online");
+    expect(state.fan.on).toBe(false);
+  });
+  it("does not resurrect a closed session from delayed telemetry or REST", () => {
+    let state = liveReducer(initialLive("a101"), { type: "session", data: { v: 1, room: "a101", revision: 2, session_id: null } });
+    state = liveReducer(state, { type: "telemetry", data: telemetry({ session_id: "old-session" }) });
+    state = liveReducer(state, { type: "seed", session: { id: "old-session", course: null, started_at: "2026-10-29T14:00:00Z" } });
+    state = liveReducer(state, { type: "session", data: { v: 1, room: "a101", revision: 1, session_id: "old-session" } });
+    expect(state.sessionId).toBeNull();
+    expect(state.sessionRevision).toBe(2);
+  });
+});

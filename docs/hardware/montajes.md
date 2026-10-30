@@ -279,3 +279,13 @@ cargó en este ensayo.
 | R-052 · 26/10/2026, America/Lima | Repetición solicitada y finalizada | Mismo A-01/B-10 y firmware privado de R-050; sin nueva carga ni cambio de conexiones | Serial 115200 confirma STOP, ARMADO, happy/sad/angry (5 s cada cara) y STOP final; puerto cerrado. El usuario confirmó visualmente la primera secuencia; la repetición cuenta con evidencia Serial, sin nueva confirmación visual específica | Tres caras preservadas en firmware/matrix_bench y añadidos comandos rotate0/90/180/270 para futuras orientaciones. Giros verificados en host; no cargados ni probados con módulo físicamente girado durante este ensayo. Logs, identidad y respaldos privados preservados; conexión directa sigue sin garantizar HIGH del MAX7219 y USB/VIN sin medir |
 
 | R-053 · 26/10/2026, America/Lima | Consolidación de evidencia M-08A y orientación para revisión | A-01/B-10 conservados; sin nueva carga, apertura de Serial ni cambio de cables tras R-052 | Visor marca M-08A ensayado con fecha propia 26/10, resultado observado y límites; guías y JSON regenerados. firmware/matrix_bench preserva las tres caras y añade rotate0/90/180/270; las rotaciones solo se ensayan en host. Compilación del sketch público: 273436 bytes programa/22172 globales, ESP32 core 3.3.12 | Host de bancos PASS con paquetes exactos de caras, giros de una esquina asimétrica, bloqueo sin arm, plazo y comandos inválidos. Web: 95 tests + 3 tokens, typecheck/lint/build y hardware-smoke de 16 bancos/13 físicos PASS. 18332 parejas de terminales, incluidos componentes/resistencias, idénticas a origin/main; cables/recorridos/métricas sin cambios (matriz: 11 cables, 10 giros, 3946 unidades del dibujo). Capturas escritorio/móvil revisadas y fecha de lista corregida. Sin alteración de respaldos/credenciales, nuevo ensayo eléctrico ni integración automática de confort |
+
+
+## Integración de tres nodos · 29/10/2026
+
+La declaración actual de Joaquín confirma E-01, tres placas y cuatro protoboards.
+La propuesta previa de dos placas permanece como historial. La implementación
+software de [tres-nodos.md](tres-nodos.md) usa B-02 para acceso, A-01 para ambiente
+y E-01 para asistente; no se han cargado estos perfiles ni abierto puertos físicos.
+Los ensayos individuales comunicados no aprueban todavía convivencia, potencia,
+activación por palabra o una sesión conjunta de 60 minutos.

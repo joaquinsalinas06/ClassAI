@@ -1,0 +1,957 @@
+{
+  "version": 1,
+  "bankId": "nodo-ambiente",
+  "layout": "breadboard",
+  "name": "Ambiente · A-01 · P2",
+  "note": "Montaje integrado propuesto · Ambiente · A-01 · P2. Cuatro protoboards entre los tres nodos; no duplicar inventario. M–M/M–H/H–H admitidos para este diseño; contar disponibilidad y alcance antes de armar. H–H une dos cabeceras macho. LP=3,3 V, RP=5 V condicionado, LN/RN=GND local. Alimentación USB propia; no unir fuentes de nodos distintos. Cables pendientes visibles como discontinuos; no colocar ni energizar esas ramas hasta resolver su condición.",
+  "board": {
+    "rows": 30,
+    "rails": true
+  },
+  "catalog": [
+    {
+      "id": "esp32",
+      "name": "ESP32 DevKit V1 · 30 pines",
+      "pending": "A-01: cotejar serigrafía, USB y respaldo antes de carga. VIN no certifica salida de 5 V.",
+      "pins": [
+        {
+          "id": "EN",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO36",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO39",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO34",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO35",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO32",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO33",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO25",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO26",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO27",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO14",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO12",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO13",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND_L",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "VIN",
+          "kind": "source",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GPIO23",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO22",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO3",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO21",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO19",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO18",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO5",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO17",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO16",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO4",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO2",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GPIO15",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "bus": "ground",
+          "required": false
+        },
+        {
+          "id": "3V3",
+          "kind": "source",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "dht11",
+      "name": "DHT11 · módulo − OUT +",
+      "pending": "Módulo DHT11 de tres pines del laboratorio UTEC, Anexo X: pull-up de 10 kΩ integrado y alimentación 3–5,5 V. Para ESP32 usar 3,3 V; cotejar +/OUT/−, no trasladar la orientación de otra foto.",
+      "pins": [
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "DATA",
+          "kind": "signal",
+          "function": "dht",
+          "required": false
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 3.3,
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "pir",
+      "name": "PIR · HC-SR501 de referencia",
+      "pending": "PIR fotografiado: lente, cuatro condensadores, dos ajustes y jumper amarillo coinciden con HC-SR501; no se leen VCC/OUT/GND ni marcado del chip. ID B-04/D-06 por asociar; mapa de terminales todavía de referencia. No copiar posiciones para energizar sin confirmarlas.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "OUT",
+          "kind": "signal",
+          "function": "presence",
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ruido",
+      "name": "M-06 · Detector B-08",
+      "pending": "Orden AO/G/+/DO reportado en foto, orientar la misma cara. Banco de ensayo a 3,3 V; AO va a ADC34 y DO no participa.",
+      "pins": [
+        {
+          "id": "AO",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "G",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "VCC",
+          "kind": "power",
+          "required": false
+        },
+        {
+          "id": "DO",
+          "kind": "signal",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "relay",
+      "name": "Módulo relé doble",
+      "pending": "Guía UTEC Anexo V: módulo relé doble de lógica 5 V y activo LOW. El módulo incluye sus relés; no se añaden bobinas externas. Referencia LOW-trigger con puente VCC/JD-VCC existente. Confirmar que IN1 acepta control 3,3 V sin devolver 5 V al GPIO. Si no, usar adaptación.",
+      "pins": [
+        {
+          "id": "VCC",
+          "kind": "power",
+          "voltage": 5,
+          "required": false
+        },
+        {
+          "id": "GND",
+          "kind": "ground",
+          "required": false
+        },
+        {
+          "id": "IN1",
+          "kind": "signal",
+          "required": false
+        },
+        {
+          "id": "IN2",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "COM1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NO1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "NC1",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "fan",
+      "name": "Ventilador DC 5 V",
+      "pending": "D-05 está recibido, pero falta una fuente 5 V con corriente de arranque suficiente y adaptar su conector/polaridad. En la vista principal el fan permanece completamente desconectado.",
+      "pins": [
+        {
+          "id": "PLUS",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "MINUS",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "ldr",
+      "name": "Fotoresistencia · luz relativa",
+      "pending": "Modelo y orientación hacia el aula por comprobar; no mide lux sin calibración.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "2",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "resistor",
+      "name": "Resistencia",
+      "pending": "Leer bandas y comprobar patas en tiras distintas.",
+      "pins": [
+        {
+          "id": "1",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "2",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "led",
+      "name": "LED · ánodo A / cátodo K",
+      "pending": "Confirmar A/K por encapsulado y patas; no omitir resistencia serie de 1 kΩ.",
+      "pins": [
+        {
+          "id": "A",
+          "kind": "passive",
+          "required": false
+        },
+        {
+          "id": "K",
+          "kind": "passive",
+          "required": false
+        }
+      ]
+    }
+  ],
+  "parts": [
+    {
+      "id": "esp1",
+      "definition": "esp32",
+      "inventory": "A-01 · Adrián · ambiente",
+      "holes": {}
+    },
+    {
+      "id": "dht1",
+      "definition": "dht11",
+      "inventory": "B-03 · DHT11",
+      "holes": {},
+      "placement": {
+        "x": 1010,
+        "y": 170
+      }
+    },
+    {
+      "id": "pir1",
+      "definition": "pir",
+      "inventory": "D-06 · movimiento del aula",
+      "holes": {},
+      "placement": {
+        "x": 1510,
+        "y": 170
+      }
+    },
+    {
+      "id": "sound1",
+      "definition": "ruido",
+      "inventory": "B-08 · ruido relativo AO",
+      "holes": {},
+      "placement": {
+        "x": 1010,
+        "y": 560
+      }
+    },
+    {
+      "id": "relay1",
+      "definition": "relay",
+      "inventory": "B-11 · un canal; resto libre",
+      "holes": {},
+      "placement": {
+        "x": 1510,
+        "y": 580
+      }
+    },
+    {
+      "id": "fan1",
+      "definition": "fan",
+      "inventory": "D-05 · ventilador 5 V",
+      "holes": {},
+      "placement": {
+        "x": 1510,
+        "y": 1100
+      }
+    },
+    {
+      "id": "ldr1",
+      "definition": "ldr",
+      "inventory": "Fotoresistencia · una de las disponibles",
+      "holes": {
+        "1": "C4",
+        "2": "C7"
+      }
+    },
+    {
+      "id": "rLight",
+      "definition": "resistor",
+      "inventory": "Resistencia 10 kΩ · caracterizar rango ADC",
+      "resistance": 10000,
+      "holes": {
+        "1": "E7",
+        "2": "E10"
+      }
+    },
+    {
+      "id": "rledGreen",
+      "definition": "resistor",
+      "inventory": "Resistencia 1 kΩ · una por LED",
+      "resistance": 1000,
+      "holes": {
+        "1": "C17",
+        "2": "G17"
+      }
+    },
+    {
+      "id": "ledGreen",
+      "definition": "led",
+      "inventory": "B-05 · LED verde",
+      "holes": {
+        "A": "H17",
+        "K": "H19"
+      }
+    },
+    {
+      "id": "rledYellow",
+      "definition": "resistor",
+      "inventory": "Resistencia 1 kΩ · una por LED",
+      "resistance": 1000,
+      "holes": {
+        "1": "C21",
+        "2": "G21"
+      }
+    },
+    {
+      "id": "ledYellow",
+      "definition": "led",
+      "inventory": "B-06 · LED amarillo",
+      "holes": {
+        "A": "H21",
+        "K": "H23"
+      }
+    },
+    {
+      "id": "rledRed",
+      "definition": "resistor",
+      "inventory": "Resistencia 1 kΩ · una por LED",
+      "resistance": 1000,
+      "holes": {
+        "1": "C25",
+        "2": "G25"
+      }
+    },
+    {
+      "id": "ledRed",
+      "definition": "led",
+      "inventory": "C-05 · LED rojo",
+      "holes": {
+        "A": "H25",
+        "K": "H27"
+      }
+    }
+  ],
+  "wires": [
+    {
+      "id": "c1",
+      "from": "esp1:GND",
+      "to": "bb:LN2",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "1. Masa común del nodo · M–H · esp1 · GND → P · LN2 · USB desconectado.",
+      "bends": [
+        [
+          457,
+          519
+        ]
+      ]
+    },
+    {
+      "id": "c2",
+      "from": "bb:LN29",
+      "to": "bb:RN29",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "2. Unir solo los dos rieles negativos · M–M · P · LN29 → P · RN29 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c3",
+      "from": "esp1:3V3",
+      "to": "bb:LP2",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "3. Riel positivo izquierdo: 3,3 V · M–H · esp1 · 3V3 → P · LP2 · USB desconectado.",
+      "bends": [
+        [
+          435,
+          546
+        ]
+      ]
+    },
+    {
+      "id": "c4",
+      "from": "esp1:VIN",
+      "to": "bb:RP2",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "note": "4. Riel positivo derecho: 5 V USB · M–H · esp1 · VIN → P · RP2 · NO CONECTAR: Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "bends": [
+        [
+          62,
+          140
+        ],
+        [
+          763,
+          140
+        ]
+      ]
+    },
+    {
+      "id": "c5",
+      "from": "bb:LP4",
+      "to": "bb:A4",
+      "color": "red",
+      "jumper": "M–M",
+      "note": "5. Divisor LDR: extremo superior a 3,3 V · M–M · P · LP4 → P · A4 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c6",
+      "from": "esp1:GPIO35",
+      "to": "bb:B7",
+      "color": "purple",
+      "jumper": "M–H",
+      "note": "6. Unión LDR/resistencia hacia ADC1 GPIO35 · M–H · esp1 · GPIO 35 → P · B7 · USB desconectado.",
+      "bends": [
+        [
+          62,
+          128
+        ],
+        [
+          520,
+          128
+        ]
+      ]
+    },
+    {
+      "id": "c7",
+      "from": "bb:A10",
+      "to": "bb:LN10",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "7. Divisor LDR: resistencia a GND · M–M · P · A10 → P · LN10 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c8",
+      "from": "bb:LP10",
+      "to": "dht1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "8. Alimentar dht1 a 3.3 V · M–H · P · LP10 → dht1 · VCC · USB desconectado.",
+      "bends": [
+        [
+          541,
+          312
+        ],
+        [
+          541,
+          344
+        ],
+        [
+          992,
+          344
+        ],
+        [
+          992,
+          376
+        ]
+      ]
+    },
+    {
+      "id": "c9",
+      "from": "bb:LN9",
+      "to": "dht1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "9. Retorno de dht1 · M–H · P · LN9 → dht1 · GND · USB desconectado.",
+      "bends": [
+        [
+          534,
+          294
+        ],
+        [
+          534,
+          351
+        ],
+        [
+          1030,
+          351
+        ]
+      ]
+    },
+    {
+      "id": "c10",
+      "from": "esp1:GPIO4",
+      "to": "dht1:DATA",
+      "color": "green",
+      "jumper": "H–H",
+      "note": "10. DHT11 · OUT con pull-up del módulo hacia 3,3 V · H–H · esp1 · GPIO 4 → dht1 · DATA · USB desconectado.",
+      "bends": [
+        [
+          527,
+          438
+        ],
+        [
+          527,
+          399
+        ],
+        [
+          1080,
+          399
+        ]
+      ]
+    },
+    {
+      "id": "c11",
+      "from": "bb:RP12",
+      "to": "pir1:VCC",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Verificar alimentación y salida del PIR D-06.",
+      "note": "11. Alimentar pir1 a 5 V · M–H · P · RP12 → pir1 · VCC · NO CONECTAR: Verificar alimentación y salida del PIR D-06.",
+      "bends": [
+        [
+          993,
+          348
+        ],
+        [
+          993,
+          362
+        ],
+        [
+          1530,
+          362
+        ]
+      ]
+    },
+    {
+      "id": "c12",
+      "from": "bb:LN12",
+      "to": "pir1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "12. Retorno de pir1 · M–H · P · LN12 → pir1 · GND · USB desconectado.",
+      "bends": [
+        [
+          999,
+          348
+        ],
+        [
+          999,
+          369
+        ],
+        [
+          1630,
+          369
+        ]
+      ]
+    },
+    {
+      "id": "c13",
+      "from": "esp1:GPIO27",
+      "to": "pir1:OUT",
+      "color": "yellow",
+      "jumper": "H–H",
+      "pending": "Cotejar nivel de OUT del PIR.",
+      "note": "13. PIR ambiente · señal lógica verificada · H–H · esp1 · GPIO 27 → pir1 · OUT · NO CONECTAR: Cotejar nivel de OUT del PIR.",
+      "bends": [
+        [
+          62,
+          621
+        ],
+        [
+          992,
+          621
+        ],
+        [
+          992,
+          560
+        ],
+        [
+          1580,
+          560
+        ]
+      ]
+    },
+    {
+      "id": "c14",
+      "from": "bb:LP14",
+      "to": "sound1:VCC",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "14. Alimentar sound1 a 3.3 V · M–H · P · LP14 → sound1 · VCC · USB desconectado.",
+      "bends": [
+        [
+          1010,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c15",
+      "from": "bb:LN14",
+      "to": "sound1:G",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "15. Retorno de sound1 · M–H · P · LN14 → sound1 · G · USB desconectado.",
+      "bends": [
+        [
+          1010,
+          384
+        ]
+      ]
+    },
+    {
+      "id": "c16",
+      "from": "esp1:GPIO34",
+      "to": "sound1:AO",
+      "color": "purple",
+      "jumper": "H–H",
+      "note": "16. Ruido relativo · AO34; DO sin cable · H–H · esp1 · GPIO 34 → sound1 · AO · USB desconectado.",
+      "bends": [
+        [
+          62,
+          622
+        ],
+        [
+          1010,
+          622
+        ]
+      ]
+    },
+    {
+      "id": "c17",
+      "from": "esp1:GPIO18",
+      "to": "bb:A17",
+      "color": "green",
+      "jumper": "M–H",
+      "note": "17. B-05 · LED verde: control con resistencia en serie · M–H · esp1 · GPIO 18 → P · A17 · USB desconectado.",
+      "bends": [
+        [
+          500,
+          330
+        ]
+      ]
+    },
+    {
+      "id": "c18",
+      "from": "bb:J19",
+      "to": "bb:RN19",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "18. B-05 · LED verde: cátodo a GND · M–M · P · J19 → P · RN19 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c19",
+      "from": "esp1:GPIO19",
+      "to": "bb:A21",
+      "color": "yellow",
+      "jumper": "M–H",
+      "note": "19. B-06 · LED amarillo: control con resistencia en serie · M–H · esp1 · GPIO 19 → P · A21 · USB desconectado.",
+      "bends": [
+        [
+          500,
+          303
+        ]
+      ]
+    },
+    {
+      "id": "c20",
+      "from": "bb:J23",
+      "to": "bb:RN23",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "20. B-06 · LED amarillo: cátodo a GND · M–M · P · J23 → P · RN23 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c21",
+      "from": "esp1:GPIO23",
+      "to": "bb:A25",
+      "color": "red",
+      "jumper": "M–H",
+      "note": "21. C-05 · LED rojo: control con resistencia en serie · M–H · esp1 · GPIO 23 → P · A25 · USB desconectado.",
+      "bends": [
+        [
+          500,
+          168
+        ]
+      ]
+    },
+    {
+      "id": "c22",
+      "from": "bb:J27",
+      "to": "bb:RN27",
+      "color": "black",
+      "jumper": "M–M",
+      "note": "22. C-05 · LED rojo: cátodo a GND · M–M · P · J27 → P · RN27 · USB desconectado.",
+      "bends": []
+    },
+    {
+      "id": "c23",
+      "from": "bb:RP16",
+      "to": "relay1:VCC",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "note": "23. Alimentar relay1 a 5 V · M–H · P · RP16 → relay1 · VCC · NO CONECTAR: Confirmar ruta USB–VIN y capacidad de corriente de esta placa antes de conectar 5 V.",
+      "bends": [
+        [
+          1750,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c24",
+      "from": "bb:LN16",
+      "to": "relay1:GND",
+      "color": "black",
+      "jumper": "M–H",
+      "note": "24. Retorno de relay1 · M–H · P · LN16 → relay1 · GND · USB desconectado.",
+      "bends": [
+        [
+          1750,
+          420
+        ]
+      ]
+    },
+    {
+      "id": "c25",
+      "from": "bb:RP19",
+      "to": "relay1:IN2",
+      "color": "orange",
+      "jumper": "M–H",
+      "pending": "Solo para la variante LOW-trigger ya identificada; confirmar IN2 y jumper.",
+      "note": "25. Mantener canal 2 desactivado · M–H · P · RP19 → relay1 · IN2 · NO CONECTAR: Solo para la variante LOW-trigger ya identificada; confirmar IN2 y jumper.",
+      "bends": [
+        [
+          1750,
+          474
+        ]
+      ]
+    },
+    {
+      "id": "c26",
+      "from": "esp1:GPIO26",
+      "to": "relay1:IN1",
+      "color": "yellow",
+      "jumper": "H–H",
+      "pending": "Verificar compatibilidad 3,3 V, jumper, polaridad y estado OFF del relé.",
+      "note": "26. Control de relé · nivel de disparo según interfaz · H–H · esp1 · GPIO 26 → relay1 · IN1 · NO CONECTAR: Verificar compatibilidad 3,3 V, jumper, polaridad y estado OFF del relé.",
+      "bends": [
+        [
+          62,
+          622
+        ],
+        [
+          1006,
+          622
+        ],
+        [
+          1006,
+          557
+        ],
+        [
+          1750,
+          557
+        ]
+      ]
+    },
+    {
+      "id": "c27",
+      "from": "bb:RP18",
+      "to": "relay1:COM1",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "Capacidad USB, arranque y cableado de potencia por verificar.",
+      "note": "27. Potencia del fan hacia COM1 · potencia · P · RP18 → relay1 · COM1 · NO CONECTAR: Capacidad USB, arranque y cableado de potencia por verificar.",
+      "bends": [
+        [
+          1510,
+          456
+        ]
+      ]
+    },
+    {
+      "id": "c28",
+      "from": "relay1:NO1",
+      "to": "fan1:PLUS",
+      "color": "orange",
+      "jumper": "potencia",
+      "pending": "No habilitar hasta validar fuente y corriente del fan.",
+      "note": "28. Contacto NO1 hacia positivo del fan · potencia · relay1 · NO1 → fan1 · PLUS · NO CONECTAR: No habilitar hasta validar fuente y corriente del fan.",
+      "bends": []
+    },
+    {
+      "id": "c29",
+      "from": "fan1:MINUS",
+      "to": "bb:RN18",
+      "color": "black",
+      "jumper": "potencia",
+      "pending": "Retorno de potencia por verificar.",
+      "note": "29. Retorno de potencia del fan · potencia · fan1 · MINUS → P · RN18 · NO CONECTAR: Retorno de potencia por verificar.",
+      "bends": [
+        [
+          785,
+          1166
+        ]
+      ]
+    }
+  ],
+  "revisions": []
+}

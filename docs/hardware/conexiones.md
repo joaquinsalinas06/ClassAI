@@ -151,3 +151,11 @@ están en proceso de soldadura según Joaquín; no se ha confirmado finalizació
 para GND (solo mitad superior) y cuatro tiras de señal independientes.
 DIP 1 OFF / 2 ON con alimentación desconectada; IRQ/RSTO y rieles derechos libres.
 Coincide con `firmware/nfc_bench`; no cambia el mapa del producto integrado.
+
+
+## Mapa integrado de tres nodos · 29/10/2026
+
+El [mapa por rol y sus condiciones](tres-nodos.md) complementa las referencias
+anteriores. Implementación en `firmware/classai_multinode`, con tabla de GPIO
+comprobada en host y perfiles de compilación separados. No traslada posiciones
+físicas entre las placas de 30 contactos y E-01 de 38 contactos.

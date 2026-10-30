@@ -1,7 +1,7 @@
 export interface Pin { id: string; kind: "source" | "ground" | "power" | "signal" | "passive"; voltage?: number; function?: string; required?: boolean; bus?: string }
 export interface Definition { id: string; name: string; pending: string; pins: Pin[] }
-export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; placement?: { x: number; y: number }; rotation?: 0 | 180; resistance?: number }
-export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][]; jumper?: "M–H" | "M–M" | "potencia" | "altavoz"; pending?: string }
+export interface Part { id: string; definition: string; inventory: string; holes: Record<string, string>; boardId?: string; pinout?: "devkit38-reference"; placement?: { x: number; y: number }; rotation?: 0 | 180; resistance?: number }
+export interface Wire { id: string; from: string; to: string; note: string; color?: WireColor; bends?: [number, number][]; jumper?: "M–H" | "M–M" | "H–H" | "potencia" | "altavoz"; pending?: string }
 export type WireColor = "red" | "black" | "orange" | "green" | "yellow" | "blue" | "purple";
 export interface Revision { at: string; note: string; snapshot: string }
 export interface Assembly { version: 1; bankId?: string; layout?: "compact" | "breadboard"; name: string; note: string; board: { rows: number; rails?: boolean; splitRails?: boolean }; catalog: Definition[]; parts: Part[]; wires: Wire[]; revisions: Revision[] }
@@ -38,7 +38,7 @@ export function parseAssembly(raw: string): Assembly {
   if (a.bankId !== undefined && (!str(a.bankId, 60) || !idPattern.test(a.bankId))) fail();
   if (!ids(a.catalog) || !ids(a.parts) || !ids(a.wires)) fail();
   for (const d of a.catalog) {
-    if (!str(d.name, 120) || !str(d.pending) || !Array.isArray(d.pins) || d.pins.length > 50 || !ids(d.pins)) fail();
+    if (!str(d.name, 120) || !str(d.pending) || !Array.isArray(d.pins) || d.pins.length > (d.id === "breadboard400" ? 450 : 50) || !ids(d.pins)) fail();
     if (d.id === "resistor" && (d.pins.length !== 2 || !d.pins.some(p => p.id === "1" && p.kind === "passive") || !d.pins.some(p => p.id === "2" && p.kind === "passive"))) fail();
     for (const p of d.pins) if (!["source", "ground", "power", "signal", "passive"].includes(p.kind) || (p.voltage !== undefined && (!Number.isFinite(p.voltage) || p.voltage < 0 || p.voltage > 24)) || (p.function !== undefined && !str(p.function, 60)) || (p.bus !== undefined && !str(p.bus, 60)) || (p.required !== undefined && typeof p.required !== "boolean")) fail();
   }
@@ -47,6 +47,8 @@ export function parseAssembly(raw: string): Assembly {
     if (!d || !str(p.inventory, 120) || !p.holes || typeof p.holes !== "object" || Array.isArray(p.holes)) fail();
     if (p.resistance !== undefined && (!Number.isFinite(p.resistance) || p.resistance <= 0 || p.resistance > 1e9)) fail();
     // Any declared component may have a verified footprint; validate each terminal below.
+    if (p.boardId !== undefined && !a.parts.some(b => b.id === p.boardId && b.definition === "breadboard400")) fail();
+    if (p.pinout !== undefined && p.pinout !== "devkit38-reference") fail();
     if (p.rotation !== undefined && p.rotation !== 0 && p.rotation !== 180) fail();
     if (p.placement !== undefined && (!p.placement || Object.keys(p.placement).sort().join() !== "x,y" || [p.placement.x,p.placement.y].some(n => !Number.isFinite(n) || n < 0 || n > 5000))) fail();
     for (const [pin, hole] of Object.entries(p.holes)) if (!d!.pins.some(x => x.id === pin) || typeof hole !== "string" || !holeValid(hole, a.board.rows)) fail();
@@ -56,7 +58,7 @@ export function parseAssembly(raw: string): Assembly {
   for (const w of a.wires) {
     if (!validEnd(w.from) || !validEnd(w.to) || !str(w.note)) fail();
     if (w.pending !== undefined && !str(w.pending)) fail();
-    if (w.jumper !== undefined && !["M–H", "M–M", "potencia", "altavoz"].includes(w.jumper)) fail();
+    if (w.jumper !== undefined && !["M–H", "M–M", "H–H", "potencia", "altavoz"].includes(w.jumper)) fail();
     if (w.color !== undefined && !["red", "black", "orange", "green", "yellow", "blue", "purple"].includes(w.color)) fail();
     if (w.bends !== undefined && (!Array.isArray(w.bends) || w.bends.length > 12 || w.bends.some(p => !Array.isArray(p) || p.length !== 2 || p.some(n => !Number.isFinite(n) || n < 0 || n > 5000)))) fail();
   }
@@ -79,11 +81,12 @@ export function analyze(a: Assembly) {
   }
   for (const p of a.parts) for (const [pin, hole] of Object.entries(p.holes)) {
     const end = `${p.id}:${pin}`;
-    join(end, `bb:${hole}`);
-    occupied.set(hole, [...(occupied.get(hole) ?? []), end]);
+    const contact = `${p.boardId ?? "bb"}:${hole}`;
+    join(end, contact);
+    occupied.set(contact, [...(occupied.get(contact) ?? []), end]);
   }
   for (const w of a.wires) {
-    for (const end of [w.from, w.to]) if (end.startsWith("bb:")) occupied.set(end.slice(3), [...(occupied.get(end.slice(3)) ?? []), w.id]);
+    for (const end of [w.from, w.to]) if (end.startsWith("bb:") || a.parts.some(p=>p.definition==="breadboard400"&&end.startsWith(`${p.id}:`))) occupied.set(end, [...(occupied.get(end) ?? []), w.id]);
     if (w.pending) findings.push({ level: "pending", text: `${w.id}: ${w.pending}` });
     else join(w.from, w.to);
   }

@@ -20,6 +20,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
 from fastapi import Path as PathParam
 from fastapi.responses import StreamingResponse
+import multinode
 
 from temperature_service import (
     ConfigurationError,
@@ -32,6 +33,7 @@ from temperature_service import (
 
 ROOM_PATTERN = r"^[a-z0-9-]+$"
 TOPICS = [(f"classai/v1/+/{kind}", 1) for kind in ("telemetry", "events", "config", "status")]
+TOPICS += [("classai/v1/+/nodes/+/snapshot", 1), ("classai/v1/+/session", 1), ("classai/v1/+/confirmed", 1)]
 TOPIC_PATTERN = re.compile(r"^classai/v1/([a-z0-9-]+)/(telemetry|events|config|status)$")
 QUEUE_SIZE = 100
 PING_SECONDS = 15
@@ -69,6 +71,23 @@ def lookup_credential(database_path: Optional[str], credential: object) -> dict:
 
 def to_sse(topic: str, payload: bytes, database_path: Optional[str], received: datetime) -> Optional[tuple[str, str, dict]]:
     """Mensaje MQTT -> (room, nombre del evento SSE, datos) o None si no se reenvía."""
+    node = re.fullmatch(r"classai/v1/([a-z0-9-]+)/nodes/([a-z0-9-]+)/snapshot", topic)
+    coordinated = re.fullmatch(r"classai/v1/([a-z0-9-]+)/(session|confirmed)", topic)
+    if node or coordinated:
+        try:
+            data = json.loads(payload)
+        except (ValueError, UnicodeDecodeError):
+            return None
+        if not isinstance(data, dict) or data.get("v") != 1:
+            return None
+        room = (node or coordinated).group(1)
+        if data.get("room") != room:
+            return None
+        if node:
+            if data.get("device") != node.group(2) or data.get("role") not in multinode.ROLES:
+                return None
+            return room, "node", data
+        return room, "session" if coordinated.group(2) == "session" else "event", data
     match = TOPIC_PATTERN.match(topic)
     if match is None:
         return None
@@ -109,7 +128,8 @@ class Hub:
                 return
             self.seen_events.append(data.get("event_id"))
         else:
-            self.cache.setdefault(room, {})[name] = data
+            key = f"node:{data['device']}" if name == "node" else name
+            self.cache.setdefault(room, {})[key] = data
         for queue in self.queues.get(room, ()):
             if queue.full():
                 queue.get_nowait()  # cliente lento: se descarta lo más viejo
@@ -121,6 +141,11 @@ class Hub:
         for name in REPLAY_ORDER:
             if name in cached:
                 queue.put_nowait((name, cached[name]))
+        for key, data in cached.items():
+            if key.startswith("node:"):
+                queue.put_nowait(("node", data))
+        if "session" in cached:
+            queue.put_nowait(("session", cached["session"]))
         self.queues.setdefault(room, set()).add(queue)
         return queue
 
@@ -146,6 +171,7 @@ async def start() -> None:
     client_id = f"{os.getenv('MQTT_API_CLIENT_ID', 'classai-api-live')}-{os.getpid()}"
     client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=client_id)
     client.reconnect_delay_set(min_delay=1, max_delay=60)
+    multinode.configure_tls(client)
     if os.getenv("MQTT_USERNAME"):
         client.username_pw_set(os.getenv("MQTT_USERNAME"), os.getenv("MQTT_PASSWORD") or None)
 
@@ -200,6 +226,16 @@ async def lifespan(app):
 router = APIRouter(tags=["live"], lifespan=lifespan)
 
 
+@router.get("/rooms/{room}/nodes", summary="Nodos por zona, origen y antigüedad")
+def nodes(room: str = PathParam(pattern=ROOM_PATTERN, max_length=32)) -> list[dict]:
+    try:
+        service = TemperatureService.from_environment()
+        with closing(service._connect()) as connection:
+            return multinode.nodes_from_connection(connection, room)
+    except (ConfigurationError, DatabaseTemporarilyUnavailableError, sqlite3.Error, OSError) as error:
+        raise HTTPException(status_code=503, detail="Estado de nodos no disponible") from error
+
+
 @router.get("/live/{room}", summary="Telemetría, eventos, config y status del aula en vivo (SSE)")
 async def live(room: str = PathParam(pattern=ROOM_PATTERN, max_length=32)) -> StreamingResponse:
     async def stream():
@@ -230,6 +266,7 @@ def rooms() -> list[dict]:
     result = []
     for row in rows:
         cached = hub.cache.get(row["id"], {})
-        result.append({**row, "status": cached.get("status", {}).get("status"),
-                       "last_telemetry": cached.get("telemetry")})
+        environment = next((value for key, value in cached.items() if key.startswith("node:") and value.get("role") == "environment"), None)
+        result.append({**row, "status": environment["status"] if environment else cached.get("status", {}).get("status"),
+                       "last_telemetry": environment.get("telemetry") if environment else cached.get("telemetry")})
     return result

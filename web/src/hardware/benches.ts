@@ -1,3 +1,4 @@
+import { completeIntegratedBenches } from "./integrated_benches";
 import example from "./example.json";
 import { nfcAssembly } from "./nfc";
 import { base, wire, route, copy, resistor, led, button } from "./bench_layout";
@@ -10,6 +11,7 @@ export interface BenchGuide {
   adaptation?: BenchGuide;
   firmware?: string;
   profile?: string;
+  role?: 1 | 2 | 3;
   action: string;
   expected: string;
   diagnosis: string;
@@ -101,3 +103,5 @@ matrixTrial.assembly.note="Ensayo A-01/B-10 del 26/10/2026. Vista frontal: cara 
 matrixTrial.action="Serial 115200: arm, happy, sad, angry; cada cara dura 5 s, stop apaga y desarma. Vista frontal/cables de entrada a la izquierda: rotate0. Si se cambia el montaje sin alimentación: cables abajo rotate90, derecha rotate180, arriba rotate270; enviar giro antes de la cara. pattern y scan se conservan como diagnóstico sin giro.";
 matrixTrial.expected="Tres caras distinguibles a intensidad mínima; apagado tras 5 s o stop. Ensayo visual confirmado por Joaquín; integración con confort pendiente.";
 matrixTrial.blockers=matrixTrial.blockers.map(s=>s.replace("Identificar placa A-01/puerto, preservar respaldo y armar sin alimentación. B-02/NFC se conserva.","A-01 identificada y respaldo propio verificado en el ensayo; reidentificar placa/puerto antes de cargar otra vez."));
+
+completeIntegratedBenches(benches);

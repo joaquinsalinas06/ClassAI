@@ -4,7 +4,7 @@ import { keepPreviousData, QueryClient, useMutation, useQuery, useQueryClient } 
 import type {
   AssistantAnswer, AttendanceRow, ChatTurn, ComfortParams, CredentialIn, CredentialOut, CurrentClass, FeedbackKind,
   FeedbackResponse, ListResponse, LiveEvent, LiveStatus, Room, SeriesMetric, SeriesPoint, SessionRow, SessionSummary,
-  SummaryRow, Telemetry, ComfortConfig,
+  SummaryRow, Telemetry, ComfortConfig, NodeSnapshot, SessionState,
 } from "./types";
 import type { Connection } from "./live";
 
@@ -62,6 +62,7 @@ const enc = encodeURIComponent;
 export const api = {
   health: () => request<{ status: string; database: string }>("/health"),
   rooms: () => request<Room[]>("/rooms"),
+  nodes: (room: string) => MOCK ? Promise.resolve([] as NodeSnapshot[]) : request<NodeSnapshot[]>(`/rooms/${enc(room)}/nodes`),
   current: (room: string) => request<CurrentClass>(`/classes/current${qs({ room })}`),
   sessions: (f: SessionFilters) =>
     request<ListResponse<SessionRow>>(`/sessions${qs({ room: f.room, course: f.course, start: f.start, end: f.end, limit: f.limit ?? 200 })}`),
@@ -153,6 +154,8 @@ export interface LiveHandlers {
   onConfig: (c: ComfortConfig) => void;
   onStatus: (s: LiveStatus) => void;
   onConnection: (c: Connection) => void;
+  onNode?: (n: NodeSnapshot) => void;
+  onSession?: (s: SessionState) => void;
 }
 
 /** Opens GET /live/{room}. EventSource reconnects by itself on network drops; on HTTP errors it
@@ -200,6 +203,8 @@ export function openLiveStream(room: string, handlers: LiveHandlers): () => void
         handlers.onConnection("reconnecting");
       }
     };
+    if (handlers.onNode) source.addEventListener("node", parse(handlers.onNode));
+    if (handlers.onSession) source.addEventListener("session", parse(handlers.onSession));
     source.addEventListener("telemetry", parse(handlers.onTelemetry));
     source.addEventListener("event", parse(handlers.onEvent));
     source.addEventListener("config", parse(handlers.onConfig));

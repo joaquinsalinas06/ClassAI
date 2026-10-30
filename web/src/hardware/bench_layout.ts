@@ -16,7 +16,7 @@ export function wire(a: Assembly, from: string, to: string, color: Wire["color"]
 }
 export function route(a: Assembly) {
   const {ends,origin}=assemblyGeometry(a);
-  const boxes=[...origin].map(([id,o])=>({left:o.type==="esp32"?o.x:o.x+8,right:o.type==="esp32"?o.x+230:o.x+238,top:o.type==="esp32"?o.y:o.y+6,bottom:o.type==="esp32"?o.y+470:o.y+50+a.catalog.find(d=>d.id===a.parts.find(p=>p.id===id)!.definition)!.pins.length*24}));
+  const boxes=[...origin].filter(([,o])=>o.type!=="breadboard400").map(([id,o])=>({left:o.type==="esp32"?o.x:o.x+8,right:o.type==="esp32"?o.x+230:o.x+238,top:o.type==="esp32"?o.y:o.y+6,bottom:o.type==="esp32"?o.y+(a.parts.find(p=>p.id===id)?.pinout?578:470):o.y+50+a.catalog.find(d=>d.id===a.parts.find(p=>p.id===id)!.definition)!.pins.length*24}));
   for(const [id,o] of origin)if(o.type==="dht11"||o.type==="pir") {
     const index=[...origin.keys()].indexOf(id);boxes[index]={left:o.x-5,right:o.x+140,top:o.y+3,bottom:o.y+180};
   }
@@ -34,7 +34,12 @@ export function route(a: Assembly) {
   }
   const clear=(u:readonly number[],v:readonly number[])=>!boxes.some(b=>u[0]===v[0]?u[0]!>b.left&&u[0]!<b.right&&Math.max(u[1]!,v[1]!)>b.top&&Math.min(u[1]!,v[1]!)<b.bottom:u[1]!>b.top&&u[1]!<b.bottom&&Math.max(u[0]!,v[0]!)>b.left&&Math.min(u[0]!,v[0]!)<b.right);
   a.wires.forEach((w,i)=>{
-    const from=ends.get(w.from)!,to=ends.get(w.to)!,margin=12+(i%5)*7;
+    const rawFrom=ends.get(w.from)!,rawTo=ends.get(w.to)!;
+    const escape=(end:string,pt:readonly[number,number]):readonly[number,number]=>{
+      const o=origin.get(end.split(":")[0]!);
+      return o?.type==="pn532" ? [o.x-12,pt[1]] : pt;
+    };
+    const from=escape(w.from,rawFrom),to=escape(w.to,rawTo),margin=12+(i%5)*7;
     const xs=[...new Set([from[0],to[0],12,...boxes.flatMap(b=>[Math.max(8,b.left-margin),b.right+margin])])].sort((x,y)=>x-y);
     const ys=[...new Set([from[1],to[1],120,...boxes.flatMap(b=>[Math.max(110,b.top-margin),b.bottom+margin])])].sort((x,y)=>x-y);
     const start=ys.indexOf(from[1])*xs.length+xs.indexOf(from[0]),target=ys.indexOf(to[1])*xs.length+xs.indexOf(to[0]);
@@ -53,6 +58,8 @@ export function route(a: Assembly) {
     if(!distance.has(target))throw new Error(`No route outside component bodies: ${a.bankId}/${w.id}`);
     const path:[number,number][]=[];let cursor=target;
     while(cursor!==start){path.unshift(point(cursor));cursor=parent.get(cursor)!;}path.unshift(point(start));
+    if(rawFrom!==from)path.unshift([rawFrom[0],rawFrom[1]]);
+    if(rawTo!==to)path.push([rawTo[0],rawTo[1]]);
     w.bends=path.filter((p,j)=>j>0&&j<path.length-1&&((path[j-1]![0]===p[0])!==(path[j+1]![0]===p[0])));
   });
   return parseAssembly(JSON.stringify(a));

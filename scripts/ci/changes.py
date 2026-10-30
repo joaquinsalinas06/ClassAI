@@ -14,7 +14,7 @@ def select(paths):
             return set(JOBS)
         if PurePosixPath(path).suffix == ".md":
             continue
-        if path.startswith("backend/"):
+        if path.startswith(("backend/", "tools/voice_agent/", "deploy/")):
             selected.update(("backend", "mqtt"))
         if path.startswith(("web/", "design/")):
             selected.add("web")

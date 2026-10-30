@@ -1,4 +1,4 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { useEffect, useReducer } from "react";
 import { api, openLiveStream, useAttendance, useCurrentClass, useParams } from "./api";
 import { CHART_METRICS } from "./comfort";
@@ -14,6 +14,8 @@ export function useLive(room: string | undefined) {
     if (!room) return;
     dispatch({ type: "reset", room });
     return openLiveStream(room, {
+      onNode: (data) => dispatch({ type: "node", data }),
+      onSession: (data) => dispatch({ type: "session", data }),
       onTelemetry: (data) => dispatch({ type: "telemetry", data }),
       onEvent: (data) => dispatch({ type: "event", data }),
       onConfig: (data) => dispatch({ type: "config", data }),
@@ -22,6 +24,10 @@ export function useLive(room: string | undefined) {
     });
   }, [room]);
 
+  const nodes = useQuery({ queryKey: ["nodes", room], queryFn: () => api.nodes(room!), enabled: !!room, refetchInterval: 10_000 });
+  useEffect(() => {
+    nodes.data?.forEach((data) => dispatch({ type: "node", data }));
+  }, [nodes.data]);
   const current = useCurrentClass(room);
   const params = useParams(room);
   const session = current.data?.session ?? null;

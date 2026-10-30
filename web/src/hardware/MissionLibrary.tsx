@@ -4,7 +4,7 @@ import { missions } from "./missions";
 
 /** One selection controls both navigation and the diagram; never keep a second active bank. */
 export function MissionLibrary({ selected, onSelect }: { selected: string; onSelect: (id: string) => void }) {
-  const groups = [...new Set(missions.map(m => m.group))];
+  const groups = [...new Set(missions.map(m => m.group))].sort((a,b)=>Number(b==="ClassAI · tres nodos")-Number(a==="ClassAI · tres nodos"));
   return <aside className="hardware-banks" aria-label="Biblioteca de bancos">
     <div className="flex h-14 shrink-0 items-center gap-2 border-b border-line px-4"><CircuitBoard size={17} className="text-fg-2"/><h2 className="text-heading">Montajes</h2><span className="ml-auto text-caption tabular-nums text-muted">{missions.length}</span></div>
     <label className="p-3 text-small lg:hidden">Banco de prueba<select aria-label="Elegir banco de prueba" className="mt-1 w-full rounded-md border border-line bg-surface p-2" value={selected} onChange={e=>onSelect(e.target.value)}>{missions.map(m=><option key={m.id} value={m.id}>{m.title}{m.trial?" · ensayado":""}</option>)}</select></label>

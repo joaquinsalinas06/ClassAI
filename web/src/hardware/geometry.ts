@@ -1,5 +1,5 @@
 import { contacts, definition, type Assembly } from "./model";
-import { devkit30, pn532SpiFrontCCW } from "./pinouts";
+import { devkit30, devkit38GPIO, pn532SpiFrontCCW } from "./pinouts";
 const { left: leftPins, right: rightPins } = devkit30;
 export function assemblyGeometry(assembly: Assembly) {
   const compact = assembly.layout === "compact", offset = compact ? 250 : 0;
@@ -15,15 +15,21 @@ export function assemblyGeometry(assembly: Assembly) {
   let espCount = 0, sensorY = 125;
   for (const p of assembly.parts) {
     const d = definition(assembly, p);
-    if (d.id === "esp32") {
+    if (d.id === "breadboard400") {
+      const x=p.placement?.x ?? 1000,y=p.placement?.y ?? 110;
+      origin.set(p.id,{x,y,type:d.id});
+      d.pins.forEach(pin=>{const pt=point(pin.id);ends.set(`${p.id}:${pin.id}`,[x+pt[0]-410-offset,y+pt[1]-110]);});
+      sensorY=Math.max(sensorY,y+assembly.board.rows*18+62);
+    } else if (d.id === "esp32") {
       const x = p.placement?.x ?? (compact ? 310 : 70), y = p.placement?.y ?? (140 + espCount * 620); espCount++;
       origin.set(p.id, { x, y, type: d.id });
       d.pins.forEach((pin, i) => {
-        const l = leftPins.indexOf(pin.id), r = rightPins.indexOf(pin.id);
+        const mapping=p.pinout ? devkit38GPIO : {left:leftPins,right:rightPins};
+        const l = mapping.left.indexOf(pin.id), r = mapping.right.indexOf(pin.id);
         ends.set(`${p.id}:${pin.id}`, l >= 0 ? [x - 8, y + 28 + l * 27] : r >= 0 ? [x + 238, y + 28 + r * 27] : [x + 238, y + 28 + i * 22]);
       });
     } else if (d.id === "pn532") {
-      const x = 940, y = 150;
+      const x = p.placement?.x ?? 940, y = p.placement?.y ?? 150;
       origin.set(p.id, { x, y, type: d.id });
       d.pins.forEach(pin => {
         const index = pn532SpiFrontCCW.indexOf(pin.id);
@@ -31,7 +37,10 @@ export function assemblyGeometry(assembly: Assembly) {
       });
       sensorY = Math.max(sensorY, 650);
     } else if (Object.keys(p.holes).length) {
-      Object.entries(p.holes).forEach(([pin, h]) => ends.set(`${p.id}:${pin}`, point(h)));
+      Object.entries(p.holes).forEach(([pin, h]) => {
+        const pt=point(h),board=p.boardId ? assembly.parts.find(b=>b.id===p.boardId) : undefined;
+        ends.set(`${p.id}:${pin}`,board ? [(board.placement?.x??1000)+pt[0]-410-offset,(board.placement?.y??110)+pt[1]-110] : pt);
+      });
     } else {
       const x = p.placement?.x ?? (compact ? (d.id === "pir" ? 50 : 1170) : 920), y = p.placement?.y ?? sensorY;
       const known = d.id === "dht11" || d.id === "pir";
@@ -42,5 +51,5 @@ export function assemblyGeometry(assembly: Assembly) {
   }
   contacts(assembly.board).forEach(h => ends.set(`bb:${h}`, point(h)));
   const height = Math.max(840, ...assembly.wires.flatMap(w=>w.bends?.map(p=>p[1]+45)??[]), 225 + assembly.board.rows * 18, espCount * 620 + 120, sensorY + 30);
-  return { point, ends, origin, height, ys, width: assembly.parts.some(p => p.definition === "pn532") ? 1370 : compact ? 1370 : assembly.bankId ? Math.max(1000,...[...origin.values()].map(p=>p.x+270)) : 1120, offset };
+  return { point, ends, origin, height, ys, width: assembly.parts.some(p => p.definition === "pn532") && !assembly.bankId?.startsWith("nodo-") ? 1370 : compact ? 1370 : assembly.bankId ? Math.max(1000,...[...origin.values()].map(p=>p.x+(assembly.bankId?.startsWith("nodo-")?(p.type==="breadboard400"?430:p.type==="pn532"?390:310):270))) : 1120, offset };
 }
