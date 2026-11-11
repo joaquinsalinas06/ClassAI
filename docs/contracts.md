@@ -232,3 +232,25 @@ POST /synthesize recibe `{text}` y devuelve WAV. El perfil de despliegue usa
 faster-whisper con modelo local y espeak-ng español; no expone su puerto a
 Internet ni descarga modelos al iniciar. El agente remuestrea a32kHz para el
 amplificador. Palabra inicial preentrenada, no reconocimiento de «ClassAI».
+
+### Cuenta y opinión del alumno (demo)
+
+La app configura un origen HTTPS mediante `CLASSAI_API_URL`; no transmite cuentas
+ni tokens de sesión por HTTP. `POST /student/register` registra nombre, apellidos,
+correo, contraseña y token HCE; `POST /student/login` autentica y verifica el mismo
+teléfono. Ambas respuestas devuelven un token de sesión temporal. El backend guarda
+hashes de contraseñas y sesiones; una credencial HCE existente se conserva y puede
+vincularse a una cuenta si aún no tiene cuenta asociada.
+
+`GET /student/classes` lista clases abiertas. `GET /student/classes/{id}` confirma
+asistencia a esa clase desde SQLite y devuelve métricas disponibles solo después de
+marcar; lecturas de nodos desconectados o de más de 15 segundos se omiten.
+`POST /student/classes/{id}/feedback` guarda la última opinión del alumno que asistió
+a una clase abierta; `GET` de esa ruta devuelve las opiniones con nombre para la
+web docente. Las opiniones no entrenan el modelo ni cambian el config de confort.
+Los endpoints autenticados reciben `Authorization: Bearer <token>`.
+
+Las tablas nuevas son aditivas en `schema.sql`; reiniciar la ingesta aplica el
+esquema sin borrar datos. Para la exposición falta configurar HTTPS confiable y el
+origen de la APK. El panel docente conserva el modelo de acceso actual de la web,
+sin autenticación propia; este flujo es una demo y no verifica identidad por correo.

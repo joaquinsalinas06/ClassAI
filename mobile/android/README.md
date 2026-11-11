@@ -147,3 +147,17 @@ logcat, incluida la credencial. El valor por defecto es 0; release nunca activa
 estas trazas. Los logs del laboratorio no se adjuntan a Git, issues ni PR.
 El toque sigue sin requerir Internet, MQTT ni enrolamiento confirmado para
 responder con el token local; eso no autoriza asistencia en el backend.
+
+## Cuenta de demostración y panel de alumno
+
+La pantalla inicial de demostración registra o autentica una cuenta, permite elegir
+una clase abierta y espera asistencia confirmada por el servidor antes de mostrar el
+panel. La sesión solo permanece en memoria; tras cerrar la app se inicia sesión de
+nuevo. El carnet HCE existente no se regenera. Si ya estaba vinculado en el backend,
+la cuenta nueva conserva ese estudiante y su historial.
+
+La app de cuentas exige `CLASSAI_API_URL` HTTPS con certificado confiable por Android;
+la URL HTTP de desarrollo de este README no permite registrar ni iniciar sesión en
+este flujo. La instalación del servidor HTTPS y la configuración de la APK se hacen
+por separado. Las opiniones llevan nombre al panel del docente y no modifican los
+ajustes de confort. Sin sensor conectado o datos recientes se muestra «Sin datos».

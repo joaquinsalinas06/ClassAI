@@ -1,13 +1,33 @@
 {$WEB_HOST} {
     encode zstd gzip
-    handle_path /api/* {
+
+    # El alumno usa Bearer; el listado nominal queda con el panel docente.
+    @student {
+        path /api/student/*
+        not {
+            method GET
+            path /api/student/classes/*/feedback
+        }
+    }
+    handle @student {
+        uri strip_prefix /api
         reverse_proxy api:8000 {
             flush_interval -1
         }
     }
     handle {
-        root * /srv
-        try_files {path} /index.html
-        file_server
+        basic_auth {
+            classai {env.DASHBOARD_PASSWORD_HASH}
+        }
+        handle_path /api/* {
+            reverse_proxy api:8000 {
+                flush_interval -1
+            }
+        }
+        handle {
+            root * /srv
+            try_files {path} /index.html
+            file_server
+        }
     }
 }

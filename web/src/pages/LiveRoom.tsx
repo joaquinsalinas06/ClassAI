@@ -1,5 +1,6 @@
 import { Cpu, Fan, Flame, PersonStanding, Snowflake, SunDim, ThumbsUp, Volume2, WifiOff, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Link, useParams as useRouteParams } from "react-router";
 import { useApp } from "../app/context";
@@ -9,7 +10,7 @@ import { AttendanceList } from "../features/AttendanceList";
 import { MetricTiles } from "../features/MetricTiles";
 import { TrendPanel } from "../features/TrendPanel";
 import { WhyRange } from "../features/WhyRange";
-import { ApiError, useFeedback } from "../lib/api";
+import { ApiError, MOCK, request, useFeedback } from "../lib/api";
 import { STATE_HINT, comfortState } from "../lib/comfort";
 import { formatDuration, formatNumber, formatRelative, formatTime, parseTime, withUnit } from "../lib/format";
 import type { ChartMetric, ComfortState, FeedbackKind, NodeSnapshot } from "../lib/types";
@@ -87,6 +88,23 @@ function FeedbackBar({ room, sessionId, disabled }: { room: string; sessionId: s
       </div>
     </div>
   );
+}
+
+function StudentFeedback({ sessionId }: { sessionId: string | null }) {
+  const reports = useQuery({
+    queryKey: ["student-feedback", sessionId],
+    queryFn: () => MOCK ? Promise.resolve({ data: [] }) : request<{ data: { full_name: string; kind: FeedbackKind; created_at: string }[] }>(`/student/classes/${encodeURIComponent(sessionId!)}/feedback`),
+    enabled: !!sessionId,
+    refetchInterval: 5_000,
+  });
+  if (!sessionId) return null;
+  return <Card className="p-4" aria-label="Opiniones de alumnos">
+    <h2 className="text-label font-semibold text-fg">Opiniones de alumnos</h2>
+    {reports.isError ? <p className="mt-2 text-small text-muted">No se pudieron cargar las opiniones.</p> :
+      reports.data?.data.length ? <ul className="mt-2 space-y-1">{reports.data.data.map((item, i) =>
+        <li key={`${item.full_name}-${item.created_at}-${i}`} className="text-small"><strong>{item.full_name}</strong>: {FEEDBACK.find(option => option.kind === item.kind)?.label ?? item.kind}</li>)}</ul> :
+        <p className="mt-2 text-small text-muted">Todavía no hay opiniones.</p>}
+  </Card>;
 }
 
 function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, presence, lastAt }: {
@@ -251,6 +269,7 @@ export function LiveRoom() {
         <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
       </div>
 
+      <StudentFeedback sessionId={state.sessionId} />
       {access && <Card className="p-4" aria-label="Estado de ClassAI">
         <div className="flex flex-wrap items-center gap-3">
           <h2 className="text-label font-semibold text-fg">ClassAI · Acceso</h2>

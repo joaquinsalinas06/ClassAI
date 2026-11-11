@@ -33,7 +33,7 @@ services:
     build: {context: .., dockerfile: deploy/Dockerfile.api}
     restart: unless-stopped
     init: true
-    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+    command: ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1", "--proxy-headers", "--forwarded-allow-ips", "172.30.231.2"]
     env_file: .env
     environment:
       DATABASE_PATH: /app/data/classai.db
@@ -56,11 +56,15 @@ services:
   web:
     build: {context: .., dockerfile: deploy/Dockerfile.web}
     restart: unless-stopped
-    environment: {WEB_HOST: "${WEB_HOST:?Set WEB_HOST}"}
+    environment:
+      WEB_HOST: "${WEB_HOST:?Set WEB_HOST}"
+      DASHBOARD_PASSWORD_HASH: "${DASHBOARD_PASSWORD_HASH:?Set DASHBOARD_PASSWORD_HASH}"
     ports: ["80:80", "443:443"]
     volumes: ["caddy-data:/data", "caddy-config:/config"]
     depends_on: [api]
-    networks: [classai]
+    networks:
+      classai:
+        ipv4_address: 172.30.231.2
   speech:
     profiles: [voice]
     build: {context: .., dockerfile: deploy/speech/Dockerfile}
@@ -75,3 +79,6 @@ volumes:
   caddy-config:
 networks:
   classai:
+    ipam:
+      config:
+        - subnet: 172.30.231.0/24

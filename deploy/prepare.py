@@ -19,8 +19,8 @@ def main():
     root = Path(__file__).resolve().parent
     if (root / '.env').exists() or (root / '.secrets').exists():
         parser.error('refusing to overwrite existing credentials')
-    if not shutil.which('openssl') or not shutil.which('mosquitto_passwd'):
-        parser.error('install openssl and mosquitto_passwd first')
+    if not all(shutil.which(program) for program in ('openssl', 'mosquitto_passwd', 'htpasswd')):
+        parser.error('install openssl, mosquitto_passwd and htpasswd first')
     os.umask(0o077)
     private = root / '.secrets'
     mqtt = private / 'mqtt'
@@ -49,7 +49,12 @@ def main():
     mqtt.chmod(0o750)
     private.chmod(0o755)  # Traversal only; CA key and device credentials stay 0600.
     (private / 'device-passwords.txt').write_text(''.join(f'{user}={passwords[user]}\n' for user in passwords if user.startswith('a101-')))
+    dashboard_password = secrets.token_urlsafe(24)
+    hashed = subprocess.run(['htpasswd', '-niBC', '12', 'classai'], input=dashboard_password + '\n',
+                            check=True, text=True, capture_output=True).stdout.strip().split(':', 1)[1]
+    (private / 'dashboard-password.txt').write_text(dashboard_password + '\n')
     (root / '.env').write_text(
+        f"DASHBOARD_PASSWORD_HASH='{hashed}'\n"
         f'WEB_HOST={args.web_host}\nMQTT_INGEST_PASSWORD={passwords["classai-ingest"]}\n'
         f'MQTT_API_PASSWORD={passwords["classai-api"]}\nADMIN_API_KEY={secrets.token_urlsafe(32)}\n'
         f'VOICE_API_KEY={secrets.token_urlsafe(32)}\nSPEECH_BASE_URL=http://speech:8090\n'

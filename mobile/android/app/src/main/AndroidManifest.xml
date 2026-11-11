@@ -18,7 +18,7 @@
         android:theme="@style/Theme.ClassAI">
 
         <activity
-            android:name=".MainActivity"
+            android:name=".StudentActivity"
             android:exported="true"
             android:launchMode="singleTop"
             android:windowSoftInputMode="adjustResize">
@@ -27,6 +27,8 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+
+        <activity android:name=".MainActivity" android:exported="false" />
 
         <service
             android:name=".ClassAiHostApduService"

@@ -18,6 +18,7 @@ from temperature_service import (
     revoke_credential,
 )
 import voice_api
+import student_api
 
 
 app = FastAPI(
@@ -32,6 +33,7 @@ app = FastAPI(
     ],
 )
 app.include_router(voice_api.router)
+app.include_router(student_api.router)
 
 try:
     import tuner

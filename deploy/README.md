@@ -8,7 +8,7 @@ broker; tres laptops solo aportan USB, salvo el agente del profesor.
 
 ## Preparación privada
 
-Instalar OpenSSL y mosquitto_passwd. En el servidor, con este checkout:
+Instalar OpenSSL, mosquitto_passwd y htpasswd (apache2-utils). En el servidor, con este checkout:
 
 ```sh
 python3 deploy/prepare.py --web-host classai.TU_DOMINIO --mqtt-host mqtt.TU_DOMINIO
@@ -16,7 +16,10 @@ python3 deploy/prepare.py --web-host classai.TU_DOMINIO --mqtt-host mqtt.TU_DOMI
 sudo chown -R 1883:1883 deploy/.secrets/mqtt
 ```
 
-El helper genera CA privada, certificado MQTT con SAN externo y `broker`,
+El helper genera una contraseña de panel en `.secrets/dashboard-password.txt`,
+protegida localmente, y configura Caddy con bcrypt. El panel y sus consultas
+requieren usuario `classai`; las rutas móviles autenticadas permanecen accesibles.
+El helper también genera CA privada, certificado MQTT con SAN externo y `broker`,
 contraseñas distintas y .env ignorado. `.secrets/device-passwords.txt` conserva
 usuarios de nodos; transferir solo su credencial a cada secrets.h y el CA PEM.
 No copiar la clave de CA a nodos. Servidor.crt expira90d; CA365d. Renovar antes
@@ -42,8 +45,8 @@ No usar `config` sin --quiet en logs compartidos: la expansión incluye secretos
 Únicamente broker8883 y Caddy80/443 se publican. API/SQLite/worker de voz son
 internos. DATABASE_PATH compartido en volumen, WAL y un worker API. Los LWT,
 snapshots y sesión sobreviven en broker; el backend repone estado desde SQLite.
-La API actual conserva sus rutas públicas de lectura/enrolamiento; este paquete
-no introduce login de estudiantes. Administrar/revocar requiere ADMIN_API_KEY y
+El proxy exige contraseña para la web y las rutas de consulta docente; no publicar
+la API directamente. Administrar/revocar requiere ADMIN_API_KEY y
 voz requiere VOICE_API_KEY. Revisar el acceso deseado antes de publicar datos
 reales del aula; el stack no se ha desplegado desde esta entrega.
 

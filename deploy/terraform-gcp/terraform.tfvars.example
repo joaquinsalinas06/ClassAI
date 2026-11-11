@@ -1,0 +1,5 @@
+# Copia a terraform.tfvars y especifica el ID del proyecto nuevo.
+project_id = "reemplazar-por-id-del-proyecto"
+
+# Valores iniciales: zona elegible para Free Tier, VM de 4 GiB (no gratuita).
+# web_source_ranges y mqtt_source_ranges quedan cerrados por defecto.

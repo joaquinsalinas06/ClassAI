@@ -158,3 +158,18 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at TEXT NOT NULL,
     context TEXT                         -- JSON: última lectura y params al momento del feedback
 );
+
+-- Cuentas de demostración y opiniones: no alteran el modelo de confort docente.
+CREATE TABLE IF NOT EXISTS student_accounts (
+    id INTEGER PRIMARY KEY, student_id INTEGER NOT NULL UNIQUE REFERENCES students(id),
+    email TEXT NOT NULL UNIQUE COLLATE NOCASE, password_hash TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS student_sessions (
+    token_hash TEXT PRIMARY KEY, account_id INTEGER NOT NULL REFERENCES student_accounts(id),
+    expires_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS student_feedback (
+    session_id TEXT NOT NULL REFERENCES sessions(id), student_id INTEGER NOT NULL REFERENCES students(id),
+    kind TEXT NOT NULL CHECK(kind IN ('ok','hot','cold','noisy','dark')), created_at TEXT NOT NULL,
+    PRIMARY KEY(session_id, student_id)
+);
