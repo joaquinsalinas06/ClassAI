@@ -4,7 +4,9 @@ run "private_by_default" {
   command = plan
 
   variables {
-    project_id = "classai-demo-example"
+    project_id         = "classai-demo-example"
+    web_source_ranges  = []
+    mqtt_source_ranges = []
   }
 
   assert {

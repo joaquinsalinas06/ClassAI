@@ -111,3 +111,37 @@ resource "google_compute_firewall" "mqtt" {
     ports    = ["8883"]
   }
 }
+
+# La ventana 23:45–00:00 contempla el retraso documentado del programador de GCP.
+data "google_project" "current" {}
+
+resource "google_project_iam_custom_role" "scheduler" {
+  role_id     = "classaiInstanceScheduler"
+  title       = "ClassAI: programar estado de VM"
+  permissions = ["compute.instances.start", "compute.instances.stop"]
+}
+
+resource "google_compute_instance_iam_member" "scheduler" {
+  instance_name = google_compute_instance.classai.name
+  zone          = var.zone
+  role          = google_project_iam_custom_role.scheduler.name
+  member        = "serviceAccount:service-${data.google_project.current.number}@compute-system.iam.gserviceaccount.com"
+}
+
+resource "google_compute_resource_policy" "nightly_stop" {
+  name   = "classai-nightly-stop"
+  region = var.region
+  instance_schedule_policy {
+    vm_stop_schedule {
+      schedule = "45 23 * * *"
+    }
+    time_zone = "America/Lima"
+  }
+}
+
+resource "google_compute_resource_policy_attachment" "nightly_stop" {
+  name       = google_compute_resource_policy.nightly_stop.name
+  instance   = google_compute_instance.classai.name
+  zone       = var.zone
+  depends_on = [google_compute_instance_iam_member.scheduler]
+}

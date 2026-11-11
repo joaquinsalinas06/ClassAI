@@ -49,3 +49,18 @@ Cambiar la configuración de red no inicia servicios ni configura TLS.
 
 Para SSH, tras autorizar IAP/OS Login: `gcloud compute ssh classai-demo --project=ID
 --zone=us-central1-a --tunnel-through-iap`. No se abre SSH a Internet.
+
+## Encender y apagar
+
+Para la instalación de Joaquín, desde el Mac ejecutar `bash ~/.codex/classai-demo/iniciar-classai.sh`. El script arranca la VM y comprueba que respondan el
+panel y MQTT; la VM vuelve a iniciar los contenedores con su política de reinicio.
+No crea una clase ni verifica que el ESP32 esté conectado.
+
+La política `classai-nightly-stop` solicita apagar la VM diariamente a las 23:45,
+hora de Lima. GCP indica que puede demorar hasta 15 minutos en iniciar la operación;
+no es una garantía absoluta ante fallos. El script no inicia la VM entre 23:45 y
+medianoche, para no saltarse ese apagado. Si se arranca por otra vía después de la
+hora programada, el siguiente apagado será al día siguiente.
+
+Detener la VM detiene el cómputo y sus servicios; el disco persistente y la IP
+estática siguen reservados y pueden generar cargos. La política no borra datos.
