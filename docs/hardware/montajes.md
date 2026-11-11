@@ -290,7 +290,7 @@ y E-01 para asistente; no se han cargado estos perfiles ni abierto puertos físi
 Los ensayos individuales comunicados no aprueban todavía convivencia, potencia,
 activación por palabra o una sesión conjunta de 60 minutos.
 
-## Ensayo local Aichac · 04/11/2026
+## Ensayo local ClassAI · 04/11/2026
 
 E-01 identificada por Joaquín y por comparación privada; respaldo original de 4 MiB
 verificado. Firmware multinodo rol acceso cargado con Wi-Fi de casa y broker LAN;

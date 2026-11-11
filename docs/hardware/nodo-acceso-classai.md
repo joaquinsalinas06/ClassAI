@@ -1,4 +1,4 @@
-# Nodo de acceso Aichac · ensayo local
+# Nodo de acceso ClassAI · ensayo local
 
 Esta variante amplía `classai_multinode`, rol 1. Se cargó en E-01 y se comprobó
 un tap NFC/HCE con asistencia persistida y relecturas duplicadas en laboratorio.

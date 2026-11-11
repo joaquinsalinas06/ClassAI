@@ -251,13 +251,13 @@ export function LiveRoom() {
         <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
       </div>
 
-      {access && <Card className="p-4" aria-label="Estado de Aichac">
+      {access && <Card className="p-4" aria-label="Estado de ClassAI">
         <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-label font-semibold text-fg">Aichac · Acceso</h2>
+          <h2 className="text-label font-semibold text-fg">ClassAI · Acceso</h2>
           <Badge tone={accessOnline ? "ok" : "neutral"}>{accessOnline ? "En línea" : "Sin conexión o lectura antigua"}</Badge>
           <span className="text-small text-muted">{!accessOnline || access.telemetry?.presence == null ? "PIR sin lectura reciente" : access.telemetry.presence ? "Movimiento detectado en la entrada" : "Sin movimiento reciente en la entrada"}</span>
         </div>
-        <p className="mt-2 text-small text-muted">{environment ? "Las métricas del aula provienen del nodo de ambiente." : "Aichac registra asistencia; temperatura y confort necesitan el nodo de ambiente."}</p>
+        <p className="mt-2 text-small text-muted">{environment ? "Las métricas del aula provienen del nodo de ambiente." : "ClassAI registra asistencia; temperatura y confort necesitan el nodo de ambiente."}</p>
       </Card>}
       {access && <div className="max-w-3xl">          <ErrorBoundary label="la asistencia">
             {inSession || state.arrivals.length > 0 ? (
