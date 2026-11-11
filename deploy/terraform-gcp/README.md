@@ -1,7 +1,7 @@
 # Base GCP para ClassAI
 
 Terraform prepara una única VM de Compute Engine en un proyecto elegido por el
-operador: red dedicada, acceso SSH mediante IAP/OS Login, IPv4 efímera y disco de
+operador: red dedicada, acceso SSH mediante IAP/OS Login, IPv4 estática y disco de
 datos separado. No instala ni inicia la aplicación, no copia credenciales y deja
 HTTP, HTTPS y MQTT cerrados por defecto. Crear la VM genera cargos; no ejecutar
 `apply` sin revisar el plan y la cuenta de facturación del proyecto.
@@ -24,9 +24,8 @@ pero no es respaldo y deja el disco facturable si se retira la VM.
 3. Desde esta carpeta, ejecutar `terraform init`, copiar `terraform.tfvars.example`
    a `terraform.tfvars`, poner el ID de proyecto y ejecutar `terraform plan`. Revisar
    los recursos y costos; solo después ejecutar `terraform apply` conscientemente.
-4. Consultar el nombre y dirección con `terraform output`. La IP es efímera y puede
-   cambiar al parar o volver a crear la VM; un cambio obliga a revisar DNS, MQTT y
-   el endpoint compilado en Android. No se asigna IP estática automáticamente.
+4. Consultar el nombre y dirección con `terraform output`. La IP está reservada; tiene costo mientras esté asignada y puede
+   generar costo adicional si se reserva sin usar. No liberarla sin actualizar DNS.
 
 El estado Terraform es local por defecto: trátalo como información privada y haz
 copia segura. Para colaboración, configurar un backend remoto con bloqueo y acceso

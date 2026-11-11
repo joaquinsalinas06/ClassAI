@@ -26,6 +26,11 @@ resource "google_compute_disk" "data" {
   }
 }
 
+resource "google_compute_address" "classai" {
+  name   = "classai-ip"
+  region = var.region
+}
+
 resource "google_compute_instance" "classai" {
   name         = "classai-demo"
   machine_type = var.machine_type
@@ -48,7 +53,9 @@ resource "google_compute_instance" "classai" {
 
   network_interface {
     subnetwork = google_compute_subnetwork.classai.id
-    access_config {}
+    access_config {
+      nat_ip = google_compute_address.classai.address
+    }
   }
 
   metadata = {

@@ -3,7 +3,7 @@ output "vm_name" {
 }
 
 output "external_ip" {
-  description = "IPv4 efímera; puede cambiar al detener y volver a arrancar la VM."
+  description = "IPv4 estática reservada para ClassAI."
   value       = google_compute_instance.classai.network_interface[0].access_config[0].nat_ip
 }
 
