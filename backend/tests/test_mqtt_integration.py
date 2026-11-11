@@ -187,6 +187,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             # Three-node extension: same real broker/process, isolated identities.
             snapshots = {}
             coordinated = []
+            node_acks = []
             subscribed = threading.Event()
             publisher.on_subscribe = lambda *args: subscribed.set()
 
@@ -199,6 +200,8 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                     snapshots[body['device']] = body
                 if message.topic.endswith('/session'):
                     coordinated.append(body)
+                if message.topic.endswith('/ack') and body.get('event_id'):
+                    node_acks.append(body)
 
             publisher.on_message = received_node
             publisher.subscribe('classai/v1/a101/#', qos=1)
@@ -211,12 +214,16 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             for role in ('access', 'environment', 'assistant'):
                 body = dict(v=1, room='a101', device=f'a101-{role}', role=role, session_id=shared_session,
                             ts=None, uptime_ms=100, lux=None, comfort=None, state='REGULAR', params_version=0)
+                if role == 'access':
+                    body.update(presence=True, light_rel=.4)
                 if role == 'environment':
                     body.update(temp_c=24, rh_pct=50, noise_rel=.2, comfort=85, light_rel=.6)
                 if role == 'assistant':
                     body['light_rel'] = .3
                 publish(f'nodes/a101-{role}/telemetry', body)
             wait_for(lambda: len(snapshots) == 3, processes)
+            assert snapshots['a101-access']['telemetry']['presence'] is True
+            assert snapshots['a101-access']['telemetry']['light_rel'] == .4
             fixture_type, fixture_token = TAPS[0]
             tap = dict(v=1, room='a101', device='a101-access', role='access', session_id=shared_session,
                        ts=None, uptime_ms=101, event='ATTENDANCE_RECORDED', event_id='three-tap',
@@ -224,6 +231,14 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             publish('nodes/a101-access/events', tap)
             publish('nodes/a101-access/events', tap)
             wait_for(lambda: rows(f"SELECT COUNT(*) FROM attendance WHERE session_id='{shared_session}'") == [(1,)], processes)
+            wait_for(lambda: len([a for a in node_acks if a['event_id'] == 'three-tap']) >= 2, processes)
+            first_acks = [a for a in node_acks if a['event_id'] == 'three-tap']
+            assert all(a['stored'] is True and a['accepted'] is True and a['outcome'] == 'new' and a['attendance_count'] == 1 for a in first_acks)
+            publish('nodes/a101-access/events', {**tap, 'event_id': 'three-tap-again'})
+            wait_for(lambda: any(a['event_id'] == 'three-tap-again' for a in node_acks), processes)
+            duplicate_ack = next(a for a in node_acks if a['event_id'] == 'three-tap-again')
+            assert duplicate_ack['outcome'] == 'duplicate' and duplicate_ack['attendance_count'] == 1
+            assert fixture_token not in json.dumps(node_acks)
             publish('nodes/a101-access/status', dict(v=1, room='a101', device='a101-access', role='access', status='offline'))
             wait_for(lambda: snapshots['a101-access']['status'] == 'offline', processes)
             assert snapshots['a101-environment']['status'] == snapshots['a101-assistant']['status'] == 'online'

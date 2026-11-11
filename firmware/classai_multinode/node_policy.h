@@ -3,7 +3,7 @@
 #include <math.h>
 namespace multinode {
 enum Role { Access=1, Environment=2, Assistant=3 };
-constexpr int accessPins[]={18,19,23,5,13,14,27,32,25,17,35};
+constexpr int accessPins[]={18,19,23,5,13,14,27,32,25,17,35,34};
 constexpr int environmentPins[]={4,34,35,27,26,18,19,23};
 constexpr int assistantPins[]={14,23,5,27,26,33,25,22,21,18,19,34,35};
 template<unsigned N> constexpr bool unique(const int (&pins)[N]) {

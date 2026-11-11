@@ -393,7 +393,10 @@ function RoomSwitcher() {
 
 function LiveIndicator() {
   const { live } = useApp();
-  const { connection, node, lastAt } = live.state;
+  const { connection, node, lastAt, nodes } = live.state;
+  const access = Object.values(nodes).find((item) => item.role === "access");
+  const accessAt = access?.received_at ? Date.parse(access.received_at) : NaN;
+  const accessOnline = access?.status === "online" && Number.isFinite(accessAt) && Date.now() - accessAt <= 15_000;
   const [, tick] = useState(0);
   useEffect(() => {
     const id = setInterval(() => tick((n) => n + 1), 5_000);
@@ -401,7 +404,8 @@ function LiveIndicator() {
   }, []);
   let tone: Tone = "regular";
   let text = "Conectando";
-  if (node === "offline") [tone, text] = ["offline", "Nodo sin conexión"];
+  if (connection === "open" && accessOnline && node !== "online") [tone, text] = ["ok", "Acceso en línea"];
+  else if (node === "offline") [tone, text] = ["offline", "Nodo de ambiente sin conexión"];
   else if (connection === "open" && node === "online") [tone, text] = ["ok", "En vivo"];
   else if (connection === "open") [tone, text] = ["neutral", "Esperando datos"];
   else if (connection === "closed") [tone, text] = ["offline", "Sin flujo en vivo"];

@@ -137,11 +137,19 @@ def handle(message, received, database, accumulator, client):
             owner = connection.execute("SELECT room FROM sessions WHERE id=?", (event["session_id"],)).fetchone()
             if owner and owner[0] != room:
                 raise ValueError("session belongs to another room")
-            store_event(connection, event, json.dumps(data), at)
+            result = store_event(connection, event, json.dumps(data), at)
+            if not existing:
+                outcome = ("new" if result == "asistencia registrada" else
+                           "duplicate" if result == "asistencia duplicada (mismo estudiante)" else "rejected")
+                count = connection.execute("SELECT COUNT(*) FROM attendance WHERE session_id=?", (event["session_id"],)).fetchone()[0]
+                connection.execute("INSERT INTO node_event_outcomes(event_id,outcome,attendance_count) VALUES (?,?,?)", (event["event_id"], outcome, count))
+            saved_outcome = connection.execute("SELECT outcome,attendance_count FROM node_event_outcomes WHERE event_id=?", (event["event_id"],)).fetchone()
             rejection = connection.execute("SELECT reason FROM attendance_rejections WHERE event_id=?", (event["event_id"],)).fetchone()
             accepted = rejection is None
             ack = {"v": 1, "room": room, "device": device, "event_id": event["event_id"], "stored": True,
-                   "accepted": accepted, "reason": rejection[0] if rejection else None}
+                   "accepted": accepted, "reason": rejection[0] if rejection else None,
+                   "outcome": saved_outcome[0] if saved_outcome else None,
+                   "attendance_count": saved_outcome[1] if saved_outcome else None}
             confirmed = {k: v for k, v in data.items() if k != "credential"}
             confirmed.update(received_at=at, accepted=accepted)
             if rejection:

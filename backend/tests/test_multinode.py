@@ -118,3 +118,37 @@ def test_snapshots_isolate_nodes_and_keep_telemetry_on_disconnect(system):
 def test_invalid_node_messages(system, role, kind, fields):
     with pytest.raises(ValueError):
         send(system, role, kind, **fields)
+
+
+def test_attendance_outcome_and_count_are_stable_on_retry(system):
+    db, client, acc, calls = system
+    send(system, 'access', 'commands', request_id='start-outcome', action='start')
+    sid = db.write(lambda c: multinode.session_state(c, 'a101'))['session_id']
+    fields = dict(event='ATTENDANCE_RECORDED', session_id=sid,
+                  credential={'type': 'nfc_card_uid', 'token': '01020304'})
+    send(system, 'access', 'events', event_id='first', **fields)
+    first = calls[-2][1]
+    assert (first['outcome'], first['attendance_count']) == ('new', 1)
+    send(system, 'access', 'events', event_id='second', **fields)
+    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('duplicate', 1)
+    send(system, 'access', 'events', event_id='first', **fields)
+    assert calls[-2][1] == first
+    send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id='unknown', session_id=sid,
+         credential={'type': 'nfc_card_uid', 'token': 'DEADBEEF'})
+    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('rejected', 1)
+
+
+def test_fifth_student_ack_and_duplicate_do_not_add_attendance(system):
+    db, client, acc, calls = system
+    send(system, 'access', 'commands', request_id='start-five', action='start')
+    sid = db.write(lambda c: multinode.session_state(c, 'a101'))['session_id']
+    for i in range(1, 6):
+        token = f'{i + 100:08X}'
+        db.write(lambda c: enroll_credential(c, f'code{i}', f'Student {i}', 'nfc_card_uid', token))
+        send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id=f'event{i}', session_id=sid,
+             credential={'type': 'nfc_card_uid', 'token': token})
+        assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('new', i)
+    send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id='again', session_id=sid,
+         credential={'type': 'nfc_card_uid', 'token': f'{105:08X}'})
+    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('duplicate', 5)
+    assert db.write(lambda c: c.execute('SELECT COUNT(*) FROM attendance').fetchone()[0]) == 5

@@ -9,6 +9,10 @@
 #include <ClassAIMultinode.h>
 #include <time.h>
 #include "secrets.h"
+#include "access_animation.h"
+#ifndef ACCESS_LDR_VALIDATED
+#define ACCESS_LDR_VALIDATED 0
+#endif
 #ifndef CLASSAI_ROLE
 #error "Compile with CLASSAI_ROLE=1 (access), 2 (environment) or 3 (assistant)"
 #endif
@@ -49,6 +53,9 @@ ComfortParams params=comfortDefaults();
 volatile bool networkUp=false;
 uint32_t bootCount=0,eventSequence=0,sessionRevision=0;
 bool filesystemReady=false,fanOn=false,motionSeen=false;
+#if CLASSAI_ROLE == 1
+bool nfcReady=false;
+#endif
 char feedbackEventId[120]="";
 volatile bool armed=false;
 volatile int displayComfort=-1;
@@ -95,7 +102,10 @@ void acknowledge(JsonDocument& ack){
   File file=LittleFS.open(path,"r");if(!file)continue;
   JsonDocument event;auto error=deserializeJson(event,file);file.close();
   if(!error&&strcmp(event["event_id"]|"",id)==0){
-   if(LittleFS.remove(path)&&!strcmp(id,feedbackEventId)){feedback=ack["accepted"]==true?2:3;feedbackAt=millis();}
+   if(LittleFS.remove(path)&&!strcmp(id,feedbackEventId)){const char* outcome=ack["outcome"]|"";
+    const int count=ack["attendance_count"]|0;
+    feedback=ack["accepted"]!=true?3:!strcmp(outcome,"duplicate")?4:!strcmp(outcome,"new")&&count>0&&count%5==0?5:2;
+    feedbackAt=millis();}
    break;
   }
  }
@@ -176,27 +186,34 @@ void matrixRegister(uint8_t reg,uint8_t value){
  digitalWrite(27,LOW);for(int bit=15;bit>=0;--bit){digitalWrite(14,LOW);digitalWrite(13,((uint16_t(reg)<<8|value)>>bit)&1);digitalWrite(14,HIGH);}digitalWrite(14,LOW);digitalWrite(27,HIGH);
 }
 void accessFeedback(){
- const bool showing=feedback&&uint32_t(millis()-feedbackAt)<2000;
- digitalWrite(25,showing&&feedback==2);
+ const uint32_t now=millis();
+ lock();const int result=feedback;const uint32_t at=feedbackAt;unlock();
+ const bool showing=result==1||(result&&uint32_t(now-at)<2000);
+ const bool motion=millis()>=60000&&digitalRead(35)==HIGH;
+ static uint32_t lastMotion=0;if(motion)lastMotion=now;
+ const bool awake=lastMotion&&uint32_t(now-lastMotion)<15000;
+ const access_ui::Expression expression=showing?(result==1?access_ui::Waiting:result==2?access_ui::Success:result==4?access_ui::Duplicate:result==5?access_ui::Celebration:result==6?access_ui::NoSession:access_ui::Rejected):(awake?access_ui::Awake:access_ui::Sleeping);
+ const auto f=access_ui::frame(expression,showing?uint32_t(now-at):now);
+ digitalWrite(25,f.led?HIGH:LOW);
  if(armed&&BUZZER_VALIDATED){
-  const bool sound=showing&&feedback==2&&uint32_t(millis()-feedbackAt)<120;
 #if BUZZER_PASSIVE
-  ledcWriteTone(17,sound?2000:0);
+  ledcWriteTone(17,f.tone);
 #else
-  digitalWrite(17,sound?HIGH:LOW);
+  digitalWrite(17,f.tone?HIGH:LOW);
 #endif
  }
+ static bool matrixWasArmed=false;
+ if(!armed)matrixWasArmed=false;
  if(armed&&MATRIX_VALIDATED){
-  static int shown=-100;int value=showing?feedback:10+(displayComfort>=80?2:1);
-  if(!showing&&(displayComfort<0||multinode::elapsed(millis(),displayAt,15000))){matrixRegister(0x0c,0);shown=-100;return;}
-  if(value==shown)return;shown=value;
-  const uint8_t happy[]={0,0x66,0x66,0,0x42,0x24,0x18,0},sad[]={0,0x66,0x66,0,0x18,0x24,0x42,0};
-  for(unsigned row=0;row<8;++row)matrixRegister(row+1,value==1?uint8_t(1u<<row):(value==2||value==12?happy[row]:sad[row]));
-  matrixRegister(0x0c,1);
+  static uint8_t previous[8]={};static bool valid=false;static int brightness=-1;
+  if(!matrixWasArmed){valid=false;brightness=-1;matrixWasArmed=true;}
+  int level=ACCESS_LDR_VALIDATED?access_ui::brightness(analogRead(34)):0;
+  if(level!=brightness){matrixRegister(0x0a,level);brightness=level;}
+  if(!valid||memcmp(previous,f.row,8)!=0){for(unsigned row=0;row<8;++row)matrixRegister(row+1,f.row[row]);memcpy(previous,f.row,8);valid=true;matrixRegister(0x0c,1);}
  }
 }
 void pollAccess(){
- static bool ready=nfcBegin();static uint32_t polled=0;
+ static bool ready=nfcBegin();nfcReady=ready;static uint32_t polled=0;
  if(ready&&multinode::elapsed(millis(),polled,60)){
   polled=millis();NfcCredential credential;
   if(nfcPoll(credential)){
@@ -207,7 +224,7 @@ void pollAccess(){
     strlcpy(feedbackEventId,id,sizeof(feedbackEventId));event["event"]="ATTENDANCE_RECORDED";event["event_id"]=id;event["credential"]["type"]=credential.type;event["credential"]["token"]=credential.token;
     saved=saveEvent(event);
    }
-   feedback=saved?1:3;feedbackAt=millis();unlock();
+   feedback=!sessionId[0]?6:saved?1:3;feedbackAt=millis();unlock();
   }
  }
  static int previous=HIGH,stable=HIGH;static uint32_t changed=0;
@@ -293,7 +310,7 @@ void disarm(){
 }
 void hardwareSetup(){
 #if CLASSAI_ROLE == 1
- pinMode(32,INPUT_PULLUP);pinMode(35,INPUT);digitalWrite(25,LOW);pinMode(25,OUTPUT);
+ pinMode(32,INPUT_PULLUP);pinMode(35,INPUT);if(ACCESS_LDR_VALIDATED){pinMode(34,INPUT);analogReadResolution(12);}digitalWrite(25,LOW);pinMode(25,OUTPUT);
  if(MATRIX_VALIDATED){digitalWrite(27,HIGH);pinMode(27,OUTPUT);pinMode(14,OUTPUT);pinMode(13,OUTPUT);matrixRegister(0x0c,0);}
  if(BUZZER_VALIDATED){digitalWrite(17,LOW);pinMode(17,OUTPUT);
 #if BUZZER_PASSIVE
@@ -316,6 +333,7 @@ void sample(){
  doc["lux"]=nullptr;doc["comfort"]=nullptr;doc["state"]="REGULAR";doc["params_version"]=p.paramsVersion;
 #if CLASSAI_ROLE == 1
  if(millis()>=60000)doc["presence"]=motionSeen;else doc["presence"]=nullptr;
+ if(ACCESS_LDR_VALIDATED)doc["light_rel"]=analogRead(34)/4095.0;else doc["light_rel"]=nullptr;
 #else
  doc["light_rel"]=analogRead(35)/4095.0;
 #if CLASSAI_ROLE == 2
@@ -400,8 +418,13 @@ void loop(){
   if(ch!='\n'){if(used+1<sizeof(command))command[used++]=ch;else {overflow=true;disarm();}continue;}
   command[used]=0;used=0;
   if(overflow){overflow=false;disarm();continue;}
-  if(!strcmp(command,"arm")){
-   armed=true;
+  if(!strcmp(command,"status")){
+#if CLASSAI_ROLE == 1
+   lock();bool inSession=sessionId[0]!=0;unlock();
+   Serial.printf("STATUS wifi=%d mqtt=%d nfc=%d storage=%d session=%d pir=%d\n",WiFi.status()==WL_CONNECTED,networkUp,nfcReady,filesystemReady,inSession,millis()>=60000?digitalRead(35):-1);
+#endif
+  }else if(!strcmp(command,"arm")){
+   armed=true;Serial.println("ARMADO");
 #if CLASSAI_ROLE == 1
    if(MATRIX_VALIDATED){matrixRegister(0x0f,0);matrixRegister(0x09,0);matrixRegister(0x0b,7);matrixRegister(0x0a,0);}
 #endif

@@ -74,6 +74,13 @@ CREATE TABLE IF NOT EXISTS attendance (
     UNIQUE (session_id, student_id)
 );
 
+-- Resultado estable para reenviar el mismo ACK tras un corte o reinicio.
+CREATE TABLE IF NOT EXISTS node_event_outcomes (
+    event_id TEXT PRIMARY KEY REFERENCES events(event_id),
+    outcome TEXT NOT NULL CHECK (outcome IN ('new', 'duplicate', 'rejected')),
+    attendance_count INTEGER NOT NULL
+);
+
 -- Lecturas rechazadas (credencial desconocida, revocada, sesión cerrada...). Sirve para enrolar.
 CREATE TABLE IF NOT EXISTS attendance_rejections (
     id INTEGER PRIMARY KEY AUTOINCREMENT,

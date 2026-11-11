@@ -211,6 +211,9 @@ export function LiveRoom() {
 
   const reading = state.latest ?? current.data?.latest_reading ?? null;
   const environment = Object.values(state.nodes).find(node => node.role === "environment");
+  const access = Object.values(state.nodes).find(node => node.role === "access");
+  const accessAt = parseTime(access?.received_at);
+  const accessOnline = access?.status === "online" && accessAt != null && now - accessAt <= 15_000;
   const environmentAt = parseTime(environment?.received_at);
   const offline = (environment != null && (!environmentAt || now - environmentAt > 15_000)) || state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
   const config = state.config ?? params.data?.current ?? null;
@@ -248,6 +251,26 @@ export function LiveRoom() {
         <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
       </div>
 
+      {access && <Card className="p-4" aria-label="Estado de Aichac">
+        <div className="flex flex-wrap items-center gap-3">
+          <h2 className="text-label font-semibold text-fg">Aichac · Acceso</h2>
+          <Badge tone={accessOnline ? "ok" : "neutral"}>{accessOnline ? "En línea" : "Sin conexión o lectura antigua"}</Badge>
+          <span className="text-small text-muted">{!accessOnline || access.telemetry?.presence == null ? "PIR sin lectura reciente" : access.telemetry.presence ? "Movimiento detectado en la entrada" : "Sin movimiento reciente en la entrada"}</span>
+        </div>
+        <p className="mt-2 text-small text-muted">{environment ? "Las métricas del aula provienen del nodo de ambiente." : "Aichac registra asistencia; temperatura y confort necesitan el nodo de ambiente."}</p>
+      </Card>}
+      {access && <div className="max-w-3xl">          <ErrorBoundary label="la asistencia">
+            {inSession || state.arrivals.length > 0 ? (
+              <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
+            ) : (
+              <Card className="p-4">
+                <h2 className="text-label font-semibold text-fg">Asistencia</h2>
+                <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase en el nodo.</p>
+                <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
+              </Card>
+            )}
+          </ErrorBoundary>
+      </div>}
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="lg:col-span-5 xl:col-span-4">
           <ComfortPanel
@@ -298,7 +321,7 @@ export function LiveRoom() {
           </ErrorBoundary>
         </div>
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-4">
-          <ErrorBoundary label="la asistencia">
+          {!access && <ErrorBoundary label="la asistencia">
             {inSession || state.arrivals.length > 0 ? (
               <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
             ) : (
@@ -308,16 +331,16 @@ export function LiveRoom() {
                 <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
               </Card>
             )}
-          </ErrorBoundary>
+          </ErrorBoundary>}
           {Object.keys(state.nodes).length > 0 && <ZoneNodes nodes={state.nodes} now={now} />}
-          <NodePanel
+          {(environment || state.latest) && <NodePanel
             device={state.latest?.device ?? `esp32-${room}`}
             uptimeMs={state.latest?.uptime_ms}
             version={reading?.params_version}
             configVersion={config?.params_version}
             irC={reading?.ir_object_c}
             online={!offline && state.node === "online"}
-          />
+          />}
         </div>
       </div>
     </div>

@@ -10,6 +10,7 @@
 // Replace with your CA PEM; no insecure certificate fallback.
 static const char MQTT_ROOT_CA[] = "-----BEGIN CERTIFICATE-----\nREPLACE_WITH_CA\n-----END CERTIFICATE-----\n";
 // Enable each branch only after its actual circuit/supply has been reviewed.
+#define ACCESS_LDR_VALIDATED 0 // GPIO34: divisor 3V3, solo tras revisión física
 #define MATRIX_VALIDATED 0
 #define BUZZER_VALIDATED 0
 #define RELAY_VALIDATED 0

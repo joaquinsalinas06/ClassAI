@@ -289,3 +289,21 @@ software de [tres-nodos.md](tres-nodos.md) usa B-02 para acceso, A-01 para ambie
 y E-01 para asistente; no se han cargado estos perfiles ni abierto puertos físicos.
 Los ensayos individuales comunicados no aprueban todavía convivencia, potencia,
 activación por palabra o una sesión conjunta de 60 minutos.
+
+## Ensayo local Aichac · 04/11/2026
+
+E-01 identificada por Joaquín y por comparación privada; respaldo original de 4 MiB
+verificado. Firmware multinodo rol acceso cargado con Wi-Fi de casa y broker LAN;
+matriz y buzzer habilitados según montaje ya ensayado, LDR deshabilitada. PN532
+SPI 18/19/23/5, PIR35, LED25, matriz 13/14/27 y buzzer17 comunicados por Joaquín.
+Partición de cola verificada vacía antes de inicializar LittleFS. Nodo online,
+lector y almacenamiento listos; sesión local iniciada en `nfc-lab`.
+
+Joaquín comunicó un tap con el teléfono: SQLite registra una asistencia
+`android_hce`; relecturas se clasificaron como duplicadas, sin otra asistencia ni
+rechazos. PIR ha comunicado estados, sin validar cobertura ni sensibilidad. No se
+han medido alimentación, corriente de buzzer ni niveles lógicos de matriz; el
+uso directo observado no sustituye esa comprobación. Broker local de prueba sin
+TLS/autenticación no es configuración de producción. Credenciales, IP privada,
+identificadores y respaldo se mantienen fuera de este registro. La sesión queda
+abierta para continuar; desmontaje pendiente.

@@ -174,7 +174,8 @@ Telemetría conserva v/device/room/session_id/ts/uptime_ms y añade `role`.
 Ambiente es la única autoridad de temp_c/rh_pct/noise_rel/comfort/state; acceso
 y asistente envían comfort:null. Solo ambiente alimenta las métricas comunes
 de presencia/confort. Luz relativa de cada nodo se conserva por device:
-`light_rel` número0..1 o null. ADC35/4095 con divisor orientado para subir al
+`light_rel` número0..1 o null. ADC34 en acceso, ADC35 en ambiente/asistente,
+con divisor orientado para subir al
 iluminar; no es lux, porcentaje de iluminancia ni comparación calibrada entre
 unidades. Todos estos perfiles envían lux:null. Su peso queda fuera del confort
 hasta calibración explícita. Fan publica `fan_on` real y `fan_enabled`; el
@@ -206,7 +207,10 @@ SESSION_STARTED y la nueva coordinación simultáneamente sobre la misma aula;
 migrar cuando no exista clase abierta.
 
 ACK comando incluye request_id/stored/accepted; ACK asistencia incluye
-event_id/stored/accepted/reason y destino device/room/v. Solo después de ACK
+event_id/stored/accepted/reason y destino device/room/v. Para eventos nuevos
+incluye `outcome` (`new`, `duplicate`, `rejected`) y `attendance_count` del
+momento del commit; ambos se guardan para ACK idénticos en reintentos. Eventos
+históricos sin resultado guardado devuelven ambos campos null. Solo después de ACK
 stored:true se borra su archivo de outbox. Reenvíos con igual event_id deben
 conservar payload; reutilizarlo con otro contenido se rechaza. Credencial,
 sesión desconocida/cerrada o token revocado producen accepted:false. No se
