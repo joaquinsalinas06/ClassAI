@@ -67,7 +67,7 @@ export function Sessions() {
     <>
       <PageHeader title="Sesiones" description="Cada clase registrada por los nodos, con su confort, asistencia y tiempo en alerta." />
 
-      <div className="mb-4 flex flex-wrap items-center gap-2">
+      <div className="mb-3 flex flex-wrap items-center gap-2">
         <ListFilter size={15} className="text-muted" aria-hidden />
         <label className="sr-only" htmlFor="f-room">Aula</label>
         <select id="f-room" value={room} onChange={(e) => set("room", e.target.value)} className={selectClass} style={{ backgroundImage: chevron }}>
@@ -85,7 +85,7 @@ export function Sessions() {
             Limpiar filtros
           </Button>
         )}
-        <div className="ml-auto flex items-center gap-4 text-small text-muted">
+        <div className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 border-t border-line-subtle pt-2 text-small text-muted xl:ml-auto xl:w-auto xl:border-0 xl:pt-0">
           <span><span className="num font-medium text-fg">{rows.length}</span> sesiones</span>
           <span>Confort medio <span className="num font-medium text-fg">{avgComfort != null ? formatNumber(avgComfort) : "—"}</span></span>
           <span><span className="num font-medium text-fg">{alertCount}</span> con alertas</span>
@@ -105,7 +105,7 @@ export function Sessions() {
             action={filtered ? <Button size="sm" onClick={() => setParams({}, { replace: true })}>Limpiar filtros</Button> : undefined}
           />
         ) : (
-          <div className="max-h-[calc(100dvh-260px)] overflow-y-auto">
+          <div className="sm:max-h-[calc(100dvh-260px)] sm:overflow-y-auto">
             <Table aria-label="Sesiones">
               <thead>
                 <tr>

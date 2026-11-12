@@ -4,7 +4,7 @@ import { cn } from "./cn";
 /** Panel: the one container. Hairline border, radius lg, almost no shadow — hierarchy comes from type and space. */
 export function Card({ className, children, ...rest }: HTMLAttributes<HTMLElement>) {
   return (
-    <section className={cn("rounded-lg border border-line bg-surface shadow-xs", className)} {...rest}>
+    <section className={cn("min-w-0 rounded-lg border border-line bg-surface", className)} {...rest}>
       {children}
     </section>
   );
@@ -22,7 +22,7 @@ export function CardHeader({ title, description, icon, actions, className }: {
       {icon && <span className="text-muted">{icon}</span>}
       <div className="min-w-0 flex-1">
         <h2 className="truncate text-label font-semibold text-fg">{title}</h2>
-        {description && <p className="truncate text-caption text-muted">{description}</p>}
+        {description && <p className="text-pretty text-caption text-muted">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 items-center gap-1.5">{actions}</div>}
     </header>

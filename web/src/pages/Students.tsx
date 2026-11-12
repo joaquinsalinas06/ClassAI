@@ -143,7 +143,7 @@ export function Students() {
 
   return (
     <>
-      <PageHeader title="Estudiantes" description="Quiénes asisten a las clases y qué credenciales usan para marcar. Enrolar y revocar requiere la clave de administrador." />
+      <PageHeader title="Estudiantes" description="Padrón de estudiantes y credenciales de asistencia. Enrolar o revocar requiere la clave de administrador." />
 
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-7">

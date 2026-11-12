@@ -7,6 +7,7 @@ import { ApiError, api } from "../lib/api";
 import type { ChatTurn } from "../lib/types";
 import { Button } from "../ui/Button";
 import { Card } from "../ui/Card";
+import { PageHeader } from "../ui/PageHeader";
 import { cn } from "../ui/cn";
 import { EmptyState } from "../ui/EmptyState";
 import { Kbd } from "../ui/Kbd";
@@ -108,17 +109,15 @@ export function Assistant() {
 
   return (
     <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-[760px] flex-col">
-      <div className="mb-4 flex items-end justify-between gap-4">
-        <div>
-          <h1 className="text-title text-fg">Asistente</h1>
-          <p className="mt-1 text-body text-muted">Pregunta por aulas, clases, asistencia o por qué el confort tiene esos rangos. Solo consulta datos; nunca cambia nada.</p>
-        </div>
-        {!empty && (
+      <PageHeader
+        title="Asistente"
+        description="Consulta los datos de tus aulas, sesiones y asistencia."
+        actions={!empty && (
           <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={() => setMessages([])}>
             Nueva conversación
           </Button>
         )}
-      </div>
+      />
 
       {unavailable && (
         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mb-4 flex items-start gap-3 rounded-lg border border-line bg-sunken p-3.5" role="status">
@@ -162,7 +161,7 @@ export function Assistant() {
                 <motion.li key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={SPRING.gentle} className={cn("flex gap-3", m.role === "user" && "justify-end")}>
                   {m.role === "assistant" && <span className="mt-0.5"><LogoMark size={26} /></span>}
                   {m.role === "user" ? (
-                    <p className="max-w-[80%] rounded-lg rounded-br-sm bg-selected px-3.5 py-2.5 text-body text-fg">{m.content}</p>
+                    <p className="max-w-[85%] wrap-anywhere rounded-lg rounded-br-sm bg-selected px-3.5 py-2.5 text-body text-fg">{m.content}</p>
                   ) : (
                     <div className="min-w-0 flex-1 pt-0.5">
                       <div className={cn("text-body leading-[22px] text-fg-2", m.error && "text-alert-text")}>
@@ -198,7 +197,7 @@ export function Assistant() {
         <div ref={endRef} />
       </div>
 
-      <Card className="sticky bottom-4 mt-4 p-2 shadow-md">
+      <Card className="sticky bottom-4 mt-4 p-2 focus-within:border-line-strong focus-within:ring-2 focus-within:ring-info/30">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -225,7 +224,7 @@ export function Assistant() {
               }
             }}
             placeholder={unavailable ? "El asistente no está disponible" : "Escribe una pregunta…"}
-            className="max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2 py-2 text-body text-fg outline-none placeholder:text-faint disabled:cursor-not-allowed"
+            className="max-h-40 min-h-9 min-w-0 flex-1 resize-none bg-transparent px-2 py-2 text-body text-fg outline-none placeholder:text-faint disabled:cursor-not-allowed"
           />
           <span className="hidden items-center gap-1 pb-2 text-caption text-muted sm:flex"><Kbd>↵</Kbd> enviar</span>
           <Button type="submit" variant="primary" aria-label="Enviar pregunta" disabled={!input.trim() || ask.isPending || !!unavailable} className="size-9 px-0">

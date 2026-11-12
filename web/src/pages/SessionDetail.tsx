@@ -133,7 +133,7 @@ export function SessionDetail() {
               {formatDateLong(startedAt)} · <span className="num">{formatTime(startedAt)}–{finished ? formatTime(endedAt) : "ahora"}</span>
               {finished && <> · {formatDuration(finished.minutes)}</>}
             </p>
-            <p className="mt-1 font-mono text-caption text-muted">{id}</p>
+            <p className="mt-1 wrap-anywhere font-mono text-caption text-muted">{id}</p>
           </div>
           {finished ? (
             <Badge tone="neutral">Finalizada · parámetros v{found.params_version ?? "—"}</Badge>

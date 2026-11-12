@@ -24,6 +24,7 @@ const pages = [
   ["estudiantes", "/estudiantes"],
   ["design", "/design"],
   ["montajes", "/montajes"],
+  ["no-encontrada", "/ruta-inexistente"],
 ];
 const only = process.env.ONLY?.split(",");
 const errors = [];
@@ -31,7 +32,7 @@ const browser = await chromium.launch();
 
 for (const [vpName, viewport, list] of [
   ["desktop", { width: 1440, height: 900 }, pages],
-  ["mobile", { width: 390, height: 844 }, pages.filter(([n]) => ["resumen", `aula-${roomIds[0]}`, "sesiones", "asistente", "montajes"].includes(n))],
+  ["mobile", { width: 390, height: 844 }, pages],
 ]) {
   for (const theme of ["light", "dark"]) {
     const context = await browser.newContext({ viewport, deviceScaleFactor: vpName === "mobile" ? 2 : 1, colorScheme: theme });
@@ -54,16 +55,21 @@ for (const [vpName, viewport, list] of [
         await page.goto(`${base}${path}`);
       }
       if (name === "asistente") {
-        await page.waitForTimeout(600);
-        await page.getByRole("button", { name: /calurosa/ }).click().catch(() => {});
+        await page.getByRole("button", { name: /calurosa/ }).click({ timeout: 3000 });
       }
       if (name === "sesion-detalle") {
-        await page.waitForTimeout(1200);
         const select = page.getByLabel("Sesión para comparar");
         const value = await select.locator("option").nth(1).getAttribute("value").catch(() => null);
         if (value) await select.selectOption(value);
       }
-      await page.waitForTimeout(name.startsWith("aula") ? 4200 : 2600);
+      await page.locator("main").waitFor();
+      if (name === "resumen" || name === "sesiones" || name === "estudiantes" || name.startsWith("aula-")) {
+        await page.locator("main .ds-skeleton").first().waitFor({ state: "hidden", timeout: 15000 });
+      }
+      if (name === "asistente") await page.getByLabel("Pensando").waitFor({ state: "hidden" });
+      await page.evaluate(() => document.fonts.ready);
+      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
+      if (overflow > 1) errors.push(`${vpName}/${theme} ${name}: horizontal page overflow (${overflow}px)`);
       await page.screenshot({ path: `${out}/${name}-${vpName}-${theme}.png`, fullPage: true });
       console.log(`saved ${name}-${vpName}-${theme}`);
     }

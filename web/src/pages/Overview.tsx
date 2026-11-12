@@ -1,6 +1,5 @@
 import { useQueries } from "@tanstack/react-query";
 import { ArrowUpRight, CircleCheck, Clock, TriangleAlert, UsersRound, WifiOff, type LucideIcon } from "lucide-react";
-import { motion } from "motion/react";
 import { useMemo } from "react";
 import { Link } from "react-router";
 import { ComfortBar } from "../charts/ComfortBar";
@@ -19,85 +18,82 @@ import { EmptyState } from "../ui/EmptyState";
 import { MetricIcon } from "../ui/icons";
 import { PageHeader } from "../ui/PageHeader";
 import { Skeleton } from "../ui/Skeleton";
-import { SPRING } from "../ui/motion";
 
 const TILE_LABEL = { temp_c: "Temp.", rh_pct: "Humedad", lux: "Luz", noise_rel: "Ruido" } as const;
 
-function RoomTile({ room, current, config, index, trend }: { room: Room; current?: CurrentClass; config?: ComfortConfig; index: number; trend?: Point[] }) {
+function RoomTile({ room, current, config, trend }: { room: Room; current?: CurrentClass; config?: ComfortConfig; trend?: Point[] }) {
   const t = room.last_telemetry;
   const offline = room.status === "offline";
   const session = current?.session;
   const lastAt = t?.received_at ?? t?.ts;
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING.gentle, delay: index * 0.05 }}>
-      <Link
-        to={`/aula/${room.id}`}
-        className="group flex h-full flex-col rounded-lg border border-line bg-surface shadow-xs transition-[border-color,box-shadow] duration-150 hover:border-line-strong hover:shadow-sm"
-      >
-        <div className="flex items-start gap-4 p-4 pb-3">
-          <ComfortRing value={t?.comfort} state={t?.state} offline={offline} size={60} />
-          <div className="min-w-0 flex-1 pt-0.5">
-            <div className="flex items-center gap-2">
-              <h2 className="truncate text-heading text-fg">{room.name ?? room.id}</h2>
-              <ArrowUpRight size={15} className="ml-auto shrink-0 text-faint transition-colors group-hover:text-fg" aria-hidden />
-            </div>
-            <p className="mt-0.5 truncate text-small text-muted">
-              {offline
-                ? `Sin conexión · ${formatRelative(lastAt)}`
-                : session
-                  ? `${session.course ?? "Clase"} · desde las ${formatTime(session.started_at)}`
-                  : "Sin clase en curso"}
-            </p>
-            <div className="mt-2">
-              <StateBadge size="sm" state={t?.state} offline={offline} />
-            </div>
+    <Link
+      to={`/aula/${room.id}`}
+      className="group flex h-full flex-col rounded-lg border border-line bg-surface shadow-xs transition-[border-color,box-shadow] duration-150 hover:border-line-strong hover:shadow-sm"
+    >
+      <div className="flex items-start gap-4 p-4 pb-3">
+        <ComfortRing value={t?.comfort} state={t?.state} offline={offline} size={60} />
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className="flex items-center gap-2">
+            <h2 className="truncate text-heading text-fg">{room.name ?? room.id}</h2>
+            <ArrowUpRight size={15} className="ml-auto shrink-0 text-faint transition-colors group-hover:text-fg" aria-hidden />
+          </div>
+          <p className="mt-0.5 truncate text-small text-muted">
+            {offline
+              ? `Sin conexión · ${formatRelative(lastAt)}`
+              : session
+                ? `${session.course ?? "Clase"} · desde las ${formatTime(session.started_at)}`
+                : "Sin clase en curso"}
+          </p>
+          <div className="mt-2">
+            <StateBadge size="sm" state={t?.state} offline={offline} />
           </div>
         </div>
-        <div className="px-4 pb-3">
-          <div className="mb-1 flex items-center justify-between text-micro text-muted">
-            <span>{session ? "Confort durante la clase" : "Confort"}</span>
-            {session && <span className="num">{formatTime(session.started_at)} – ahora</span>}
+      </div>
+      <div className="px-4 pb-3">
+        <div className="mb-1 flex items-center justify-between text-micro text-muted">
+          <span>{session ? "Confort durante la clase" : "Confort"}</span>
+          {session && <span className="num">{formatTime(session.started_at)} – ahora</span>}
+        </div>
+        {session && trend && trend.length > 1 ? (
+          <Sparkline points={trend} band={config ? [config.ok_min, 100] : null} color="var(--ds-metric-comfort)" minSpan={30} height={34} live />
+        ) : (
+          <div className="flex h-[34px] items-center justify-center rounded-sm border border-dashed border-line text-caption text-muted">
+            {offline ? "Nodo sin conexión" : session ? "Reuniendo lecturas de la clase…" : "Sin clase en curso"}
           </div>
-          {session && trend && trend.length > 1 ? (
-            <Sparkline points={trend} band={config ? [config.ok_min, 100] : null} color="var(--ds-metric-comfort)" minSpan={30} height={34} live />
-          ) : (
-            <div className="flex h-[34px] items-center justify-center rounded-sm border border-dashed border-line text-caption text-muted">
-              {offline ? "Nodo sin conexión" : session ? "Reuniendo lecturas de la clase…" : "Sin clase en curso"}
+        )}
+      </div>
+      <dl className={cn("grid grid-cols-4 border-t border-line-subtle", offline && "opacity-60")}>
+        {SENSOR_METRICS.map((m, i) => {
+          const value = t?.[m] as number | null | undefined;
+          const where = placement(value, bandOf(m, config));
+          return (
+            <div key={m} className={cn("min-w-0 px-3 py-2.5", i > 0 && "border-l border-line-subtle")}>
+              <dt className="flex items-center gap-1 text-micro text-muted">
+                <MetricIcon metric={m} size={12} />
+                <span className="truncate">{TILE_LABEL[m]}</span>
+              </dt>
+              <dd className="num mt-0.5 truncate text-label font-semibold text-fg" title={placementText(m, where)}>
+                {formatMetric(m, value, m !== "noise_rel")}
+                {(where === "high" || where === "low") && !offline && (
+                  <span className="ml-1 inline-block size-1.5 -translate-y-px rounded-full bg-alert align-middle" aria-label={placementText(m, where)} />
+                )}
+              </dd>
             </div>
-          )}
-        </div>
-        <dl className={cn("grid grid-cols-4 border-t border-line-subtle", offline && "opacity-60")}>
-          {SENSOR_METRICS.map((m, i) => {
-            const value = t?.[m] as number | null | undefined;
-            const where = placement(value, bandOf(m, config));
-            return (
-              <div key={m} className={cn("min-w-0 px-3 py-2.5", i > 0 && "border-l border-line-subtle")}>
-                <dt className="flex items-center gap-1 text-micro text-muted">
-                  <MetricIcon metric={m} size={12} />
-                  <span className="truncate">{TILE_LABEL[m]}</span>
-                </dt>
-                <dd className="num mt-0.5 truncate text-label font-semibold text-fg" title={placementText(m, where)}>
-                  {formatMetric(m, value, m !== "noise_rel")}
-                  {(where === "high" || where === "low") && !offline && (
-                    <span className="ml-1 inline-block size-1.5 -translate-y-px rounded-full bg-alert align-middle" aria-label={placementText(m, where)} />
-                  )}
-                </dd>
-              </div>
-            );
-          })}
-        </dl>
-        <div className="mt-auto flex items-center gap-3 border-t border-line-subtle px-4 py-2.5 text-caption text-muted">
-          <span className="inline-flex items-center gap-1.5">
-            <UsersRound size={13} aria-hidden />
-            {session ? `${session.attendance_count} presentes` : !t ? "Sin lecturas en vivo" : t.presence ? "Hay presencia" : "Aula vacía"}
-          </span>
-          <span className="ml-auto inline-flex items-center gap-1.5">
-            <Clock size={13} aria-hidden />
-            {formatRelative(lastAt)}
-          </span>
-        </div>
-      </Link>
-    </motion.div>
+          );
+        })}
+      </dl>
+      <div className="mt-auto flex items-center gap-3 border-t border-line-subtle px-4 py-2.5 text-caption text-muted">
+        <span className="inline-flex items-center gap-1.5">
+          <UsersRound size={13} aria-hidden />
+          {session ? `${session.attendance_count} presentes` : !t ? "Sin lecturas en vivo" : t.presence ? "Hay presencia" : "Aula vacía"}
+        </span>
+        <span className="ml-auto inline-flex items-center gap-1.5">
+          <Clock size={13} aria-hidden />
+          {formatRelative(lastAt)}
+        </span>
+      </div>
+    </Link>
   );
 }
 
@@ -183,7 +179,7 @@ export function Overview() {
     <>
       <PageHeader
         title="Resumen"
-        description="Cómo están las aulas en este momento y qué pasó en los últimos días."
+        description="Estado actual de las aulas y alertas recientes."
         meta={
           rooms.data && (
             <>
@@ -206,11 +202,11 @@ export function Overview() {
         <Card><EmptyState illustration="room" title="Aún no hay aulas" description="Las aulas aparecen cuando su nodo publica la primera lectura." /></Card>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-          {list.map((r, i) => <RoomTile key={r.id} room={r} current={currentFor(r.id)} config={configFor(r.id)} index={i} trend={toPoints(trends[i]?.data)} />)}
+          {list.map((r, i) => <RoomTile key={r.id} room={r} current={currentFor(r.id)} config={configFor(r.id)} trend={toPoints(trends[i]?.data)} />)}
         </div>
       )}
 
-      <div className="mt-6 grid gap-5 lg:grid-cols-12">
+      <div className="mt-5 grid items-start gap-4 lg:grid-cols-12">
         <Card className="lg:col-span-7">
           <CardHeader title="Alertas" description="Lo que requiere atención, primero lo más reciente" />
           {recent.isPending && rooms.isPending ? (

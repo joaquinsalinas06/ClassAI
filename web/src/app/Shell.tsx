@@ -162,17 +162,13 @@ export function Shell() {
         <div className="flex min-w-0 flex-1 flex-col">
           <Topbar onMenu={() => setMobileNav(true)} />
           <main id="main" className="min-w-0 flex-1">
-            <motion.div
-              key={location.pathname.split("/").slice(0, 2).join("/")}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: DURATION.base, ease: EASE.enter }}
-              className={location.pathname === "/montajes" ? "w-full px-4 py-3" : "mx-auto w-full max-w-[1360px] px-4 pt-5 pb-16 sm:px-6 lg:px-8 lg:pt-7"}
+            <div
+              className={location.pathname === "/montajes" ? "w-full px-4 py-3" : "mx-auto w-full max-w-[1360px] px-4 pt-5 pb-12 sm:px-6 lg:px-8 lg:pt-7"}
             >
               <ErrorBoundary label="esta página" resetKey={location.pathname}>
                 <Outlet />
               </ErrorBoundary>
-            </motion.div>
+            </div>
           </main>
         </div>
       </div>

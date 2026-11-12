@@ -263,7 +263,7 @@ export function LiveRoom() {
 
       <StudentFeedback sessionId={state.sessionId} />
       {(access || environment) && (
-        <div className={cn("grid items-start gap-4", access && "lg:grid-cols-2")}>
+        <div className={cn("grid gap-4", access && "lg:grid-cols-2")}>
           <Card className="p-4 sm:px-5" aria-labelledby="zone-motion">
             <h2 id="zone-motion" className="text-label font-semibold text-fg">Movimiento por zona</h2>
             <div className="mt-2 divide-y divide-line-subtle">
@@ -297,7 +297,7 @@ export function LiveRoom() {
               {inSession || state.arrivals.length > 0 ? (
                 <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
               ) : (
-                <Card className="p-4 sm:px-5">
+                <Card className="flex flex-col items-start p-4 sm:px-5">
                   <h2 className="text-label font-semibold text-fg">Asistencia</h2>
                   <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase.</p>
                   <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
