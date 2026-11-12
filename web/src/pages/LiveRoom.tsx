@@ -1,4 +1,4 @@
-import { Cpu, Fan, Flame, PersonStanding, Snowflake, SunDim, ThumbsUp, Volume2, WifiOff, type LucideIcon } from "lucide-react";
+import { Cpu, DoorOpen, Fan, Flame, PersonStanding, Snowflake, SunDim, ThumbsUp, Volume2, WifiOff, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
@@ -119,15 +119,8 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
   lastAt: number | null;
 }) {
   useNow(5_000);
-  const key = offline ? "offline" : state === "OK" ? "ok" : state === "ALERT" ? "alert" : "regular";
   return (
-    <Card className="relative flex flex-col overflow-hidden">
-      {/* the one decorative gesture: a soft wash of the current state behind the gauge */}
-      <div
-        aria-hidden
-        className="pointer-events-none absolute inset-x-0 top-0 h-56 transition-[background] duration-700"
-        style={{ background: `radial-gradient(120% 90% at 50% 0%, var(--ds-state-${key}-subtle) 0%, transparent 70%)` }}
-      />
+    <Card className="flex flex-col overflow-hidden">
       <div className="relative flex items-center justify-between px-4 pt-3.5">
         <h2 className="text-label font-semibold text-fg">Confort ahora</h2>
         <StateBadge state={state} offline={offline} />
@@ -232,7 +225,7 @@ export function LiveRoom() {
   const environment = Object.values(state.nodes).find(node => node.role === "environment");
   const access = Object.values(state.nodes).find(node => node.role === "access");
   const environmentAt = parseTime(environment?.received_at);
-  const offline = (environment != null && (!environmentAt || now - environmentAt > 15_000)) || state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
+  const offline = (environment != null && (environment.status === "offline" || !environmentAt || now - environmentAt > 15_000)) || state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
   const config = state.config ?? params.data?.current ?? null;
   const comfort = reading?.comfort ?? null;
   const stateNow: ComfortState | null = reading?.state ?? (comfort != null && config ? comfortState(config, comfort) : null);
@@ -269,34 +262,51 @@ export function LiveRoom() {
       </div>
 
       <StudentFeedback sessionId={state.sessionId} />
-      {(access || environment) && <Card className="p-4" aria-labelledby="zone-motion">
-        <h2 id="zone-motion" className="text-label font-semibold text-fg">Movimiento por zona</h2>
-        <div className="mt-3 grid gap-2 sm:grid-cols-2">
-          {([{ label: "Entrada", node: access }, { label: "Interior del aula", node: environment }]).map(({ label, node }) => {
-            const receivedAt = parseTime(node?.received_at);
-            const movement = node?.telemetry?.presence;
-            const state = !node ? "Esperando nodo" : node.status === "offline" ? "Sin conexión"
-              : !receivedAt || now - receivedAt > 15_000 ? "Sin datos recientes"
-              : movement == null ? "Sin lectura del PIR" : movement ? "Movimiento detectado" : "Sin movimiento";
-            return <div key={label} role="group" aria-label={label} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-subtle bg-sunken px-3 py-2">
-              <h3 className="text-small font-medium text-fg">{label}</h3>
-              <Badge tone={state === "Movimiento detectado" ? "info" : "neutral"}>{state}</Badge>
-            </div>;
-          })}
+      {(access || environment) && (
+        <div className={cn("grid items-start gap-4", access && "lg:grid-cols-2")}>
+          <Card className="p-4 sm:px-5" aria-labelledby="zone-motion">
+            <h2 id="zone-motion" className="text-label font-semibold text-fg">Movimiento por zona</h2>
+            <div className="mt-2 divide-y divide-line-subtle">
+              {[
+                { label: "Entrada", node: access, Icon: DoorOpen },
+                { label: "Interior del aula", node: environment, Icon: PersonStanding },
+              ].map(({ label, node, Icon }) => {
+                const receivedAt = parseTime(node?.received_at);
+                const movement = node?.telemetry?.presence;
+                const status = !node ? "Esperando nodo" : node.status === "offline" ? "Sin conexión"
+                  : !receivedAt || now - receivedAt > 15_000 ? "Sin datos recientes"
+                  : movement == null ? "Sin lectura del PIR" : movement ? "Movimiento detectado" : "Sin movimiento";
+                const detected = status === "Movimiento detectado";
+                return (
+                  <div key={label} role="group" aria-label={label} className="grid min-h-11 grid-cols-[minmax(0,1fr)_minmax(0,1fr)] items-center gap-2 py-2">
+                    <div className="flex items-center gap-2.5">
+                      <Icon size={16} className="shrink-0 text-muted" aria-hidden />
+                      <h3 className="text-small font-medium text-fg">{label}</h3>
+                    </div>
+                    <span className={cn("flex items-center justify-end gap-2 text-right text-small", detected ? "font-medium text-info" : "text-muted")}>
+                      {detected && <span className="size-1.5 shrink-0 rounded-full bg-info" aria-hidden />}
+                      {status}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+          {access && (
+            <ErrorBoundary label="la asistencia">
+              {inSession || state.arrivals.length > 0 ? (
+                <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
+              ) : (
+                <Card className="p-4 sm:px-5">
+                  <h2 className="text-label font-semibold text-fg">Asistencia</h2>
+                  <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase.</p>
+                  <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
+                </Card>
+              )}
+            </ErrorBoundary>
+          )}
         </div>
-      </Card>}
-      {access && <div className="max-w-3xl">          <ErrorBoundary label="la asistencia">
-            {inSession || state.arrivals.length > 0 ? (
-              <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
-            ) : (
-              <Card className="p-4">
-                <h2 className="text-label font-semibold text-fg">Asistencia</h2>
-                <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase en el nodo.</p>
-                <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
-              </Card>
-            )}
-          </ErrorBoundary>
-      </div>}
+      )}
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="lg:col-span-5 xl:col-span-4">
           <ComfortPanel
