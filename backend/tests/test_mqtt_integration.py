@@ -58,6 +58,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
     ready = threading.Event()
     connected = threading.Event()
     lines = []
+    simulated_nodes = {}
     processes = []
     publisher = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id="smoke-publisher")
 
@@ -67,10 +68,10 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
 
     publisher.on_connect = on_connect
 
-    def publish(kind, payload):
+    def publish(kind, payload, client=publisher):
         data = payload if isinstance(payload, bytes) else json.dumps(payload)
         # Exercise firmware's actual publish QoS 0; no delivery guarantee is claimed.
-        info = publisher.publish(f"classai/v1/a101/{kind}", data, qos=0)
+        info = client.publish(f"classai/v1/a101/{kind}", data, qos=0)
         info.wait_for_publish(timeout=5)
         assert info.is_published()
 
@@ -188,6 +189,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             snapshots = {}
             coordinated = []
             node_acks = []
+            confirmations = {}
             subscribed = threading.Event()
             publisher.on_subscribe = lambda *args: subscribed.set()
 
@@ -200,46 +202,107 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                     snapshots[body['device']] = body
                 if message.topic.endswith('/session'):
                     coordinated.append(body)
+                if message.topic.endswith('/confirmed'):
+                    confirmations[body['event_id']] = body
                 if message.topic.endswith('/ack') and body.get('event_id'):
                     node_acks.append(body)
 
             publisher.on_message = received_node
             publisher.subscribe('classai/v1/a101/#', qos=1)
             wait_for(subscribed.is_set, processes)
+            def on_simulated_connect(client, userdata, flags, reason, properties):
+                if not reason.is_failure:
+                    userdata.set()
+
+            for role in ('access', 'environment', 'assistant'):
+                device = f'a101-{role}'
+                node = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2, client_id=device)
+                simulated_nodes[role] = node
+                node_connected = threading.Event()
+                node.user_data_set(node_connected)
+                node.on_connect = on_simulated_connect
+                node.connect('127.0.0.1', port, keepalive=10)
+                node.loop_start()
+                wait_for(node_connected.is_set, processes)
+
+            def publish_node(role, kind, payload):
+                publish(f'nodes/a101-{role}/{kind}', payload, client=simulated_nodes[role])
+
             request = dict(v=1, room='a101', device='a101-access', role='access', request_id='three-start', action='start')
-            publish('nodes/a101-access/commands', request)
+            publish_node('access', 'commands', request)
             wait_for(lambda: bool(coordinated) and coordinated[-1]['session_id'], processes)
             shared_session = coordinated[-1]['session_id']
-            publish('nodes/a101-access/commands', request)
+            publish_node('access', 'commands', request)
+            telemetry = {}
             for role in ('access', 'environment', 'assistant'):
                 body = dict(v=1, room='a101', device=f'a101-{role}', role=role, session_id=shared_session,
                             ts=None, uptime_ms=100, lux=None, comfort=None, state='REGULAR', params_version=0)
                 if role == 'access':
                     body.update(presence=True, light_rel=.4)
                 if role == 'environment':
-                    body.update(temp_c=24, rh_pct=50, noise_rel=.2, comfort=85, light_rel=.6)
+                    body.update(temp_c=24, rh_pct=50, noise_rel=.2, comfort=85, light_rel=.6,
+                                presence=False, fan_on=False, fan_enabled=True)
                 if role == 'assistant':
                     body['light_rel'] = .3
-                publish(f'nodes/a101-{role}/telemetry', body)
+                telemetry[role] = body
+                publish_node(role, 'telemetry', body)
             wait_for(lambda: len(snapshots) == 3, processes)
             assert snapshots['a101-access']['telemetry']['presence'] is True
             assert snapshots['a101-access']['telemetry']['light_rel'] == .4
+
+            # Cover the two LDRs and trigger the PIR zones independently.
+            for role, other, other_light in (
+                ('environment', 'assistant', .3), ('assistant', 'environment', .1),
+            ):
+                publish_node(role, 'telemetry', {**telemetry[role], 'light_rel': .1})
+                wait_for(lambda: snapshots[f'a101-{role}']['telemetry']['light_rel'] == .1, processes)
+                assert snapshots[f'a101-{other}']['telemetry']['light_rel'] == other_light
+            publish_node('environment', 'telemetry', {
+                **telemetry['environment'], 'light_rel': .1, 'presence': True,
+                'temp_c': 31, 'noise_rel': .8, 'comfort': 45, 'fan_on': True,
+            })
+            wait_for(lambda: snapshots['a101-environment']['telemetry']['fan_on'] is True, processes)
+            publish_node('access', 'telemetry', {**telemetry['access'], 'presence': False})
+            wait_for(lambda: snapshots['a101-access']['telemetry']['presence'] is False, processes)
+            with TestClient(api.app) as client:
+                live_nodes = {node['role']: node for node in client.get('/rooms/a101/nodes').json()}
+                ambient = live_nodes['environment']['telemetry']
+                assert (ambient['temp_c'], ambient['noise_rel'], ambient['presence']) == (31, .8, True)
+                assert ambient['fan_enabled'] is True and ambient['fan_on'] is True
+                assert live_nodes['access']['telemetry']['presence'] is False
+                assert live_nodes['assistant']['telemetry']['light_rel'] == .1
+            publish_node('environment', 'telemetry', telemetry['environment'])
+            wait_for(lambda: snapshots['a101-environment']['telemetry']['fan_on'] is False, processes)
             fixture_type, fixture_token = TAPS[0]
             tap = dict(v=1, room='a101', device='a101-access', role='access', session_id=shared_session,
                        ts=None, uptime_ms=101, event='ATTENDANCE_RECORDED', event_id='three-tap',
                        credential={'type': fixture_type, 'token': fixture_token})
-            publish('nodes/a101-access/events', tap)
-            publish('nodes/a101-access/events', tap)
+            publish_node('access', 'events', tap)
+            publish_node('access', 'events', tap)
             wait_for(lambda: rows(f"SELECT COUNT(*) FROM attendance WHERE session_id='{shared_session}'") == [(1,)], processes)
             wait_for(lambda: len([a for a in node_acks if a['event_id'] == 'three-tap']) >= 2, processes)
             first_acks = [a for a in node_acks if a['event_id'] == 'three-tap']
             assert all(a['stored'] is True and a['accepted'] is True and a['outcome'] == 'new' and a['attendance_count'] == 1 for a in first_acks)
-            publish('nodes/a101-access/events', {**tap, 'event_id': 'three-tap-again'})
+            publish_node('access', 'events', {**tap, 'event_id': 'three-tap-again'})
             wait_for(lambda: any(a['event_id'] == 'three-tap-again' for a in node_acks), processes)
             duplicate_ack = next(a for a in node_acks if a['event_id'] == 'three-tap-again')
             assert duplicate_ack['outcome'] == 'duplicate' and duplicate_ack['attendance_count'] == 1
             assert fixture_token not in json.dumps(node_acks)
-            publish('nodes/a101-access/status', dict(v=1, room='a101', device='a101-access', role='access', status='offline'))
+
+            wait_for(lambda: 'three-tap' in confirmations, processes)
+            confirmed = confirmations['three-tap']
+            assert confirmed['accepted'] is True and confirmed['session_id'] == shared_session
+            assert 'credential' not in confirmed and fixture_token not in json.dumps(confirmed)
+            publish_node('access', 'events', {
+                **tap, 'event_id': 'three-rejected',
+                'credential': {'type': fixture_type, 'token': 'F0' * 16},
+            })
+            wait_for(lambda: 'three-rejected' in confirmations, processes)
+            assert confirmations['three-rejected']['accepted'] is False
+            wait_for(lambda: any(a['event_id'] == 'three-rejected' for a in node_acks), processes)
+            rejected_ack = next(a for a in node_acks if a['event_id'] == 'three-rejected')
+            assert rejected_ack['stored'] is True and rejected_ack['outcome'] == 'rejected'
+            publish_node('access', 'status', dict(v=1, room='a101', device='a101-access', role='access', status='offline'))
             wait_for(lambda: snapshots['a101-access']['status'] == 'offline', processes)
             assert snapshots['a101-environment']['status'] == snapshots['a101-assistant']['status'] == 'online'
             with TestClient(api.app) as client:
@@ -247,7 +310,7 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                 assert nodes.status_code == 200 and len(nodes.json()) == 3
                 assert client.get('/classes/current?room=a101').json()['latest_reading']['temp_c'] == 24
                 assert 'credential' not in nodes.text and fixture_token not in nodes.text
-            publish('nodes/a101-access/commands', {**request, 'request_id': 'three-stop', 'action': 'stop', 'session_id': shared_session})
+            publish_node('access', 'commands', {**request, 'request_id': 'three-stop', 'action': 'stop', 'session_id': shared_session})
             wait_for(lambda: coordinated[-1]['session_id'] is None, processes)
             assert rows(f"SELECT COUNT(*) FROM sessions WHERE id='{shared_session}'") == [(1,)]
             assert rows(f"SELECT attendance_count FROM session_summaries WHERE session_id='{shared_session}'") == [(1,)]
@@ -257,6 +320,9 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
             assert ingest.wait(timeout=10) == 0
             reader.join(timeout=2)
     finally:
+        for node in simulated_nodes.values():
+            node.disconnect()
+            node.loop_stop()
         publisher.disconnect()
         publisher.loop_stop()
         for process in reversed(processes):

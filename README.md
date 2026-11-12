@@ -28,6 +28,10 @@ Comprueba:
 
 - Publicación QoS 0 (como el ESP32), suscripción real y parsing `classai/v1`.
 - Telemetría cruda y agregada en SQLite; `null` no genera una métrica.
+- Tres clientes MQTT simulan acceso, ambiente y asistente. El ensayo abre y cierra
+  una sesión por MQTT, verifica asistencia aceptada, duplicada y rechazada, y
+  comprueba dos luces y dos PIR por separado. También inyecta calor, ruido y
+  estados de ventilador para verificar que llegan a la API.
 - Inicio/fin/resumen de sesión; un `event_id` repetido solo se aplica una vez.
 - Fixtures del simulador: tarjeta NFC y Android HCE, dos credenciales del mismo
   estudiante sin duplicar asistencia y credencial desconocida.
