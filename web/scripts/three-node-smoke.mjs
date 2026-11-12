@@ -7,13 +7,15 @@ try {
  const page = await browser.newPage({viewport:{width:1440,height:1000}});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));
  let disconnected=false;
+ let motion={access:true,environment:false};
+ let stale=false;
  const stamp=()=>new Date().toISOString();
  const nodes=()=>['access','environment','assistant'].map(role=>({v:1,room:'a101',device:`a101-${role}`,role,
-  status:role==='access'&&disconnected?'offline':'online',status_at:stamp(),received_at:stamp(),
+  status:role==='access'&&disconnected?'offline':'online',status_at:stamp(),received_at:role==='environment'&&stale?new Date(Date.now()-60_000).toISOString():stamp(),
   telemetry:{v:1,room:'a101',device:`a101-${role}`,role,session_id:null,ts:null,uptime_ms:70000,
    comfort:role==='environment'?85:null,state:'OK',params_version:0,lux:null,temp_c:role==='environment'?23.4:null,
    rh_pct:role==='environment'?55:null,noise_rel:role==='environment'?.2:null,light_rel:role==='access'?null:role==='environment'?.6:.3,
-   presence:false,fan_on:false,agent_online:true,voice_state:'idle',received_at:stamp()}}));
+   presence:motion[role]??null,fan_on:false,agent_online:true,voice_state:'idle',received_at:stamp()}}));
  const config={v:1,room:'a101',params_version:0,temp_c:[21,24],rh_pct:[40,60],lux:[300,500],noise_rel_max:.5,
   weights:{temp:.35,rh:.2,lux:.2,noise:.25},ok_min:80,regular_min:60,source:{temp:'default',noise:'default',lux:'default'}};
  await page.route('**/api/**',route=>{
@@ -28,11 +30,26 @@ try {
  await page.getByRole('heading',{name:'Nodos por zona',exact:true}).waitFor();
  await page.getByText('Luz relativa: 60 % · sin calibrar a lux',{exact:true}).waitFor();
  assert.equal(await page.getByText('Luz relativa: 30 % · sin calibrar a lux',{exact:true}).count(),1);
- assert.equal(await page.getByText('Sin movimiento',{exact:true}).count(),1);
+ const entrance=page.getByRole('group',{name:'Entrada',exact:true});
+ const classroom=page.getByRole('group',{name:'Interior del aula',exact:true});
+ await entrance.getByText('Movimiento detectado',{exact:true}).waitFor();
+ await classroom.getByText('Sin movimiento',{exact:true}).waitFor();
+ motion={access:false,environment:true};
+ await page.reload();
+ await entrance.getByText('Sin movimiento',{exact:true}).waitFor();
+ await classroom.getByText('Movimiento detectado',{exact:true}).waitFor();
  disconnected=true;
+ stale=true;
  await page.reload();
  await page.getByRole('heading',{name:'Nodos por zona',exact:true}).waitFor();
- assert.equal(await page.getByText('Sin conexión',{exact:true}).count(),1);
+ await entrance.getByText('Sin conexión',{exact:true}).waitFor();
+ await classroom.getByText('Sin datos recientes',{exact:true}).waitFor();
+ disconnected=false;
+ stale=false;
+ motion={access:null,environment:true};
+ await page.reload();
+ await entrance.getByText('Sin lectura del PIR',{exact:true}).waitFor();
+ await classroom.getByText('Movimiento detectado',{exact:true}).waitFor();
  await mkdir('screenshots',{recursive:true});
  await page.screenshot({path:'screenshots/three-nodes-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});

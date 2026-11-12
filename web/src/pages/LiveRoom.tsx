@@ -107,7 +107,7 @@ function StudentFeedback({ sessionId }: { sessionId: string | null }) {
   </Card>;
 }
 
-function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, presence, lastAt }: {
+function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, presence, showPresence, lastAt }: {
   comfort: number | null | undefined;
   state: ComfortState | null;
   okMin: number;
@@ -115,6 +115,7 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
   offline: boolean;
   fanOn: boolean;
   presence: boolean | number | null | undefined;
+  showPresence: boolean;
   lastAt: number | null;
 }) {
   useNow(5_000);
@@ -137,7 +138,7 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
       <p className="relative -mt-3 px-6 text-center text-small text-muted">
         {offline ? "El nodo no está enviando datos. Se muestra la última lectura conocida." : state ? STATE_HINT[state] : "Esperando la primera lectura del nodo."}
       </p>
-      <dl className="relative mt-4 grid grid-cols-2 border-t border-line-subtle">
+      <dl className={cn("relative mt-4 grid border-t border-line-subtle", showPresence && "grid-cols-2")}>
         <div className="flex items-center gap-2.5 px-4 py-3">
           <span className={cn("flex size-8 items-center justify-center rounded-md border", fanOn ? "border-info/30 bg-info-subtle text-info" : "border-line bg-sunken text-muted")}>
             <Fan size={16} className={fanOn && !offline ? "ds-spin" : undefined} aria-hidden />
@@ -147,7 +148,7 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
             <dd className="text-label font-medium text-fg">{offline ? "Desconocido" : fanOn ? "Encendido" : "Apagado"}</dd>
           </div>
         </div>
-        <div className="flex items-center gap-2.5 border-l border-line-subtle px-4 py-3">
+        {showPresence && <div className="flex items-center gap-2.5 border-l border-line-subtle px-4 py-3">
           <span className={cn("flex size-8 items-center justify-center rounded-md border", presence ? "border-line bg-sunken text-presence" : "border-line bg-sunken text-muted")}>
             <PersonStanding size={16} aria-hidden />
           </span>
@@ -155,7 +156,7 @@ function ComfortPanel({ comfort, state, okMin, regularMin, offline, fanOn, prese
             <dt className="text-caption text-muted">Presencia</dt>
             <dd className="text-label font-medium text-fg">{presence == null ? "Sin dato" : presence ? "Movimiento" : "Sin movimiento"}</dd>
           </div>
-        </div>
+        </div>}
       </dl>
       <p className="relative border-t border-line-subtle px-4 py-2.5 text-caption text-muted">
         {lastAt ? `Última lectura ${formatRelative(lastAt)} · ${formatTime(lastAt, true)}` : "Sin lecturas todavía"}
@@ -209,7 +210,7 @@ function ZoneNodes({ nodes, now }: { nodes: Record<string, NodeSnapshot>; now: n
         <div className="flex items-center justify-between gap-2"><h3 className="text-label">{label}</h3>
           <Badge size="sm" tone={node.status === "online" && !stale ? "ok" : "offline"}>{node.status === "offline" ? "Sin conexión" : stale ? "Sin datos recientes" : "En línea"}</Badge></div>
         <p className="mt-1 break-all font-mono text-caption text-muted">{node.device}</p>
-        <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Movimiento de entrada; sin conteo de personas" : "Esperando mediciones"}</p>
+        <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Luz relativa sin lectura" : "Esperando mediciones"}</p>
         {node.role === "assistant" && <p className="text-small text-muted">Agente: {node.telemetry?.agent_online ? node.telemetry.voice_state ?? "conectado" : "sin conexión"}</p>}
         <p className="text-caption text-muted">{at ? `Última lectura ${formatRelative(at)}` : "Sin lecturas"}</p>
       </div>;
@@ -230,8 +231,6 @@ export function LiveRoom() {
   const reading = state.latest ?? current.data?.latest_reading ?? null;
   const environment = Object.values(state.nodes).find(node => node.role === "environment");
   const access = Object.values(state.nodes).find(node => node.role === "access");
-  const accessAt = parseTime(access?.received_at);
-  const accessOnline = access?.status === "online" && accessAt != null && now - accessAt <= 15_000;
   const environmentAt = parseTime(environment?.received_at);
   const offline = (environment != null && (!environmentAt || now - environmentAt > 15_000)) || state.node === "offline" || (state.node === "unknown" && roomInfo?.status === "offline");
   const config = state.config ?? params.data?.current ?? null;
@@ -270,13 +269,21 @@ export function LiveRoom() {
       </div>
 
       <StudentFeedback sessionId={state.sessionId} />
-      {access && <Card className="p-4" aria-label="Estado de ClassAI">
-        <div className="flex flex-wrap items-center gap-3">
-          <h2 className="text-label font-semibold text-fg">ClassAI · Acceso</h2>
-          <Badge tone={accessOnline ? "ok" : "neutral"}>{accessOnline ? "En línea" : "Sin conexión o lectura antigua"}</Badge>
-          <span className="text-small text-muted">{!accessOnline || access.telemetry?.presence == null ? "PIR sin lectura reciente" : access.telemetry.presence ? "Movimiento detectado en la entrada" : "Sin movimiento reciente en la entrada"}</span>
+      {(access || environment) && <Card className="p-4" aria-labelledby="zone-motion">
+        <h2 id="zone-motion" className="text-label font-semibold text-fg">Movimiento por zona</h2>
+        <div className="mt-3 grid gap-2 sm:grid-cols-2">
+          {([{ label: "Entrada", node: access }, { label: "Interior del aula", node: environment }]).map(({ label, node }) => {
+            const receivedAt = parseTime(node?.received_at);
+            const movement = node?.telemetry?.presence;
+            const state = !node ? "Esperando nodo" : node.status === "offline" ? "Sin conexión"
+              : !receivedAt || now - receivedAt > 15_000 ? "Sin datos recientes"
+              : movement == null ? "Sin lectura del PIR" : movement ? "Movimiento detectado" : "Sin movimiento";
+            return <div key={label} role="group" aria-label={label} className="flex flex-wrap items-center justify-between gap-2 rounded-md border border-line-subtle bg-sunken px-3 py-2">
+              <h3 className="text-small font-medium text-fg">{label}</h3>
+              <Badge tone={state === "Movimiento detectado" ? "info" : "neutral"}>{state}</Badge>
+            </div>;
+          })}
         </div>
-        <p className="mt-2 text-small text-muted">{environment ? "Las métricas del aula provienen del nodo de ambiente." : "ClassAI registra asistencia; temperatura y confort necesitan el nodo de ambiente."}</p>
       </Card>}
       {access && <div className="max-w-3xl">          <ErrorBoundary label="la asistencia">
             {inSession || state.arrivals.length > 0 ? (
@@ -299,7 +306,8 @@ export function LiveRoom() {
             regularMin={config?.regular_min ?? 60}
             offline={offline}
             fanOn={state.latest?.fan_on ?? state.fan.on}
-            presence={reading?.presence}
+            presence={environment ? undefined : reading?.presence}
+            showPresence={!environment}
             lastAt={lastAt}
           />
         </div>
