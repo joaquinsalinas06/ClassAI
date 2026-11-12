@@ -9,6 +9,8 @@ import json
 import os
 import re
 import sqlite3
+import time
+from uuid import uuid4
 from collections import deque
 from contextlib import asynccontextmanager, closing
 from datetime import datetime, timezone
@@ -270,3 +272,40 @@ def rooms() -> list[dict]:
         result.append({**row, "status": environment["status"] if environment else cached.get("status", {}).get("status"),
                        "last_telemetry": environment.get("telemetry") if environment else cached.get("telemetry")})
     return result
+
+
+def set_room_fan(room: str, mode: str) -> str:
+    if mode not in ("on", "off", "auto") or not re.fullmatch(r"[a-z0-9-]{1,32}", room):
+        return "Orden de ventilador inválida."
+    client = _client
+    if not client or not client.is_connected():
+        return "El broker no está disponible. El cambio quedó sin confirmar."
+    device = f"{room}-environment"
+    command_id = uuid4().hex
+    command = {"v": 1, "room": room, "device": device, "mode": mode,
+               "command_id": command_id, "expires_at": int(time.time()) + 10}
+    try:
+        environment = next((node for node in nodes(room) if node["device"] == device), None)
+        if not environment or environment["stale"] or environment["status"] != "online":
+            return "El nodo ambiente no está disponible. El cambio quedó sin confirmar."
+        if not (environment.get("telemetry") or {}).get("fan_enabled"):
+            return "El ventilador está deshabilitado."
+        info = multinode.publish(client, f"classai/v1/{room}/nodes/{device}/fan/set", command)
+        if info.rc != mqtt.MQTT_ERR_SUCCESS:
+            return "No se pudo enviar el comando. El cambio quedó sin confirmar."
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            for node in nodes(room):
+                if node["device"] != device or node["status"] != "online" or node["stale"]:
+                    continue
+                reading = node.get("telemetry") or {}
+                if reading.get("fan_command_id") == command_id:
+                    if reading.get("fan_mode") != mode or (mode != "auto" and reading.get("fan_on") is not (mode == "on")):
+                        return "El nodo no pudo aplicar la orden del ventilador."
+                    return {"on": "Ventilador encendido durante cinco minutos.",
+                            "off": "Ventilador apagado durante cinco minutos.",
+                            "auto": "Ventilador en modo automático."}[mode]
+            time.sleep(.15)
+    except (HTTPException, OSError):
+        pass
+    return "El nodo ambiente no confirmó el cambio del ventilador."

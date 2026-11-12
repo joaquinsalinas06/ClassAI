@@ -13,6 +13,8 @@ def no_env_files(monkeypatch):
     monkeypatch.setattr(assistant_api, "load_dotenv", lambda *args, **kwargs: None)
     monkeypatch.delenv("TEMPERATURE_API_BASE_URL", raising=False)
     monkeypatch.delenv("API_PORT", raising=False)
+    monkeypatch.delenv("GROQ_API_KEY", raising=False)
+    monkeypatch.delenv("GROQ_MODEL", raising=False)
 
 
 def test_validation_limits():
@@ -62,3 +64,38 @@ def test_answer_and_tools_used(monkeypatch):
     assert assistant_api.ask(body) == {"answer": "La a101 está en CS5055 con 23.4 °C.", "tools_used": ["get_current_class"]}
     assert calls == [("http://127.0.0.1:8000/classes/current", {"room": "a101"})]
     assert [m["role"] for m in sent[0]] == ["system", "user", "assistant", "user"]
+
+@pytest.mark.parametrize("question,mode", [
+    ("Hace calor, ¿puedes prender el ventilador?", "on"),
+    ("Apaga el ventilador, por favor", "off"),
+    ("Pon el ventilador en automático", "auto"),
+    ("No enciendas el ventilador", None),
+    ("Está apagado el ventilador", None),
+    ("Ventilador", None),
+])
+def test_groq_fan_tool_requires_explicit_intent(monkeypatch, question, mode):
+    import live
+
+    monkeypatch.setenv("GROQ_API_KEY", "synthetic-test-key")
+    applied = []
+    monkeypatch.setattr(live, "set_room_fan", lambda room, requested: applied.append((room, requested)) or "Confirmado")
+
+    def create(**kwargs):
+        assert kwargs["model"] == "openai/gpt-oss-120b"
+        available = any(tool["function"]["name"] == "set_fan" for tool in kwargs["tools"])
+        assert available == (mode is not None)
+        message = SimpleNamespace(content="Consulta", tool_calls=None)
+        if available:
+            message.tool_calls = [SimpleNamespace(id="cmd", function=SimpleNamespace(
+                name="set_fan", arguments=f'{{"mode":"{mode}"}}'))]
+            message.model_dump = lambda **kwargs: {"role": "assistant"}
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    def connect(**kwargs):
+        assert kwargs["base_url"] == "https://api.groq.com/openai/v1"
+        return SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+
+    monkeypatch.setattr(assistant_api, "OpenAI", connect)
+    result = assistant_api.ask(assistant_api.AskIn(question=question, room="a101"))
+    assert result["answer"] == ("Confirmado" if mode else "Consulta")
+    assert applied == ([("a101", mode)] if mode else [])

@@ -69,8 +69,12 @@ docker compose --env-file deploy/.env -f deploy/compose.yaml --profile voice up 
 ```
 
 Descarga explícita, no ejecutada por CI. El worker no descarga durante inicio.
-Configurar DEEPSEEK_API_KEY/MODEL solo si se desea usar el asistente textual
-existente; sin ellos /assistant/voice devuelve503. La transcripción/síntesis son
+En el archivo privado `deploy/.env`, configurar `GROQ_API_KEY` y, opcionalmente,
+`GROQ_MODEL` (por defecto `openai/gpt-oss-120b`). Si se omite la clave de Groq,
+se usa `DEEPSEEK_API_KEY` con `DEEPSEEK_MODEL` cuando estén configurados.
+El agente requiere `CLASSAI_VOICE_KEY` con el valor privado de `VOICE_API_KEY`
+y el aula correcta en `--room`. La ruta HTTPS de voz usa esa credencial.
+Medir desde que termina la frase hasta el primer audio audible en la placa. La transcripción/síntesis son
 locales al servidor; el LLM usa el proveedor ya configurado y puede tener coste.
 No se hacen consultas al proveedor al construir o probar el stack.
 

@@ -78,8 +78,8 @@ export const api = {
     request<CredentialOut>("/credentials", { method: "POST", body: JSON.stringify(body), headers: { "X-API-Key": key } }),
   revoke: (id: number, key: string) =>
     request<{ revoked: boolean; credential_id: number }>(`/credentials/${id}/revoke`, { method: "POST", headers: { "X-API-Key": key } }),
-  ask: (question: string, history: ChatTurn[]) =>
-    request<AssistantAnswer>("/assistant/ask", { method: "POST", body: JSON.stringify({ question, history }) }),
+  ask: (question: string, history: ChatTurn[], room?: string) =>
+    request<AssistantAnswer>("/assistant/ask", { method: "POST", body: JSON.stringify({ question, history, room }) }),
 };
 
 export interface SessionFilters {

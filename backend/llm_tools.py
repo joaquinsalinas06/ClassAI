@@ -1,10 +1,12 @@
 """Capa semántica del asistente: herramientas permitidas -> endpoints GET fijos de la API.
 
 El LLM nunca escribe SQL ni URLs: elige una herramienta de TOOLS y sus argumentos se validan
-contra el esquema declarado antes de llamar a la API de solo lectura.
+antes de consultar la API o ejecutar una orden explícita y validada.
 """
 
 import json
+import re
+import unicodedata
 from datetime import datetime
 from typing import Any, Optional
 from urllib.parse import quote
@@ -28,8 +30,9 @@ Reglas:
 - Solo respondes sobre aulas, sesiones de clase, asistencia, confort (temperatura, humedad, luz, ruido)
   y cómo se decidieron los parámetros de confort. Para cualquier otro tema responde brevemente
   que solo puedes ayudar con eso.
-- Nunca muestres tokens, UIDs ni credenciales, ni los uses para identificar a alguien; a los
-  estudiantes solo los nombras por el código y nombre que devuelva la asistencia.
+- Nunca muestres tokens, UIDs ni credenciales, ni los uses para identificar a alguien; la asistencia se comunica con cifras agregadas.
+- Usa get_live_room para estado actual y distingue lecturas vencidas o desconectadas.
+- Si piden controlar un dispositivo sin una orden clara, pide aclaración. Usa set_fan solo si se ofrece.
 - noise_rel es ruido relativo 0–1, no decibelios.
 - Para explicar el confort usa explain_comfort_decision: rangos, fuente de cada rango (source)
   y el desplazamiento aprendido del feedback (source.shift). Los rangos los calcula el backend
@@ -49,7 +52,13 @@ def _tool(name: str, description: str, properties: Optional[dict] = None, requir
     }
 
 
+FAN_TOOL = _tool("set_fan", "Aplica la orden explícita de ventilador del turno actual.",
+                 {"mode": {"type": "string", "enum": ["on", "off", "auto"]}}, ("mode",))
+
+
 TOOLS = [
+    _tool("get_live_room", "Estado actual, sesión, luces y PIR por zona y ventilador. Úsala para preguntas sobre el estado actual.",
+          {"room": ROOM}, ("room",)),
     _tool("get_temperature_stats", "Min, max, promedio ponderado y clasificación del sensor legado MLX90614 en un periodo.",
           {"start": {"type": "string", "description": "Inicio ISO 8601."},
            "end": {"type": "string", "description": "Fin ISO 8601 exclusivo."}}, ("start", "end")),
@@ -74,7 +83,7 @@ TOOLS = [
     _tool("get_metric_series", "Serie temporal de una métrica de una sesión agrupada en buckets de minutos.",
           {"session_id": SESSION, "metric": {"type": "string", "enum": METRICS},
            "bucket_minutes": {"type": "integer", "minimum": 1, "maximum": 60}}, ("session_id", "metric")),
-    _tool("get_attendance", "Asistentes de una sesión (código y nombre).", {"session_id": SESSION}, ("session_id",)),
+    _tool("get_attendance", "Cantidad de asistentes de una sesión.", {"session_id": SESSION}, ("session_id",)),
     _tool("explain_comfort_decision",
           "Parámetros de confort vigentes de un aula (o los usados en una sesión), su fuente e historial.",
           {"room": ROOM, "session_id": SESSION}),
@@ -153,40 +162,90 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
         return _strip_hidden(_explain_comfort(base_url, arguments.get("room"), arguments.get("session_id")))
     if name == "compare_sessions":
         arguments = {"ids": [str(item) for item in arguments["session_ids"]][:10]}
+    if name == "get_live_room":
+        room = arguments["room"]
+        if not isinstance(room, str) or not re.fullmatch(r"[a-z0-9-]{1,32}", room):
+            return {"error": "Aula inválida"}
+        nodes = _get(base_url, f"/rooms/{room}/nodes")
+        if not isinstance(nodes, list):
+            return nodes
+        current = _get(base_url, "/classes/current", {"room": room})
+        fields = ("temp_c", "rh_pct", "noise_rel", "light_rel", "presence", "fan_on", "fan_enabled", "comfort")
+        return {"room": room, "session": current.get("session"), "nodes": [
+            {**{key: node.get(key) for key in ("role", "status", "received_at", "stale")},
+             "readings": {key: (node.get("telemetry") or {}).get(key) for key in fields}
+             if node.get("status") == "online" and node.get("stale") is False else None}
+            for node in nodes
+        ]}
     route = ROUTES[name]
     if "{session_id}" in route:
         route = route.format(session_id=quote(str(arguments.pop("session_id")), safe=""))
-    return _strip_hidden(_get(base_url, route, arguments))
+    result = _get(base_url, route, arguments)
+    if name == "get_attendance" and "error" not in result:
+        return {"attendance_count": result.get("count", 0)}
+    return _strip_hidden(result)
 
 
 def answer_question(client, model: str, base_url: str, history: list[dict], question: str,
-                    tools_used: Optional[list[str]] = None) -> str:
+                    tools_used: Optional[list[str]] = None, *, room=None, fan_action=None) -> str:
     """Bucle de tool-calling con un cliente compatible con OpenAI; anota en tools_used las herramientas usadas."""
     messages: list[dict[str, Any]] = [{"role": "system", "content": build_system_prompt()}]
+    if room:
+        messages[0]["content"] += f"\nAula seleccionada: {room}."
+    tools = [*TOOLS, FAN_TOOL] if fan_action else TOOLS
+    tool_choice = {"type": "function", "function": {"name": "set_fan"}} if fan_action else "auto"
     messages.extend({"role": item["role"], "content": item["content"]} for item in history)
     messages.append({"role": "user", "content": question})
 
     for _ in range(5):
         response = client.chat.completions.create(
-            model=model, messages=messages, tools=TOOLS, tool_choice="auto", temperature=0.2,
+            model=model, messages=messages, tools=tools, tool_choice=tool_choice, temperature=0.2,
         )
         assistant_message = response.choices[0].message
         if not assistant_message.tool_calls:
+            if fan_action:
+                return "El asistente no pudo enviar la orden del ventilador."
             return assistant_message.content or "No pude generar una respuesta."
 
-        messages.append(assistant_message.model_dump(exclude_none=True))
+        messages.append({"role": "assistant", "content": assistant_message.content,
+                         "tool_calls": [
+                             {"id": call.id, "type": "function",
+                              "function": {"name": call.function.name, "arguments": call.function.arguments}}
+                             for call in assistant_message.tool_calls
+                         ]})
         for tool_call in assistant_message.tool_calls:
             if tools_used is not None and tool_call.function.name in SCHEMAS and tool_call.function.name not in tools_used:
                 tools_used.append(tool_call.function.name)
+            arguments = None
             try:
                 arguments = json.loads(tool_call.function.arguments or "{}")
             except json.JSONDecodeError:
                 tool_result = {"error": "Argumentos de herramienta inválidos"}
             else:
                 tool_result = execute_tool(base_url, tool_call.function.name, arguments)
+            if tool_call.function.name == "set_fan":
+                if fan_action and isinstance(arguments, dict) and arguments.get("mode") == fan_action[0]:
+                    if tools_used is not None:
+                        tools_used.append("set_fan")
+                    return fan_action[1]()
+                tool_result = {"error": "La orden explícita no coincide"}
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
                 "content": json.dumps(tool_result, ensure_ascii=False),
             })
-    return "No pude completar la consulta de datos tras varios intentos."
+    return ("El asistente no pudo enviar la orden del ventilador." if fan_action
+            else "No pude completar la consulta de datos tras varios intentos.")
+
+
+def explicit_fan_mode(question):
+    text = "".join(c for c in unicodedata.normalize("NFD", question.lower()) if not unicodedata.combining(c))
+    text = re.sub(r"[¿?¡!]", "", text).strip(" .,")
+    text = re.sub(r"^(?:(?:hace calor|hace frio),? +)?(?:por favor,? +)?(?:(?:puedes|podrias) +)?", "", text)
+    text = re.sub(r"(?:,? +por favor)$", "", text)
+    match = re.fullmatch(r"(prende|prender|enciende|encender|apaga|apagar) (?:el )?ventilador", text)
+    if match:
+        return "off" if match[1].startswith("apaga") else "on"
+    if re.fullmatch(r"(?:pon|poner|deja|dejar) (?:el )?ventilador en (?:modo )?automatico", text):
+        return "auto"
+    return None

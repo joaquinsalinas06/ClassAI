@@ -254,3 +254,19 @@ Las tablas nuevas son aditivas en `schema.sql`; reiniciar la ingesta aplica el
 esquema sin borrar datos. Para la exposición falta configurar HTTPS confiable y el
 origen de la APK. El panel docente conserva el modelo de acceso actual de la web,
 sin autenticación propia; este flujo es una demo y no verifica identidad por correo.
+
+### Asistente y control del ventilador
+
+`POST /assistant/ask` admite `room` opcional como aula seleccionada. La voz
+comparte la misma consulta y usa el aula indicada en el agente. El asistente
+consulta snapshots actuales y usa conteos de asistencia para Groq.
+
+- `classai/v1/{room}/display/attendance`: ingesta publica después del commit de
+  una asistencia nueva. QoS 1 sin retain, con `v`, `room` y `event_id`.
+- `classai/v1/{room}/nodes/{environment}/fan/set`: API publica con QoS 1
+  sin retain, con `v`, `room`, `device`, `command_id`, `expires_at` (Unix UTC,
+  segundos) y `mode` (`on`, `off`, `auto`). El nodo valida el vencimiento,
+  aplica la intervención manual hasta cinco minutos y conserva sus condiciones
+  de habilitación. La telemetría devuelve `fan_command_id`, `fan_mode`,
+  `fan_enabled` y `fan_on`. La respuesta de la API confirma solo la
+  telemetría que corresponde al comando.

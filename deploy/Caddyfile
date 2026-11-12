@@ -9,6 +9,10 @@
             path /api/student/classes/*/feedback
         }
     }
+    handle /api/assistant/voice {
+        uri strip_prefix /api
+        reverse_proxy api:8000
+    }
     handle @student {
         uri strip_prefix /api
         reverse_proxy api:8000 {

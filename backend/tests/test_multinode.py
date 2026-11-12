@@ -76,7 +76,7 @@ def test_attendance_ack_after_commit_and_no_tokens(system):
     client.publish = original
     send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id='bad1', session_id=sid,
          credential={'type': 'nfc_card_uid', 'token': 'DEADBEEF'})
-    assert calls[-2][1]['stored'] is True and calls[-2][1]['accepted'] is False
+    assert last_ack(calls)['stored'] is True and last_ack(calls)['accepted'] is False
 
 
 def test_failed_database_never_acknowledges(system, monkeypatch):
@@ -120,6 +120,10 @@ def test_invalid_node_messages(system, role, kind, fields):
         send(system, role, kind, **fields)
 
 
+def last_ack(calls):
+    return next(body for topic, body, _ in reversed(calls) if topic.endswith("/ack"))
+
+
 def test_attendance_outcome_and_count_are_stable_on_retry(system):
     db, client, acc, calls = system
     send(system, 'access', 'commands', request_id='start-outcome', action='start')
@@ -127,15 +131,18 @@ def test_attendance_outcome_and_count_are_stable_on_retry(system):
     fields = dict(event='ATTENDANCE_RECORDED', session_id=sid,
                   credential={'type': 'nfc_card_uid', 'token': '01020304'})
     send(system, 'access', 'events', event_id='first', **fields)
-    first = calls[-2][1]
+    first = last_ack(calls)
     assert (first['outcome'], first['attendance_count']) == ('new', 1)
+    assert calls[-1] == ('classai/v1/a101/display/attendance',
+                         {'v': 1, 'room': 'a101', 'event_id': 'first'}, {'qos': 1, 'retain': False})
     send(system, 'access', 'events', event_id='second', **fields)
-    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('duplicate', 1)
+    assert (last_ack(calls)['outcome'], last_ack(calls)['attendance_count']) == ('duplicate', 1)
     send(system, 'access', 'events', event_id='first', **fields)
-    assert calls[-2][1] == first
+    assert last_ack(calls) == first
     send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id='unknown', session_id=sid,
          credential={'type': 'nfc_card_uid', 'token': 'DEADBEEF'})
-    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('rejected', 1)
+    assert (last_ack(calls)['outcome'], last_ack(calls)['attendance_count']) == ('rejected', 1)
+    assert sum(topic.endswith('/display/attendance') for topic, _, _ in calls) == 1
 
 
 def test_fifth_student_ack_and_duplicate_do_not_add_attendance(system):
@@ -147,8 +154,8 @@ def test_fifth_student_ack_and_duplicate_do_not_add_attendance(system):
         db.write(lambda c: enroll_credential(c, f'code{i}', f'Student {i}', 'nfc_card_uid', token))
         send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id=f'event{i}', session_id=sid,
              credential={'type': 'nfc_card_uid', 'token': token})
-        assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('new', i)
+        assert (last_ack(calls)['outcome'], last_ack(calls)['attendance_count']) == ('new', i)
     send(system, 'access', 'events', event='ATTENDANCE_RECORDED', event_id='again', session_id=sid,
          credential={'type': 'nfc_card_uid', 'token': f'{105:08X}'})
-    assert (calls[-2][1]['outcome'], calls[-2][1]['attendance_count']) == ('duplicate', 5)
+    assert (last_ack(calls)['outcome'], last_ack(calls)['attendance_count']) == ('duplicate', 5)
     assert db.write(lambda c: c.execute('SELECT COUNT(*) FROM attendance').fetchone()[0]) == 5

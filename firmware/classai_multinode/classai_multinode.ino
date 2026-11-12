@@ -36,6 +36,15 @@ struct Playback { uint16_t size; uint8_t pcm[1280]; };
 volatile bool voiceError=true;
 uint32_t agentAt=0,frameSequence=0;
 char voiceState[20]="sin agente";
+multinode::Reactions reactions;
+char attendanceId[121]="";
+char environmentAt[32]="";
+#elif CLASSAI_ROLE == 2
+char fanCommandId[33]="";
+char recentFanCommands[16][33]={};
+unsigned nextFanCommand=0;
+uint32_t fanOverrideAt=0;
+int fanOverride=-1;
 #endif
 const char* ROLE=CLASSAI_ROLE==1?"access":CLASSAI_ROLE==2?"environment":"assistant";
 char device[65],prefix[96],nodePrefix[150],sessionId[96]="";
@@ -139,6 +148,48 @@ void receive(char* topic,byte* payload,unsigned length){
  snprintf(expected,sizeof(expected),"%s/nodes/%s-environment/snapshot",prefix,ROOM_ID);
  if(!strcmp(topic,expected)){displayComfort=doc["status"]=="online"?(doc["telemetry"]["comfort"]|-1):-1;displayAt=millis();}
 #endif
+#if CLASSAI_ROLE == 2
+ snprintf(expected,sizeof(expected),"%s/fan/set",nodePrefix);
+ if(!strcmp(topic,expected)&&doc["v"]==1&&!strcmp(doc["room"]|"",ROOM_ID)&&!strcmp(doc["device"]|"",device)){
+  const char* id=doc["command_id"]|"";
+  const char* mode=doc["mode"]|"";
+  const time_t now=time(nullptr);
+  const int64_t expiry=doc["expires_at"]|int64_t(0);
+  bool seen=false;
+  for(const auto& previous:recentFanCommands)if(!strcmp(id,previous))seen=true;
+  if(strlen(id)==32&&!seen&&now>1700000000&&expiry>=now&&expiry<=now+10){
+   int requested=!strcmp(mode,"on")?1:!strcmp(mode,"off")?0:!strcmp(mode,"auto")?-1:-2;
+   if(requested>=-1){
+    strlcpy(recentFanCommands[nextFanCommand++%16],id,sizeof(fanCommandId));
+    strlcpy(fanCommandId,id,sizeof(fanCommandId));fanOverride=armed&&RELAY_VALIDATED?requested:-1;fanOverrideAt=millis();
+   }
+  }
+ }
+#elif CLASSAI_ROLE == 3
+ snprintf(expected,sizeof(expected),"%s/nodes/%s-environment/snapshot",prefix,ROOM_ID);
+ if(!strcmp(topic,expected)){
+  const char* at=doc["received_at"]|"";
+  if(doc["status"]!="online") reactions.reset();
+  else if(*at&&strcmp(at,environmentAt)){
+   struct tm utc={};
+   const char* end=strptime(at,"%Y-%m-%dT%H:%M:%S",&utc);
+   const time_t now=time(nullptr);
+   const time_t measured=end?mktime(&utc):0;
+   if(now>=measured&&now-measured<=15){
+    strlcpy(environmentAt,at,sizeof(environmentAt));
+    auto reading=doc["telemetry"];
+    reactions.sample(millis(),reading["temp_c"]|NAN,reading["noise_rel"]|NAN,params.tempMax,params.noiseRelMax);
+   }
+  }
+ }
+ snprintf(expected,sizeof(expected),"%s/display/attendance",prefix);
+ if(!strcmp(topic,expected)&&doc["v"]==1&&!strcmp(doc["room"]|"",ROOM_ID)){
+  const char* id=doc["event_id"]|"";
+  if(*id&&strlen(id)<sizeof(attendanceId)&&strcmp(id,attendanceId)){
+   strlcpy(attendanceId,id,sizeof(attendanceId));reactions.attendance(millis());
+  }
+ }
+#endif
  unlock();
 }
 void networkTask(void*){
@@ -158,6 +209,12 @@ void networkTask(void*){
    snprintf(topic,sizeof(topic),"%s/ack",nodePrefix);mqtt.subscribe(topic,1);
 #if CLASSAI_ROLE == 1
    snprintf(topic,sizeof(topic),"%s/nodes/%s-environment/snapshot",prefix,ROOM_ID);mqtt.subscribe(topic,1);
+#endif
+#if CLASSAI_ROLE == 2
+   snprintf(topic,sizeof(topic),"%s/fan/set",nodePrefix);mqtt.subscribe(topic,1);
+#elif CLASSAI_ROLE == 3
+   snprintf(topic,sizeof(topic),"%s/nodes/%s-environment/snapshot",prefix,ROOM_ID);mqtt.subscribe(topic,1);
+   snprintf(topic,sizeof(topic),"%s/display/attendance",prefix);mqtt.subscribe(topic,1);
 #endif
    JsonDocument status;lock();common(status);unlock();status["status"]="online";publishDoc("status",status,true);
   }
@@ -303,6 +360,7 @@ void disarm(){
 #endif
  digitalWrite(17,LOW);}
 #elif CLASSAI_ROLE == 2
+ lock();fanOverride=-1;unlock();
  if(RELAY_VALIDATED)digitalWrite(26,RELAY_OFF_LEVEL);fanOn=false;
 #else
  digitalWrite(21,LOW);
@@ -350,10 +408,18 @@ void sample(){
  if(comfort>=0)doc["comfort"]=comfort;doc["state"]=comfortState(p,comfort);
  if(millis()>=60000)doc["presence"]=motionSeen;else doc["presence"]=nullptr;
  bool desired=multinode::fanDesired(fanOn,temperature,comfort,p.tempMax,p.okMin,p.regularMin);
- if(!isfinite(temperature)||!armed||!RELAY_VALIDATED||(desired!=fanOn&&multinode::elapsed(millis(),fanChangedAt,60000))){
-  fanOn=armed&&RELAY_VALIDATED&&desired&&isfinite(temperature);fanChangedAt=millis();if(RELAY_VALIDATED)digitalWrite(26,fanOn?RELAY_ON_LEVEL:RELAY_OFF_LEVEL);
+ lock();
+ const uint32_t now=millis();
+ fanOverride=multinode::activeFanOverride(fanOverride,armed,now,fanOverrideAt);
+ const bool enabled=RELAY_VALIDATED&&armed&&isfinite(temperature);
+ if(fanOverride>=0)desired=fanOverride==1;
+ if(!enabled||(desired!=fanOn&&(fanOverride>=0||multinode::elapsed(now,fanChangedAt,60000)))){
+  fanOn=enabled&&desired;fanChangedAt=now;if(RELAY_VALIDATED)digitalWrite(26,fanOn?RELAY_ON_LEVEL:RELAY_OFF_LEVEL);
  }
- doc["fan_on"]=fanOn;doc["fan_enabled"]=bool(RELAY_VALIDATED&&armed);
+ doc["fan_on"]=fanOn;doc["fan_enabled"]=enabled;
+ doc["fan_mode"]=fanOverride<0?"auto":fanOverride?"on":"off";
+ if(fanCommandId[0])doc["fan_command_id"]=fanCommandId;
+ unlock();
  digitalWrite(18,comfort>=p.okMin);digitalWrite(19,comfort>=p.regularMin&&comfort<p.okMin);digitalWrite(23,comfort>=0&&comfort<p.regularMin);
 #else
  doc["agent_online"]=!multinode::elapsed(millis(),agentAt,1500);doc["voice_state"]=voiceState;doc["audio_error"]=voiceError;
@@ -404,11 +470,22 @@ void loop(){
   screen.fillRect(x+3*s,y+s,10*s,3*s,orange);screen.fillRect(x+2*s,y+3*s,12*s,6*s,orange);
   screen.fillRect(x,y+4*s,2*s,3*s,orange);
   const bool talking=!strcmp(voiceState,"speaking");
+  lock();
+  reactions.setSpeaking(talking,millis());
+  const auto reaction=reactions.visible(millis(),networkUp);
+  unlock();
+  if(reaction==multinode::Reactions::Heat){
+   const int drop=100+(millis()/500)%3*14;
+   screen.fillCircle(177,drop,5,ST77XX_BLUE);
+   screen.fillTriangle(172,drop,177,drop-9,182,drop,ST77XX_BLUE);
+  }
   screen.fillRect(x+14*s,y+(talking?1:4)*s,2*s,3*s,orange);
   for(int leg=0;leg<4;++leg)screen.fillRect(x+(3+leg*3)*s,y+9*s,2*s,3*s,orange);
   const bool blink=(millis()/500)%8==0;
   for(int eye:{5,10})screen.fillRect(x+eye*s,y+3*s,s,blink?2:s,ST77XX_BLACK);
-  screen.fillRect(0,0,240,80,ST77XX_BLACK);screen.setCursor(8,8);screen.print("ClassAI");screen.setCursor(8,35);screen.print(voiceState);screen.setCursor(8,60);screen.print(networkUp?"MQTT online":"MQTT offline");
+  screen.fillRect(0,0,240,80,ST77XX_BLACK);screen.setCursor(8,8);screen.print("ClassAI");screen.setCursor(8,35);screen.print(reaction==multinode::Reactions::Attendance?"Asistencia OK":
+    !strcmp(voiceState,"listening")?"Escuchando":reaction==multinode::Reactions::Heat?"Hace calor":
+    reaction==multinode::Reactions::Noise?"Ruido alto":voiceState);screen.setCursor(8,60);screen.print(networkUp?"MQTT online":"MQTT offline");
  }
 #endif
 #if CLASSAI_ROLE != 3

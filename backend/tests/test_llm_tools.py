@@ -55,9 +55,9 @@ def test_routes_quote_path_and_drop_unknown_arguments(api):
 
 
 def test_tokens_never_reach_the_model(api):
-    api.responses["/sessions/s1/attendance"] = {"data": [{"code": "2021", "full_name": "Ana", "token": "9F2C", "uid": "04AB"}]}
+    api.responses["/sessions/s1/attendance"] = {"count": 1, "data": [{"code": "2021", "full_name": "Ana", "token": "9F2C", "uid": "04AB"}]}
     result = llm_tools.execute_tool(BASE, "get_attendance", {"session_id": "s1"})
-    assert result == {"data": [{"code": "2021", "full_name": "Ana"}]}
+    assert result == {"attendance_count": 1}
 
 
 def test_explain_comfort_decision_uses_the_session_config(api):
@@ -96,3 +96,13 @@ def test_answer_loop_returns_tool_errors_to_the_model(api):
     assert answer == "Solo puedo ayudar con clases y confort."
     assert json.loads(sent[1][-1]["content"]) == {"error": "Herramienta no permitida"}
     assert api.calls == []
+
+def test_live_room_refreshes_and_masks_stale_readings(api):
+    api.responses["/classes/current"] = {"session": {"id": "s1", "attendance_count": 3}}
+    environment = {"role": "environment", "status": "online", "stale": False, "telemetry": {"temp_c": 30}}
+    api.responses["/rooms/a101/nodes"] = [environment]
+    assert llm_tools.execute_tool(BASE, "get_live_room", {"room": "a101"})["nodes"][0]["readings"]["temp_c"] == 30
+    environment["telemetry"]["temp_c"] = 32
+    assert llm_tools.execute_tool(BASE, "get_live_room", {"room": "a101"})["nodes"][0]["readings"]["temp_c"] == 32
+    environment["stale"] = True
+    assert llm_tools.execute_tool(BASE, "get_live_room", {"room": "a101"})["nodes"][0]["readings"] is None

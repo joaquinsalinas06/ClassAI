@@ -273,6 +273,42 @@ def test_mqtt_to_sqlite_and_api(tmp_path, monkeypatch):
                 assert live_nodes['assistant']['telemetry']['light_rel'] == .1
             publish_node('environment', 'telemetry', telemetry['environment'])
             wait_for(lambda: snapshots['a101-environment']['telemetry']['fan_on'] is False, processes)
+            # Environment simulator echoes only the command it received over MQTT.
+            import live
+            environment = simulated_nodes['environment']
+            environment_subscribed = threading.Event()
+            handled = set()
+            applied = []
+
+            def fan_command(client, userdata, message):
+                command = json.loads(message.payload)
+                if command['command_id'] in handled:
+                    return
+                handled.add(command['command_id'])
+                applied.append(command['mode'])
+                client.publish('classai/v1/a101/nodes/a101-environment/telemetry', json.dumps({
+                    **telemetry['environment'], 'fan_mode': command['mode'],
+                    'fan_on': command['mode'] == 'on', 'fan_command_id': command['command_id'],
+                }))
+
+            environment.on_message = fan_command
+            environment.on_subscribe = lambda *args: environment_subscribed.set()
+            environment.subscribe('classai/v1/a101/nodes/a101-environment/fan/set', qos=1)
+            wait_for(environment_subscribed.is_set, processes)
+            with TestClient(api.app):
+                wait_for(lambda: live._client is not None and live._client.is_connected(), processes)
+                assert live.set_room_fan('a101', 'on') == 'Ventilador encendido durante cinco minutos.'
+                assert live.set_room_fan('a101', 'off') == 'Ventilador apagado durante cinco minutos.'
+                assert live.set_room_fan('a101', 'auto') == 'Ventilador en modo automático.'
+                publish_node('environment', 'status', {
+                    'v': 1, 'room': 'a101', 'device': 'a101-environment', 'role': 'environment', 'status': 'offline',
+                })
+                wait_for(lambda: snapshots['a101-environment']['status'] == 'offline', processes)
+                assert 'sin confirmar' in live.set_room_fan('a101', 'on')
+                assert applied == ['on', 'off', 'auto']
+            publish_node('environment', 'telemetry', telemetry['environment'])
+            wait_for(lambda: snapshots['a101-environment']['status'] == 'online', processes)
+
             fixture_type, fixture_token = TAPS[0]
             tap = dict(v=1, room='a101', device='a101-access', role='access', session_id=shared_session,
                        ts=None, uptime_ms=101, event='ATTENDANCE_RECORDED', event_id='three-tap',

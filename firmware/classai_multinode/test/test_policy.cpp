@@ -26,6 +26,25 @@ int main(){
  assert(!fanDesired(true,28,75,24,75,50));
  assert(elapsed(10,0xfffffff0u,25));
  assert(!elapsed(10,0xfffffff0u,27));
+ assert(activeFanOverride(1,true,300099,100)==1);
+ assert(activeFanOverride(1,true,300100,100)==-1);
+ assert(activeFanOverride(0,false,101,100)==-1);
+ Reactions reactions;
+ reactions.sample(10000,31,.8,30,.5);
+ assert(reactions.visible(10000,true)==Reactions::Heat);
+ reactions.attendance(10500);
+ assert(reactions.visible(11000,true)==Reactions::Attendance);
+ reactions.sample(15000,29.5,.8,30,.5);
+ assert(reactions.visible(15000,true)==Reactions::Heat);
+ reactions.sample(20000,28,.8,30,.5);
+ assert(reactions.visible(20000,true)==Reactions::Noise);
+ reactions.setSpeaking(true,20500);
+ reactions.sample(21000,28,.8,30,.5);
+ assert(reactions.visible(21000,true)==Reactions::Idle);
+ assert(reactions.visible(21000,false)==Reactions::Idle);
+ reactions.setSpeaking(false,22000);
+ reactions.sample(27000,31,.1,30,.5);
+ assert(reactions.visible(42000,true)==Reactions::Idle);
  const char* fixture="123456789";
  assert(crc32(reinterpret_cast<const uint8_t*>(fixture),strlen(fixture))==0xcbf43926u);
 }

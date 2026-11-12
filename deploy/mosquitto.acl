@@ -10,18 +10,22 @@ topic read classai/v1/a101/session
 topic read classai/v1/a101/config
 
 user a101-environment
+topic read classai/v1/a101/nodes/a101-environment/fan/set
 topic write classai/v1/a101/nodes/a101-environment/telemetry
 topic write classai/v1/a101/nodes/a101-environment/status
 topic read classai/v1/a101/session
 topic read classai/v1/a101/config
 
 user a101-assistant
+topic read classai/v1/a101/nodes/a101-environment/snapshot
+topic read classai/v1/a101/display/attendance
 topic write classai/v1/a101/nodes/a101-assistant/telemetry
 topic write classai/v1/a101/nodes/a101-assistant/status
 topic read classai/v1/a101/session
 topic read classai/v1/a101/config
 
 user classai-ingest
+topic write classai/v1/+/display/attendance
 topic read classai/v1/+/nodes/+/telemetry
 topic read classai/v1/+/nodes/+/status
 topic read classai/v1/+/nodes/+/commands
@@ -37,6 +41,7 @@ topic write classai/v1/+/confirmed
 topic write classai/v1/+/config
 
 user classai-api
+topic write classai/v1/+/nodes/+/fan/set
 topic read classai/v1/+/nodes/+/snapshot
 topic read classai/v1/+/session
 topic read classai/v1/+/confirmed

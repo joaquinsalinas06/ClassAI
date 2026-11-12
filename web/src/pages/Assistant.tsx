@@ -1,3 +1,4 @@
+import { useApp } from "../app/context";
 import { useMutation } from "@tanstack/react-query";
 import { ArrowUp, CircleSlash, RotateCcw, Wrench } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
@@ -21,6 +22,8 @@ const SUGGESTIONS = [
 ];
 
 const TOOL_LABEL: Record<string, string> = {
+  get_live_room: "Estado en vivo",
+  set_fan: "Control del ventilador",
   get_current_class: "Clase actual",
   get_session_summary: "Resumen de sesión",
   list_sessions: "Lista de sesiones",
@@ -72,6 +75,11 @@ function Typed({ text, animate, onDone }: { text: string; animate: boolean; onDo
 }
 
 export function Assistant() {
+  const { room } = useApp();
+  return <RoomAssistant key={room} room={room} />;
+}
+
+function RoomAssistant({ room }: { room: string }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const [unavailable, setUnavailable] = useState<string | null>(null);
@@ -80,12 +88,12 @@ export function Assistant() {
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const ask = useMutation({
-    mutationFn: ({ question, history }: { question: string; history: ChatTurn[] }) => api.ask(question, history),
+    mutationFn: ({ question, history }: { question: string; history: ChatTurn[] }) => api.ask(question, history, room),
     onSuccess: (answer) =>
       setMessages((m) => [...m, { id: ++counter.current, role: "assistant", content: answer.answer, tools: answer.tools_used, fresh: true }]),
     onError: (error) => {
       if (error instanceof ApiError && (error.status === 503 || error.status === 404)) {
-        setUnavailable(error.status === 503 ? "El asistente no está configurado en este servidor: falta la clave del modelo de lenguaje." : "Este servidor todavía no ofrece el asistente.");
+        setUnavailable(error.status === 503 ? "El asistente no está disponible en este servidor." : "Este servidor todavía no ofrece el asistente.");
         return;
       }
       setMessages((m) => [...m, { id: ++counter.current, role: "assistant", content: error instanceof ApiError ? error.message : "No hubo respuesta del servidor.", error: true }]);
@@ -111,7 +119,7 @@ export function Assistant() {
     <div className="mx-auto flex min-h-[calc(100dvh-140px)] w-full max-w-[760px] flex-col">
       <PageHeader
         title="Asistente"
-        description="Consulta los datos de tus aulas, sesiones y asistencia."
+        description={`Consulta las lecturas y la asistencia de ${room.toUpperCase()}.`}
         actions={!empty && (
           <Button variant="ghost" size="sm" icon={<RotateCcw size={14} />} onClick={() => setMessages([])}>
             Nueva conversación

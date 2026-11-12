@@ -18,6 +18,34 @@ inline bool fanDesired(bool current,float temperature,int comfort,float maximum,
  return current;
 }
 inline bool elapsed(uint32_t now,uint32_t before,uint32_t duration){return uint32_t(now-before)>=duration;}
+inline int activeFanOverride(int requested, bool armed, uint32_t now, uint32_t received) {
+ return armed&&!elapsed(now,received,300000)?requested:-1;
+}
+struct Reactions {
+ enum View { Idle, Heat, Noise, Attendance };
+ bool heat=false, hasReading=false, speaking=false, hasAttendance=false;
+ unsigned noisy=0;
+ uint32_t readingAt=0, attendanceAt=0, speakingAt=0;
+ void reset(){hasReading=false;heat=false;noisy=0;}
+ void attendance(uint32_t now){hasAttendance=true;attendanceAt=now;}
+ void setSpeaking(bool active,uint32_t now){
+  if(active||speaking){speakingAt=now;noisy=0;}
+  speaking=active;
+ }
+ void sample(uint32_t now,float temp,float noise,float maxTemp,float maxNoise){
+  if(!hasReading||elapsed(now,readingAt,15000))reset();
+  hasReading=true;readingAt=now;
+  heat=isfinite(temp)&&(temp>maxTemp||(heat&&temp>maxTemp-1));
+  if(speaking||!elapsed(now,speakingAt,5000)||!isfinite(noise)||noise<=maxNoise)noisy=0;
+  else if(noisy<3)++noisy;
+ }
+ View visible(uint32_t now,bool connected) const {
+  if(hasAttendance&&!elapsed(now,attendanceAt,2500))return Attendance;
+  if(!connected||!hasReading||elapsed(now,readingAt,15000))return Idle;
+  if(heat)return Heat;
+  return noisy>=3?Noise:Idle;
+ }
+};
 inline uint32_t crc32(const uint8_t* data,unsigned length) {
  uint32_t crc=0xffffffffu;
  for(unsigned i=0;i<length;++i){crc^=data[i];for(unsigned bit=0;bit<8;++bit)crc=(crc>>1)^(0xedb88320u&uint32_t(-int32_t(crc&1)));}

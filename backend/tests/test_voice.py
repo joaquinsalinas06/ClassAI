@@ -79,3 +79,28 @@ def test_response_resamples_to_stereo_driver_rate():
         wav.writeframes(b'\0'*4410)
     result = agent.response_pcm(target.getvalue())
     assert len(result) == 6400 and result == b'\0'*6400
+
+def test_voice_transcript_reaches_shared_assistant_with_room(monkeypatch):
+    from types import SimpleNamespace
+
+    clip = agent.wav_query(b'\0' * 3200)
+    monkeypatch.setenv('SPEECH_BASE_URL', 'http://speech.test')
+    calls = []
+
+    def post(url, **kwargs):
+        if url.endswith('/transcribe'):
+            return SimpleNamespace(raise_for_status=lambda: None,
+                                   json=lambda: {'text': 'Apaga el ventilador'})
+        assert kwargs['json'] == {'text': 'Ventilador apagado.'}
+        from contextlib import nullcontext
+        return nullcontext(SimpleNamespace(raise_for_status=lambda: None,
+                                           iter_content=lambda size: [clip]))
+
+    def ask(body):
+        calls.append((body.room, body.question))
+        return {'answer': 'Ventilador apagado.'}
+
+    monkeypatch.setattr(voice_api.requests, 'post', post)
+    monkeypatch.setattr(voice_api, 'ask', ask)
+    assert voice_api.process_voice(clip, 'b204') == clip
+    assert calls == [('b204', 'Apaga el ventilador')]

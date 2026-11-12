@@ -38,7 +38,7 @@ def process_voice(content, room="a101"):
         text = transcript.json()['text']
         if not isinstance(text, str) or not text.strip() or len(text) > 1000:
             raise HTTPException(400, detail='No se obtuvo una consulta válida')
-        answer = ask(AskIn(question=f'En el aula {room}: {text}'[:1000]))['answer']
+        answer = ask(AskIn(question=text[:1000], room=room))['answer']
         with requests.post(f'{base}/synthesize', json={'text': answer[:600]}, timeout=45, stream=True) as speech:
             speech.raise_for_status()
             wav = bytearray()

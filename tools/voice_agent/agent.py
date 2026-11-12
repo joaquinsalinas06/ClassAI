@@ -118,6 +118,7 @@ def main():
     sequence = 0
     next_audio = 0
     cooldown = 0
+    captured_at = None
 
     def query(pcm):
         with requests.post(args.server.rstrip('/') + '/assistant/voice?room=' + args.room, data=wav_query(pcm),
@@ -156,6 +157,7 @@ def main():
                         continue
                     clip = interaction.feed(pcm)
                     if clip is not None and future is None:
+                        captured_at = time.monotonic()
                         future = executor.submit(query, clip)
                 if last_capture and now-last_capture > 1:
                     send(5)
@@ -183,6 +185,9 @@ def main():
                 if playback and now >= next_audio:
                     chunk = playback[offset:offset+1280]
                     send(2, chunk)
+                    if captured_at is not None:
+                        print(f'Voice capture complete to first USB playback frame: {time.monotonic()-captured_at:.2f}s', flush=True)
+                        captured_at = None
                     offset += len(chunk)
                     next_audio = now + len(chunk)/64000
                     if offset >= len(playback):

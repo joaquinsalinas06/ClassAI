@@ -160,6 +160,9 @@ def handle(message, received, database, accumulator, client):
                 if row:
                     confirmed["student"] = {"code": row[0], "full_name": row[1]}
             outgoing.extend([(f"{prefix}/nodes/{device}/ack", ack, False), (f"{prefix}/confirmed", confirmed, False)])
+            if not existing and saved_outcome and saved_outcome[0] == "new":
+                outgoing.append((f"{prefix}/display/attendance",
+                                 {"v": 1, "room": room, "event_id": event["event_id"]}, False))
         return outgoing
 
     if kind == "commands" and data["action"] == "stop":
