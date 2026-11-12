@@ -1,0 +1,44 @@
+name: Deploy ClassAI demo
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: classai-demo-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: github.repository == 'joaquinsalinas06/ClassAI' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: projects/291608604056/locations/global/workloadIdentityPools/classai-github/providers/github
+          service_account: classai-deploy@classai-demo-joaquin-261110.iam.gserviceaccount.com
+      - uses: google-github-actions/setup-gcloud@v3
+      - name: Deploy tested demo branch over IAP
+        run: |
+          # shellcheck disable=SC2016
+          gcloud compute ssh classai-demo --project=classai-demo-joaquin-261110 \
+            --zone=us-central1-a --tunnel-through-iap --quiet --command='
+              set -eu
+              cd /home/salinsuwu_gmail_com/ClassAI
+              test -z "$(sudo -u salinsuwu_gmail_com git status --porcelain)"
+              test "$(sudo -u salinsuwu_gmail_com git branch --show-current)" = codex/three-node-local-smoke
+              sudo -u salinsuwu_gmail_com git fetch origin refs/heads/codex/three-node-local-smoke
+              sudo -u salinsuwu_gmail_com git merge --ff-only FETCH_HEAD
+              sudo docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
+              sudo docker compose --env-file deploy/.env -f deploy/compose.yaml build api ingest web
+              sudo docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait --wait-timeout 120 api ingest web
+              sudo docker compose --env-file deploy/.env -f deploy/compose.yaml restart broker
+              sudo docker compose --env-file deploy/.env -f deploy/compose.yaml ps
+              sudo -u salinsuwu_gmail_com git rev-parse --short HEAD
+            '
