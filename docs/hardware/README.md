@@ -26,12 +26,19 @@ los montajes; no volver a crear una pieza con otro nombre. No renombrar un ID
 cuando cambie su ubicación o función. Un lote se puede dividir después en IDs
 individuales, dejando registrado el origen y evitando duplicar cantidades.
 
-## Actualización para integración · 29/10/2026
+## Disponibilidad actual · 02/11/2026
 
-Joaquín confirma tres ESP32 y cuatro protoboards de 400 puntos disponibles.
-El reparto acceso/ambiente/asistente se prepara en [tres-nodos.md](tres-nodos.md);
-las cantidades antiguas que siguen describen el estado histórico de sus ensayos.
-La integración física conjunta todavía no está aprobada.
+Joaquín ratifica **tres ESP32** (una USB-C de 38 pines de su propiedad), y
+actualiza el stock a **cinco protoboards**: dos de Adrián/Auki, una de la
+universidad y dos personales. Declara **140 cables personales de 20 cm**
+(60 macho–macho, 40 macho–hembra, 40 hembra–hembra), además de seis botones,
+LEDs de tres colores, resistencias y adaptador de batería. Ver el corte
+[con IDs, propiedad y devolución](inventario.md#corte-vigente-de-hardware-y-devolución--02112026).
+
+El reparto acceso/ambiente/asistente usa cuatro de las cinco protoboards,
+con una en reserva; está en [tres-nodos.md](tres-nodos.md). El corte previo
+del 29/10 hablaba de cuatro y queda como registro histórico. No se afirma
+que la integración física conjunta esté aprobada.
 
 ## Propiedad y disponibilidad
 
@@ -54,23 +61,24 @@ actualizar también esta tabla. No incluye contenido interno sin contar de kits.
 
 | Categoría | Disponible según declaración | Pedido / todavía no confirmado recibido |
 |---|---|---|
-| ESP32 | 2: A-01 y B-02 | 1: E-01 (38 pines, Type-C); 3 previstos |
-| Protoboards | 2 unidades/conjuntos: A-04 y B-01 | E-02 + mini incluida en E-04; 4 previstas si el kit trae una mini |
-| Jumpers | Aproximadamente 40: A-02 (~14) + C-07 (~10) + C-08 (~16) | E-03 y contenido de E-04, sin cantidades verificadas |
+| ESP32 | **3**: A-01, B-02 y E-01 (personal de Joaquín, 38 pines, USB-C) | Pinout E-01 sin verificar |
+| Protoboards | **5**: A-04 ×2 (Auki), B-01 ×1 (universidad), E-02 ×1 y mini E-04 ×1 (Joaquín) | Asociar físicamente las cinco a IDs; P1–P4 usan cuatro |
+| Jumpers | **140 personales de 20 cm**: 60 M–M, 40 M–H, 40 H–H (E-03 + E-04); aparte préstamos A-02 (~14), C-07 (~10), C-08 (~16) | Recuento pieza por pieza pendiente; no confundir lotes |
 | Cables USB a micro USB | **2**: A-03 y D-10 | Ninguno adicional confirmado; cable USB-C no inventariado |
 | Pantalla TFT | 1: D-04; retirada del montaje según Joaquín | — |
 | PIR | 2: B-04 y D-06 | — |
 | Temperatura/humedad | 1 DHT11: B-03 | — |
 | Módulos de micrófono | 2: B-08 y D-07, de interfaces distintas | — |
 | Audio de salida | 1 amplificador D-08, 2 altavoces D-09, 1 buzzer B-09 | — |
-| Señalización | 1 matriz B-10 y **6 LEDs sueltos** | LEDs adicionales de E-04, sin contar |
-| Control | 1 pulsador C-04, 1 relé doble B-11 (2 bobinas de 5 V), 1 ventilador D-05 (DC 5 V) | Pulsadores adicionales de E-04, sin contar |
+| Señalización | 1 matriz B-10, 6 LEDs de B/C y LEDs personales E-04 (~4–5 de cada color amarillo/rojo/verde, por confirmar) | Conteo y separación por propietario pendientes |
+| Control | 1 pulsador C-04 + **6 pulsadores personales E-04**, 1 relé doble B-11, 1 ventilador D-05 | Verificación física pendiente |
 | NFC | 1 lector D-01 + 1 tarjeta D-02 + 1 llavero D-03 | — |
-| Resistencias y conectores | Lotes sin contar | Resistencias/accesorios de E-04, sin contar |
+| Resistencias y conectores | Lotes C por contar; lote personal E-04: 1 kΩ, 10 kΩ, 100 kΩ y quizá 100 Ω; adaptador batería ×1 | Confirmar 100 Ω, cantidades y tipo de adaptador |
 
 No hay un total exacto de «piezas» mientras falten cantidades de lotes/kits.
-Los rangos conversados de 10/20/40 cables no son conteos: no se convierten en
-un total ficticio de 60/120 jumpers.
+**140** es el total **declarado de jumpers propios de Joaquín**, no el total
+exacto de todos los cables del equipo; los préstamos A/C conservan estimaciones.
+La devolución se registra por ID, cantidad, propietario y fecha real en inventario.md.
 
 ## Antes de reconstruir un montaje
 
@@ -88,7 +96,7 @@ claves de API, contenido de flash/NVS ni números de pedidos privados aquí.
 ## Corte de verificación física (24/10/2026)
 Se fotografiaron y asociaron a sus IDs sin duplicar stock: **D-05 ventilador 5 V**, **D-04 TFT ST7789 Ver:1.1**, **D-01 PN532 V3 serigrafiado Elechouse**, **B-10 matriz LED 8×8**, **B-11 módulo con dos relés TONG LING 5VDC**, **B-09 buzzer polarizado** y **B-08 detector AO/G/+/DO**. **No se ha ejecutado ninguna prueba eléctrica**; revisar [identificacion-fisica.md](identificacion-fisica.md) y [conexiones.md](conexiones.md) antes de montar.
 
-La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. Las compras E-01 a E-04 siguen pendientes de recepción física.
+La alimentación prevista es USB/hub para ESP32 y **fuente independiente regulada 5 V DC** para ventilador/relé, pendiente de conocer consumos y comprobar GPIO 3,3 V. No declarar hub ni cargador suficientes sin leer su etiqueta. **En el corte histórico del 24/10**, las compras E-01 a E-04 aún no tenían recepción confirmada; ver actualización del 02/11.
 
 [Bancos físicos, materiales y evidencia R-025](bancos-fisicos.md): ensayos sucesivos con la otra placa, sin desmontar NFC automáticamente.
 
@@ -120,5 +128,5 @@ M-08A/B-10 ensayado con **A-01 (Adrián, identificado por Joaquín)** y respaldo
 ## Ver cómo se construye cada nodo
 
 En el visor `/montajes`, abrir **ClassAI · tres nodos**: acceso, ambiente y
-asistente. Incluye cuatro protoboards, H–H admitidos en las propuestas, recorrido
+asistente. Usa cuatro de las cinco protoboards disponibles, H–H admitidos en las propuestas, recorrido
 cable por cable, condiciones visibles y exportación. [Montajes integrados](tres-nodos.md#montajes-visuales-integrados--30102026).
