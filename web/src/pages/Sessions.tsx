@@ -4,6 +4,7 @@ import { Link, useNavigate, useSearchParams } from "react-router";
 import { useApp } from "../app/context";
 import { ComfortBar } from "../charts/ComfortBar";
 import { useSessions } from "../lib/api";
+import { NewSessionButton, SessionRowActions } from "../features/SessionActions";
 import { FACTORY_CONFIG, comfortState } from "../lib/comfort";
 import { formatDate, formatDuration, formatNumber, formatTime, withUnit } from "../lib/format";
 import { Badge } from "../ui/Badge";
@@ -65,7 +66,11 @@ export function Sessions() {
 
   return (
     <>
-      <PageHeader title="Sesiones" description="Cada clase registrada por los nodos, con su confort, asistencia y tiempo en alerta." />
+      <PageHeader
+        title="Sesiones"
+        description="Abre, cierra o elimina clases. Cada una muestra su confort, asistencia y tiempo en alerta."
+        actions={<NewSessionButton onCreated={(id) => navigate(`/sesiones/${encodeURIComponent(id)}`)} />}
+      />
 
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <ListFilter size={15} className="text-muted" aria-hidden />
@@ -117,6 +122,7 @@ export function Sessions() {
                   <Th className="text-right">Temp. media</Th>
                   <Th>Confort medio</Th>
                   <Th>En alerta</Th>
+                  <Th className="text-right"><span className="sr-only">Acciones</span></Th>
                   <Th className="w-8"><span className="sr-only">Abrir</span></Th>
                 </tr>
               </thead>
@@ -145,6 +151,7 @@ export function Sessions() {
                           <span className="text-muted">{live ? "—" : "Ninguno"}</span>
                         )}
                       </Td>
+                      <Td><SessionRowActions id={s.session_id} open={live} label={`${s.course ?? "Sin curso"} · ${s.room.toUpperCase()} · ${formatDate(s.started_at)}`} /></Td>
                       <Td><ChevronRight size={15} className="text-faint transition-transform group-hover:translate-x-0.5 group-hover:text-fg-2" aria-hidden /></Td>
                     </tr>
                   );

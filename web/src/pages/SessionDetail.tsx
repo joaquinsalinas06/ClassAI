@@ -1,9 +1,11 @@
 import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft, GitCompareArrows, Radio } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, useParams as useRouteParams } from "react-router";
+import { Link, useNavigate, useParams as useRouteParams } from "react-router";
 import { ComfortRing } from "../charts/ComfortRing";
 import { AttendanceList } from "../features/AttendanceList";
+import { SessionRowActions } from "../features/SessionActions";
+import { VotesCard } from "../features/VotesCard";
 import { TrendPanel } from "../features/TrendPanel";
 import { api, useAttendance, useCompare, useParams, useSessions, useSummary } from "../lib/api";
 import { CHART_METRICS, comfortState } from "../lib/comfort";
@@ -69,6 +71,7 @@ export function SessionDetail() {
   const [compareId, setCompareId] = useState<string>("");
   const compare = useSessionPoints(compareId || undefined);
   const compareSummary = useCompare(compareId && id ? [id, compareId] : []);
+  const navigate = useNavigate();
 
   if (summary.isPending) {
     return (
@@ -135,13 +138,16 @@ export function SessionDetail() {
             </p>
             <p className="mt-1 font-mono text-caption text-muted">{id}</p>
           </div>
-          {finished ? (
-            <Badge tone="neutral">Finalizada · parámetros v{found.params_version ?? "—"}</Badge>
-          ) : (
-            <Link to={`/aula/${found.room}`} className={buttonClass("primary")}>
-              <Radio size={15} aria-hidden /> Ver en vivo
-            </Link>
-          )}
+          <div className="flex flex-wrap items-center gap-2">
+            {finished ? (
+              <Badge tone="neutral">Finalizada · parámetros v{found.params_version ?? "—"}</Badge>
+            ) : (
+              <Link to={`/aula/${found.room}`} className={buttonClass("primary")}>
+                <Radio size={15} aria-hidden /> Ver en vivo
+              </Link>
+            )}
+            <SessionRowActions id={id!} open={!found.ended_at} size="md" label={`${found.course ?? "Sin curso"} · ${found.room.toUpperCase()}`} onDeleted={() => navigate("/sesiones", { replace: true })} />
+          </div>
         </div>
       </div>
 
@@ -241,7 +247,8 @@ export function SessionDetail() {
             )}
           </Card>
         </div>
-        <div className="lg:col-span-4">
+        <div className="flex flex-col gap-5 lg:col-span-4">
+          <VotesCard id={id!} live={!found.ended_at} />
           <AttendanceList arrivals={arrivals} startedAt={startedAt} endAt={endedAt} loading={attendance.isPending} maxHeight={640} emptyText="Nadie registró asistencia en esta clase." />
         </div>
       </div>

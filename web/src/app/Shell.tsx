@@ -1,13 +1,14 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import * as Popover from "@radix-ui/react-popover";
 import {
-  BotMessageSquare, Check, ChevronsUpDown, History, LayoutDashboard, Menu, Moon, Palette, PanelLeft, Radio, Search, Sun,
+  BotMessageSquare, Check, ChevronsUpDown, History, LayoutDashboard, LogOut, Menu, Moon, Palette, PanelLeft, Radio, Search, Sun,
   UsersRound, CircuitBoard, type LucideIcon,
 } from "lucide-react";
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { NavLink, Outlet, useLocation, useMatch, useNavigate } from "react-router";
-import { MOCK, useHealth, useRooms } from "../lib/api";
+import { useQueryClient } from "@tanstack/react-query";
+import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate } from "react-router";
+import { api, MOCK, UNAUTHORIZED, useHealth, useMe, useRooms } from "../lib/api";
 import { formatRelative } from "../lib/format";
 import { useLive } from "../lib/useLive";
 import type { Room } from "../lib/types";
@@ -60,6 +61,53 @@ export const roomTone = (room: Room | undefined): Tone => {
   const state = room.last_telemetry?.state;
   return state === "OK" ? "ok" : state === "ALERT" ? "alert" : state === "REGULAR" ? "regular" : "neutral";
 };
+
+/** Panel routes need a teacher session; without one (or once it expires) go to /login. */
+export function RequireTeacher() {
+  const me = useMe();
+  const client = useQueryClient();
+  const navigate = useNavigate();
+  const location = useLocation();
+  useEffect(() => {
+    const onUnauthorized = () => {
+      client.removeQueries({ queryKey: ["me"] });
+      navigate("/login", { replace: true, state: { from: location.pathname } });
+    };
+    window.addEventListener(UNAUTHORIZED, onUnauthorized);
+    return () => window.removeEventListener(UNAUTHORIZED, onUnauthorized);
+  }, [client, navigate, location.pathname]);
+  if (me.isPending) return <div className="min-h-dvh bg-page" aria-busy="true" />;
+  if (me.isError) return <Navigate replace to="/login" state={{ from: location.pathname + location.search }} />;
+  return <Shell />;
+}
+
+function TeacherMenu({ collapsed }: { collapsed: boolean }) {
+  const me = useMe();
+  const client = useQueryClient();
+  const navigate = useNavigate();
+  const teacher = me.data?.teacher;
+  if (!teacher) return null;
+  const logout = async () => {
+    try {
+      await api.logout();
+    } finally {
+      client.clear();
+      navigate("/login", { replace: true });
+    }
+  };
+  return (
+    <div className={cn("flex h-9 items-center gap-2 px-2.5 text-caption", collapsed && "justify-center px-0")}>
+      {!collapsed && (
+        <span className="min-w-0 flex-1 truncate">
+          <span className="block truncate font-medium text-fg">{teacher.full_name}</span>
+        </span>
+      )}
+      <IconButton label="Cerrar sesión" size="sm" onClick={logout}>
+        <LogOut size={14} />
+      </IconButton>
+    </div>
+  );
+}
 
 export function Shell() {
   const navigate = useNavigate();
@@ -274,6 +322,7 @@ function Sidebar({ collapsed, onToggle }: { collapsed: boolean; onToggle?: () =>
 
       <div className="mt-auto flex flex-col gap-0.5">
         {NAV_FOOTER.map(link)}
+        {!MOCK && <TeacherMenu collapsed={collapsed} />}
         <Tooltip content={MOCK ? "Datos simulados en el navegador" : apiOk ? "API conectada" : "La API no responde"} side="right">
           <div className={cn("flex h-8 items-center gap-2.5 px-2.5 text-caption text-muted", collapsed && "justify-center px-0")}>
             <span className="flex size-4 items-center justify-center">

@@ -10,6 +10,7 @@ import type { Connection } from "./live";
 
 export const MOCK = import.meta.env.VITE_MOCK === "1";
 export const API_BASE = "/api";
+export const UNAUTHORIZED = "classai:unauthorized";
 
 export class ApiError extends Error {
   status: number;
@@ -34,6 +35,8 @@ export async function request<T>(path: string, init: RequestInit = {}): Promise<
     throw new ApiError(0, "No se pudo conectar con el servidor");
   }
   if (!response.ok) {
+    // An expired teacher cookie anywhere in the panel sends the user back to /login (see Shell).
+    if (response.status === 401 && !path.startsWith("/auth/")) window.dispatchEvent(new Event(UNAUTHORIZED));
     let detail = response.statusText || `Error ${response.status}`;
     try {
       const body = await response.json();
@@ -59,7 +62,26 @@ const qs = (params: Record<string, string | number | undefined | null | string[]
 };
 const enc = encodeURIComponent;
 
+export interface Teacher { id: number; username: string; full_name: string }
+export interface SessionDetailRow {
+  session_id: string; room: string; course: string | null; device: string; started_at: string; ended_at: string | null;
+  open: boolean; attendance_count: number; votes: Record<"ok" | "hot" | "cold", number>; published?: boolean;
+}
+export interface VoteRow { student_code: string; full_name: string; kind: string; created_at: string }
+
+const MOCK_TEACHER: Teacher = { id: 1, username: "docente", full_name: "Docente demo" };
+
 export const api = {
+  me: () => MOCK ? Promise.resolve({ teacher: MOCK_TEACHER }) : request<{ teacher: Teacher }>("/auth/me"),
+  login: (username: string, password: string) =>
+    request<{ teacher: Teacher }>("/auth/login", { method: "POST", body: JSON.stringify({ username, password }) }),
+  logout: () => request<{ ok: boolean }>("/auth/logout", { method: "POST" }),
+  createSession: (body: { room: string; course: string; started_at?: string }) =>
+    request<SessionDetailRow>("/sessions", { method: "POST", body: JSON.stringify(body) }),
+  session: (id: string) => request<SessionDetailRow>(`/sessions/${enc(id)}`),
+  closeSession: (id: string) => request<SessionDetailRow>(`/sessions/${enc(id)}/close`, { method: "POST" }),
+  deleteSession: (id: string) => request<{ deleted: boolean }>(`/sessions/${enc(id)}`, { method: "DELETE" }),
+  votes: (id: string) => request<{ counts: SessionDetailRow["votes"]; count: number; data: VoteRow[] }>(`/sessions/${enc(id)}/votes`),
   health: () => request<{ status: string; database: string }>("/health"),
   rooms: () => request<Room[]>("/rooms"),
   nodes: (room: string) => MOCK ? Promise.resolve([] as NodeSnapshot[]) : request<NodeSnapshot[]>(`/rooms/${enc(room)}/nodes`),
@@ -81,6 +103,23 @@ export const api = {
   ask: (question: string, history: ChatTurn[]) =>
     request<AssistantAnswer>("/assistant/ask", { method: "POST", body: JSON.stringify({ question, history }) }),
 };
+
+export const useMe = () => useQuery({ queryKey: ["me"], queryFn: api.me, staleTime: 60_000, retry: false });
+export const useVotes = (id: string | undefined, live = false) =>
+  useQuery({ queryKey: ["votes", id], queryFn: () => api.votes(id!), enabled: !!id && !MOCK, refetchInterval: live ? 5_000 : false });
+
+/** Create/close/delete invalidate every session-related query so lists and the live room refresh. */
+export function useSessionMutations() {
+  const client = useQueryClient();
+  const refresh = () => {
+    for (const key of ["sessions", "summary", "current", "rooms", "votes"]) void client.invalidateQueries({ queryKey: [key] });
+  };
+  return {
+    create: useMutation({ mutationFn: api.createSession, onSuccess: refresh }),
+    close: useMutation({ mutationFn: api.closeSession, onSuccess: refresh }),
+    remove: useMutation({ mutationFn: api.deleteSession, onSuccess: refresh }),
+  };
+}
 
 export interface SessionFilters {
   room?: string;

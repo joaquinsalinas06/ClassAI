@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router";
-import { Shell } from "./app/Shell";
+import { RequireTeacher } from "./app/Shell";
+import { Login } from "./pages/Login";
 import { Overview } from "./pages/Overview";
 import { LiveRoom } from "./pages/LiveRoom";
 import { NotFound } from "./pages/NotFound";
@@ -13,8 +14,9 @@ const storedRoom = () => {
 };
 
 export const router = createBrowserRouter([
+  { path: "login", element: <Login /> },
   {
-    element: <Shell />,
+    element: <RequireTeacher />,
     children: [
       { index: true, element: <Overview /> },
       { path: "aula", element: <Navigate replace to={`/aula/${storedRoom()}`} /> },

@@ -6,6 +6,8 @@ import { useApp } from "../app/context";
 import { roomName } from "../app/Shell";
 import { Gauge } from "../charts/Gauge";
 import { AttendanceList } from "../features/AttendanceList";
+import { NewSessionButton, SessionRowActions } from "../features/SessionActions";
+import { VotesCard } from "../features/VotesCard";
 import { MetricTiles } from "../features/MetricTiles";
 import { TrendPanel } from "../features/TrendPanel";
 import { WhyRange } from "../features/WhyRange";
@@ -256,7 +258,12 @@ export function LiveRoom() {
             )}
           </div>
         </div>
-        <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
+        <div className="flex flex-wrap items-center gap-2">
+          <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
+          {state.sessionId
+            ? <SessionRowActions id={state.sessionId} open size="md" label={`${state.course ?? session?.course ?? "Clase"} · ${room.toUpperCase()}`} />
+            : <NewSessionButton />}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-12">
@@ -311,13 +318,14 @@ export function LiveRoom() {
           </ErrorBoundary>
         </div>
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-4">
+          {state.sessionId && <VotesCard id={state.sessionId} live />}
           <ErrorBoundary label="la asistencia">
             {inSession || state.arrivals.length > 0 ? (
               <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
             ) : (
               <Card className="p-4">
                 <h2 className="text-label font-semibold text-fg">Asistencia</h2>
-                <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase en el nodo.</p>
+                <p className="mt-1 text-small text-muted">La lista se abre al crear la clase aquí o con el botón del nodo.</p>
                 <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
               </Card>
             )}
