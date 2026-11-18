@@ -68,6 +68,14 @@ export interface SessionDetailRow {
   open: boolean; attendance_count: number; votes: Record<"ok" | "hot" | "cold", number>; published?: boolean;
 }
 export interface VoteRow { student_code: string; full_name: string; kind: string; created_at: string }
+export type VoteDimension = "light" | "noise" | "motion" | "humidity";
+export type VoteLevel = "low" | "ok" | "high";
+export interface DimensionVoteRow { student_code: string; full_name: string; dimension: VoteDimension; value: VoteLevel; created_at: string }
+export interface VotesResponse {
+  counts: SessionDetailRow["votes"]; count: number; data: VoteRow[];
+  /** Ausentes en un backend anterior a los votos por dimensión. */
+  dimensions?: Record<VoteDimension, Record<VoteLevel, number>>; dimension_data?: DimensionVoteRow[];
+}
 
 const MOCK_TEACHER: Teacher = { id: 1, username: "docente", full_name: "Docente demo" };
 
@@ -81,7 +89,7 @@ export const api = {
   session: (id: string) => request<SessionDetailRow>(`/sessions/${enc(id)}`),
   closeSession: (id: string) => request<SessionDetailRow>(`/sessions/${enc(id)}/close`, { method: "POST" }),
   deleteSession: (id: string) => request<{ deleted: boolean }>(`/sessions/${enc(id)}`, { method: "DELETE" }),
-  votes: (id: string) => request<{ counts: SessionDetailRow["votes"]; count: number; data: VoteRow[] }>(`/sessions/${enc(id)}/votes`),
+  votes: (id: string) => request<VotesResponse>(`/sessions/${enc(id)}/votes`),
   health: () => request<{ status: string; database: string }>("/health"),
   rooms: () => request<Room[]>("/rooms"),
   nodes: (room: string) => MOCK ? Promise.resolve([] as NodeSnapshot[]) : request<NodeSnapshot[]>(`/rooms/${enc(room)}/nodes`),
