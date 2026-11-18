@@ -16,4 +16,7 @@ static const char MQTT_ROOT_CA[] = "-----BEGIN CERTIFICATE-----\nREPLACE_WITH_CA
 #define RELAY_VALIDATED 0
 #define AMPLIFIER_VALIDATED 0
 #define RELAY_ON_LEVEL LOW // LOW-trigger direct interface; change only for a verified driver.
+#define FAN_SIMULATED 0 // 1 enables simulated fan_on/fan_enabled/fan_set telemetry without driving hardware
+#define FAN_DRIVER_L9110 0 // 1 uses L9110 (IA=GPIO26 PWM soft-start, IB=GPIO25 LOW) instead of relay
+#define LOCAL_COMFORT_OVERRIDE 0 // 1 overrides noise_rel_max and comfort weights locally on this node
 #define BUZZER_PASSIVE 0

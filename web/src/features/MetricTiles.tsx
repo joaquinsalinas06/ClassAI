@@ -1,4 +1,5 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "lucide-react";
+import type { ReactNode } from "react";
 import { METRICS, SENSOR_METRICS, bandOf, placement, placementText } from "../lib/comfort";
 import { formatDelta, formatNumber } from "../lib/format";
 import { deltaOver, type Point } from "../lib/series";
@@ -72,7 +73,9 @@ export function MetricTile({ metric, value, points, config, live, stale, onSelec
   );
 }
 
-export function MetricTiles({ readings, points, config, live, stale, loading, selected, onSelect }: {
+export function MetricTiles({ metrics = SENSOR_METRICS, extraTile, readings, points, config, live, stale, loading, selected, onSelect }: {
+  metrics?: readonly ChartMetric[];
+  extraTile?: ReactNode;
   readings: Partial<Record<ChartMetric, number | null | undefined>>;
   points: Record<ChartMetric, Point[]>;
   config: ComfortConfig | null;
@@ -84,7 +87,7 @@ export function MetricTiles({ readings, points, config, live, stale, loading, se
 }) {
   return (
     <div className="grid h-full grid-cols-1 gap-px overflow-hidden rounded-lg border border-line bg-line-subtle shadow-xs sm:grid-cols-2">
-      {SENSOR_METRICS.map((metric) =>
+      {metrics.map((metric) =>
         loading ? (
           <div key={metric} className="flex flex-col gap-3 bg-surface p-4">
             <Skeleton className="h-4 w-24" />
@@ -106,6 +109,7 @@ export function MetricTiles({ readings, points, config, live, stale, loading, se
           />
         ),
       )}
+      {extraTile}
     </div>
   );
 }

@@ -13,6 +13,15 @@
 #ifndef ACCESS_LDR_VALIDATED
 #define ACCESS_LDR_VALIDATED 0
 #endif
+#ifndef FAN_SIMULATED
+#define FAN_SIMULATED 0
+#endif
+#ifndef FAN_DRIVER_L9110
+#define FAN_DRIVER_L9110 0
+#endif
+#ifndef LOCAL_COMFORT_OVERRIDE
+#define LOCAL_COMFORT_OVERRIDE 0
+#endif
 #ifndef CLASSAI_ROLE
 #error "Compile with CLASSAI_ROLE=1 (access), 2 (environment) or 3 (assistant)"
 #endif
@@ -61,7 +70,7 @@ struct Telemetry { char json[900]; };
 ComfortParams params=comfortDefaults();
 volatile bool networkUp=false;
 uint32_t bootCount=0,eventSequence=0,sessionRevision=0;
-bool filesystemReady=false,fanOn=false,motionSeen=false;
+bool filesystemReady=false,fanOn=false,physicalFanOn=false,motionSeen=false;
 #if CLASSAI_ROLE == 1
 bool nfcReady=false;
 #endif
@@ -161,7 +170,8 @@ void receive(char* topic,byte* payload,unsigned length){
    int requested=!strcmp(mode,"on")?1:!strcmp(mode,"off")?0:!strcmp(mode,"auto")?-1:-2;
    if(requested>=-1){
     strlcpy(recentFanCommands[nextFanCommand++%16],id,sizeof(fanCommandId));
-    strlcpy(fanCommandId,id,sizeof(fanCommandId));fanOverride=armed&&RELAY_VALIDATED?requested:-1;fanOverrideAt=millis();
+    const bool fanReady=(RELAY_VALIDATED&&armed)||(FAN_SIMULATED!=0);
+    strlcpy(fanCommandId,id,sizeof(fanCommandId));fanOverride=fanReady?requested:-1;fanOverrideAt=millis();
    }
   }
  }
@@ -350,6 +360,25 @@ void pollSerialAudio(){
  if(used==sizeof(buffer))used=0;
 }
 #endif
+#if CLASSAI_ROLE == 2
+void applyFanOutput(bool on,bool wasOn){
+ if(!RELAY_VALIDATED||!armed||!on){
+#if FAN_DRIVER_L9110
+  digitalWrite(25,LOW);ledcWrite(26,0);
+#else
+  if(RELAY_VALIDATED)digitalWrite(26,RELAY_OFF_LEVEL);
+#endif
+  return;
+ }
+#if FAN_DRIVER_L9110
+ digitalWrite(25,LOW);
+ if(!wasOn){for(int v=120;v<=255;v+=15){ledcWrite(26,v);delay(40);}}
+ ledcWrite(26,255);
+#else
+ digitalWrite(26,RELAY_ON_LEVEL);
+#endif
+}
+#endif
 void disarm(){
  armed=false;
 #if CLASSAI_ROLE == 1
@@ -360,8 +389,8 @@ void disarm(){
 #endif
  digitalWrite(17,LOW);}
 #elif CLASSAI_ROLE == 2
- lock();fanOverride=-1;unlock();
- if(RELAY_VALIDATED)digitalWrite(26,RELAY_OFF_LEVEL);fanOn=false;
+ lock();fanOverride=-1;const bool prevPhysical=physicalFanOn;fanOn=false;physicalFanOn=false;unlock();
+ applyFanOutput(false,prevPhysical);
 #else
  digitalWrite(21,LOW);
 #endif
@@ -378,7 +407,11 @@ void hardwareSetup(){
 #elif CLASSAI_ROLE == 2
  dht.begin();pinMode(27,INPUT);pinMode(34,INPUT);pinMode(35,INPUT);analogReadResolution(12);
  for(int pin:{18,19,23}){digitalWrite(pin,LOW);pinMode(pin,OUTPUT);}
+#if FAN_DRIVER_L9110
+ pinMode(25,OUTPUT);digitalWrite(25,LOW);ledcAttach(26,1000,8);ledcWrite(26,0);
+#else
  if(RELAY_VALIDATED){digitalWrite(26,RELAY_OFF_LEVEL);pinMode(26,OUTPUT);}
+#endif
 #else
  pinMode(35,INPUT);digitalWrite(21,LOW);pinMode(21,OUTPUT);
  displaySpi.begin(14,-1,23,5);screen.init(240,240);screen.fillScreen(ST77XX_BLACK);screen.setTextColor(ST77XX_WHITE);screen.setTextSize(2);
@@ -388,6 +421,10 @@ void hardwareSetup(){
 }
 void sample(){
  JsonDocument doc;lock();common(doc);ComfortParams p=params;unlock();
+#if LOCAL_COMFORT_OVERRIDE
+ p.noiseRelMax=LOCAL_NOISE_REL_MAX;
+ p.wTemp=LOCAL_W_TEMP;p.wRh=LOCAL_W_RH;p.wLux=LOCAL_W_LUX;p.wNoise=LOCAL_W_NOISE;
+#endif
  doc["lux"]=nullptr;doc["comfort"]=nullptr;doc["state"]="REGULAR";doc["params_version"]=p.paramsVersion;
 #if CLASSAI_ROLE == 1
  if(millis()>=60000)doc["presence"]=motionSeen;else doc["presence"]=nullptr;
@@ -410,17 +447,24 @@ void sample(){
  bool desired=multinode::fanDesired(fanOn,temperature,comfort,p.tempMax,p.okMin,p.regularMin);
  lock();
  const uint32_t now=millis();
- fanOverride=multinode::activeFanOverride(fanOverride,armed,now,fanOverrideAt);
- const bool enabled=RELAY_VALIDATED&&armed&&isfinite(temperature);
+ const bool simOnly=FAN_SIMULATED&&(!RELAY_VALIDATED||!armed);
+ const bool controlActive=(RELAY_VALIDATED&&armed)||simOnly;
+ fanOverride=multinode::activeFanOverride(fanOverride,controlActive,now,fanOverrideAt);
+ const bool enabled=controlActive&&isfinite(temperature);
  if(fanOverride>=0)desired=fanOverride==1;
  if(!enabled||(desired!=fanOn&&(fanOverride>=0||multinode::elapsed(now,fanChangedAt,60000)))){
-  fanOn=enabled&&desired;fanChangedAt=now;if(RELAY_VALIDATED)digitalWrite(26,fanOn?RELAY_ON_LEVEL:RELAY_OFF_LEVEL);
+  fanOn=enabled&&desired;fanChangedAt=now;
  }
  doc["fan_on"]=fanOn;doc["fan_enabled"]=enabled;
  doc["fan_mode"]=fanOverride<0?"auto":fanOverride?"on":"off";
  if(fanCommandId[0])doc["fan_command_id"]=fanCommandId;
+ const bool prevPhysical=physicalFanOn;
+ const bool targetPhysical=RELAY_VALIDATED&&armed&&fanOn;
+ physicalFanOn=targetPhysical;
  unlock();
- digitalWrite(18,comfort>=p.okMin);digitalWrite(19,comfort>=p.regularMin&&comfort<p.okMin);digitalWrite(23,comfort>=0&&comfort<p.regularMin);
+ if(targetPhysical!=prevPhysical)applyFanOutput(targetPhysical,prevPhysical);
+ if(!isfinite(temperature)||!isfinite(humidity)){digitalWrite(18,LOW);digitalWrite(19,LOW);digitalWrite(23,HIGH);}
+ else{digitalWrite(18,comfort>=p.okMin);digitalWrite(19,comfort>=p.regularMin&&comfort<p.okMin);digitalWrite(23,comfort>=0&&comfort<p.regularMin);}
 #else
  doc["agent_online"]=!multinode::elapsed(millis(),agentAt,1500);doc["voice_state"]=voiceState;doc["audio_error"]=voiceError;
 #endif
@@ -499,6 +543,9 @@ void loop(){
 #if CLASSAI_ROLE == 1
    lock();bool inSession=sessionId[0]!=0;unlock();
    Serial.printf("STATUS wifi=%d mqtt=%d nfc=%d storage=%d session=%d pir=%d\n",WiFi.status()==WL_CONNECTED,networkUp,nfcReady,filesystemReady,inSession,millis()>=60000?digitalRead(35):-1);
+#elif CLASSAI_ROLE == 2
+   lock();const bool on=fanOn;const int ov=fanOverride;unlock();
+   Serial.printf("STATUS wifi=%d mqtt=%d armed=%d fan_sim=%d relay_val=%d fan_on=%d fan_mode=%s pir=%d\n",WiFi.status()==WL_CONNECTED,networkUp,armed?1:0,FAN_SIMULATED,RELAY_VALIDATED,on?1:0,ov<0?"auto":ov?"on":"off",millis()>=60000?digitalRead(27):-1);
 #endif
   }else if(!strcmp(command,"arm")){
    armed=true;Serial.println("ARMADO");

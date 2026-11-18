@@ -13,7 +13,7 @@ struct ComfortParams {
 
 // Valores de fábrica del contrato (params_version 0).
 inline ComfortParams comfortDefaults() {
-  return ComfortParams{21, 24, 40, 60, 300, 500, 0.5f, 0.35f, 0.20f, 0.20f, 0.25f, 80, 60, 0};
+  return ComfortParams{21, 24, 40, 60, 300, 500, 0.1f, 0.47f, 0.01f, 0.20f, 0.32f, 80, 60, 0};
 }
 
 const double COMFORT_TEMP_FALLOFF_C = 3.0;  // temperatura: 0 a ±3 °C fuera del rango

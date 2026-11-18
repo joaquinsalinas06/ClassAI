@@ -30,7 +30,7 @@ from river import linear_model, optim
 
 ROOM_PATTERN = r"^[a-z0-9-]+$"
 DEFAULT_TIMEZONE = "America/Lima"
-WEIGHTS = {"temp": 0.35, "rh": 0.20, "lux": 0.20, "noise": 0.25}
+WEIGHTS = {"temp": 0.47, "rh": 0.01, "lux": 0.20, "noise": 0.32}
 
 # Puntuación (idéntica a firmware/classai_node/comfort.h).
 TEMP_FALLOFF_C = 3.0      # temperatura: 0 a ±3 °C fuera del rango
@@ -44,7 +44,7 @@ OPEN_METEO_URL = "https://api.open-meteo.com/v1/forecast"
 
 # Ruido: P90 de la propia clase, con un mínimo de datos.
 MIN_NOISE_MINUTES, MIN_NOISE_SESSIONS = 30, 2
-NOISE_RANGE = (0.2, 0.8)
+NOISE_RANGE = (0.05, 0.8)
 
 # Luz EN 12464-1 (aulas 300 lx; clases nocturnas / adultos 500 lx).
 LUX_DAY, LUX_EVENING, EVENING_HOUR = [300, 500], [500, 750], 18
@@ -70,7 +70,7 @@ def factory_config(room: str) -> dict:
     """Valores de fábrica del contrato (params_version 0)."""
     return {
         "v": 1, "params_version": 0, "room": room,
-        "temp_c": [21, 24], "rh_pct": [40, 60], "lux": [300, 500], "noise_rel_max": 0.5,
+        "temp_c": [21, 24], "rh_pct": [40, 60], "lux": [300, 500], "noise_rel_max": 0.1,
         "weights": dict(WEIGHTS), "ok_min": 80, "regular_min": 60,
         "source": {"temp": "factory", "rh": "factory", "noise": "factory", "lux": "factory"},
     }
@@ -324,7 +324,7 @@ def build_config(db_conn: sqlite3.Connection, room: str, course: Optional[str],
     version = db_conn.execute(
         "SELECT COALESCE(MAX(params_version), 0) + 1 FROM comfort_params WHERE room = ?", (room,)
     ).fetchone()[0]
-    base_noise = 0.5 if noise is None else noise
+    base_noise = 0.1 if noise is None else noise
     return {
         "v": 1,
         "params_version": version,
