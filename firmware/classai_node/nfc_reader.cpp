@@ -32,6 +32,8 @@ static bool ready = false;
 static bool waitRelease = false;
 static uint8_t misses = 0;
 static nfcp::Cooldown cooldown;
+static nfcp::SelectRetry selectRetry;
+static bool phoneNoAnswer = false;  // último SELECT sin respuesta con UID de teléfono
 
 bool nfcBegin() {
   SPI.begin(PIN_SCK, PIN_MISO, PIN_MOSI, PIN_SS);
@@ -45,9 +47,20 @@ bool nfcBegin() {
   Serial.printf("[NFC] PN5%02X firmware %u.%u\n", (unsigned)(ver >> 24) & 0xFF,
                 (unsigned)(ver >> 16) & 0xFF, (unsigned)(ver >> 8) & 0xFF);
   // retries=1 (2 intentos): InListPassiveTarget responde "0 targets" rápido en vez de esperar
+  // retries=10 se probó el 17-nov-2026: SELECT aceptado 7/12 pero GET_CREDENTIAL 0/7 (con 1: algunos llegaban). Mantener 1.
   ready = nfc.SAMConfig() && nfc.setPassiveActivationRetries(0x01);
   if (!ready) Serial.println("[NFC] fallo SAMConfig/RFConfiguration");
   return ready;
+}
+
+// Apaga y vuelve a encender el campo RF: simula «alejar y volver a acercar». Hipótesis (17-nov): Android HCE solo
+// completa la activación con un flanco de subida del campo; sin validar, medir con 10 taps antes/después.
+static void fieldReset() {
+  uint8_t off[] = {0x32, 0x01, 0x00};  // RFConfiguration, RF field: apagado
+  uint8_t on[] = {0x32, 0x01, 0x03};   // encendido + AutoRFCA
+  nfc.sendCommandCheckAck(off, sizeof(off));
+  delay(40);
+  nfc.sendCommandCheckAck(on, sizeof(on));
 }
 
 static bool exchange(const uint8_t* apdu, uint8_t len, uint8_t* resp, uint8_t* respLen) {
@@ -64,22 +77,26 @@ static bool readCredential(const uint8_t* uid, uint8_t uidLen, NfcCredential& ou
   bool exchanged = exchange(nfcp::SELECT_APDU, sizeof(nfcp::SELECT_APDU), resp, &n);
 
   switch (nfcp::afterSelect(exchanged, resp, exchanged ? n : 0, uidLen)) {
-    case nfcp::Path::HCE:
+    case nfcp::Path::HCE: {
       Serial.println("[NFC] SELECT ClassAI aceptado; solicitando credencial");
       n = sizeof(resp);
-      if (exchange(nfcp::GET_CREDENTIAL_APDU, sizeof(nfcp::GET_CREDENTIAL_APDU), resp, &n) &&
-          nfcp::parseCredential(resp, n, out.token)) {
+      // El enlace muere al fallar la respuesta (log del celular, 17-nov: nunca llega un 2.º GET): no se reintenta aquí.
+      const bool got = exchange(nfcp::GET_CREDENTIAL_APDU, sizeof(nfcp::GET_CREDENTIAL_APDU), resp, &n);
+      if (got && nfcp::parseCredential(resp, n, out.token)) {
         strcpy(out.type, "android_hce");
         return true;
       }
+      phoneNoAnswer = !got;  // corte de transporte en pleno intercambio: reintentar mientras siga cerca
       Serial.printf("[NFC] ClassAI sin credencial válida (SW %04X), ignorado\n", nfcp::statusWord(resp, n));
       return false;
+    }
     case nfcp::Path::CARD:
       if (nfcp::cardToken(uid, uidLen, out.token)) {
         strcpy(out.type, "nfc_card_uid");
         return true;
       }
-      Serial.printf("[NFC] UID aleatorio o inválido (%u bytes), ignorado\n", uidLen);
+      phoneNoAnswer = true;
+      Serial.printf("[NFC] SELECT sin respuesta y UID no válido (%u bytes): reintento mientras siga cerca\n", uidLen);
       return false;
     default:
       Serial.println("[NFC] dispositivo ISO-DEP sin app ClassAI, ignorado");
@@ -99,11 +116,18 @@ bool nfcPoll(NfcCredential& out) {
     else if (++misses >= RELEASE_MISSES) waitRelease = false;
     return false;
   }
-  if (!present) return false;  // WAIT_TARGET
+  if (!present) { selectRetry.reset(); return false; }  // WAIT_TARGET
 
-  waitRelease = true;
   misses = 0;
-  if (!readCredential(uid, uidLen, out)) return false;
+  phoneNoAnswer = false;
+  if (!readCredential(uid, uidLen, out)) {
+    // teléfono que aún no responde: no gastar el intento, reintentar en el próximo poll
+    if (phoneNoAnswer && selectRetry.again()) { fieldReset(); return false; }
+    waitRelease = true;
+    return false;
+  }
+  selectRetry.reset();
+  waitRelease = true;
   if (!cooldown.allow(out.token, millis())) {
     Serial.printf("[NFC] %s repetido (<3 s), ignorado\n", out.type);
     return false;

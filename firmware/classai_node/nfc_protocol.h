@@ -67,6 +67,19 @@ inline Path afterSelect(bool exchanged, const uint8_t* r, size_t n, size_t uidLe
   return uidLen == 4 ? Path::IGNORE : Path::CARD;
 }
 
+// Android tarda en despertar HCE en el primer contacto: SELECT sin respuesta con UID de teléfono
+// (4 bytes, no válido como tarjeta) se reintenta mientras el target siga presente, hasta maxTries.
+// Devuelve true = reintentar en el próximo poll; false = agotado, esperar a que se retire.
+struct SelectRetry {
+  uint8_t tries = 0;
+  bool again(uint8_t maxTries = 6) {
+    if (++tries < maxTries) return true;
+    tries = 0;
+    return false;
+  }
+  void reset() { tries = 0; }
+};
+
 // Anti-repetición: el mismo token no se re-emite dentro de windowMs. now = millis() inyectado.
 struct Cooldown {
   char last[41] = {0};

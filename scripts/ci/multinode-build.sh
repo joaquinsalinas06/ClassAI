@@ -4,7 +4,7 @@ cd "$(dirname "$0")/../.."
 node_tmp=$(mktemp -d)
 trap 'rm -rf "$node_tmp"' EXIT
 mkdir -p "$node_tmp/classai_multinode" "$node_tmp/classai_node"
-cp firmware/classai_multinode/{classai_multinode.ino,node_policy.h} "$node_tmp/classai_multinode/"
+cp firmware/classai_multinode/{classai_multinode.ino,node_policy.h,access_animation.h} "$node_tmp/classai_multinode/"
 cp firmware/classai_multinode/secrets.example.h "$node_tmp/classai_multinode/secrets.h"
 cp firmware/classai_node/{comfort.h,nfc_reader.h,nfc_protocol.h,nfc_reader.cpp} "$node_tmp/classai_node/"
 python3 scripts/ci/prepare-pn532.py "$node_tmp/Adafruit_PN532"
