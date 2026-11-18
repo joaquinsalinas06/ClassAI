@@ -3,6 +3,7 @@ import { ArrowUpRight, CircleCheck, Clock, TriangleAlert, UsersRound, WifiOff, t
 import { motion, useReducedMotion } from "motion/react";
 import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router";
+import { roomName } from "../app/Shell";
 import { ComfortBar } from "../charts/ComfortBar";
 import { ComfortRing } from "../charts/ComfortRing";
 import { Sparkline } from "../charts/Sparkline";
@@ -165,7 +166,7 @@ export function Overview() {
       if (!s.alert_minutes || !s.ended_at || (parseTime(s.started_at) ?? 0) < cutoff) continue;
       items.push({
         id: s.session_id, at: parseTime(s.ended_at) ?? 0, tone: s.alert_minutes >= 10 ? "alert" : "regular", icon: Clock,
-        title: `${s.course ?? "Clase"} en ${s.room.toUpperCase()}: ${formatDuration(s.alert_minutes)} en alerta`,
+        title: `${s.course ?? "Clase"} en ${roomName(rooms.data, s.room)}: ${formatDuration(s.alert_minutes)} en alerta`,
         detail: `Confort promedio ${s.comfort_avg != null ? Math.round(s.comfort_avg) : "—"} · terminó ${formatRelative(s.ended_at)}`,
         to: `/sesiones/${encodeURIComponent(s.session_id)}`,
       });
@@ -173,7 +174,7 @@ export function Overview() {
     return items.sort((a, b) => b.at - a.at).slice(0, 8);
     // configFor reads `params`, which is in the deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [list, params.map((p) => p.dataUpdatedAt).join(), recent.data]);
+  }, [list, rooms.data, params.map((p) => p.dataUpdatedAt).join(), recent.data]);
 
   const today = limaDayKey(Date.now());
   const todays = (recent.data?.data ?? []).filter((s) => limaDayKey(s.started_at) === today);
@@ -258,7 +259,7 @@ export function Overview() {
                     <Link to={`/sesiones/${encodeURIComponent(s.session_id)}`} className="flex items-center gap-3 px-4 py-2 transition-colors hover:bg-hover/60">
                       <span className="num w-11 shrink-0 text-small text-muted">{formatTime(s.started_at)}</span>
                       <span className="min-w-0 flex-1 truncate text-label text-fg">
-                        {s.course ?? "Clase"} <span className="text-muted">· {s.room.toUpperCase()}</span>
+                        {s.course ?? "Clase"} <span className="text-muted">· {roomName(rooms.data, s.room)}</span>
                       </span>
                       {s.ended_at ? (
                         <ComfortBar value={s.comfort_avg} state={s.comfort_avg != null && cfg ? comfortState(cfg, s.comfort_avg) : null} okMin={cfg?.ok_min} width={56} />

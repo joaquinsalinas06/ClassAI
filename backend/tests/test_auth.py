@@ -76,6 +76,12 @@ def test_session_crud_and_votes_of_registered_student(client):
     assert student.get("/student/classes").status_code == 401
     classes = student.get("/student/classes", headers=bearer).json()["classes"]
     assert [c["id"] for c in classes] == [sid] and classes[0]["course"] == "CS5055 IoT"
+    assert classes[0]["room"] == "a101"  # sin nombre registrado, el id
+    import sqlite3 as _sq
+    with _sq.connect(client.database) as _db:
+        _db.execute("INSERT OR REPLACE INTO rooms(id, name) VALUES ('a101', 'M602')")
+    assert student.get("/student/classes", headers=bearer).json()["classes"][0]["room"] == "M602"
+    assert student.get(f"/student/classes/{sid}", headers=bearer).json()["room"] == "M602"
 
     # El token HCE registrado es el que resuelve la asistencia del nodo de acceso.
     import json
