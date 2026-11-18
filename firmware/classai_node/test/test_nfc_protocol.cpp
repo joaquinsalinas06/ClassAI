@@ -71,6 +71,14 @@ int main() {
   assert(!w.allow("CC", 0x00000100u));  // 512 ms después de la vuelta
   assert(w.allow("CC", 0x00000C00u));   // > 3 s después
 
+  // Reintento de SELECT: 5 reintentos y a la 6.ª se rinde; reset() reinicia
+  SelectRetry r;
+  for (int i = 0; i < 5; i++) assert(r.again());
+  assert(!r.again());
+  assert(r.again());               // el contador se reinició al rendirse
+  r.reset();
+  for (int i = 0; i < 5; i++) assert(r.again());
+
   puts("test_nfc_protocol: OK");
   return 0;
 }
