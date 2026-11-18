@@ -16,7 +16,7 @@ import requests
 LOCAL_TIMEZONE = "America/Lima"
 WEEKDAYS = ("lunes", "martes", "miércoles", "jueves", "viernes", "sábado", "domingo")
 METRICS = ["temp_c", "rh_pct", "lux", "noise_rel", "presence", "ir_object_c", "comfort"]
-ROOM = {"type": "string", "description": "ID del aula, p.ej. a101."}
+ROOM = {"type": "string", "description": "ID interno del aula en minúsculas, p.ej. a101 o l201 (no el nombre visible)."}
 SESSION = {"type": "string", "description": "session_id, p.ej. a101-20261014T140000Z."}
 # Campos que nunca se le pasan al modelo aunque la API los devolviera.
 HIDDEN_KEYS = {"token", "uid", "credential", "credential_id"}
@@ -30,6 +30,12 @@ Reglas:
   que solo puedes ayudar con eso.
 - Nunca muestres tokens, UIDs ni credenciales, ni los uses para identificar a alguien; a los
   estudiantes solo los nombras por el código y nombre que devuelva la asistencia.
+- Cada aula tiene un id interno y un nombre visible: M602 es el id a101 y L201 es el id l201.
+  Si el usuario nombra un aula ("la 201", "L201", "M602"), usa list_rooms para traducir el nombre
+  al id y llama a las demás herramientas con el id; en la respuesta usa el nombre visible.
+- Para una clase de un día ("la clase de ayer en L201") usa list_sessions con room y el rango
+  start/end de ese día local (con zona horaria); su resumen trae promedios, confort y alertas.
+- Si comparas o listas varias cifras, usa una tabla markdown.
 - noise_rel es ruido relativo 0–1, no decibelios.
 - Para explicar el confort usa explain_comfort_decision: rangos, fuente de cada rango (source)
   y el desplazamiento aprendido del feedback (source.shift). Los rangos los calcula el backend
@@ -50,6 +56,7 @@ def _tool(name: str, description: str, properties: Optional[dict] = None, requir
 
 
 TOOLS = [
+    _tool("list_rooms", "Aulas conocidas: id interno, nombre visible (p.ej. L201), estado y última lectura."),
     _tool("get_temperature_stats", "Min, max, promedio ponderado y clasificación del sensor legado MLX90614 en un periodo.",
           {"start": {"type": "string", "description": "Inicio ISO 8601."},
            "end": {"type": "string", "description": "Fin ISO 8601 exclusivo."}}, ("start", "end")),
@@ -82,6 +89,7 @@ TOOLS = [
 
 # Herramienta -> ruta GET; los demás argumentos van como query params.
 ROUTES = {
+    "list_rooms": "/rooms",
     "get_temperature_stats": "/temperature/stats",
     "get_latest_temperature": "/temperature/latest",
     "get_temperature_history": "/temperature/history",
@@ -147,6 +155,8 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
     if schema is None or not isinstance(arguments, dict):
         return {"error": "Herramienta no permitida"}
     arguments = {k: v for k, v in arguments.items() if k in schema["properties"] and v not in (None, "")}
+    if isinstance(arguments.get("room"), str):
+        arguments["room"] = arguments["room"].strip().lower()
     missing = [key for key in schema["required"] if key not in arguments]
     if missing:
         return {"error": f"Faltan argumentos: {', '.join(missing)}"}
@@ -161,10 +171,25 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
     return _strip_hidden(_get(base_url, route, arguments))
 
 
+def build_context_note(context: Optional[dict]) -> str:
+    """Qué clase o aula está viendo el docente; los valores ya vienen validados por el endpoint."""
+    if not context:
+        return ""
+    parts = []
+    if context.get("session_id"):
+        parts.append(f"la sesión session_id={context['session_id']}")
+    if context.get("room"):
+        parts.append(f"el aula con id={context['room']}")
+    if not parts:
+        return ""
+    return ("\nContexto: el docente pregunta desde la pantalla de " + " y ".join(parts)
+            + ". Si no nombra otra clase o aula, \"esta clase\" se refiere a eso; consulta sus datos con las herramientas.")
+
+
 def answer_question(client, model: str, base_url: str, history: list[dict], question: str,
-                    tools_used: Optional[list[str]] = None) -> str:
+                    tools_used: Optional[list[str]] = None, context: Optional[dict] = None) -> str:
     """Bucle de tool-calling con un cliente compatible con OpenAI; anota en tools_used las herramientas usadas."""
-    messages: list[dict[str, Any]] = [{"role": "system", "content": build_system_prompt()}]
+    messages: list[dict[str, Any]] = [{"role": "system", "content": build_system_prompt() + build_context_note(context)}]
     messages.extend({"role": item["role"], "content": item["content"]} for item in history)
     messages.append({"role": "user", "content": question})
 

@@ -461,10 +461,20 @@ export async function mockRequest(path: string, init: RequestInit = {}): Promise
 
   if (p === "/assistant/ask" && method === "POST") {
     await delay(700);
+    if (body.context?.session_id) return classAnswer(String(body.context.session_id));
     return assistantAnswer(String(body.question ?? ""));
   }
 
   throw new ApiError(404, "Not Found");
+}
+
+function classAnswer(id: string) {
+  const session = SESSIONS.find((s) => s.id === id);
+  const sum = session ? summarize(session) : null;
+  return {
+    answer: `En esta clase la temperatura promedio fue **${sum?.temp_avg?.toFixed(1) ?? "—"} °C**.\n\n| Indicador | Valor |\n|---|---:|\n| Temperatura media | ${sum?.temp_avg?.toFixed(1) ?? "—"} °C |\n| Confort medio | ${Math.round(sum?.comfort_avg ?? 0)} |\n| Minutos en alerta | ${sum?.alert_minutes ?? 0} |\n\nEl calor se explica por la temperatura sobre el rango objetivo durante buena parte de la sesión.`,
+    tools_used: ["get_session_summary", "explain_comfort_decision"],
+  };
 }
 
 function assistantAnswer(question: string) {

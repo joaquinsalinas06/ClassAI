@@ -96,3 +96,17 @@ def test_answer_loop_returns_tool_errors_to_the_model(api):
     assert answer == "Solo puedo ayudar con clases y confort."
     assert json.loads(sent[1][-1]["content"]) == {"error": "Herramienta no permitida"}
     assert api.calls == []
+
+
+def test_room_names_are_normalized_and_listed(api):
+    api.responses["/rooms"] = [{"id": "l201", "name": "L201"}]
+    assert llm_tools.execute_tool(BASE, "list_rooms", {}) == [{"id": "l201", "name": "L201"}]
+    llm_tools.execute_tool(BASE, "list_sessions", {"room": " L201 ", "start": "2026-11-17T00:00:00-05:00"})
+    assert api.calls[-1] == (f"{BASE}/sessions", {"room": "l201", "start": "2026-11-17T00:00:00-05:00"})
+    assert "L201 es el id l201" in llm_tools.SYSTEM_PROMPT
+
+
+def test_context_note_points_to_the_viewed_session():
+    note = llm_tools.build_context_note({"session_id": "l201-abc", "room": "l201"})
+    assert "session_id=l201-abc" in note and "id=l201" in note
+    assert llm_tools.build_context_note(None) == llm_tools.build_context_note({}) == ""
