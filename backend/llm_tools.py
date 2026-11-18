@@ -38,7 +38,9 @@ Reglas:
 - Para "la clase de hoy/ayer/la última" resuelve la sesión con list_sessions (rango del día local con zona
   horaria, o sin rango para la última) y luego llama get_session_overview con su session_id.
   Si hay varias sesiones ese día, elige la de más minutos y asistentes salvo que pidan otra.
-  Para comparar varias sesiones llama get_session_overview de todas en el mismo turno (llamadas en paralelo).
+  Para "hoy o ayer" sin aula, una sola llamada a list_sessions con start = ayer 00:00 y end = mañana 00:00.
+- list_sessions ya trae por sesión movimiento_medio_pct, luz_media_pct, temp_media_c y confort_medio: con eso
+  compara sesiones o aulas directamente (sin más llamadas). Usa get_session_overview solo para el detalle de una.
 - Horas siempre en hora local ({timezone}); las herramientas compuestas ya las devuelven así.
 - Solo respondes sobre aulas, sesiones de clase, asistencia, confort (temperatura, humedad, luz, ruido)
   y cómo se decidieron los parámetros de confort. Para cualquier otro tema responde brevemente
@@ -55,7 +57,8 @@ Reglas:
 - La clasificación frio/templado/calido/caluroso es una regla de aplicación, no una medida científica.
 Formato de respuesta (en español): un título corto en negrita o con ###, una tabla markdown con las cifras
 (métrica | valor | detalle) y luego 2 o 3 frases de interpretación. Usa los nombres visibles de las aulas
-(M602, L201), nunca los ids internos. Luz y movimiento son porcentajes relativos (0–100 %)."""
+(M602, L201), nunca los ids internos. Luz y movimiento son porcentajes relativos (0–100 %); el movimiento es actividad detectada por los PIR,
+no ocupación ni número de personas."""
 
 
 def _tool(name: str, description: str, properties: Optional[dict] = None, required: tuple = ()) -> dict:
@@ -250,6 +253,17 @@ def _room_names(base_url: str) -> dict[str, str]:
     return {r.get("id"): r.get("name") or r.get("id") for r in rooms} if isinstance(rooms, list) else {}
 
 
+def _session_metrics(base_url: str, row: dict) -> dict:
+    """Cifras clave de una sesión para comparar sin pedir el overview: movimiento y luz por zonas + ambiente."""
+    zones = _get(base_url, f"/sessions/{quote(str(row.get('session_id')), safe='')}/zones")
+    stats = _zone_stats(zones) if "zones" in zones else {}
+    motion, light = stats.get("movimiento_actividad_pct"), stats.get("luz_pct")
+    return {"movimiento_medio_pct": motion["combinado"]["media_pct"] if motion else None,
+            "luz_media_pct": light["promedio_zonas"]["media_pct"] if light else None,
+            "temp_media_c": _round(row.get("temp_avg")), "confort_medio": _round(row.get("comfort_avg")),
+            "minutos_en_alerta": row.get("alert_minutes")}
+
+
 def _session_overview(base_url: str, session_id: str) -> dict:
     sid = quote(session_id, safe="")
     summary = _get(base_url, f"/sessions/{sid}/summary")
@@ -376,7 +390,8 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
         result["data"] = [{"session_id": row.get("session_id"), "aula": names.get(row.get("room"), row.get("room")),
                            "curso": row.get("course"), "inicio": _local(row.get("started_at"), "%Y-%m-%d %H:%M"),
                            "fin": _local(row.get("ended_at")), "minutos": row.get("minutes"),
-                           "asistentes": row.get("attendance_count")} for row in result["data"]]
+                           "asistentes": row.get("attendance_count"), **_session_metrics(base_url, row)}
+                          for row in result["data"]]
     return _strip_hidden(result)
 
 
@@ -420,10 +435,10 @@ def answer_question(client, model: str, base_url: str, history: list[dict], ques
             tools_used.append(name)
 
     retried = False
-    for _ in range(6):
+    for attempt in range(6):
         try:
-            response = client.chat.completions.create(
-                model=model, messages=messages, tools=TOOLS, tool_choice="auto", temperature=0.2,
+            response = client.chat.completions.create(  # la última ronda obliga a responder con lo que ya tiene
+                model=model, messages=messages, tools=TOOLS, tool_choice="none" if attempt == 5 else "auto", temperature=0.2,
             )
         except BadRequestError as error:
             # Groq rechaza (400 tool_use_failed) una llamada que no cumple el esquema; se reintenta una vez avisando al modelo.
