@@ -5,8 +5,12 @@ import os
 import sqlite3
 from typing import Annotated, Literal, Optional
 
-from fastapi import FastAPI, Header, HTTPException, Query
+from fastapi import Depends, FastAPI, Header, HTTPException, Query
 from pydantic import BaseModel, Field
+
+import auth
+import class_sessions
+import student_api
 
 from temperature_service import (
     ConfigurationError,
@@ -29,9 +33,15 @@ app = FastAPI(
         {"name": "temperature", "description": "Consultas históricas y agregadas de temperatura."},
         {"name": "classes", "description": "Sesiones de clase, series por métrica y asistencia."},
         {"name": "credentials", "description": "Enrolamiento de credenciales (requiere X-API-Key)."},
+        {"name": "auth", "description": "Login de docentes (cookie httpOnly)."},
+        {"name": "student", "description": "Cuentas, clases abiertas y votos de alumnos (Bearer)."},
     ],
+    # Todo exige la cookie del docente salvo las rutas públicas de auth.PUBLIC_PATHS.
+    dependencies=[Depends(auth.teacher_guard)],
 )
 app.include_router(voice_api.router)
+app.include_router(auth.router)
+app.include_router(student_api.router)
 
 try:
     import tuner
@@ -263,3 +273,7 @@ def revoke(credential_id: int, x_api_key: Annotated[Optional[str], Header()] = N
     if not run_write(lambda connection: revoke_credential(connection, credential_id)):
         raise HTTPException(status_code=404, detail="Credencial inexistente o ya revocada")
     return {"revoked": True, "credential_id": credential_id}
+
+
+# Al final: GET /sessions/{session_id} no debe tapar /sessions/compare ni las demás rutas fijas.
+app.include_router(class_sessions.router)
