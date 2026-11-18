@@ -4,4 +4,5 @@
 struct NfcCredential { char type[16]; char token[41]; };   // type "nfc_card_uid" | "android_hce"
 
 bool nfcBegin();                    // init PN532 over SPI; false if not found (node keeps working without NFC)
-bool nfcPoll(NfcCredential& out);   // non-blocking (target <~60 ms per call); true once per new tap (cooldown/release handled inside)
+bool nfcIsReady();                  // PN532 inicializado ahora mismo (nfcPoll lo reintenta si falló)
+bool nfcPoll(NfcCredential& out);  // non-blocking (target <~60 ms per call); true once per new tap (cooldown/release handled inside)

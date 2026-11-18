@@ -41,6 +41,25 @@ def diagnostic_source(source):
     return source[:start] + result + source[end:]
 
 
+EXCHANGE_ACK = 'sendCommandCheckAck(pn532_packetbuffer, sendLength + 2, '
+EXCHANGE_ACK_MS, EXCHANGE_REPLY_MS = 150, 300
+
+
+def fast_exchange_source(source):
+    """Un intercambio fallido costaba 1000 ms (ACK) + 1000 ms (respuesta); el celular HCE responde en 25-50 ms.
+    Con 150/300 ms cada intento fallido es ~7 veces más barato. Un timeout deja trama atrasada: nfc_reader.cpp reinicializa."""
+    start = source.index('bool Adafruit_PN532::inDataExchange(')
+    end = source.index("\n}", start) + 2
+    body = source[start:end]
+    if f'{EXCHANGE_ACK}{EXCHANGE_ACK_MS})' in body and f'waitready({EXCHANGE_REPLY_MS})' in body:
+        return source
+    if body.count(f'{EXCHANGE_ACK}1000)') != 1 or body.count('waitready(1000)') != 1:
+        raise ValueError('Unexpected exchange timeouts; review fast exchange patch')
+    body = body.replace(f'{EXCHANGE_ACK}1000)', f'{EXCHANGE_ACK}{EXCHANGE_ACK_MS})')
+    body = body.replace('waitready(1000)', f'waitready({EXCHANGE_REPLY_MS})')
+    return source[:start] + body + source[end:]
+
+
 def prepare(destination):
     libraries = json.loads(subprocess.check_output(['arduino-cli', 'lib', 'list', '--json'], text=True))
     library = next(item['library'] for item in libraries['installed_libraries']
@@ -49,7 +68,7 @@ def prepare(destination):
         raise ValueError('Expected Adafruit PN532 1.3.4; review patch before changing version')
     source = Path(library['install_dir'])
     # Never modify the installed library or overwrite an existing staged copy.
-    body = diagnostic_source(patched_source((source / 'Adafruit_PN532.cpp').read_text()))
+    body = fast_exchange_source(diagnostic_source(patched_source((source / 'Adafruit_PN532.cpp').read_text())))
     spi = 'new Adafruit_SPIDevice(ss, 1000000, SPI_BITORDER_LSBFIRST,'
     if body.count(spi) != 1:
         raise ValueError('Unexpected hardware SPI constructor')

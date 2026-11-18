@@ -53,13 +53,14 @@ void queueEvent(const char* e, const void*) { events.push_back(e); eventCount++;
     actual_exchange = reader[begin:end]
     exchange_stub = r'''
 struct { bool ok=false; bool inDataExchange(uint8_t*, uint8_t, uint8_t*, uint8_t*) { return ok; } } nfc;
+static bool needResync=false;
 '''
     test = r'''
 int main() {
   uint8_t response[32]={0}, length=32, apdu[5]={0};
-  assert(!exchange(apdu,5,response,&length) && length==0);
-  nfc.ok=true; length=32;
-  assert(exchange(apdu,5,response,&length) && length==32);
+  assert(!exchange(apdu,5,response,&length) && length==0 && needResync);  // fallo de transporte pide resincronizar
+  nfc.ok=true; length=32; needResync=false;
+  assert(exchange(apdu,5,response,&length) && length==32 && !needResync);
   labCommand("net"); assert(networkChecks==1 && events.empty() && !sessionActive);
   labCommand("start"); assert(!sessionActive && events.empty());
   mqttClient.online=true; nfcOk=false;
