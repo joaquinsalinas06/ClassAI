@@ -21,8 +21,6 @@ export const TOOL_LABEL: Record<string, string> = {
   get_metric_series: "Serie de una métrica",
   get_attendance: "Asistencia",
   explain_comfort_decision: "Explicar el rango",
-  get_session_overview: "Panorama de la sesión",
-  get_room_now: "Aula ahora",
 };
 
 export interface Message extends ChatTurn {
