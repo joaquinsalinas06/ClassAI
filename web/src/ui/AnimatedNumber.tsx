@@ -4,13 +4,15 @@ import { cn } from "./cn";
 import { EASE } from "./motion";
 
 /** Tweens between values by writing text directly (no re-render per frame). */
-export function AnimatedNumber({ value, format, className, from, duration = 0.6 }: {
+export function AnimatedNumber({ value, format, className, from, duration = 0.6, bump }: {
   value: number | null | undefined;
   format: (n: number) => string;
   className?: string;
   /** Start value on first mount (e.g. 0 for a count-up). Defaults to no mount animation. */
   from?: number;
   duration?: number;
+  /** Give a soft scale bump when the value goes up (live counters: arrivals, votes). */
+  bump?: boolean;
 }) {
   const ref = useRef<HTMLSpanElement>(null);
   const previous = useRef<number | null>(from ?? null);
@@ -33,11 +35,17 @@ export function AnimatedNumber({ value, format, className, from, duration = 0.6 
       return;
     }
     const controls = animate(start, value, { duration, ease: EASE.standard, onUpdate: (v) => (el.textContent = formatRef.current(v)) });
-    return () => controls.stop();
-  }, [value, reduce, duration]);
+    const pop = bump && value > start
+      ? animate(el, { transform: ["scale(1)", "scale(1.2)", "scale(1)"] }, { duration: 0.5, ease: EASE.emphasized })
+      : null;
+    return () => {
+      controls.stop();
+      pop?.complete();
+    };
+  }, [value, reduce, duration, bump]);
 
   return (
-    <span ref={ref} className={cn("num", className)}>
+    <span ref={ref} className={cn("num", bump && "inline-block origin-center", className)}>
       {value == null || !Number.isFinite(value) ? "—" : format(from ?? value)}
     </span>
   );

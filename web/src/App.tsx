@@ -15,6 +15,8 @@ const storedRoom = () => {
 
 export const router = createBrowserRouter([
   { path: "login", element: <Login /> },
+  // Pública: los alumnos llegan aquí escaneando el QR, sin cuenta docente.
+  { path: "app", lazy: () => import("./pages/AppDownload").then((m) => ({ Component: m.AppDownload })) },
   {
     element: <RequireTeacher />,
     children: [
