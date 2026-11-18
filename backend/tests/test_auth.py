@@ -98,6 +98,26 @@ def test_session_crud_and_votes_of_registered_student(client):
     database.close()
     assert student.get(f"/student/classes/{sid}", headers=bearer).json()["attended"] is True
 
+    # El alumno ve el aula completa: zonas PIR, ventilador, presentes, rangos y tendencia.
+    fresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    minute = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    with sqlite3.connect(client.database) as db:
+        db.execute("INSERT OR REPLACE INTO node_state VALUES ('a101','a101-environment','environment','online',?,?,?)",
+                   (fresh, json.dumps({"temp_c": 24.5, "rh_pct": 52, "noise_rel": 0.08, "light_rel": 0.6, "comfort": 86,
+                                       "state": "OK", "presence": True, "fan_on": False, "fan_enabled": True}), fresh))
+        db.execute("INSERT OR REPLACE INTO node_state VALUES ('a101','a101-access','access','online',?,?,?)",
+                   (fresh, json.dumps({"presence": False, "comfort": None}), fresh))
+        db.execute("INSERT OR REPLACE INTO sensor_minutes VALUES ('a101','a101-environment','comfort',?,6,80,90,85)", (minute,))
+    live = student.get(f"/student/classes/{sid}", headers=bearer).json()
+    assert live["metrics"]["zones"] == {"entrance": False, "interior": True}
+    assert live["metrics"]["presence"] is False and live["metrics"]["fan_on"] is False
+    assert live["present_count"] == 1 and live["targets"]["temp_c"] == [21, 24]
+    assert live["trend"][-1]["comfort"] == 85
+    assert student.get("/student/classes", headers=bearer).json()["classes"][0]["metrics"]["comfort"] == 86
+    history = student.get("/student/history", headers=bearer).json()["history"]
+    assert [h["session_id"] for h in history] == [sid] and history[0]["course"] == "CS5055 IoT"
+    assert student.get("/student/history").status_code == 401
+
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "hot"}, headers=bearer).json()["saved"]
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "cold"}, headers=bearer).status_code == 200
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "tibio"}, headers=bearer).status_code == 422

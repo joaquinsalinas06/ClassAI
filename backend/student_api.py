@@ -145,7 +145,23 @@ def classes(authorization: Optional[str] = Header(default=None)) -> dict:
     with connect() as db:
         student = identity(db, authorization)
         rows = db.execute(CLASS_SQL + "WHERE s.ended_at IS NULL ORDER BY s.started_at DESC", {"student": student}).fetchall()
-        return {"classes": [class_row(row) for row in rows]}
+        result = [class_row(row) for row in rows]
+        for item in result:
+            item["metrics"] = live_metrics(db, item["room"])
+        return {"classes": result}
+
+
+@router.get("/history", summary="Últimas asistencias del alumno")
+def history(authorization: Optional[str] = Header(default=None)) -> dict:
+    with connect() as db:
+        student = identity(db, authorization)
+        rows = db.execute(
+            "SELECT s.id, s.room, s.course, s.started_at, a.recorded_at FROM attendance a "
+            "JOIN sessions s ON s.id=a.session_id WHERE a.student_id=? ORDER BY a.recorded_at DESC LIMIT 20",
+            (student,),
+        ).fetchall()
+        return {"history": [{"session_id": r[0], "room": r[1], "course": r[2], "started_at": r[3], "attended_at": r[4]}
+                            for r in rows]}
 
 
 def live_metrics(db: sqlite3.Connection, room: str) -> dict:
@@ -161,9 +177,39 @@ def live_metrics(db: sqlite3.Connection, room: str) -> dict:
             continue
         if not 0 <= age <= 15:
             continue
-        keys = ("temp_c", "rh_pct", "noise_rel", "light_rel", "comfort", "state") if role == "environment" else ("presence",) if role == "access" else ()
+        keys = ("temp_c", "rh_pct", "noise_rel", "light_rel", "comfort", "state", "fan_on", "fan_enabled", "fan_mode") \
+            if role == "environment" else ("presence",) if role == "access" else ()
         metrics.update({key: data[key] for key in keys if data.get(key) is not None})
+        # PIR por zona: el de acceso vigila la entrada y el de ambiente el interior.
+        zone = {"access": "entrance", "environment": "interior"}.get(role)
+        if zone and data.get("presence") is not None:
+            metrics.setdefault("zones", {})[zone] = data["presence"]
     return metrics
+
+
+def room_config(db: sqlite3.Connection, room: str) -> dict:
+    """Rangos objetivo vigentes del aula (último comfort_params o los de fábrica)."""
+    from tuner import factory_config
+    row = db.execute("SELECT payload FROM comfort_params WHERE room=? ORDER BY params_version DESC LIMIT 1", (room,)).fetchone()
+    cfg = json.loads(row[0]) if row else factory_config(room)
+    return {key: cfg.get(key) for key in ("temp_c", "rh_pct", "noise_rel_max", "ok_min", "regular_min")}
+
+
+def class_trend(db: sqlite3.Connection, room: str, started_at: str) -> list:
+    """Promedio por minuto de confort y temperatura desde el inicio (últimos 30 minutos)."""
+    try:
+        since = datetime.fromisoformat(started_at.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
+    except (ValueError, AttributeError):
+        return []
+    rows = db.execute(
+        "SELECT minute_utc, metric, AVG(avg) FROM sensor_minutes WHERE room=? AND metric IN ('comfort','temp_c') "
+        "AND minute_utc>=? GROUP BY minute_utc, metric ORDER BY minute_utc DESC LIMIT 60",
+        (room, since),
+    ).fetchall()
+    points: dict = {}
+    for minute, metric, value in rows:
+        points.setdefault(minute, {"minute": minute.replace(" ", "T") + ":00Z"})[metric] = round(value, 2)
+    return sorted(points.values(), key=lambda p: p["minute"])[-30:]
 
 
 @router.get("/classes/{session_id}", summary="Detalle de una clase para el alumno")
@@ -175,6 +221,9 @@ def class_detail(session_id: str, authorization: Optional[str] = Header(default=
             raise HTTPException(404, "Clase no encontrada")
         result = class_row(row)
         result["metrics"] = live_metrics(db, result["room"]) if not result["ended"] else {}
+        result["present_count"] = db.execute("SELECT COUNT(*) FROM attendance WHERE session_id=?", (session_id,)).fetchone()[0]
+        result["targets"] = room_config(db, result["room"])
+        result["trend"] = class_trend(db, result["room"], result["started_at"])
         return result
 
 

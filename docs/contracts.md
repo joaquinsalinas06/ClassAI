@@ -276,8 +276,9 @@ Se envía `Authorization: Bearer <access_token>`. El token dura 30 días, y en S
 | POST | `/student/login` | `{"code":"202310123","password":"secreta1","nfc_token":"…"}` | 200, igual que register · 401 |
 | POST | `/student/logout` | — | `{"ok":true}` |
 | GET | `/student/me` | — | `{"student":{"code","full_name","phone_linked"}}` · 401 |
-| GET | `/student/classes` | — | `{"classes":[{"id":"a101-…","room":"a101","course":"CS5055 IoT","started_at":"…","ended":false,"attended":false,"attended_at":null,"my_vote":null}]}` (solo las abiertas) |
-| GET | `/student/classes/{id}` | — | lo mismo para una clase, más `"metrics":{"temp_c":24.1,"rh_pct":55,"noise_rel":0.2,"comfort":82,"state":"OK","presence":true}` (lectura de ≤15 s; `{}` si no hay o si la clase cerró) · 404 |
+| GET | `/student/classes` | — | `{"classes":[{"id":"a101-…","room":"a101","course":"CS5055 IoT","started_at":"…","ended":false,"attended":false,"attended_at":null,"my_vote":null,"metrics":{…}}]}` (solo las abiertas; `metrics` como en el detalle) |
+| GET | `/student/history` | — | `{"history":[{"session_id":"a101-…","room":"a101","course":"CS5055 IoT","started_at":"…","attended_at":"…"}]}` (últimas 20 asistencias, la más reciente primero) · 401 |
+| GET | `/student/classes/{id}` | — | lo mismo para una clase, más `"metrics":{"temp_c":24.1,"rh_pct":55,"noise_rel":0.2,"comfort":82,"state":"OK","presence":true,"light_rel":0.6,"fan_on":false,"fan_enabled":true,"fan_mode":"auto","zones":{"entrance":true,"interior":false}}` (lectura de ≤15 s; `{}` si no hay o si la clase cerró; `presence` sigue siendo el PIR de la entrada), `"present_count":12`, `"targets":{"temp_c":[21,24],"rh_pct":[40,60],"noise_rel_max":0.1,"ok_min":80,"regular_min":60}` (último `comfort_params` o fábrica) y `"trend":[{"minute":"2026-11-18T14:01:00Z","comfort":85,"temp_c":24.1}]` (promedio por minuto desde el inicio, hasta 30) · 404 |
 | POST | `/student/classes/{id}/feedback` | `{"kind":"hot"}` (`ok`, `hot` o `cold`; también se aceptan `noisy` y `dark`) | `{"saved":true,"session_id":"…","kind":"hot","created_at":"…"}` · 409 si la clase ya terminó · 404 |
 
 - `password` debe tener al menos 6 caracteres. `code` debe cumplir `[A-Za-z0-9-]{1,32}`. Si el docente ya había
