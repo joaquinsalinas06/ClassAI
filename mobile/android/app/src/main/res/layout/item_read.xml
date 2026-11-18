@@ -4,33 +4,49 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:gravity="center_vertical"
+    android:minHeight="64dp"
     android:orientation="horizontal"
     android:paddingHorizontal="@dimen/ds_space_4"
-    android:paddingVertical="10dp">
+    android:paddingVertical="@dimen/ds_space_3">
 
     <ImageView
-        android:layout_width="40dp"
-        android:layout_height="40dp"
-        android:background="@drawable/bg_icon_circle"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:background="@drawable/bg_success_halo"
         android:importantForAccessibility="no"
-        android:padding="@dimen/ds_space_2"
+        android:padding="8dp"
         android:src="@drawable/ic_check_circle"
-        app:tint="?attr/colorOnSecondaryContainer" />
+        app:tint="@color/ds_state_ok_text" />
 
-    <TextView
-        android:id="@+id/readText"
+    <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="@dimen/ds_space_3"
         android:layout_weight="1"
-        android:text="@string/read_ok"
-        android:textAppearance="?attr/textAppearanceBodyLarge" />
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/readCourse"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/figtree_semibold"
+            android:maxLines="1"
+            android:textColor="@color/ds_text_primary"
+            android:textSize="15sp" />
+
+        <TextView
+            android:id="@+id/readMeta"
+            style="@style/ClassAI.Label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/readTime"
+        style="@style/ClassAI.Number"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:fontFamily="monospace"
-        android:textAppearance="?attr/textAppearanceBodyMedium"
-        android:textColor="?attr/colorOnSurfaceVariant" />
+        android:textSize="@dimen/ds_text_heading_size" />
 </LinearLayout>

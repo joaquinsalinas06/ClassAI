@@ -36,9 +36,10 @@ private fun View.now() = SystemClock.uptimeMillis()
 
 /** Fondo del login: superficies neutras compartidas, con movimiento reducido. */
 class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
+    // Halos de marca (aire azul→verde) sobre neutros: profundidad sin gris plano.
     private val colors = intArrayOf(
-        context.getColor(R.color.ds_bg_selected), context.getColor(R.color.ds_bg_sunken),
-        context.getColor(R.color.ds_bg_hover), context.getColor(R.color.ds_bg_selected),
+        context.getColor(R.color.ds_app_glow_a), context.getColor(R.color.ds_bg_selected),
+        context.getColor(R.color.ds_app_glow_b), context.getColor(R.color.ds_bg_hover),
     )
     private val paints = colors.map { Paint(Paint.ANTI_ALIAS_FLAG) }
     private var radius = 0f
@@ -48,15 +49,17 @@ class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(
         radius = max(w, h) * 0.5f
         paints.forEachIndexed { i, p ->
             val c = colors[i]
-            p.shader = RadialGradient(0f, 0f, radius, Color.argb(150, Color.red(c), Color.green(c), Color.blue(c)),
+            val a = if (Color.alpha(c) == 255) 150 else Color.alpha(c) * 3
+            p.shader = RadialGradient(0f, 0f, radius, Color.argb(min(a, 255), Color.red(c), Color.green(c), Color.blue(c)),
                 Color.TRANSPARENT, Shader.TileMode.CLAMP)
         }
     }
 
     override fun onDraw(canvas: Canvas) {
+        canvas.drawColor(context.getColor(R.color.ds_bg_page))
         val t = if (motionEnabled) (now() - t0) / 1000f else 0f
         paints.forEachIndexed { i, p ->
-            val speed = 0.11f + i * 0.04f
+            val speed = 0.17f + i * 0.06f  // cada halo a su velocidad
             val cx = width * (0.5f + 0.42f * sin(t * speed + i * 1.7f))
             val cy = height * (0.15f + i * 0.25f + 0.1f * cos(t * speed * 0.8f + i))
             canvas.save()
@@ -68,13 +71,13 @@ class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(
     }
 }
 
-/** Carnet digital: tinta de marca, brillo monocromo y destello al leer. */
+/** Carnet digital gris perla (en claro y oscuro), brillo que barre y destello al leer. */
 class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
     private val radius = resources.getDimension(R.dimen.ds_radius_xl)
     private val bg = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 20) }
+    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 14) }
     private val decoLine = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE; strokeWidth = dp(1.5f); color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 26)
+        style = Paint.Style.STROKE; strokeWidth = dp(1.2f); color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 22)
     }
     private val sheenPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(4f) }
@@ -97,21 +100,20 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
                 outline.setRoundRect(0, 0, view.width, view.height, radius)
         }
         clipToOutline = true
-        elevation = dp(10f)
+        elevation = dp(14f)
         if (Build.VERSION.SDK_INT >= 28) {
-            outlineSpotShadowColor = context.getColor(R.color.ds_border_strong)
-            outlineAmbientShadowColor = context.getColor(R.color.ds_border_strong)
+            outlineSpotShadowColor = context.getColor(R.color.ds_app_card_shadow)
+            outlineAmbientShadowColor = context.getColor(R.color.ds_app_card_shadow)
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
-        bg.color = context.getColor(R.color.ds_brand_ink)
-        // Brillo derivado de on-ink: no introduce una paleta paralela.
+        bg.shader = LinearGradient(0f, 0f, w * 0.4f, h.toFloat(),
+            context.getColor(R.color.ds_app_card_top), context.getColor(R.color.ds_app_card_bottom), Shader.TileMode.CLAMP)
+        // Brillo blanco sobre la perla.
         val band = w * 0.45f
         sheenPaint.shader = LinearGradient(0f, 0f, band, band * 0.5f,
-            intArrayOf(0, 24, 20, 16, 0).map {
-                ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), it)
-            }.toIntArray(),
+            intArrayOf(0, 90, 120, 80, 0).map { ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_on_mood), it) }.toIntArray(),
             floatArrayOf(0f, 0.35f, 0.55f, 0.75f, 1f), Shader.TileMode.CLAMP)
         glowPaint.shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(),
             context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_ok_border), Shader.TileMode.CLAMP)
@@ -137,7 +139,7 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
         super.dispatchDraw(canvas)
         val w = width.toFloat()
         // barrido periódico cada ~6 s; entre barridos, brillo tenue según inclinación
-        val period = 14000L
+        val period = 6500L
         val t = now()
         val sinceSweep = t - sweepStart
         val p = if (motionEnabled) {
@@ -167,8 +169,8 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
 
 /** Ondas NFC: anillos que se expanden mientras el carnet está listo para el lector. */
 class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = context.getColor(R.color.ds_brand_on_ink) }
-    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 38) }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = context.getColor(R.color.ds_app_card_on) }
+    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 22) }
     private val t0 = now()
 
     var active = false
@@ -190,22 +192,34 @@ class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, a
             canvas.drawCircle(cx, cy, (rMin + rMax) / 2, ring)
             return
         }
-        val t = (now() - t0) / 3000f
-        val f = t % 1f
-        ring.alpha = (90 * (1 - f)).toInt()
-        canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
-        if (isShown) postInvalidateDelayed(48)
+        // Tres anillos desfasados que laten hacia afuera, cada uno a su ritmo
+        val t = (now() - t0) / 2600f
+        for (i in 0..2) {
+            val f = (t + i / 3f) % 1f
+            ring.alpha = (110 * (1 - f) * (1 - f)).toInt()
+            canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
+        }
+        if (isShown) postInvalidateOnAnimation()
     }
 }
 
 /** Avatar con iniciales y anillo en tinta. */
 class AvatarView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE; strokeWidth = dp(3f); color = context.getColor(R.color.ds_brand_on_ink)
-    }
-    private val fill = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_brand_on_ink), 51) }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(3f) }
+    private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = context.getColor(R.color.ds_brand_on_ink); textAlign = Paint.Align.CENTER; typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+        textAlign = Paint.Align.CENTER
+        typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.figtree_semibold)
+    }
+
+    /** Tinta del avatar: la del carnet por defecto; en la cabecera, la del texto. */
+    var ink = context.getColor(R.color.ds_app_card_on)
+        set(v) { field = v; applyInk() }
+
+    init { applyInk() }
+
+    private fun applyInk() {
+        ring.color = ink; text.color = ink; fill.color = ColorUtils.setAlphaComponent(ink, 30); invalidate()
     }
 
     var initials = ""
@@ -314,9 +328,9 @@ class ConfettiView(context: Context, attrs: AttributeSet? = null) : View(context
     fun burst() {
         animator?.cancel()
         if (!motionEnabled || !isShown) return
-        val colors = intArrayOf(context.getColor(R.color.ds_state_ok_solid),
-            context.getColor(R.color.ds_state_regular_solid), context.getColor(R.color.ds_brand_air_to))
-        pieces = List(40) { i ->
+        val colors = intArrayOf(context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_regular_solid),
+            context.getColor(R.color.ds_brand_air_from), context.getColor(R.color.ds_brand_air_to), context.getColor(R.color.ds_app_mood_ok))
+        pieces = List(70) { i ->
             val angle = kotlin.random.Random.nextFloat() * 2f * Math.PI.toFloat()
             val speed = dp(100f + kotlin.random.Random.nextFloat() * 180f)
             Piece(cos(angle) * speed, -abs(sin(angle)) * speed - dp(70f),

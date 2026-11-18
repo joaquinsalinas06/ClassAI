@@ -2,6 +2,7 @@ import { motion } from "motion/react";
 import type { ComfortState } from "../lib/types";
 import { stateKey } from "../lib/comfort";
 import { formatNumber } from "../lib/format";
+import { AnimatedNumber } from "../ui/AnimatedNumber";
 import { EASE } from "../ui/motion";
 
 /** Compact comfort ring for tiles: full circle, value arc in state color, number inside. */
@@ -30,7 +31,7 @@ export function ComfortRing({ value, state, size = 64, offline }: { value: numbe
         )}
       </svg>
       <span className="num absolute inset-0 flex items-center justify-center font-semibold tracking-[-0.03em] text-fg" style={{ fontSize: size * 0.3 }}>
-        {valid ? formatNumber(value) : "—"}
+        <AnimatedNumber value={valid ? value : null} from={0} duration={0.9} format={(n) => formatNumber(n)} />
       </span>
     </div>
   );

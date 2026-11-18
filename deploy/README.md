@@ -42,8 +42,10 @@ No usar `config` sin --quiet en logs compartidos: la expansión incluye secretos
 Únicamente broker8883 y Caddy80/443 se publican. API/SQLite/worker de voz son
 internos. DATABASE_PATH compartido en volumen, WAL y un worker API. Los LWT,
 snapshots y sesión sobreviven en broker; el backend repone estado desde SQLite.
-La API actual conserva sus rutas públicas de lectura/enrolamiento; este paquete
-no introduce login de estudiantes. Administrar/revocar requiere ADMIN_API_KEY y
+El panel exige login de docente (cookie httpOnly); la app del alumno usa Bearer
+en /student/*. Al arrancar, la API crea el docente de TEACHER_USER/TEACHER_PASSWORD
+si no existe; otro docente: `docker compose --env-file deploy/.env -f deploy/compose.yaml
+exec api python create_teacher.py USUARIO`. Administrar/revocar requiere ADMIN_API_KEY y
 voz requiere VOICE_API_KEY. Revisar el acceso deseado antes de publicar datos
 reales del aula; el stack no se ha desplegado desde esta entrega.
 

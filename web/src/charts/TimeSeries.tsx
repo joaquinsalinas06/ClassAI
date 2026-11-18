@@ -14,6 +14,8 @@ import { useSize } from "./useSize";
 const M = { top: 18, right: 18, bottom: 26, left: 44 };
 const MINUTE = 60_000;
 const X_STEPS = [1, 2, 5, 10, 15, 30, 60, 120, 240, 480].map((m) => m * MINUTE);
+// Symmetric ease-in-out (easeInOutCubic) so the draw-in reads as growing, not as a snap.
+export const DRAW_EASE = [0.65, 0, 0.35, 1] as const;
 const bisect = bisector<Point, number>((p) => p.t).center;
 
 /** Tween a numeric tuple toward its target (domain glide when new points arrive). */
@@ -45,6 +47,40 @@ function useTweened(target: number[], enabled: boolean) {
   return value;
 }
 
+/**
+ * When a new reading is appended, the last point travels from the previous tail to its real place,
+ * so the curve extends instead of jumping. Returns the points to draw.
+ */
+export function useGrowingTail(points: Point[], enabled: boolean, series?: string) {
+  const tail = points[points.length - 1];
+  const settled = useRef<Point | undefined>(tail);
+  const seriesRef = useRef(series);
+  const from = useRef<Point | undefined>(undefined);
+  const [k, setK] = useState(1);
+  const last = settled.current;
+  // Detected during render so the new point never flashes at its final place for a frame.
+  // A different series (metric tab) is not a new reading: never travel from another metric's tail.
+  const isNew = enabled && series === seriesRef.current && !!tail && !!last && (tail.t > last.t || (tail.t === last.t && tail.v !== last.v));
+  useEffect(() => {
+    const before = settled.current;
+    settled.current = tail;
+    seriesRef.current = series;
+    if (!isNew) {
+      setK(1);
+      return;
+    }
+    from.current = before;
+    setK(0);
+    const controls = animate(0, 1, { duration: DURATION.update, ease: EASE.standard, onUpdate: setK });
+    return () => controls.stop();
+  }, [tail?.t, tail?.v, series]); // eslint-disable-line react-hooks/exhaustive-deps
+  if (series !== seriesRef.current) return points;
+  const start = isNew ? last : from.current;
+  const progress = isNew ? 0 : k;
+  if (progress >= 1 || !tail || !start || points.length < 2) return points;
+  return [...points.slice(0, -1), { t: start.t + (tail.t - start.t) * progress, v: start.v + (tail.v - start.v) * progress }];
+}
+
 export interface TimeSeriesProps {
   points: Point[];
   metric: MetricMeta;
@@ -65,6 +101,11 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
   const [hover, setHover] = useState<number | null>(null);
   const [keyboard, setKeyboard] = useState(false);
+  // "Mounted" = the first frame with a measured width has painted; until then every entrance plays in full.
+  const mounted = useRef(false);
+  useEffect(() => {
+    if (width > 0) mounted.current = true;
+  }, [width]);
 
   const innerW = Math.max(0, width - M.left - M.right);
   const innerH = height - M.top - M.bottom;
@@ -95,7 +136,8 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
 
   const runs = useMemo(() => excursions(points, band), [points, band]);
   const notes = useMemo(() => annotations(points, band, 2), [points, band]);
-  const tail = points[points.length - 1];
+  const drawn = useGrowingTail(points, !!live && !reduce, metric.key);
+  const tail = drawn[drawn.length - 1];
   const hovered = hover != null ? points[hover] : undefined;
   const compareAt = hovered && compare ? compare.points[bisect(compare.points, hovered.t)] : undefined;
 
@@ -119,7 +161,7 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
   const bandTop = band ? y(Math.min(band[1], dy1)) : 0;
   const bandBottom = band ? y(Math.max(band[0], dy0)) : 0;
   const summary = hasData
-    ? `${metric.label}: último ${formatMetric(metric.key, tail!.v)}` +
+    ? `${metric.label}: último ${formatMetric(metric.key, points[points.length - 1]!.v)}` +
       (band ? `, rango objetivo ${formatNumber(band[0], metric.decimals)} a ${formatNumber(band[1], metric.decimals)} ${metric.unit}` : "") +
       (runs.length ? `, ${runs.length} periodo(s) fuera de rango` : "") +
       ". Usa las flechas para recorrer los valores."
@@ -146,6 +188,20 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
           <defs>
             <clipPath id={`clip-${uid}`}>
               <rect x={0} y={-4} width={innerW} height={innerH + 8} />
+            </clipPath>
+            {/* Draw-in: a clip that sweeps left to right so line and area grow together. Re-runs on metric change. */}
+            <clipPath id={`reveal-${uid}`}>
+              <motion.rect
+                key={metric.key}
+                x={-8}
+                y={-12}
+                width={innerW + 16}
+                height={innerH + 24}
+                style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }}
+                initial={{ transform: reduce ? "scaleX(1)" : "scaleX(0)" }}
+                animate={{ transform: "scaleX(1)" }}
+                transition={{ duration: mounted.current ? DURATION.chart * 0.6 : DURATION.chart, ease: DRAW_EASE }}
+              />
             </clipPath>
             <linearGradient id={`fill-${uid}`} x1="0" y1="0" x2="0" y2="1">
               <stop offset="0" stopColor={metric.color} stopOpacity={metric.key === "comfort" ? 0.05 : 0.12} />
@@ -204,29 +260,13 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
                 );
               })}
               {hasData && (
-                <>
+                <g clipPath={`url(#reveal-${uid})`}>
                   {compare && compare.points.length > 1 && (
                     <path d={linePath(compare.points) ?? ""} fill="none" stroke="var(--ds-chart-compare)" strokeWidth={1.75} strokeDasharray="5 4" strokeLinecap="round" />
                   )}
-                  <motion.path
-                    d={areaPath(points) ?? ""}
-                    fill={`url(#fill-${uid})`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ duration: DURATION.slow, delay: reduce ? 0 : DURATION.chart * 0.6 }}
-                  />
-                  <motion.path
-                    d={linePath(points) ?? ""}
-                    fill="none"
-                    stroke={metric.color}
-                    strokeWidth={2}
-                    strokeLinejoin="round"
-                    strokeLinecap="round"
-                    initial={{ pathLength: reduce ? 1 : 0 }}
-                    animate={{ pathLength: 1 }}
-                    transition={{ duration: DURATION.chart, ease: EASE.emphasized }}
-                  />
-                </>
+                  <path d={areaPath(drawn) ?? ""} fill={`url(#fill-${uid})`} />
+                  <path d={linePath(drawn) ?? ""} fill="none" stroke={metric.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                </g>
               )}
             </g>
 
@@ -255,7 +295,7 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
                     key={`${note.point.t}-${note.kind}`}
                     initial={{ opacity: 0, y: below ? -4 : 4 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: DURATION.base, delay: reduce ? 0 : DURATION.chart + i * 0.12 }}
+                    transition={{ duration: DURATION.base, delay: reduce || mounted.current ? 0 : DURATION.chart + i * 0.12 }}
                   >
                     <line x1={px} x2={lx} y1={py + (below ? 5 : -5)} y2={ly + (below ? -9 : 9)} stroke="var(--ds-border-strong)" />
                     <g transform={`translate(${lx - labelW / 2},${ly - 10})`}>
@@ -274,9 +314,24 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
 
             {/* live tail */}
             {hasData && live && tail && x(tail.t) <= innerW + 1 && (
-              <g>
-                <circle cx={x(tail.t)} cy={y(tail.v)} r={4} fill={metric.color} className="ds-spark-pulse" />
-                <circle cx={x(tail.t)} cy={y(tail.v)} r={4} fill={metric.color} stroke="var(--ds-bg-surface)" strokeWidth={2} />
+              <g transform={`translate(${x(tail.t)},${y(tail.v)})`}>
+              <motion.g
+                initial={reduce || mounted.current ? false : { opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: DURATION.base, delay: DURATION.chart * 0.85 }}
+              >
+                <circle r={4} fill={metric.color} className="ds-spark-pulse" />
+                {/* keyed on the newest reading: each one lands with a small pop and a single ring */}
+                <motion.g
+                  key={points[points.length - 1]!.t}
+                  initial={reduce || !mounted.current ? false : { transform: "scale(0.4)", opacity: 0 }}
+                  animate={{ transform: "scale(1)", opacity: 1 }}
+                  transition={{ type: "spring", duration: 0.45, bounce: 0.3 }}
+                >
+                  <circle r={4} fill={metric.color} stroke="var(--ds-bg-surface)" strokeWidth={2} />
+                </motion.g>
+                {mounted.current && !reduce && <circle key={`ring-${points[points.length - 1]!.t}`} r={4} fill="none" stroke={metric.color} strokeWidth={1.5} className="ds-ring-once" />}
+              </motion.g>
               </g>
             )}
 

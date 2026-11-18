@@ -27,7 +27,7 @@ def api(monkeypatch):
     calls = []
     responses = {}
 
-    def fake_get(url, params=None, timeout=None):
+    def fake_get(url, params=None, timeout=None, headers=None):
         calls.append((url, params))
         return FakeResponse(responses.get(url.removeprefix(BASE), {"found": True}))
 

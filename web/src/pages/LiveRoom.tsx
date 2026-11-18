@@ -1,17 +1,20 @@
 import { Cpu, Fan, Flame, PersonStanding, Snowflake, SunDim, ThumbsUp, Volume2, WifiOff, type LucideIcon } from "lucide-react";
 import { motion } from "motion/react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams as useRouteParams } from "react-router";
 import { useApp } from "../app/context";
 import { roomName } from "../app/Shell";
 import { Gauge } from "../charts/Gauge";
 import { AttendanceList } from "../features/AttendanceList";
+import { NewSessionButton, SessionRowActions } from "../features/SessionActions";
+import { VotesCard } from "../features/VotesCard";
 import { MetricTiles } from "../features/MetricTiles";
 import { TrendPanel } from "../features/TrendPanel";
 import { WhyRange } from "../features/WhyRange";
 import { ApiError, useFeedback } from "../lib/api";
 import { STATE_HINT, comfortState } from "../lib/comfort";
 import { formatDuration, formatNumber, formatRelative, formatTime, parseTime, withUnit } from "../lib/format";
+import type { Arrival } from "../lib/live";
 import type { ChartMetric, ComfortState, FeedbackKind, NodeSnapshot } from "../lib/types";
 import { Badge, StateBadge } from "../ui/Badge";
 import { buttonClass } from "../ui/Button";
@@ -208,6 +211,25 @@ function ZoneNodes({ nodes, now, embedded = false }: { nodes: Record<string, Nod
   return <Card className="p-4">{content}</Card>;
 }
 
+/** A quiet toast per student who taps in while the page is open ("Valeria Quispe llegó · 10:42"); bursts are grouped. */
+function useArrivalToasts(arrivals: Arrival[]) {
+  const toast = useToast();
+  const seen = useRef<Set<string> | null>(null);
+  useEffect(() => {
+    if (!seen.current) {
+      seen.current = new Set(arrivals.map((a) => a.id));
+      return;
+    }
+    const fresh = arrivals.filter((a) => a.live && !seen.current!.has(a.id));
+    fresh.forEach((a) => seen.current!.add(a.id));
+    if (fresh.length === 0) return;
+    if (fresh.length > 2) toast({ tone: "ok", title: `Llegaron ${fresh.length} estudiantes`, description: fresh.map((a) => a.full_name.split(" ")[0]).join(", ") });
+    else fresh.forEach((a) => toast({ tone: "ok", title: `${a.full_name} llegó · ${formatTime(a.at)}` }));
+  }, [arrivals, toast]);
+}
+
+const rise = (i: number) => ({ className: "ds-rise", style: { "--i": i } as CSSProperties });
+
 const LIVE_SENSOR_METRICS = ["temp_c", "rh_pct", "noise_rel"] as const satisfies readonly ChartMetric[];
 
 export function LiveRoom() {
@@ -217,6 +239,7 @@ export function LiveRoom() {
   const [metric, setMetric] = useState<ChartMetric>("temp_c");
   const now = useNow(1_000);
   const roomInfo = rooms?.find((r) => r.id === room);
+  useArrivalToasts(state.arrivals);
 
   if (routeRoom && routeRoom !== room) return null; // the shell syncs the selected room on the next tick
 
@@ -256,11 +279,16 @@ export function LiveRoom() {
             )}
           </div>
         </div>
-        <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
+        <div className="flex flex-wrap items-center gap-2">
+          <FeedbackBar room={room} sessionId={state.sessionId} disabled={offline} />
+          {state.sessionId
+            ? <SessionRowActions id={state.sessionId} open size="md" label={`${state.course ?? session?.course ?? "Clase"} · ${room.toUpperCase()}`} />
+            : <NewSessionButton />}
+        </div>
       </div>
 
       <div className="grid gap-5 lg:grid-cols-12">
-        <div className="lg:col-span-5 xl:col-span-4">
+        <div className="ds-rise lg:col-span-5 xl:col-span-4">
           <ComfortPanel
             comfort={comfort}
             state={stateNow}
@@ -272,7 +300,7 @@ export function LiveRoom() {
             lastAt={lastAt}
           />
         </div>
-        <div className="lg:col-span-7 xl:col-span-8">
+        <div className="ds-rise lg:col-span-7 xl:col-span-8" style={{ "--i": 1 } as CSSProperties}>
           <ErrorBoundary label="las métricas">
             <MetricTiles
               metrics={LIVE_SENSOR_METRICS}
@@ -293,6 +321,7 @@ export function LiveRoom() {
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-8">
           <ErrorBoundary label="el gráfico">
+            <div {...rise(2)}>
             <TrendPanel
               title={inSession ? "Tendencia de la clase" : "Lecturas recientes"}
               description={inSession ? "Promedio por minuto desde el inicio, más lecturas en vivo" : "Desde que abriste esta página"}
@@ -305,31 +334,35 @@ export function LiveRoom() {
               xExtent={inSession && startedAt ? [startedAt, Math.max(now, lastAt ?? 0)] : undefined}
               emptyHint={offline ? "El nodo está sin conexión." : undefined}
             />
+            </div>
           </ErrorBoundary>
           <ErrorBoundary label="la explicación del rango">
-            <WhyRange config={config} history={params.data?.history ?? []} nodeVersion={reading?.params_version} loading={params.isPending} />
+            <div {...rise(5)}><WhyRange config={config} history={params.data?.history ?? []} nodeVersion={reading?.params_version} loading={params.isPending} /></div>
           </ErrorBoundary>
         </div>
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-4">
           <ErrorBoundary label="la asistencia">
+            <div {...rise(3)}>
             {inSession || state.arrivals.length > 0 ? (
               <AttendanceList arrivals={state.arrivals} rejections={state.rejections} startedAt={startedAt} endAt={now} loading={current.isPending} />
             ) : (
               <Card className="p-4">
                 <h2 className="text-label font-semibold text-fg">Asistencia</h2>
-                <p className="mt-1 text-small text-muted">La lista se abre cuando el docente inicia la clase en el nodo.</p>
+                <p className="mt-1 text-small text-muted">La lista se abre al crear la clase aquí o con el botón del nodo.</p>
                 <Link to={`/sesiones?room=${room}`} className={cn(buttonClass("secondary", "sm"), "mt-3")}>Ver clases anteriores</Link>
               </Card>
             )}
+            </div>
           </ErrorBoundary>
-          <NodePanel
+          {state.sessionId && <div {...rise(4)}><VotesCard id={state.sessionId} live /></div>}
+          <div {...rise(6)}><NodePanel
             device={state.latest?.device ?? `esp32-${room}`}
             uptimeMs={state.latest?.uptime_ms}
             version={reading?.params_version}
             configVersion={config?.params_version}
             irC={reading?.ir_object_c}
             online={!offline && state.node === "online"}
-          />
+          /></div>
         </div>
       </div>
     </div>

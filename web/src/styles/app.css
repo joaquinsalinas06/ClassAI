@@ -209,3 +209,25 @@ svg.lucide { stroke-width: var(--ds-icon-stroke); flex-shrink: 0; }
   .hardware-banks > label { display: flex; align-items: center; gap: 12px; padding: 8px 12px; border-bottom: 1px solid var(--ds-border-default); }
   .hardware-banks select { flex: 1; min-width: 0; margin: 0; }
 }
+
+/* Entradas y avisos en vivo (tokens de motion). Solo transform y opacity. */
+@keyframes ds-rise { from { opacity: 0; transform: translateY(10px); } }
+.ds-rise { animation: ds-rise 460ms var(--ds-motion-easing-emphasized) both; animation-delay: calc(var(--i, 0) * 60ms); }
+@keyframes ds-cell { from { opacity: 0; transform: scale(0.9); } }
+.ds-cell { animation: ds-cell 360ms var(--ds-motion-easing-emphasized) both; animation-delay: calc(120ms + var(--i, 0) * 22ms); }
+@keyframes ds-ring-once { from { transform: scale(1); opacity: 0.7; } to { transform: scale(3.2); opacity: 0; } }
+.ds-ring-once { transform-box: fill-box; transform-origin: center; animation: ds-ring-once 700ms var(--ds-motion-easing-enter) forwards; }
+@media (prefers-reduced-motion: reduce) {
+  .ds-rise, .ds-cell { animation-name: ds-fade; }
+  .ds-ring-once { display: none; }
+}
+@keyframes ds-fade { from { opacity: 0; } }
+
+/* Figtree (OFL), la misma letra de la app Android; variable 300–900, self-hosted. */
+@font-face {
+  font-family: "Figtree Variable";
+  src: url("./fonts/figtree-variable.woff2") format("woff2-variations"), url("./fonts/figtree-variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}

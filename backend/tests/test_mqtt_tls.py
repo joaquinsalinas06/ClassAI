@@ -18,7 +18,7 @@ from test_mqtt_integration import wait_for
 pytestmark = pytest.mark.skipif(os.getenv('CLASSAI_MQTT_SMOKE') != '1', reason='run scripts/ci/smoke.sh')
 
 
-def test_tls_and_role_acl(tmp_path):
+def test_tls_and_role_acl(tmp_path, monkeypatch):
     for executable in ('openssl', 'mosquitto', 'mosquitto_passwd'):
         assert shutil.which(executable), f'Install {executable}'
     def run(*args):
@@ -31,6 +31,8 @@ def test_tls_and_role_acl(tmp_path):
     ingest_pass = secrets.token_urlsafe(24)
     run('mosquitto_passwd', '-b', '-c', str(auth_path), 'a101-access', access_pass)
     run('mosquitto_passwd', '-b', str(auth_path), 'classai-ingest', ingest_pass)
+    api_pass = secrets.token_urlsafe(24)
+    run('mosquitto_passwd', '-b', str(auth_path), 'classai-api', api_pass)
     with socket.socket() as reservation:
         reservation.bind(('127.0.0.1', 0))
         port = reservation.getsockname()[1]
@@ -72,6 +74,15 @@ def test_tls_and_role_acl(tmp_path):
         assert not any(payload == b'forged' for _, _, payload in received)
         ingest.publish('classai/v1/a101/nodes/a101-access/ack', 'legitimate', qos=1).wait_for_publish(5)
         wait_for(lambda: any(name == 'tls-a101-access' and payload == b'legitimate' for name, _, payload in received), [broker])
+        # La web abre la clase: classai-api publica el retenido que lee el nodo de acceso.
+        import class_sessions
+        for name, value in {'MQTT_HOST': '127.0.0.1', 'MQTT_PORT': str(port), 'MQTT_TLS': '1', 'MQTT_CA_FILE': str(cert),
+                            'MQTT_USERNAME': 'classai-api', 'MQTT_PASSWORD': api_pass}.items():
+            monkeypatch.setenv(name, value)
+        state = {'v': 1, 'room': 'a101', 'revision': 7, 'session_id': 'a101-web', 'course': 'CS5055'}
+        assert class_sessions.publish_session('a101', state)
+        wait_for(lambda: any(name == 'tls-a101-access' and topic == 'classai/v1/a101/session' and json.loads(payload) == state
+                             for name, topic, payload in received), [broker])
         # System trust must reject our private test CA, not silently downgrade.
         with pytest.raises(ssl.SSLCertVerificationError):
             with socket.create_connection(('127.0.0.1', port)) as connection:

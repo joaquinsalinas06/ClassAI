@@ -151,3 +151,51 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at TEXT NOT NULL,
     context TEXT                         -- JSON: última lectura y params al momento del feedback
 );
+
+-- Resultado estable para reenviar el mismo ACK tras un corte o reinicio.
+CREATE TABLE IF NOT EXISTS node_event_outcomes (
+    event_id TEXT PRIMARY KEY REFERENCES events(event_id),
+    outcome TEXT NOT NULL CHECK (outcome IN ('new', 'duplicate', 'rejected')),
+    attendance_count INTEGER NOT NULL
+);
+
+-- Docentes del panel web. Contraseña con hashlib.scrypt ("scrypt$salt$hash").
+CREATE TABLE IF NOT EXISTS teachers (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    full_name TEXT NOT NULL,
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+-- Contraseña del alumno (la identidad es students.code).
+CREATE TABLE IF NOT EXISTS student_passwords (
+    student_id INTEGER PRIMARY KEY REFERENCES students(id),
+    password_hash TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
+
+-- Sesiones de login (cookie del docente, Bearer del alumno). Solo se guarda el SHA-256 del token.
+CREATE TABLE IF NOT EXISTS auth_tokens (
+    token_hash TEXT PRIMARY KEY,
+    role TEXT NOT NULL CHECK (role IN ('teacher', 'student')),
+    subject_id INTEGER NOT NULL,         -- teachers.id o students.id según role
+    expires_at TEXT NOT NULL
+);
+
+-- Votos de los alumnos (uno por alumno y sesión; votar de nuevo lo reemplaza).
+-- No alteran el modelo de confort del docente.
+CREATE TABLE IF NOT EXISTS student_feedback (
+    session_id TEXT NOT NULL REFERENCES sessions(id), student_id INTEGER NOT NULL REFERENCES students(id),
+    kind TEXT NOT NULL CHECK(kind IN ('ok','hot','cold','noisy','dark')), created_at TEXT NOT NULL,
+    PRIMARY KEY(session_id, student_id)
+);
+
+-- Votos por dimensión distinta de la temperatura (que sigue en student_feedback): uno por alumno,
+-- sesión y dimensión. low/ok/high = poca luz/bien/mucha luz, silencio/bien/mucho ruido, etc.
+CREATE TABLE IF NOT EXISTS student_votes (
+    session_id TEXT NOT NULL REFERENCES sessions(id), student_id INTEGER NOT NULL REFERENCES students(id),
+    dimension TEXT NOT NULL CHECK(dimension IN ('light','noise','motion','humidity')),
+    value TEXT NOT NULL CHECK(value IN ('low','ok','high')), created_at TEXT NOT NULL,
+    PRIMARY KEY(session_id, student_id, dimension)
+);

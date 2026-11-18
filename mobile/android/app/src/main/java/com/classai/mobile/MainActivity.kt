@@ -1,108 +1,146 @@
 package com.classai.mobile
 
+import android.animation.ArgbEvaluator
 import android.animation.ObjectAnimator
 import android.animation.ValueAnimator
-import android.content.ActivityNotFoundException
-import android.content.ClipData
-import android.content.ClipboardManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.content.res.Configuration
 import android.graphics.drawable.AnimatedVectorDrawable
+import android.graphics.drawable.GradientDrawable
 import android.hardware.Sensor
 import android.hardware.SensorEvent
 import android.hardware.SensorEventListener
 import android.hardware.SensorManager
-import android.net.ConnectivityManager
-import android.net.Network
 import android.nfc.NfcAdapter
 import android.os.Build
 import android.os.Bundle
-import android.os.VibrationEffect
-import android.os.Vibrator
-import android.os.VibratorManager
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
-import android.view.KeyEvent
+import android.transition.AutoTransition
+import android.transition.TransitionManager
+import android.view.GestureDetector
 import android.view.HapticFeedbackConstants
+import android.view.LayoutInflater
+import android.view.MotionEvent
 import android.view.View
+import android.view.ViewGroup
 import android.view.inputmethod.EditorInfo
 import android.view.inputmethod.InputMethodManager
-import android.view.animation.DecelerateInterpolator
-import android.view.animation.OvershootInterpolator
+import android.view.animation.LinearInterpolator
+import android.widget.ImageView
+import android.widget.LinearLayout
+import android.widget.TextView
+import androidx.activity.OnBackPressedCallback
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.widget.doAfterTextChanged
+import androidx.core.content.res.ResourcesCompat
+import androidx.core.graphics.ColorUtils
 import androidx.core.view.ViewCompat
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.updateLayoutParams
+import androidx.core.widget.doAfterTextChanged
 import com.classai.mobile.databinding.ActivityMainBinding
+import com.classai.mobile.databinding.ItemClassBinding
 import com.classai.mobile.databinding.ItemReadBinding
-import com.google.android.material.color.MaterialColors
+import com.classai.mobile.databinding.ItemTileBinding
+import com.classai.mobile.databinding.ScreenAuthBinding
+import com.classai.mobile.databinding.ScreenClassBinding
+import com.classai.mobile.databinding.ScreenHomeBinding
+import com.classai.mobile.databinding.ScreenVoteBinding
+import com.google.android.material.button.MaterialButton
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.google.android.material.progressindicator.CircularProgressIndicatorSpec
 import com.google.android.material.progressindicator.IndeterminateDrawable
 import com.google.android.material.snackbar.Snackbar
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.Locale
 import java.util.concurrent.Executors
+import kotlin.math.abs
 
+/** Una Activity: acceso y tres pestañas (inicio con el carnet, el aula en vivo y el voto). */
 class MainActivity : AppCompatActivity(), SensorEventListener {
-    private lateinit var b: ActivityMainBinding
-    private lateinit var tokens: TokenStore
-    private lateinit var profile: ProfileStore
-    private val io = Executors.newSingleThreadExecutor()
-    private val timeFmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
+    private enum class Screen { AUTH, HOME, ROOM, VOTE }
 
-    private var enrollmentGeneration = 0
+    private val io = Executors.newFixedThreadPool(2)
+    private val ui = Handler(Looper.getMainLooper())
+    private val es = Locale.forLanguageTag("es")
+    private lateinit var session: SessionStore
+    private lateinit var tokens: TokenStore
+    private lateinit var api: StudentApi
+    private lateinit var main: ActivityMainBinding
+    private lateinit var auth: ScreenAuthBinding
+    private lateinit var home: ScreenHomeBinding
+    private lateinit var cls: ScreenClassBinding
+    private lateinit var vote: ScreenVoteBinding
+
+    private var screen = Screen.AUTH
+    private var registerMode = true
     private var busy = false
-    private var status: CardStatus? = null
-    private var chipColor = 0
-    private var flipping = false
+    private var loading = false
+    private var generation = 0       // sube al entrar o salir: descarta respuestas de otra sesión
+    private var resumed = false
     private var demoNfc = false  // solo debug: el emulador no tiene NFC
+    private var classes: List<ClassInfo>? = null
+    private var history: List<HistoryItem> = emptyList()
+    private var classId: String? = null
+    private var current: ClassInfo? = null
+    private val attendedSeen = mutableMapOf<String, Boolean>()  // sin entrada = aún no sé (no celebrar al abrir)
+    private val renderedRows = mutableSetOf<String>()
+    private var status: CardStatus? = null
+    private var choice = Mood.OK
+    private var sending = false
+    private var fanSpin: ObjectAnimator? = null
+    private var moodAnim: ValueAnimator? = null
+    private var moodColors = intArrayOf(0, 0)
     private var sensors: SensorManager? = null
     private var gx0 = Float.NaN
     private var gy0 = 0f
-    private var tiltX = 0f
-    private var tiltY = 0f
-    private val hideSuccess = Runnable { hideSuccessOverlay() }
-    private val networkCallback = object : ConnectivityManager.NetworkCallback() {
-        override fun onAvailable(network: Network) {
-            runOnUiThread { retryIfPending() }
-        }
-    }
-    private var foreground = false
 
-    private fun retryIfPending() {
-        if (foreground && profile.hasProfile && !profile.enrolled && !busy) retry()
-    }
-
+    private val refreshTick = Runnable { refresh() }
     private val debuggable get() = applicationInfo.flags and ApplicationInfo.FLAG_DEBUGGABLE != 0
-    private fun dp(v: Float) = v * resources.displayMetrics.density
-    private fun attr(id: Int) = MaterialColors.getColor(b.root, id)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        WindowCompat.setDecorFitsSystemWindows(window, false)
-        b = ActivityMainBinding.inflate(layoutInflater)
-        setContentView(b.root)
+        session = SessionStore(this)
         tokens = TokenStore(this)
-        profile = ProfileStore(this)
-        tokens.getOrCreate()  // primer arranque: genera el token una sola vez
-
+        api = StudentApi(BuildConfig.CLASSAI_API_URL) { session.token }
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        if (Build.VERSION.SDK_INT >= 29) { window.isStatusBarContrastEnforced = false; window.isNavigationBarContrastEnforced = false }
+        main = ActivityMainBinding.inflate(layoutInflater)
+        setContentView(main.root)
         val night = resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
-        WindowCompat.getInsetsController(window, b.root).apply {
+        WindowCompat.getInsetsController(window, main.root).apply {
             isAppearanceLightStatusBars = !night
             isAppearanceLightNavigationBars = !night
         }
-        applyInsets()
-        setupLogin()
-        setupCard()
+        val navMargin = resources.getDimensionPixelSize(R.dimen.ds_space_4)
+        ViewCompat.setOnApplyWindowInsetsListener(main.root) { _, insets ->
+            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
+            main.host.setPadding(bars.left, bars.top, bars.right, maxOf(ime.bottom - bars.bottom, 0))
+            listOf(home.scroll, cls.scroll, vote.scroll, auth.scroll).forEach {
+                it.setPadding(0, 0, 0, if (it === auth.scroll) maxOf(bars.bottom, ime.bottom) else bars.bottom)
+            }
+            main.nav.updateLayoutParams<ViewGroup.MarginLayoutParams> { bottomMargin = bars.bottom + navMargin }
+            insets
+        }
+        val inflater = LayoutInflater.from(this)
+        auth = ScreenAuthBinding.inflate(inflater, main.host, false)
+        home = ScreenHomeBinding.inflate(inflater, main.host, false)
+        cls = ScreenClassBinding.inflate(inflater, main.host, false)
+        vote = ScreenVoteBinding.inflate(inflater, main.host, false)
+        listOf(auth.root, home.root, cls.root, vote.root).forEach { it.visibility = View.GONE; main.host.addView(it) }
+        setupAuth(); setupHome(); setupRoom(); setupVote(); setupNav()
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (screen == Screen.ROOM || screen == Screen.VOTE) go(Screen.HOME)
+                else { isEnabled = false; onBackPressedDispatcher.onBackPressed() }
+            }
+        })
+        if (session.loggedIn) go(Screen.HOME, entering = true) else showAuth()
         handleDebugIntent(intent)
-
-        val first = savedInstanceState == null
-        if (profile.hasProfile) showCard(animate = first) else showLogin(animate = first)
     }
 
     override fun onNewIntent(intent: Intent) {
@@ -110,535 +148,1019 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         handleDebugIntent(intent)
     }
 
+    // Solo debug: adb shell am start -n com.classai.mobile/.MainActivity --ez demo_nfc true
+    private fun handleDebugIntent(intent: Intent?) {
+        if (!debuggable || intent == null) return
+        if (intent.hasExtra("demo_nfc")) demoNfc = intent.getBooleanExtra("demo_nfc", false)
+        intent.getStringExtra("tab")?.let { t -> if (session.loggedIn) go(Screen.valueOf(t)) }
+        if (screen != Screen.AUTH) renderNfc()
+    }
+
     override fun onResume() {
         super.onResume()
-        foreground = true
-        EventLog.listener = ::onLogEntry
-        getSystemService(ConnectivityManager::class.java).registerDefaultNetworkCallback(networkCallback)
-        if (b.card.root.visibility == View.VISIBLE) {
-            renderCard()
-            startTilt()
-            retryIfPending()
-        }
+        resumed = true
+        CredentialEvents.listener = { ui.postDelayed({ refresh() }, 700) }
+        if (screen != Screen.AUTH) { renderNfc(); refresh(); startTilt() }
     }
 
     override fun onPause() {
-        foreground = false
-        getSystemService(ConnectivityManager::class.java).unregisterNetworkCallback(networkCallback)
-        EventLog.listener = null
+        resumed = false
+        CredentialEvents.listener = null
+        ui.removeCallbacks(refreshTick)
         stopTilt()
         super.onPause()
     }
 
     override fun onDestroy() {
+        ui.removeCallbacksAndMessages(null)
         io.shutdownNow()
         super.onDestroy()
     }
 
-    // Pantalla de borde a borde: el contenido se aparta de barras y teclado
-    private fun applyInsets() {
-        ViewCompat.setOnApplyWindowInsetsListener(b.root) { _, insets ->
-            val bars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            val ime = insets.getInsets(WindowInsetsCompat.Type.ime())
-            b.login.scroll.setPadding(bars.left, bars.top, bars.right, maxOf(bars.bottom, ime.bottom))
-            b.card.screen.setPadding(bars.left, bars.top, bars.right, 0)
-            b.card.cardScroll.setPadding(0, 0, 0, bars.bottom)
-            WindowInsetsCompat.CONSUMED
+    private fun dp(v: Float) = v * resources.displayMetrics.density
+
+    /** Snackbar sobre la píldora de navegación, sin taparla. */
+    private fun snack(message: String) =
+        Snackbar.make(main.root, message, Snackbar.LENGTH_LONG).apply { if (main.nav.visibility == View.VISIBLE) anchorView = main.nav }.show()
+    private fun ms(id: Int) = resources.getInteger(id).toLong()
+    private fun haptic(v: View, kind: Int) = v.performHapticFeedback(kind)
+    private val confirm get() = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.LONG_PRESS
+    private val reject get() = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.REJECT else HapticFeedbackConstants.LONG_PRESS
+
+    // ------------------------------------------------------------ navegación
+
+    private fun rootOf(s: Screen): View = when (s) { Screen.AUTH -> auth.root; Screen.HOME -> home.root; Screen.ROOM -> cls.root; Screen.VOTE -> vote.root }
+
+    /** Eje compartido en X: la pestaña nueva entra desde el lado hacia el que vas. */
+    private fun go(target: Screen, entering: Boolean = false) {
+        val from = screen
+        if (from == target && rootOf(target).visibility == View.VISIBLE) { refresh(); return }
+        screen = target
+        ui.removeCallbacks(refreshTick)
+        val outgoing = rootOf(from)
+        val incoming = rootOf(target)
+        val dir = if (target.ordinal >= from.ordinal) 1f else -1f
+        if (from != target && outgoing.visibility == View.VISIBLE) {
+            if (motionEnabled) {
+                outgoing.animate().alpha(0f).translationX(-dir * dp(24f)).setDuration(ms(R.integer.ds_motion_fast))
+                    .setInterpolator(Motion.exit).withEndAction { outgoing.visibility = View.GONE; outgoing.translationX = 0f }.start()
+            } else outgoing.visibility = View.GONE
+        }
+        incoming.visibility = View.VISIBLE
+        if (motionEnabled && !entering) {
+            incoming.alpha = 0f; incoming.translationX = dir * dp(24f)
+            incoming.animate().alpha(1f).translationX(0f).setStartDelay(ms(R.integer.ds_motion_instant))
+                .setDuration(Springs.gentle.settleMs).setInterpolator(Springs.gentle).start()
+        } else { incoming.alpha = 1f; incoming.translationX = 0f }
+        val tabbed = target != Screen.AUTH
+        if (tabbed && main.nav.visibility != View.VISIBLE) {
+            main.nav.visibility = View.VISIBLE
+            if (motionEnabled) { main.nav.translationY = dp(96f); main.nav.animate().translationY(0f).setStartDelay(240)
+                .setDuration(ms(R.integer.ds_motion_slow)).setInterpolator(Motion.standard).start() }
+        } else if (!tabbed) main.nav.visibility = View.GONE
+        renderNav()
+        when (target) {
+            Screen.HOME -> enterHome(entering)
+            Screen.ROOM -> enterRoom()
+            Screen.VOTE -> enterVote()
+            Screen.AUTH -> Unit
         }
     }
 
-    // Solo en builds debug: el emulador no tiene NFC ni lector real.
-    //   adb shell am start -n com.classai.mobile/.MainActivity --ez demo_nfc true --ez simulate_read true
-    private fun handleDebugIntent(intent: Intent?) {
-        if (!debuggable || intent == null) return
-        if (intent.hasExtra("demo_nfc")) demoNfc = intent.getBooleanExtra("demo_nfc", false)
-        if (intent.getBooleanExtra("simulate_read", false)) b.root.postDelayed({ EventLog.credentialRead() }, 800)
-        intent.removeExtra("simulate_read")
-        if (b.card.root.visibility == View.VISIBLE) renderCard()
+    private fun setupNav() {
+        main.navHome.setOnClickListener { go(Screen.HOME) }
+        main.navRoom.setOnClickListener { go(Screen.ROOM) }
+        main.navVote.setOnClickListener { go(Screen.VOTE) }
+        listOf(main.navHome, main.navRoom, main.navVote).forEach { it.pressable() }
     }
 
-    // ---------------------------------------------------------------- login
+    private var navAt = -1
 
-    private lateinit var linkTint: ColorStateList
-    private lateinit var linkText: ColorStateList
-
-    private fun setupLogin(): Unit = with(b.login) {
-        linkTint = link.backgroundTintList!!
-        linkText = link.textColors
-        code.doAfterTextChanged {
-            codeLayout.error = null
-            link.isEnabled = !busy && validateCode(it.toString()) == null
-        }
-        link.setOnClickListener { submit() }
-        code.setOnEditorActionListener { _, id, event ->
-            val done = id == EditorInfo.IME_ACTION_DONE ||
-                (event?.keyCode == KeyEvent.KEYCODE_ENTER && event.action == KeyEvent.ACTION_DOWN)
-            if (done) submit()
-            done
-        }
-        code.setOnFocusChangeListener { _, focused ->
-            if (motionEnabled) form.animate().scaleX(if (focused) 1.015f else 1f)
-                .scaleY(if (focused) 1.015f else 1f).setDuration(180).start()
+    /** Indicador que se desliza con resorte; íconos y etiquetas solo cambian transform y alpha. */
+    private fun renderNav() {
+        val items = listOf(main.navHome to Screen.HOME, main.navRoom to Screen.ROOM, main.navVote to Screen.VOTE)
+        val index = items.indexOfFirst { it.second == screen }
+        if (index < 0) return
+        val w = main.navHome.width
+        if (w == 0) { main.nav.post { renderNav() }; return }
+        if (main.navIndicator.layoutParams.width != w) main.navIndicator.updateLayoutParams { width = w }
+        val animate = motionEnabled && navAt >= 0 && navAt != index
+        val x = w * index.toFloat()
+        if (animate) main.navIndicator.animate().translationX(x).setDuration(Springs.snappy.settleMs).setInterpolator(Springs.snappy).start()
+        else main.navIndicator.translationX = x
+        navAt = index
+        items.forEach { (item, s) ->
+            val active = s == screen
+            val icon = item.getChildAt(0) as ImageView
+            val label = item.getChildAt(1) as TextView
+            val shift = (label.width + (label.layoutParams as ViewGroup.MarginLayoutParams).marginStart) / 2f
+            val tint = getColor(if (active) R.color.ds_brand_on_ink else R.color.ds_text_muted)
+            fun go(v: View, tx: Float, alpha: Float) {
+                if (animate) v.animate().translationX(tx).alpha(alpha).setDuration(Springs.snappy.settleMs).setInterpolator(Springs.snappy).start()
+                else { v.translationX = tx; v.alpha = alpha }
+            }
+            go(icon, if (active) 0f else shift, 1f)
+            go(label, if (active) 0f else shift * 0.4f, if (active) 1f else 0f)
+            val from = icon.imageTintList?.defaultColor ?: tint
+            if (animate && from != tint) ValueAnimator.ofArgb(from, tint).apply {
+                duration = ms(R.integer.ds_motion_fast); addUpdateListener { icon.imageTintList = ColorStateList.valueOf(it.animatedValue as Int) }
+            }.start() else icon.imageTintList = ColorStateList.valueOf(tint)
+            item.contentDescription = label.text
+            item.isSelected = active
         }
     }
 
-    private fun submit(): Unit = with(b.login) {
+    private fun showAuth(message: String? = null) {
+        go(Screen.AUTH)
+        busy = false
+        applyMode(animate = false)
+        setAuthError(message)
+        animateAuthIn()
+    }
+
+    private fun logout(message: String? = null) {
+        val token = session.token
+        session.clear()
+        generation++
+        loading = false
+        if (token != null) io.execute { StudentApi(BuildConfig.CLASSAI_API_URL) { token }.logout() }
+        registerMode = false
+        auth.password.text = null
+        classes = null; history = emptyList(); classId = null; current = null
+        attendedSeen.clear(); renderedRows.clear(); home.classes.removeAllViews()
+        stopTilt()
+        showAuth(message)
+    }
+
+    private fun onFailure(f: Failure, message: TextView) {
+        if (f is Failure.SessionExpired) { logout(f.message); return }
+        message.text = f.message
+        message.visibility = View.VISIBLE
+    }
+
+    // ------------------------------------------------------------ acceso
+
+    private fun setupAuth() = with(auth) {
+        title.text = emph(getString(R.string.login_title))
+        submit.setOnClickListener { submitAuth() }
+        submit.pressable()
+        segRegister.setOnClickListener { if (!registerMode && !busy) { registerMode = true; applyMode(true); setAuthError(null) } }
+        segLogin.setOnClickListener { if (registerMode && !busy) { registerMode = false; applyMode(true); setAuthError(null) } }
+        password.setOnEditorActionListener { _, id, _ -> if (id == EditorInfo.IME_ACTION_DONE) { submitAuth(); true } else false }
+        code.doAfterTextChanged { codeLayout.error = null }
+        name.doAfterTextChanged { nameLayout.error = null }
+        password.doAfterTextChanged { passLayout.error = null }
+        segment.post { placeThumb(false) }
+    }
+
+    private fun placeThumb(animate: Boolean) = with(auth) {
+        val w = (segment.width - segment.paddingLeft - segment.paddingRight) / 2
+        if (w <= 0) return
+        segmentThumb.updateLayoutParams { width = w }
+        val x = if (registerMode) 0f else w.toFloat()
+        if (animate && motionEnabled) segmentThumb.animate().translationX(x).setDuration(ms(R.integer.ds_motion_base))
+            .setInterpolator(Motion.standard).start()
+        else segmentThumb.translationX = x
+        segRegister.setTextColor(getColor(if (registerMode) R.color.ds_text_primary else R.color.ds_text_muted))
+        segLogin.setTextColor(getColor(if (!registerMode) R.color.ds_text_primary else R.color.ds_text_muted))
+    }
+
+    private fun applyMode(animate: Boolean) = with(auth) {
+        if (animate && motionEnabled) TransitionManager.beginDelayedTransition(form, AutoTransition().apply {
+            duration = ms(R.integer.ds_motion_base); interpolator = Motion.standard
+        })
+        placeThumb(animate)
+        formTitle.text = emph(getString(if (registerMode) R.string.form_register else R.string.form_login))
+        nameLayout.visibility = if (registerMode) View.VISIBLE else View.GONE
+        submit.setText(if (registerMode) R.string.action_register else R.string.action_login)
+        submit.icon = null
+        passLayout.helperText = if (registerMode) "Mínimo 6 caracteres" else null
+        submit.isEnabled = !busy
+    }
+
+    private fun setAuthError(message: String?) = with(auth) {
+        val show = !message.isNullOrEmpty()
+        if (show) errorText.text = message  // al ocultar, el texto se queda mientras se desvanece
+        if (show == (error.visibility == View.VISIBLE)) return
+        if (motionEnabled) TransitionManager.beginDelayedTransition(form, AutoTransition().apply { duration = ms(R.integer.ds_motion_base) })
+        error.visibility = if (show) View.VISIBLE else View.GONE
+    }
+
+    private fun shake(v: View) {
+        haptic(v, reject)
+        if (!motionEnabled) return
+        ObjectAnimator.ofFloat(v, View.TRANSLATION_X, 0f, 18f, -18f, 12f, -12f, 6f, -6f, 0f).setDuration(420).start()
+    }
+
+    private fun submitAuth() = with(auth) {
         if (busy) return
         val c = code.text.toString().trim()
+        val n = name.text.toString().trim()
+        val p = password.text.toString()
         codeLayout.error = validateCode(c)
-        if (codeLayout.error != null) {
-            reject(form)
-            return
-        }
-        getSystemService(InputMethodManager::class.java).hideSoftInputFromWindow(root.windowToken, 0)
-        // Save the pending code first: rotation/network loss must not lose this step.
-        profile.save(c, "Tu carnet", enrolled = false)
-        setLinkLoading()
-        enroll(c) { outcome ->
-            when (outcome) {
-                is EnrollOutcome.Linked -> {
-                    profile.save(c, outcome.fullName, enrolled = true)
-                    linkDone(true) { busy = false; showCard(animate = true) }
-                }
-                EnrollOutcome.Pending -> {
-                    linkDone(false) {
-                        busy = false
-                        showCard(animate = true)
-                        snack("Guardamos tu código. Terminaremos de vincularlo al recuperar la conexión")
-                    }
-                }
-                is EnrollOutcome.Rejected -> {
-                    profile.clear()
-                    resetLinkButton()
-                    codeLayout.error = outcome.message
-                    reject(form)
-                }
-            }
-        }
-    }
-
-    private fun enroll(code: String, done: (EnrollOutcome) -> Unit) {
-        val credential = tokens.getOrCreate()
-        val request = ++enrollmentGeneration
-        val token = credential.toHex()
-        val json = enrollJson(code, token)
-        io.execute {
-            val outcome = postEnroll(BuildConfig.CLASSAI_API_URL, json)
-            runOnUiThread {
-                if (!isDestroyed && !isFinishing && profile.code == code &&
-                    enrollmentResultIsCurrent(request, enrollmentGeneration, BuildConfig.CLASSAI_API_URL,
-                        BuildConfig.CLASSAI_API_URL, credential, tokens.get())) done(outcome)
-            }
-        }
-    }
-
-    private fun setLinkLoading(): Unit = with(b.login.link) {
+        nameLayout.error = if (registerMode) validateName(n) else null
+        passLayout.error = if (registerMode) validatePassword(p) else if (p.isEmpty()) "Escribe tu contraseña" else null
+        if (codeLayout.error != null || nameLayout.error != null || passLayout.error != null) { shake(form); return }
+        (getSystemService(INPUT_METHOD_SERVICE) as InputMethodManager).hideSoftInputFromWindow(root.windowToken, 0)
         busy = true
-        isEnabled = false
-        b.login.code.isEnabled = false
-        val spec = CircularProgressIndicatorSpec(context, null, 0,
+        setAuthError(null)
+        submit.isEnabled = false
+        val spec = CircularProgressIndicatorSpec(this@MainActivity, null, 0,
             com.google.android.material.R.style.Widget_Material3_CircularProgressIndicator_ExtraSmall)
-        spec.indicatorColors = intArrayOf(currentTextColor)
-        icon = IndeterminateDrawable.createCircularDrawable(context, spec)
-        text = "Vinculando…"
-    }
-
-    // Botón → check animado (vinculado) o reloj (pendiente), y luego sigue
-    private fun linkDone(linked: Boolean, next: () -> Unit): Unit = with(b.login.link) {
-        val to = getColor(if (linked) R.color.ds_state_ok_subtle else R.color.ds_state_regular_subtle)
-        val foreground = ColorStateList.valueOf(getColor(if (linked) R.color.ds_state_ok_text else R.color.ds_state_regular_text))
-        setTextColor(foreground)
-        iconTint = foreground
-        text = if (linked) "¡Vinculado!" else "Guardado sin conexión"
-        if (linked) {
-            val avd = (getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable)
-            avd.setTint(foreground.defaultColor)
-            icon = avd
-            iconSize = dp(26f).toInt()
-            avd.start()
-        } else {
-            setIconResource(R.drawable.ic_schedule)
-        }
-        performHapticFeedback(HapticFeedbackConstants.CONFIRM.takeIf { Build.VERSION.SDK_INT >= 30 }
-            ?: HapticFeedbackConstants.LONG_PRESS)
-        backgroundTintList = ColorStateList.valueOf(to)
-        postDelayed({ next() }, if (motionEnabled) 500 else 0)
-    }
-
-    private fun resetLinkButton(): Unit = with(b.login.link) {
-        busy = false
-        b.login.code.isEnabled = true
-        isEnabled = validateCode(b.login.code.text.toString()) == null
-        backgroundTintList = linkTint
-        setTextColor(linkText)
-        iconTint = linkText
-        iconSize = dp(24f).toInt()
-        setIconResource(R.drawable.ic_link)
-        setText(R.string.action_link)
-    }
-
-    private fun reject(v: View) {
-        v.performHapticFeedback(HapticFeedbackConstants.REJECT.takeIf { Build.VERSION.SDK_INT >= 30 }
-            ?: HapticFeedbackConstants.LONG_PRESS)
-        if (!motionEnabled) return
-        ObjectAnimator.ofFloat(v, View.TRANSLATION_X, 0f, 24f, -24f, 16f, -16f, 8f, -8f, 0f).setDuration(450).start()
-    }
-
-    private fun showLogin(animate: Boolean) {
-        resetLinkButton()
-        b.login.root.visibility = View.VISIBLE
-        b.login.root.alpha = 1f
-        b.login.root.translationY = 0f
-        if (b.card.root.visibility == View.VISIBLE) {
-            stopTilt()
-            b.card.root.animate().alpha(0f).setDuration(200).withEndAction {
-                b.card.root.visibility = View.GONE
-                b.card.root.alpha = 1f
-            }.start()
-        }
-        if (animate && motionEnabled) animateLoginIn()
-    }
-
-    private fun animateLoginIn(): Unit = with(b.login) {
-        logo.apply {
-            scaleX = 0.96f; scaleY = 0.96f; alpha = 0f; rotation = 0f
-            animate().scaleX(1f).scaleY(1f).alpha(1f).rotation(0f)
-                .setInterpolator(DecelerateInterpolator()).setDuration(360).start()
-        }
-        listOf<View>(title, subtitle, form, privacy).forEachIndexed { i, v ->
-            v.alpha = 0f
-            v.translationY = dp(20f)
-            v.animate().alpha(1f).translationY(0f).setStartDelay(80L + i * 65L).setDuration(320)
-                .setInterpolator(DecelerateInterpolator(2f)).start()
-        }
-    }
-
-    // ---------------------------------------------------------------- carnet
-
-    private fun setupCard(): Unit = with(b.card) {
-        toolbar.setOnMenuItemClickListener {
-            when (it.itemId) {
-                R.id.action_unlink -> confirmUnlink()
-            }
-            true
-        }
-        refresh.setColorSchemeColors(attr(androidx.appcompat.R.attr.colorPrimary), getColor(R.color.ds_brand_air_to))
-        refresh.setProgressBackgroundColorSchemeColor(attr(com.google.android.material.R.attr.colorSurfaceContainerHigh))
-        refresh.setOnRefreshListener { if (!profile.enrolled) retry() else { renderCard(); refresh.isRefreshing = false } }
-        retry.setOnClickListener { refresh.isRefreshing = true; retry() }
-        nfcSettings.setOnClickListener {
-            try { startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) }
-            catch (e: ActivityNotFoundException) { startActivity(Intent(Settings.ACTION_WIRELESS_SETTINGS)) }
-        }
-        technicalNfcSettings.setOnClickListener { nfcSettings.performClick() }
-        detailsToggle.setOnClickListener {
-            val open = details.visibility != View.VISIBLE
-            details.visibility = if (open) View.VISIBLE else View.GONE
-            detailsToggle.setText(if (open) R.string.details_hide else R.string.details_show)
-            if (open) {
-                renderDetails()
-                cardScroll.post { cardScroll.smoothScrollTo(0, details.bottom) }
-            }
-        }
-        copy.setOnClickListener {
-            getSystemService(ClipboardManager::class.java).setPrimaryClip(
-                ClipData.newPlainText("ClassAI credencial privada", tokens.getOrCreate().toHex()).apply {
-                    if (Build.VERSION.SDK_INT >= 33) description.extras = android.os.PersistableBundle().apply {
-                        putBoolean(android.content.ClipDescription.EXTRA_IS_SENSITIVE, true)
+        spec.indicatorColors = intArrayOf(getColor(R.color.ds_brand_on_ink))
+        submit.icon = IndeterminateDrawable.createCircularDrawable(this@MainActivity, spec)
+        submit.text = if (registerMode) "Creando tu cuenta…" else "Entrando…"
+        val nfc = tokens.getOrCreate().toHex()
+        val register = registerMode
+        io.execute {
+            val r = if (register) api.register(c, n, p, nfc) else api.login(c, p, nfc)
+            ui.post {
+                when (r) {
+                    is Result.Ok -> {
+                        session.save(r.value.token, r.value.student.code, r.value.student.fullName)
+                        generation++
+                        password.text = null
+                        authDone()
                     }
-                })
-            snack("Credencial copiada. No la compartas")
-        }
-        successOverlayClick()
-    }
-
-    private fun successOverlayClick() = b.successOverlay.setOnClickListener { hideSuccessOverlay() }
-
-    private fun showCard(animate: Boolean) {
-        val wasLogin = b.login.root.visibility == View.VISIBLE
-        b.card.root.visibility = View.VISIBLE
-        renderCard()
-        startTilt()
-        if (wasLogin) {
-            if (animate && motionEnabled) {
-                b.login.root.animate().alpha(0f).translationY(-dp(40f)).setDuration(280).withEndAction {
-                    b.login.root.visibility = View.GONE
-                }.start()
-            } else b.login.root.visibility = View.GONE
-        }
-        if (animate && motionEnabled) flipIn()
-    }
-
-    // Entrada breve: aparece y se eleva suavemente.
-    private fun flipIn(): Unit = with(b.card) {
-        flipping = true
-        idCard.alpha = 0f
-        idCard.translationY = dp(12f)
-        idCard.animate().alpha(1f).translationY(0f).setDuration(360)
-            .setInterpolator(DecelerateInterpolator())
-            .withEndAction { flipping = false }.start()
-    }
-
-    private fun renderCard() = with(b.card) {
-        val adapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
-        val hce = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
-        val s = cardStatus(adapter != null || demoNfc, hce || demoNfc, adapter?.isEnabled == true || demoNfc, profile.enrolled)
-        val n = profile.name ?: "Tu carnet"
-        cardName.text = n
-        cardCode.text = "Código ${profile.code.orEmpty()}"
-        avatar.initials = initials(n)
-        setStatus(s)
-        idCard.contentDescription = "Carnet de $n, código ${profile.code}. Estado: ${s.label}"
-        renderDetails()
-        renderReads(animateFirst = false)
-    }
-
-    private fun setStatus(s: CardStatus): Unit = with(b.card) {
-        val color = getColor(when (s) {
-            CardStatus.ACTIVE -> R.color.ds_state_ok_subtle
-            CardStatus.PENDING -> R.color.ds_state_regular_subtle
-            CardStatus.NFC_OFF -> R.color.ds_state_alert_subtle
-            CardStatus.NO_NFC, CardStatus.NO_HCE -> R.color.ds_state_offline_subtle
-        })
-        val foreground = getColor(when (s) {
-            CardStatus.ACTIVE -> R.color.ds_state_ok_text
-            CardStatus.PENDING -> R.color.ds_state_regular_text
-            CardStatus.NFC_OFF -> R.color.ds_state_alert_text
-            CardStatus.NO_NFC, CardStatus.NO_HCE -> R.color.ds_state_offline_text
-        })
-        chipText.setTextColor(foreground)
-        chipIcon.imageTintList = ColorStateList.valueOf(foreground)
-        val icon = when (s) {
-            CardStatus.ACTIVE -> R.drawable.ic_check_circle
-            CardStatus.PENDING -> R.drawable.ic_schedule
-            else -> R.drawable.ic_warning
-        }
-        val changed = s != status
-        status = s
-        chipText.text = s.label
-        chipIcon.setImageResource(icon)
-        waves.active = s == CardStatus.ACTIVE
-        retry.visibility = if (!profile.enrolled) View.VISIBLE else View.GONE
-        nfcSettings.visibility = if (s == CardStatus.NFC_OFF) View.VISIBLE else View.GONE
-        hint.setCompoundDrawablesRelativeWithIntrinsicBounds(if (s == CardStatus.ACTIVE) R.drawable.ic_contactless else icon, 0, 0, 0)
-        hint.compoundDrawableTintList = ColorStateList.valueOf(attr(androidx.appcompat.R.attr.colorPrimary))
-        if (!changed) return
-        if (chipColor == 0 || !motionEnabled) {
-            chip.backgroundTintList = ColorStateList.valueOf(color)
-            hint.text = s.hint
-        } else {
-            ValueAnimator.ofArgb(chipColor, color).apply {
-                duration = 450
-                addUpdateListener { chip.backgroundTintList = ColorStateList.valueOf(it.animatedValue as Int) }
-            }.start()
-            chip.scaleX = 0.98f; chip.scaleY = 0.98f
-            chip.animate().scaleX(1f).scaleY(1f).setInterpolator(DecelerateInterpolator()).setDuration(240).start()
-            hint.animate().alpha(0f).setDuration(120).withEndAction {
-                hint.text = s.hint
-                hint.animate().alpha(1f).setDuration(200).start()
-            }.start()
-        }
-        chipColor = color
-    }
-
-    private fun renderReads(animateFirst: Boolean): Unit = with(b.card) {
-        val list = EventLog.reads().take(8)
-        reads.removeAllViews()
-        list.forEachIndexed { i, e ->
-            val row = ItemReadBinding.inflate(layoutInflater, reads, false)
-            row.readTime.text = timeFmt.format(Date(e.time))
-            row.root.contentDescription = "${getString(R.string.read_ok)} a las ${row.readTime.text}"
-            reads.addView(row.root)
-            if (i == 0 && animateFirst && motionEnabled) {
-                row.root.alpha = 0f
-                row.root.translationX = -dp(60f)
-                row.root.animate().alpha(1f).translationX(0f).setStartDelay(500).setDuration(500)
-                    .setInterpolator(OvershootInterpolator(1.2f)).start()
+                    is Result.Err -> {
+                        busy = false
+                        if (r.failure is Failure.AccountExists) registerMode = false
+                        applyMode(true)
+                        setAuthError(r.failure.message)
+                        shake(form)
+                    }
+                }
             }
         }
-        val empty = list.isEmpty()
-        b.card.empty.visibility = if (empty) View.VISIBLE else View.GONE
-        reads.visibility = if (empty) View.GONE else View.VISIBLE
     }
 
-    private fun retry() {
-        if (busy) return
-        val code = profile.code ?: return
-        busy = true
-        b.card.retry.isEnabled = false
-        enroll(code) { outcome ->
+    // Botón → check verde y luego entra al carnet.
+    private fun authDone() = with(auth.submit) {
+        val ok = getColor(R.color.ds_state_ok_solid)
+        backgroundTintList = ColorStateList.valueOf(ok)
+        setTextColor(getColor(R.color.ds_app_on_mood))
+        text = "¡Listo!"
+        val avd = getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable
+        avd.setTint(getColor(R.color.ds_app_on_mood))
+        icon = avd; iconTint = null; iconSize = dp(24f).toInt()
+        avd.start()
+        haptic(this, confirm)
+        postDelayed({
             busy = false
-            b.card.retry.isEnabled = true
-            b.card.refresh.isRefreshing = false
-            when (outcome) {
-                is EnrollOutcome.Linked -> {
-                    profile.save(code, outcome.fullName, enrolled = true)
-                    renderCard()
-                    b.card.idCard.sweepOnce()
-                    snack("Tu carnet está listo")
-                }
-                EnrollOutcome.Pending -> snack("Tu código está guardado. Seguimos sin conexión")
-                is EnrollOutcome.Rejected -> {
-                    profile.clear()
-                    showLogin(animate = true)
-                    b.login.code.setText(code)
-                    b.login.codeLayout.error = outcome.message
-                }
+            backgroundTintList = null; setTextColor(getColor(R.color.ds_brand_on_ink))
+            go(Screen.HOME)
+        }, if (motionEnabled) 650 else 0)
+    }
+
+    private fun animateAuthIn() = with(auth) {
+        (logo.drawable as? AnimatedVectorDrawable)?.let { it.reset(); it.start() }
+        if (!motionEnabled) return
+        logo.alpha = 0f; logo.scaleX = 0.9f; logo.scaleY = 0.9f
+        logo.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(ms(R.integer.ds_motion_slow)).setInterpolator(Motion.standard).start()
+        listOf<View>(title, subtitle, form, privacy).forEachIndexed { i, v -> v.enter(i + 1, 20f) }
+    }
+
+    // ------------------------------------------------------------ NFC / carnet
+
+    private fun renderNfc() {
+        val adapter = NfcAdapter.getDefaultAdapter(this)
+        val hce = packageManager.hasSystemFeature("android.hardware.nfc.hce")
+        val s = cardStatus(adapter != null || demoNfc, hce || demoNfc, adapter?.isEnabled == true || demoNfc)
+        val fg = getColor(when (s) {
+            CardStatus.ACTIVE -> R.color.ds_app_card_chip_ok
+            CardStatus.NFC_OFF -> R.color.ds_app_card_chip_warn
+            else -> R.color.ds_app_card_chip_off
+        })
+        with(home) {
+            chipText.text = s.label
+            chipText.setTextColor(fg)
+            chipIcon.setImageResource(when (s) { CardStatus.ACTIVE -> R.drawable.ic_check_circle; CardStatus.NFC_OFF -> R.drawable.ic_warning; else -> R.drawable.ic_contactless })
+            chipIcon.imageTintList = ColorStateList.valueOf(fg)
+            waves.active = s == CardStatus.ACTIVE
+            hint.text = s.hint
+            hint.setCompoundDrawablesRelativeWithIntrinsicBounds(if (s == CardStatus.ACTIVE) R.drawable.ic_contactless else 0, 0, 0, 0)
+            hint.setTextColor(getColor(if (s == CardStatus.ACTIVE) R.color.ds_text_primary else R.color.ds_text_secondary))
+            hint.textSize = if (s == CardStatus.ACTIVE) 16f else 14f
+            nfcSettings.visibility = if (s == CardStatus.NFC_OFF) View.VISIBLE else View.GONE
+            idCard.contentDescription = "Carnet de ${session.name.orEmpty()}, código ${session.code.orEmpty()}. Estado: ${s.label}"
+            if (status != null && status != s && motionEnabled) {
+                chip.scaleX = 0.9f; chip.scaleY = 0.9f
+                chip.animate().scaleX(1f).scaleY(1f).setDuration(ms(R.integer.ds_motion_base)).setInterpolator(Motion.standard).start()
             }
         }
+        status = s
     }
 
-    private fun confirmUnlink() {
-        MaterialAlertDialogBuilder(this)
-            .setIcon(R.drawable.ic_logout)
-            .setTitle("¿Cambiar de estudiante?")
-            .setMessage("Volverás al inicio. Si luego quieres vincular otra vez este carnet, tu docente deberá habilitarlo.")
-            .setNegativeButton("Cancelar", null)
-            .setPositiveButton("Cambiar") { _, _ ->
-                enrollmentGeneration++
-                tokens.regenerate()
-                profile.clear()
-                status = null
-                chipColor = 0
-                EventLog.clear()
-                EventLog.add("Token regenerado")
-                b.login.code.text = null
-                showLogin(animate = true)
-            }
-            .show()
+    private fun openNfcSettings() {
+        try { startActivity(Intent(Settings.ACTION_NFC_SETTINGS)) } catch (e: Exception) { startActivity(Intent(Settings.ACTION_SETTINGS)) }
     }
 
-    // ---------------------------------------------------------------- momento estrella
-
-    private fun renderDetails() = with(b.card) {
-        if (details.visibility != View.VISIBLE) return@with
-        val adapter = NfcAdapter.getDefaultAdapter(this@MainActivity)
-        val hce = packageManager.hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)
-        token.text = tokens.getOrCreate().toHex().chunked(8).joinToString(" ")
-        tech.text = "APK ${BuildConfig.VERSION_NAME} · trazas ${if (BuildConfig.DEBUG && BuildConfig.CLASSAI_LAB_DIAGNOSTICS) "completas de laboratorio" else "INS/SW"}\n" +
-            "NFC: ${if (adapter == null) "no disponible" else if (adapter.isEnabled) "activado" else "desactivado"}\n" +
-            "HCE: ${if (hce) "compatible" else "no disponible"}\n" +
-            "Vinculación: ${if (profile.enrolled) "confirmada por el servidor" else "pendiente"}\n" +
-            "Servidor (configurado en .env): ${BuildConfig.CLASSAI_API_URL}\n" +
-            "AID: F0434C4153534149 · protocolo v1\n" +
-            "El servicio responde SELECT → GET CREDENTIAL automáticamente, sin pulsar botones. Usa el teléfono desbloqueado.\n" +
-            "Una lectura confirma la entrega de la credencial; la asistencia la valida el backend." +
-            if (demoNfc) "\nVista de demostración: el estado del carnet simula NFC. El diagnóstico de arriba muestra el hardware real." else ""
-        log.text = EventLog.text().ifEmpty { "Sin eventos APDU en este proceso. Esperando al lector." }
-    }
-
-    private fun onLogEntry(e: EventLog.Entry) {
-        if (b.card.root.visibility == View.VISIBLE) renderDetails()
-        if (e.read) {
-            if (b.card.root.visibility == View.VISIBLE) celebrate()
-            else { vibrate(); showSuccessOverlay() }
-        }
-    }
-
-    private fun celebrate(): Unit = with(b.card) {
-        vibrate()
-        renderReads(animateFirst = true)
-        if (!motionEnabled) {
-            showSuccessOverlay()
-            return
-        }
-        // La celebración confirma la entrega NFC, nunca persistencia de asistencia.
-        idCard.sweepOnce()
-        ValueAnimator.ofFloat(0f, 1f, 1f, 0f).apply {
-            duration = 1600
-            addUpdateListener {
-                val g = it.animatedValue as Float
-                idCard.glow = g
-                idCard.elevation = dp(10f)
-            }
-        }.start()
-        b.root.postDelayed({ showSuccessOverlay() }, 350)
-    }
-
-    private fun showSuccessOverlay(): Unit = with(b) {
-        root.removeCallbacks(hideSuccess)
-        successOverlay.animate().cancel()
-        successOverlay.visibility = View.VISIBLE
-        confetti.post { if (successOverlay.visibility == View.VISIBLE) confetti.burst() }
-        val avd = successCheck.drawable as AnimatedVectorDrawable
-        if (motionEnabled) {
-            successOverlay.alpha = 0f
-            successOverlay.animate().alpha(1f).setDuration(200).start()
-            successCheck.scaleX = 0.95f; successCheck.scaleY = 0.95f
-            successCheck.animate().scaleX(1f).scaleY(1f).setInterpolator(DecelerateInterpolator()).setDuration(250).start()
-            listOf(successTitle, successBody).forEachIndexed { i, v ->
-                v.alpha = 0f; v.translationY = dp(24f)
-                v.animate().alpha(1f).translationY(0f).setStartDelay(250L + i * 90).setDuration(400).start()
-            }
-            avd.reset()
-            avd.start()
-        } else {
-            successOverlay.alpha = 1f
-            avd.reset()
-            avd.start()  // con animaciones desactivadas el sistema salta al estado final
-        }
-        root.postDelayed(hideSuccess, 1900)
-    }
-
-    private fun hideSuccessOverlay(): Unit = with(b) {
-        root.removeCallbacks(hideSuccess)
-        if (successOverlay.visibility != View.VISIBLE) return
-        successOverlay.animate().alpha(0f).setDuration(250).withEndAction {
-            successOverlay.visibility = View.GONE
-            snack("Lectura registrada a las ${timeFmt.format(Date())}", R.drawable.ic_check_circle)
-        }.start()
-    }
-
-    private fun vibrate() {
-        val v = if (Build.VERSION.SDK_INT >= 31) getSystemService(VibratorManager::class.java)?.defaultVibrator
-        else @Suppress("DEPRECATION") getSystemService(Vibrator::class.java)
-        if (v?.hasVibrator() != true) return
-        v.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 35, 70, 60), intArrayOf(0, 160, 0, 255), -1))
-    }
-
-    private fun snack(msg: String, icon: Int = 0) {
-        val s = Snackbar.make(b.root, msg, Snackbar.LENGTH_LONG)
-        if (icon != 0) {
-            s.view.findViewById<android.widget.TextView>(com.google.android.material.R.id.snackbar_text)?.apply {
-                setCompoundDrawablesRelativeWithIntrinsicBounds(icon, 0, 0, 0)
-                compoundDrawablePadding = dp(12f).toInt()
-                compoundDrawableTintList = ColorStateList.valueOf(getColor(R.color.ds_text_inverse))
-            }
-        }
-        s.show()
-    }
-
-    // ---------------------------------------------------------------- inclinación (parallax)
-
+    // Inclinación: el carnet gira unos grados y el brillo sigue al teléfono.
     private fun startTilt() {
-        if (!motionEnabled || sensors != null) return
+        if (!motionEnabled || sensors != null || screen != Screen.HOME) return
         val sm = getSystemService(SensorManager::class.java) ?: return
-        val sensor = sm.getDefaultSensor(Sensor.TYPE_GRAVITY) ?: sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: return
-        sensors = sm
-        gx0 = Float.NaN
-        sm.registerListener(this, sensor, SensorManager.SENSOR_DELAY_GAME)
+        val sensor = sm.getDefaultSensor(Sensor.TYPE_GRAVITY) ?: return
+        sensors = sm; gx0 = Float.NaN
+        sm.registerListener(this, sensor, SensorManager.SENSOR_DELAY_UI)
     }
 
-    private fun stopTilt() {
-        sensors?.unregisterListener(this)
-        sensors = null
-    }
+    private fun stopTilt() { sensors?.unregisterListener(this); sensors = null }
 
     override fun onSensorChanged(e: SensorEvent) {
-        if (flipping) return
-        val gx = e.values[0]
-        val gy = e.values[1]
-        if (gx0.isNaN()) { gx0 = gx; gy0 = gy }
-        // la referencia sigue lentamente a la postura del usuario: solo reacciona a movimientos
-        gx0 += (gx - gx0) * 0.02f
-        gy0 += (gy - gy0) * 0.02f
-        tiltX += ((gx - gx0) - tiltX) * 0.15f
-        tiltY += ((gy - gy0) - tiltY) * 0.15f
-        val card = b.card.idCard
-        card.rotationY = (-tiltX * 0.7f).coerceIn(-2f, 2f)
-        card.rotationX = (tiltY * 0.7f).coerceIn(-2f, 2f)
-        card.holo = (tiltX / 3f).coerceIn(-1f, 1f)
+        if (gx0.isNaN()) { gx0 = e.values[0]; gy0 = e.values[1] }
+        val tx = ((e.values[0] - gx0) / 4f).coerceIn(-1f, 1f)
+        val ty = ((e.values[1] - gy0) / 4f).coerceIn(-1f, 1f)
+        home.idCard.rotationY += (-tx * 6f - home.idCard.rotationY) * 0.15f
+        home.idCard.rotationX += (ty * 4f - home.idCard.rotationX) * 0.15f
+        home.idCard.holo = tx
     }
 
-    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
+
+    // ------------------------------------------------------------ inicio
+
+    private fun setupHome() = with(home) {
+        refresh.setColorSchemeColors(getColor(R.color.ds_brand_air_from), getColor(R.color.ds_brand_air_to))
+        refresh.setProgressBackgroundColorSchemeColor(getColor(R.color.ds_bg_raised))
+        refresh.setOnRefreshListener { refresh() }
+        nfcSettings.setOnClickListener { openNfcSettings() }
+        logout.setOnClickListener {
+            MaterialAlertDialogBuilder(this@MainActivity)
+                .setTitle("¿Cerrar sesión?")
+                .setMessage("Tu carnet seguirá vinculado a este teléfono cuando vuelvas a entrar.")
+                .setNegativeButton("Cancelar", null)
+                .setPositiveButton("Cerrar sesión") { _, _ -> logout() }
+                .show()
+        }
+        hero.clipToOutline = true
+        hero.pressable()
+        // Parallax: el carnet se queda atrás y se desvanece al bajar; Kirby se desplaza más lento que su tarjeta
+        scroll.setOnScrollChangeListener { _: View, _: Int, y: Int, _: Int, _: Int ->
+            if (!motionEnabled || idCard.animation != null) return@setOnScrollChangeListener
+            // se aleja (escala y alfa), sin invadir lo que viene debajo
+            val k = (y / idCard.bottom.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
+            idCard.scaleX = 1f - 0.06f * k; idCard.scaleY = 1f - 0.06f * k
+            idCard.alpha = 1f - 0.5f * k
+            heroKirby.translationY = ((y - hero.top + idCard.height) * 0.08f).coerceIn(-dp(14f), dp(14f))
+        }
+        heroAction.setOnClickListener { this@MainActivity.classes?.firstOrNull()?.let { classId = it.id; current = null }; go(Screen.ROOM) }
+        heroAction.pressable()
+        headAvatar.ink = getColor(R.color.ds_text_primary)
+    }
+
+    private fun enterHome(entering: Boolean) = with(home) {
+        val name = session.name.orEmpty()
+        headName.text = emph("*${name.substringBefore(' ').ifBlank { "Hola" }}*")
+        greeting.text = when (java.time.LocalTime.now().hour) { in 5..11 -> "Buenos días,"; in 12..18 -> "Buenas tardes,"; else -> "Buenas noches," }
+        headAvatar.initials = initials(name)
+        cardName.text = name
+        cardCode.text = "Código ${session.code.orEmpty()}"
+        avatar.initials = initials(name)
+        renderNfc()
+        if (classes == null) renderHome(emptyList(), skeleton = true)
+        if (motionEnabled) {
+            header.enter(0)
+            idCard.alpha = 0f; idCard.translationY = dp(24f); idCard.scaleX = 0.96f; idCard.scaleY = 0.96f
+            idCard.animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f).setStartDelay(if (entering) 80 else 120)
+                .setDuration(ms(R.integer.ds_motion_slow) + 140).setInterpolator(Motion.standard)
+                .withEndAction { idCard.sweepOnce() }.start()
+            hint.enter(3); hero.enter(4)
+        }
+        startTilt()
+        refresh()
+    }
+
+    private fun renderHome(list: List<ClassInfo>, skeleton: Boolean = false) = with(home) {
+        val first = list.firstOrNull()
+        // Héroe: el aula ahora con Kirby según cómo está la temperatura.
+        val mood = roomMood(first?.metrics, first?.targets)
+        heroKirby.show(if (first == null) Mood.OK else mood)
+        tintHero(getColor(when (if (first == null) Mood.OK else mood) {
+            Mood.OK -> R.color.ds_app_kirby_ok_edge; Mood.HOT -> R.color.ds_app_kirby_hot_edge; Mood.COLD -> R.color.ds_app_kirby_cold_edge
+        }))
+        if (first == null) {
+            heroKicker.text = if (skeleton) "Cargando…" else "Sin clases ahora"
+            heroTitle.text = emph("Tómate un *respiro*")
+            heroBody.text = getString(R.string.classes_empty)
+            heroAction.visibility = View.GONE
+        } else {
+            val m = first.metrics
+            heroKicker.text = "●  En vivo · Aula ${first.room.uppercase()}"
+            heroTitle.text = emph(when {
+                m?.tempC == null -> "Tu clase está *en vivo*"
+                mood == Mood.HOT -> "Hace *calor* en el aula"
+                mood == Mood.COLD -> "Hace *frío* en el aula"
+                else -> "El aula está *a gusto*"
+            })
+            heroBody.text = first.course.ifBlank { "Clase" } + listOfNotNull(m?.tempC?.let { "%.1f °C".format(es, it) },
+                m?.state?.let { comfortLabel(it) }).joinToString(" · ").let { if (it.isEmpty()) "" else "\n$it" }
+            heroAction.visibility = View.VISIBLE
+        }
+        classesCount.text = list.size.toString()
+        classesHead.visibility = if (skeleton || list.isNotEmpty()) View.VISIBLE else View.GONE
+        message.visibility = View.GONE
+        classes.removeAllViews()
+        if (skeleton) {
+            repeat(2) { classes.addView(ShimmerView(this@MainActivity), LinearLayout.LayoutParams(-1, dp(150f).toInt()).apply { topMargin = dp(12f).toInt() }) }
+            return
+        }
+        var newIndex = 0
+        list.forEach { c ->
+            val row = ItemClassBinding.inflate(layoutInflater, classes, false)
+            row.course.text = c.course.ifBlank { "Clase" }
+            row.room.text = "Aula ${c.room.uppercase()}"
+            row.since.text = timeLabel(c.startedAt)?.let { "desde $it" } ?: ""
+            row.elapsed.text = elapsedLabel(c.startedAt).orEmpty()
+            styleStatus(row.status, c)
+            val level = comfortLevel(c.metrics?.state)
+            row.comfort.text = c.metrics?.let { m -> listOfNotNull(m.tempC?.let { "%.1f °C".format(es, it) }, comfortLabel(m.state).takeIf { m.state != null }).joinToString(" · ") }
+                ?.ifBlank { null } ?: "Sin lecturas"
+            row.comfortDot.backgroundTintList = ColorStateList.valueOf(getColor(levelColor(level)))
+            row.root.setOnClickListener { classId = c.id; current = null; go(Screen.ROOM) }
+            row.root.pressable()
+            classes.addView(row.root)
+            if (renderedRows.add(c.id)) row.root.enter(newIndex++)
+        }
+        renderedRows.retainAll(list.map { it.id }.toSet()); Unit
+    }
+
+    private var heroEdge = 0
+
+    /** El héroe toma el color del borde del video y lo funde hacia Kirby, a la derecha. */
+    private fun tintHero(edge: Int): Unit = with(home) {
+        if (edge == heroEdge) return
+        val from = heroEdge
+        heroEdge = edge
+        val bg = GradientDrawable().apply { cornerRadius = resources.getDimension(R.dimen.app_radius_hero) }
+        val fade = GradientDrawable(GradientDrawable.Orientation.LEFT_RIGHT, intArrayOf(0, 0, 0, 0))
+        hero.background = bg; heroFade.background = fade
+        fun paint(c: Int) {
+            bg.setColor(c)
+            fade.colors = intArrayOf(c, ColorUtils.setAlphaComponent(c, 235), ColorUtils.setAlphaComponent(c, 0), 0)
+        }
+        if (from == 0 || !motionEnabled) { paint(edge); return }
+        ValueAnimator.ofArgb(from, edge).apply {
+            duration = ms(R.integer.ds_motion_slow); interpolator = Motion.standard
+            addUpdateListener { paint(it.animatedValue as Int) }
+            start()
+        }
+    }
+
+    private fun styleStatus(chip: TextView, c: ClassInfo) {
+        val ok = c.attended
+        chip.text = if (ok) "Asistencia ${timeLabel(c.attendedAt)?.let { "· $it" } ?: "marcada"}" else "Falta marcar asistencia"
+        chip.backgroundTintList = ColorStateList.valueOf(getColor(if (ok) R.color.ds_state_ok_subtle else R.color.ds_state_regular_subtle))
+        val fg = getColor(if (ok) R.color.ds_state_ok_text else R.color.ds_state_regular_text)
+        chip.setTextColor(fg)
+        chip.setCompoundDrawablesRelativeWithIntrinsicBounds(if (ok) R.drawable.ic_check_circle else R.drawable.ic_contactless, 0, 0, 0)
+        chip.compoundDrawableTintList = ColorStateList.valueOf(fg)
+        chip.compoundDrawablesRelative[0]?.setBounds(0, 0, dp(14f).toInt(), dp(14f).toInt())
+        chip.setCompoundDrawablesRelative(chip.compoundDrawablesRelative[0], null, null, null)
+    }
+
+    private fun levelColor(l: Level) = when (l) {
+        Level.OK -> R.color.ds_state_ok_solid
+        Level.REGULAR -> R.color.ds_state_regular_solid
+        Level.ALERT -> R.color.ds_state_alert_solid
+        Level.NONE -> R.color.ds_state_offline_solid
+    }
+
+    private fun renderHistory() = with(home) {
+        reads.removeAllViews()
+        history.take(6).forEachIndexed { i, h ->
+            val row = ItemReadBinding.inflate(layoutInflater, reads, false)
+            row.readCourse.text = h.course.ifBlank { "Clase" }
+            row.readMeta.text = listOfNotNull("Aula ${h.room.uppercase()}", dayTimeLabel(h.attendedAt)?.substringBefore(" ·")).joinToString(" · ")
+            row.readTime.text = timeLabel(h.attendedAt).orEmpty()
+            if (i > 0) reads.addView(View(this@MainActivity).apply { setBackgroundColor(getColor(R.color.ds_border_subtle)) },
+                LinearLayout.LayoutParams(-1, 1).apply { marginStart = dp(64f).toInt() })
+            reads.addView(row.root)
+        }
+        reads.visibility = if (history.isEmpty()) View.GONE else View.VISIBLE
+        readsEmpty.visibility = if (history.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    // ------------------------------------------------------------ datos
+
+    private fun refresh() {
+        if (!resumed || loading || screen == Screen.AUTH) return
+        ui.removeCallbacks(refreshTick)
+        loading = true
+        val onScreen = screen
+        val wanted = classId
+        val gen = generation
+        io.execute {
+            var list: Result<List<ClassInfo>>? = null
+            var hist: Result<List<HistoryItem>>? = null
+            var detail: Result<ClassInfo>? = null
+            list = api.classes()
+            if (onScreen == Screen.HOME) hist = api.history()
+            // La clase elegida sigue solo mientras esté abierta; si el docente la cerró, pasa a la siguiente abierta.
+            val open = (list as? Result.Ok)?.value
+            val id = if (open == null) wanted
+                else wanted?.takeIf { w -> open.any { it.id == w } } ?: open.firstOrNull { !it.attended }?.id ?: open.firstOrNull()?.id
+            if (onScreen != Screen.HOME && id != null) detail = api.classInfo(id)
+            ui.post {
+                if (gen != generation) return@post  // respuesta de una sesión anterior
+                loading = false
+                home.refresh.isRefreshing = false
+                cls.refresh.isRefreshing = false
+                if (screen == onScreen) apply(onScreen, list, hist, detail, id)
+                if (resumed && screen != Screen.AUTH) {
+                    // Si cambió de pestaña mientras tanto, pide lo de la pestaña nueva ya mismo.
+                    val fast = screen != Screen.HOME && current?.attended == false
+                    ui.postDelayed(refreshTick, if (screen != onScreen) 0L else if (fast) 2500L else 5000L)
+                }
+            }
+        }
+    }
+
+    private fun apply(s: Screen, list: Result<List<ClassInfo>>?, hist: Result<List<HistoryItem>>?, detail: Result<ClassInfo>?, id: String?) {
+        (listOf(list, hist, detail).firstOrNull { it is Result.Err && it.failure is Failure.SessionExpired } as? Result.Err)?.let {
+            logout(it.failure.message); return
+        }
+        when (list) {
+            is Result.Ok -> { classes = list.value; list.value.forEach(::noteAttendance); if (s == Screen.HOME) renderHome(list.value) }
+            is Result.Err -> if (s == Screen.HOME) { if (classes == null) renderHome(emptyList()); onFailure(list.failure, home.message) }
+            null -> Unit
+        }
+        // Un backend sin historial (404) o sin red deja el estado vacío ilustrado.
+        if (hist is Result.Ok) history = hist.value
+        if (hist != null) renderHistory()
+        if (s == Screen.HOME) return
+        if (id == null) { classId = null; current = null; renderNoClass(); return }
+        if (id != classId) { classId = id; current = null; voteFor = null }
+        when (detail) {
+            is Result.Ok -> {
+                noteAttendance(detail.value)
+                current = detail.value
+                if (s == Screen.ROOM) renderRoom(detail.value) else renderVote(detail.value)
+            }
+            is Result.Err -> {
+                if (s == Screen.ROOM) { cls.loading.visibility = View.GONE; onFailure(detail.failure, cls.message) }
+                else snack(detail.failure.message)
+                if (detail.failure.message.contains("no está disponible")) { classId = null; current = null }
+            }
+            null -> renderNoClass()
+        }
+    }
+
+    /** Celebra solo el paso de "sin asistencia" a "con asistencia" visto por esta app. */
+    private fun noteAttendance(c: ClassInfo) {
+        val before = attendedSeen[c.id]
+        attendedSeen[c.id] = c.attended
+        if (before == false && c.attended) celebrate(c)
+    }
+
+    private fun renderNoClass() {
+        listOf(cls.noClass to cls.content, vote.noClass to vote.content).forEach { (empty, content) ->
+            if (empty.visibility != View.VISIBLE) { empty.visibility = View.VISIBLE; empty.enter() }
+            content.visibility = View.GONE
+        }
+        cls.noClassTitle.text = emph("Sin clases *abiertas*")
+        vote.noClassTitle.text = emph("Nada que votar *aún*")
+    }
+
+    // ------------------------------------------------------------ aula
+
+    private fun setupRoom() = with(cls) {
+        refresh.setColorSchemeColors(getColor(R.color.ds_brand_air_from), getColor(R.color.ds_brand_air_to))
+        refresh.setProgressBackgroundColorSchemeColor(getColor(R.color.ds_bg_raised))
+        refresh.setOnRefreshListener { refresh() }
+        voteShortcut.setOnClickListener { go(Screen.VOTE) }
+        voteShortcut.pressable()
+        waitDot.tint = getColor(R.color.ds_state_regular_solid)
+        fun tile(t: ItemTileBinding, icon: Int, color: Int, label: String) {
+            t.icon.setImageResource(icon); t.icon.imageTintList = ColorStateList.valueOf(getColor(color))
+            t.ring.tint = getColor(color); t.bar.tint = getColor(color); t.bars.tint = getColor(color); t.label.text = label
+        }
+        tile(tileTemp, R.drawable.ic_thermo, R.color.ds_metric_temp, "Temperatura")
+        tile(tileRh, R.drawable.ic_drop, R.color.ds_metric_rh, "Humedad")
+        tile(tileNoise, R.drawable.ic_noise, R.color.ds_metric_noise, "Ruido")
+        tile(tileLight, R.drawable.ic_light, R.color.ds_metric_lux, "Luz")
+        tileNoise.bar.visibility = View.GONE; tileNoise.bars.visibility = View.VISIBLE
+        listOf(comfortCard, presenceCard, tileTemp.root, tileRh.root, tileNoise.root, tileLight.root).forEach { it.pressable() }
+        listOf(tileNoise.value, tileLight.value).forEach { it.textSize = 28f }
+    }
+
+    private fun enterRoom() = with(cls) {
+        metricsTitle.text = emph(getString(R.string.metrics_title))
+        message.visibility = View.GONE
+        val c = current
+        if (c != null && c.id == classId) renderRoom(c, entering = true)
+        else {
+            noClass.visibility = View.GONE; content.visibility = View.VISIBLE
+            head.visibility = View.INVISIBLE; attended.visibility = View.GONE
+            metrics.visibility = View.GONE; metricsEmpty.visibility = View.GONE; voteShortcut.visibility = View.GONE
+            loading.visibility = View.VISIBLE
+        }
+        renderNfc()
+        refresh()
+    }
+
+    private fun renderRoom(c: ClassInfo, entering: Boolean = false) = with(cls) {
+        val firstPaint = loading.visibility == View.VISIBLE || head.visibility != View.VISIBLE || entering
+        noClass.visibility = View.GONE; content.visibility = View.VISIBLE; loading.visibility = View.GONE
+        message.visibility = View.GONE
+        head.visibility = View.VISIBLE
+        course.text = c.course.ifBlank { "Clase" }
+        room.text = "Aula ${c.room.uppercase()}"
+        since.text = timeLabel(c.startedAt)?.let { "desde $it" } ?: "—"
+        elapsed.text = if (c.ended) "" else elapsedLabel(c.startedAt).orEmpty()
+        liveDot.pulsing = !c.ended
+        liveDot.tint = getColor(if (c.ended) R.color.ds_state_offline_solid else R.color.ds_state_alert_solid)
+        liveText.text = if (c.ended) "Terminada" else getString(R.string.live)
+        liveText.setTextColor(getColor(if (c.ended) R.color.ds_state_offline_text else R.color.ds_state_alert_text))
+        liveBadge.backgroundTintList = if (c.ended) ColorStateList.valueOf(getColor(R.color.ds_state_offline_subtle)) else null
+        present.visibility = if (c.presentCount != null) View.VISIBLE else View.GONE
+        present.text = (c.presentCount ?: 0).let { if (it == 1) "1 presente" else "$it presentes" }
+        renderAttendance(c)
+        renderMetrics(c)
+        voteShortcut.visibility = if (c.ended) View.GONE else View.VISIBLE
+        val n = c.myVotes.size
+        voteShortcutTitle.text = emph(if (n == 0) "¿Cómo te *sientes*?" else "Votaste *$n de ${VoteDim.values().size}*")
+        voteShortcutBody.text = if (n == 0) "Temperatura, luz, ruido, movimiento y humedad" else "Toca para votar o cambiar tus votos"
+        // Coreografía: cada bloque y cada tarjeta de métrica entra por su cuenta
+        if (firstPaint) listOf<View>(head, attended, metricsTitle, comfortCard, tileTemp.root, tileRh.root, tileNoise.root,
+            tileLight.root, presenceCard, metricsEmpty, voteShortcut)
+            .filter { it.visibility == View.VISIBLE && (it.parent as View).visibility == View.VISIBLE }
+            .forEachIndexed { i, v -> v.enter(i) }
+    }
+
+    /** Una línea: verde con la hora si ya marcó; ámbar con la instrucción si no (toca para activar NFC si está apagado). */
+    private fun renderAttendance(c: ClassInfo) = with(cls) {
+        val ok = c.attended
+        attended.visibility = if (ok || !c.ended) View.VISIBLE else View.GONE
+        attended.background = getDrawable(if (ok) R.drawable.bg_ok_banner else R.drawable.bg_warn_banner)
+        val fg = getColor(if (ok) R.color.ds_state_ok_text else R.color.ds_state_regular_text)
+        attendedText.setTextColor(fg); attendedTime.setTextColor(fg)
+        attendedText.text = when {
+            ok -> "Asistencia marcada"
+            status == CardStatus.NFC_OFF -> "Activa NFC para marcar asistencia"
+            status == CardStatus.ACTIVE -> "Aún no marcas asistencia · acerca tu celular al lector"
+            else -> "Aún no marcas asistencia · " + (status?.hint ?: "")
+        }
+        attendedTime.text = if (ok) timeLabel(c.attendedAt).orEmpty() else ""
+        attendedIcon.background = getDrawable(if (ok) R.drawable.bg_success_solid else R.drawable.bg_warn_solid)
+        if (ok) {
+            if (attendedIcon.tag != "ok") {  // el check se dibuja una vez, al cambiar de estado
+                attendedIcon.tag = "ok"
+                attendedIcon.imageTintList = null
+                attendedIcon.setImageResource(R.drawable.avd_check)
+                (attendedIcon.drawable as? AnimatedVectorDrawable)?.let { it.setTint(getColor(R.color.ds_app_on_mood)); it.start() }
+            }
+            attended.setOnClickListener(null); attended.isClickable = false
+        } else {
+            attendedIcon.tag = "pending"
+            attendedIcon.setImageResource(R.drawable.ic_contactless)
+            attendedIcon.imageTintList = ColorStateList.valueOf(getColor(R.color.ds_app_on_mood))
+            attended.setOnClickListener { if (status == CardStatus.NFC_OFF) openNfcSettings() }
+        }
+    }
+
+    private fun renderMetrics(c: ClassInfo) = with(cls) {
+        val m = c.metrics
+        metrics.visibility = if (m != null) View.VISIBLE else View.GONE
+        metricsEmpty.visibility = if (m == null && !c.ended) View.VISIBLE else View.GONE
+        if (m == null) return
+        val t = c.targets ?: Targets(21.0, 24.0, 40.0, 60.0, 0.1)
+
+        // Confort: arco, número que cuenta y tendencia
+        val level = comfortLevel(m.state)
+        gauge.tint = getColor(levelColor(level))
+        gauge.setValue(m.comfort)
+        comfortValue.countTo(m.comfort) { "%.0f".format(es, it) }
+        comfortState.text = emph(when (level) { Level.OK -> "*Confortable*"; Level.REGULAR -> "*Regular*"; Level.ALERT -> "*Incómodo*"; Level.NONE -> "Sin dato" })
+        comfortState.setTextColor(getColor(when (level) { Level.OK -> R.color.ds_state_ok_text; Level.REGULAR -> R.color.ds_state_regular_text; Level.ALERT -> R.color.ds_state_alert_text; Level.NONE -> R.color.ds_text_primary }))
+        val comfortSeries = c.trend.mapNotNull { it.comfort }
+        trendChip(comfortTrend, trendDelta(comfortSeries), "", higherIsBetter = true, decimals = 0, suffix = " en 5 min")
+        trendBox.visibility = if (comfortSeries.size >= 2) View.VISIBLE else View.GONE
+        spark.tint = getColor(levelColor(level))
+        spark.set(comfortSeries)
+        trendCaption.text = "Confort de la clase · últimos ${comfortSeries.size} min"
+
+        // Temperatura: escala ±4 °C alrededor del objetivo
+        val lo = t.tempLow - 4; val hi = t.tempHigh + 4
+        fun pos(v: Double?, a: Double, b: Double) = v?.let { ((it - a) / (b - a)).toFloat() }
+        with(tileTemp) {
+            value.countTo(m.tempC) { "%.1f".format(es, it) }; unit.text = "°C"
+            bar.set(pos(m.tempC, lo, hi), pos(t.tempLow, lo, hi)!!, pos(t.tempHigh, lo, hi)!!)
+            ring.set(pos(m.tempC, lo, hi) ?: 0f)
+            caption.text = "Objetivo %s–%s °C".format(fmt0(t.tempLow), fmt0(t.tempHigh))
+            trendChip(trend, trendDelta(c.trend.mapNotNull { it.tempC }), " °C", higherIsBetter = null, decimals = 1)
+        }
+        with(tileRh) {
+            value.countTo(m.rhPct) { "%.0f".format(es, it) }; unit.text = "%"
+            bar.set(pos(m.rhPct, 0.0, 100.0), (t.rhLow / 100).toFloat(), (t.rhHigh / 100).toFloat())
+            ring.set(pos(m.rhPct, 0.0, 100.0) ?: 0f)
+            caption.text = "Objetivo %s–%s %%".format(fmt0(t.rhLow), fmt0(t.rhHigh))
+        }
+        with(tileNoise) {
+            val lvl = noiseLevel(m.noiseRel, t.noiseMax)
+            value.text = noiseLabel(m.noiseRel, t.noiseMax); unit.text = ""
+            bars.set(lvl); ring.set(lvl)
+            caption.text = when { m.noiseRel == null -> "Sin dato"; m.noiseRel <= t.noiseMax -> "Dentro de lo ideal"; else -> "Más de lo ideal" }
+        }
+        with(tileLight) {
+            val l = m.lightRel
+            value.text = when { l == null -> "—"; l < 0.33 -> "Tenue"; l < 0.66 -> "Media"; else -> "Clara" }; unit.text = ""
+            bar.set(l?.toFloat()); ring.set(l?.toFloat() ?: 0f)
+            caption.text = "Luz relativa del sensor"
+        }
+
+        // Movimiento por zona, presentes y ventilador
+        fun zone(dot: PulseDotView, text: TextView, v: Boolean?) {
+            dot.tint = getColor(if (v == true) R.color.ds_state_ok_solid else R.color.ds_state_offline_solid)
+            dot.pulsing = v == true
+            text.text = when (v) { true -> "Movimiento"; false -> "Sin movimiento"; null -> "Sin dato" }
+        }
+        zone(entranceDot, entranceText, m.entrance ?: m.presence)
+        zone(interiorDot, interiorText, m.interior)
+        presentValue.text = c.presentCount?.let { if (it == 1) "1 alumno" else "$it alumnos" } ?: "—"
+        fanText.text = when (m.fanOn) { true -> "Encendido"; false -> "Apagado"; null -> "Sin dato" }
+        fanIcon.imageTintList = ColorStateList.valueOf(getColor(if (m.fanOn == true) R.color.ds_metric_rh else R.color.ds_text_secondary))
+        if (m.fanOn == true && motionEnabled) {
+            if (fanSpin == null) fanSpin = ObjectAnimator.ofFloat(fanIcon, View.ROTATION, 0f, 360f).apply {
+                duration = 1100; repeatCount = ValueAnimator.INFINITE; interpolator = LinearInterpolator(); start()
+            }
+        } else { fanSpin?.cancel(); fanSpin = null; fanIcon.rotation = 0f }
+    }
+
+    private fun fmt0(v: Double) = if (v % 1.0 == 0.0) "%.0f".format(es, v) else "%.1f".format(es, v)
+
+    /** Chip de tendencia (+0,3 °C): verde si mejora, rojo si empeora, neutro si no aplica. */
+    private fun trendChip(chip: TextView, delta: Double?, unit: String, higherIsBetter: Boolean?, decimals: Int, suffix: String = "") {
+        if (delta == null || abs(delta) < (if (decimals == 0) 0.5 else 0.05)) { chip.visibility = View.GONE; return }
+        chip.visibility = View.VISIBLE
+        chip.text = (if (decimals == 0) (if (delta >= 0) "+" else "−") + "%.0f".format(es, abs(delta)) + unit else signed1(delta, unit)) + suffix
+        val good = higherIsBetter?.let { if (it) delta > 0 else delta < 0 }
+        val (bg, fg) = when (good) {
+            true -> R.color.ds_state_ok_subtle to R.color.ds_state_ok_text
+            false -> R.color.ds_state_alert_subtle to R.color.ds_state_alert_text
+            null -> R.color.ds_bg_selected to R.color.ds_text_secondary
+        }
+        chip.backgroundTintList = ColorStateList.valueOf(getColor(bg))
+        chip.setTextColor(getColor(fg))
+        chip.setCompoundDrawablesRelativeWithIntrinsicBounds(if (delta >= 0) R.drawable.ic_trend_up else R.drawable.ic_trend_down, 0, 0, 0)
+        chip.compoundDrawablesRelative[0]?.setBounds(0, 0, dp(14f).toInt(), dp(14f).toInt())
+        chip.setCompoundDrawablesRelative(chip.compoundDrawablesRelative[0], null, null, null)
+        chip.compoundDrawableTintList = ColorStateList.valueOf(getColor(fg))
+    }
+
+    // ------------------------------------------------------------ éxito de asistencia
+
+    private fun celebrate(c: ClassInfo) = with(main) {
+        haptic(root, confirm)
+        successTitle.text = emph("¡Asistencia *marcada*!")
+        successBody.text = listOfNotNull(c.course.ifBlank { null }, timeLabel(c.attendedAt)?.let { "a las $it" }).joinToString(" · ")
+        success.visibility = View.VISIBLE
+        val avd = successCheck.drawable as AnimatedVectorDrawable
+        avd.setTint(getColor(R.color.ds_app_on_mood))
+        avd.reset(); avd.start()
+        if (motionEnabled) {
+            success.alpha = 0f
+            success.animate().alpha(1f).setDuration(ms(R.integer.ds_motion_base)).start()
+            successBadge.scaleX = 0.8f; successBadge.scaleY = 0.8f
+            successBadge.scaleX = 0.6f; successBadge.scaleY = 0.6f
+            successBadge.animate().scaleX(1f).scaleY(1f).setDuration(Springs.bouncy.settleMs)
+                .setInterpolator(Springs.bouncy).start()
+            successHalo.scaleX = 0.6f; successHalo.scaleY = 0.6f; successHalo.alpha = 1f
+            successHalo.animate().scaleX(1.25f).scaleY(1.25f).alpha(0.5f).setDuration(900).setInterpolator(Motion.standard).start()
+            listOf<View>(successTitle, successBody).forEachIndexed { i, v -> v.enter(i + 3, 20f) }
+            confetti.post { confetti.burst() }
+        }
+        success.setOnClickListener { dismissSuccess() }
+        root.postDelayed(::dismissSuccess, 2200)
+    }
+
+    private fun dismissSuccess() = with(main) {
+        if (success.visibility != View.VISIBLE) return
+        success.animate().alpha(0f).setDuration(ms(R.integer.ds_motion_base)).withEndAction { success.visibility = View.GONE }.start()
+    }
+
+    // ------------------------------------------------------------ voto
+
+    private val moods = listOf(Mood.COLD, Mood.OK, Mood.HOT)
+    private var dim = VoteDim.TEMP
+    private val dimIcons = mapOf(VoteDim.TEMP to R.drawable.ic_thermo, VoteDim.LIGHT to R.drawable.ic_light,
+        VoteDim.NOISE to R.drawable.ic_noise, VoteDim.MOTION to R.drawable.ic_people, VoteDim.HUMIDITY to R.drawable.ic_drop)
+
+    private fun setupVote() = with(vote) {
+        moodCard.clipToOutline = true
+        kirby.background = GradientDrawable().apply {
+            cornerRadius = resources.getDimension(R.dimen.app_radius_card); setColor(getColor(R.color.ds_app_mood_glass))
+        }
+        kirby.clipToOutline = true
+        optCold.setOnClickListener { select(Mood.COLD, user = true) }
+        optOk.setOnClickListener { select(Mood.OK, user = true) }
+        optHot.setOnClickListener { select(Mood.HOT, user = true) }
+        send.setOnClickListener { sendVote() }
+        send.pressable()
+        // Deslizar sobre Kirby: izquierda/derecha cambia el valor
+        val detector = GestureDetector(this@MainActivity, object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent) = true
+            override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
+                if (abs(vx) < abs(vy) || abs(vx) < 400) return false
+                val i = moods.indexOf(choice) + if (vx < 0) 1 else -1
+                if (i in moods.indices) select(moods[i], user = true)
+                return true
+            }
+        })
+        kirby.setOnTouchListener { _, e -> detector.onTouchEvent(e) }
+        selector.addOnLayoutChangeListener { _, l, _, r, _, _, ol, _, or_ -> if (r - l != or_ - ol) selector.post { placeSelector(false) } }
+        val bg = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(getColor(R.color.ds_app_mood_ok_deep), getColor(R.color.ds_app_mood_ok)))
+        bg.cornerRadius = resources.getDimension(R.dimen.app_radius_hero)
+        moodCard.background = bg
+        moodColors = intArrayOf(getColor(R.color.ds_app_mood_ok_deep), getColor(R.color.ds_app_mood_ok))
+        VoteDim.values().forEach { d ->
+            val chip = layoutInflater.inflate(R.layout.item_dim, dims, false) as LinearLayout
+            chip.tag = d
+            (chip.getChildAt(0) as ImageView).setImageResource(dimIcons.getValue(d))
+            ((chip.getChildAt(1) as LinearLayout).getChildAt(0) as TextView).text = d.title
+            chip.setOnClickListener { pickDim(d, user = true) }
+            chip.pressable()
+            dims.addView(chip)
+        }
+    }
+
+    private fun enterVote() = with(vote) {
+        val c = current
+        if (c != null && c.id == classId) renderVote(c, entering = true) else { content.visibility = View.INVISIBLE; noClass.visibility = View.GONE }
+        refresh()
+    }
+
+    private var voteFor: String? = null
+
+    private fun renderVote(c: ClassInfo, entering: Boolean = false): Unit = with(vote) {
+        val firstPaint = entering || content.visibility != View.VISIBLE || voteFor != c.id
+        noClass.visibility = View.GONE; content.visibility = View.VISIBLE
+        course.text = "${c.course.ifBlank { "Clase" }} · Aula ${c.room.uppercase()}"
+        if (voteFor != c.id) { voteFor = c.id; pickDim(dim, user = false) } else if (!sending) renderSend()
+        renderDims(c)
+        listOf(optCold, optOk, optHot).forEach { it.isEnabled = !c.ended }
+        if (firstPaint) { dimsScroll.enter(0); moodCard.enter(1, 24f); summary.enter(2); footnote.enter(3) }
+    }
+
+    /** Chips de dimensión (con su voto) y el resumen "Tus votos". */
+    private fun renderDims(c: ClassInfo): Unit = with(vote) {
+        for (i in 0 until dims.childCount) {
+            val chip = dims.getChildAt(i) as LinearLayout
+            val d = chip.tag as VoteDim
+            val active = d == dim
+            val voted = c.myVotes[d.id]
+            chip.background = getDrawable(if (active) R.drawable.bg_nav_active else R.drawable.bg_segment)
+            val fg = getColor(if (active) R.color.ds_brand_on_ink else R.color.ds_text_primary)
+            (chip.getChildAt(0) as ImageView).imageTintList = ColorStateList.valueOf(fg)
+            val texts = chip.getChildAt(1) as LinearLayout
+            (texts.getChildAt(0) as TextView).setTextColor(fg)
+            (texts.getChildAt(1) as TextView).apply {
+                text = voted?.let { "✓ ${d.label(it)}" } ?: "Sin votar"
+                setTextColor(if (active) ColorUtils.setAlphaComponent(fg, 190) else getColor(if (voted != null) R.color.ds_state_ok_text else R.color.ds_text_muted))
+            }
+        }
+        summaryRows.removeAllViews()
+        val votes = VoteDim.values().filter { c.myVotes[it.id] != null }
+        summary.visibility = if (votes.isEmpty()) View.GONE else View.VISIBLE
+        summaryTitle.text = emph("Tus votos · *${votes.size} de ${VoteDim.values().size}*")
+        votes.forEach { d ->
+            val v = c.myVotes.getValue(d.id)
+            val row = layoutInflater.inflate(R.layout.item_vote_summary, summaryRows, false) as LinearLayout
+            val dot = row.getChildAt(0) as ImageView
+            dot.setImageResource(dimIcons.getValue(d))
+            dot.imageTintList = ColorStateList.valueOf(getColor(when (v) { "low" -> R.color.ds_app_mood_cold; "high" -> R.color.ds_app_mood_hot; else -> R.color.ds_app_mood_ok }))
+            (row.getChildAt(1) as TextView).text = d.title
+            (row.getChildAt(2) as TextView).text = d.label(v)
+            row.setOnClickListener { pickDim(d, user = true); scroll.smoothScrollTo(0, 0) }
+            summaryRows.addView(row)
+        }
+    }
+
+    private fun pickDim(d: VoteDim, user: Boolean): Unit = with(vote) {
+        val changed = d != dim
+        dim = d
+        if (user && changed) haptic(dims, HapticFeedbackConstants.CLOCK_TICK)
+        val name = session.name.orEmpty().substringBefore(' ').ifBlank { null }
+        val q = d.question.replaceFirstChar { if (name == null) it.uppercase() else it.toString() }
+        if (user && changed && motionEnabled) {
+            question.animate().alpha(0f).translationY(-dp(8f)).setDuration(ms(R.integer.ds_motion_fast)).withEndAction {
+                question.text = emph((name?.let { "$it, " } ?: "") + q)
+                question.translationY = dp(8f)
+                question.animate().alpha(1f).translationY(0f).setDuration(ms(R.integer.ds_motion_base)).setInterpolator(Motion.standard).start()
+            }.start()
+        } else question.text = emph((name?.let { "$it, " } ?: "") + q)
+        optCold.text = d.low; optOk.text = getString(R.string.vote_ok); optHot.text = d.high
+        current?.let { renderDims(it) }
+        select(levelMood(current?.myVotes?.get(d.id)), user = false, force = true)
+        if (user && changed) {
+            val chip = (0 until dims.childCount).map { dims.getChildAt(it) }.first { it.tag == d }
+            dimsScroll.smoothScrollTo(chip.left - dp(20f).toInt(), 0)
+        }
+    }
+
+    private fun placeSelector(animate: Boolean): Unit = with(vote) {
+        val w = selector.width / 3
+        if (w > 0) {
+            if (selectorThumb.layoutParams.width != w) selectorThumb.updateLayoutParams { width = w }
+            val x = w * moods.indexOf(choice).toFloat()
+            if (animate && motionEnabled) selectorThumb.animate().translationX(x).setDuration(ms(R.integer.ds_motion_base) + 60)
+                .setInterpolator(Motion.standard).start() else selectorThumb.translationX = x
+        }
+        val strong = ResourcesCompat.getFont(this@MainActivity, R.font.figtree_extrabold)
+        val regular = ResourcesCompat.getFont(this@MainActivity, R.font.figtree_semibold)
+        listOf(optCold, optOk, optHot).forEachIndexed { i, tv ->
+            val on = moods[i] == choice
+            tv.typeface = if (on) strong else regular
+            tv.animate().alpha(if (on) 1f else 0.6f).scaleX(if (on) 1.06f else 1f).scaleY(if (on) 1.06f else 1f)
+                .setDuration(if (animate && motionEnabled) ms(R.integer.ds_motion_base) else 0).start()
+        }
+    }
+
+    private fun select(m: Mood, user: Boolean, force: Boolean = false): Unit = with(vote) {
+        if (current?.ended == true && user) return
+        val changed = m != choice
+        if (!changed && !force && user) return
+        choice = m
+        if (user && changed) haptic(selector, HapticFeedbackConstants.CLOCK_TICK)
+        placeSelector(user || force)
+        kirby.show(m)
+        moodCaption.text = dim.caption(moodLevel(m))
+        val (deep, base) = when (m) {
+            Mood.COLD -> R.color.ds_app_mood_cold_deep to R.color.ds_app_mood_cold
+            Mood.OK -> R.color.ds_app_mood_ok_deep to R.color.ds_app_mood_ok
+            Mood.HOT -> R.color.ds_app_mood_hot_deep to R.color.ds_app_mood_hot
+        }
+        tintMood(getColor(deep), getColor(base), animate = user || force)
+        renderSend()
+    }
+
+    private fun tintMood(deep: Int, base: Int, animate: Boolean) {
+        val bg = vote.moodCard.background as GradientDrawable
+        val from = moodColors.copyOf()
+        moodColors = intArrayOf(deep, base)
+        moodAnim?.cancel()
+        if (!animate || !motionEnabled) { bg.colors = moodColors; return }
+        val ev = ArgbEvaluator()
+        moodAnim = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = ms(R.integer.ds_motion_slow); interpolator = Motion.standard
+            addUpdateListener { a -> val f = a.animatedFraction
+                bg.colors = intArrayOf(ev.evaluate(f, from[0], deep) as Int, ev.evaluate(f, from[1], base) as Int) }
+            start()
+        }
+    }
+
+    private fun renderSend(): Unit = with(vote.send) {
+        val c = current
+        val mine = c?.myVotes?.get(dim.id)
+        val level = moodLevel(choice)
+        val saved = mine == level
+        icon = if (saved) getDrawable(R.drawable.ic_check_circle) else null
+        iconTint = ColorStateList.valueOf(getColor(R.color.ds_state_ok_solid))
+        text = when {
+            c?.ended == true -> "La clase terminó"
+            saved -> "Es tu voto de ${dim.title.lowercase()}"
+            mine != null -> "Cambiar a «${dim.label(level)}»"
+            else -> "Enviar «${dim.label(level)}»"
+        }
+        isEnabled = c != null && !c.ended && !sending  // un voto ya guardado no reenvía (sendVote lo ignora)
+    }
+
+    private fun sendVote() {
+        val c = current ?: return
+        val d = dim
+        val level = moodLevel(choice)
+        if (sending || c.myVotes[d.id] == level) return
+        sending = true
+        val b: MaterialButton = vote.send
+        b.isEnabled = false
+        b.text = "Enviando…"
+        io.execute {
+            val r = api.vote(c.id, d.id, level)
+            ui.post {
+                sending = false
+                if (classId != c.id) return@post
+                when (r) {
+                    is Result.Ok -> {
+                        current = current?.let { it.copy(myVotes = it.myVotes + (d.id to level),
+                            myVote = if (d == VoteDim.TEMP) tempKind(level) else it.myVote) }
+                        current?.let { renderDims(it) }
+                        haptic(b, confirm)
+                        val avd = getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable
+                        avd.setTint(getColor(R.color.ds_state_ok_solid))
+                        b.icon = avd; b.iconTint = null; avd.start()
+                        b.text = "¡Voto enviado!"
+                        if (motionEnabled) {
+                            vote.moodCard.animate().scaleX(1.02f).scaleY(1.02f).setDuration(ms(R.integer.ds_motion_fast)).setInterpolator(Motion.standard)
+                                .withEndAction { vote.moodCard.animate().scaleX(1f).scaleY(1f).setDuration(ms(R.integer.ds_motion_base)).start() }.start()
+                        }
+                        b.postDelayed({ if (!sending) renderSend() }, 1400)
+                    }
+                    is Result.Err -> {
+                        renderSend()
+                        if (r.failure is Failure.SessionExpired) logout(r.failure.message)
+                        else { shake(vote.moodCard); snack(r.failure.message) }
+                    }
+                }
+            }
+        }
+    }
 }
