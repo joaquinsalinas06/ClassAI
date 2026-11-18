@@ -41,6 +41,9 @@ Reglas:
   Para "hoy o ayer" sin aula, una sola llamada a list_sessions con start = ayer 00:00 y end = mañana 00:00.
 - list_sessions ya trae por sesión movimiento_medio_pct, luz_media_pct, temp_media_c y confort_medio: con eso
   compara sesiones o aulas directamente (sin más llamadas). Usa get_session_overview solo para el detalle de una.
+- minutos_en_alerta se cuentan sobre minutos_con_lecturas_ambiente, no sobre la duración total; dilo así.
+- La interpretación debe ser coherente con las cifras: temperatura sobre el rango = calor; no añadas causas
+  ni etiquetas que los datos no muestren.
 - Horas siempre en hora local ({timezone}); las herramientas compuestas ya las devuelven así.
 - Solo respondes sobre aulas, sesiones de clase, asistencia, confort (temperatura, humedad, luz, ruido)
   y cómo se decidieron los parámetros de confort. Para cualquier otro tema responde brevemente
@@ -278,6 +281,8 @@ def _session_overview(base_url: str, session_id: str) -> dict:
 
     has_env = summary.get("comfort_avg") is not None or summary.get("temp_avg") is not None
     environment = None
+    env_minutes = next((len({b["bucket_start"] for k in ("light", "presence") for b in z.get(k, [])})
+                        for z in zones.get("zones", []) if z.get("role") == "environment"), None)
     if has_env:
         ranges = {}
         for metric in ("comfort", "rh_pct", "noise_rel"):
@@ -288,6 +293,7 @@ def _session_overview(base_url: str, session_id: str) -> dict:
             "confort_0_100": {"media": _round(summary.get("comfort_avg")), "min": _round(summary.get("comfort_min")),
                               "max": _round(ranges.get("comfort", (None, None))[1])},
             "minutos_en_alerta": summary.get("alert_minutes"),
+            "minutos_con_lecturas_ambiente": env_minutes,
             "temperatura_c": {"media": _round(summary.get("temp_avg")), "min": _round(summary.get("temp_min")),
                               "max": _round(summary.get("temp_max"))},
             "humedad_pct": {"media": _round(summary.get("rh_avg")), "min": _round(ranges.get("rh_pct", (None,))[0]),
