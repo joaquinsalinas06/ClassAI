@@ -3,6 +3,8 @@ import { ArrowLeft, GitCompareArrows, Radio } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams as useRouteParams } from "react-router";
 import { ComfortRing } from "../charts/ComfortRing";
+import { useApp } from "../app/context";
+import { roomName } from "../app/Shell";
 import { AttendanceList } from "../features/AttendanceList";
 import { SessionRowActions } from "../features/SessionActions";
 import { VotesCard } from "../features/VotesCard";
@@ -59,6 +61,7 @@ const COMPARE_ROWS: { label: string; key: keyof SummaryRow; decimals: number; un
 export function SessionDetail() {
   const { id } = useRouteParams();
   const summary = useSummary(id);
+  const { rooms } = useApp();
   const s = summary.data;
   const found = s?.found ? s : null;
   const room = found?.room;
@@ -131,7 +134,7 @@ export function SessionDetail() {
         </Link>
         <div className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
-            <h1 className="text-title text-fg">{found.course ?? "Clase sin curso"} <span className="text-muted">en {found.room.toUpperCase()}</span></h1>
+            <h1 className="text-title text-fg">{found.course ?? "Clase sin curso"} <span className="text-muted">en {roomName(rooms, found.room)}</span></h1>
             <p className="mt-1 text-body text-muted">
               {formatDateLong(startedAt)} · <span className="num">{formatTime(startedAt)}–{finished ? formatTime(endedAt) : "ahora"}</span>
               {finished && <> · {formatDuration(finished.minutes)}</>}

@@ -157,6 +157,12 @@ LEFT JOIN student_feedback f ON f.session_id=s.id AND f.student_id=:student
 """
 
 
+def room_label(db: sqlite3.Connection, room: str) -> str:
+    """Nombre visible del aula (rooms.name); el id sigue siendo el de MQTT."""
+    row = db.execute("SELECT name FROM rooms WHERE id=?", (room,)).fetchone()
+    return row[0] if row and row[0] else room
+
+
 def class_row(row) -> dict:
     session_id, room, course, started, ended, attended_at, vote = row
     return {"id": session_id, "room": room, "course": course, "started_at": started, "ended": ended is not None,
@@ -171,6 +177,7 @@ def classes(authorization: Optional[str] = Header(default=None)) -> dict:
         result = [class_row(row) for row in rows]
         for item in result:
             item["metrics"] = live_metrics(db, item["room"])
+            item["room"] = room_label(db, item["room"])
         return {"classes": result}
 
 
@@ -183,7 +190,7 @@ def history(authorization: Optional[str] = Header(default=None)) -> dict:
             "JOIN sessions s ON s.id=a.session_id WHERE a.student_id=? ORDER BY a.recorded_at DESC LIMIT 20",
             (student,),
         ).fetchall()
-        return {"history": [{"session_id": r[0], "room": r[1], "course": r[2], "started_at": r[3], "attended_at": r[4]}
+        return {"history": [{"session_id": r[0], "room": room_label(db, r[1]), "course": r[2], "started_at": r[3], "attended_at": r[4]}
                             for r in rows]}
 
 
@@ -248,6 +255,7 @@ def class_detail(session_id: str, authorization: Optional[str] = Header(default=
         result["present_count"] = db.execute("SELECT COUNT(*) FROM attendance WHERE session_id=?", (session_id,)).fetchone()[0]
         result["targets"] = room_config(db, result["room"])
         result["trend"] = class_trend(db, result["room"], result["started_at"])
+        result["room"] = room_label(db, result["room"])
         return result
 
 
