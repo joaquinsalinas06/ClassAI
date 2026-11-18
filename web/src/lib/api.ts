@@ -112,9 +112,15 @@ export const api = {
     request<CredentialOut>("/credentials", { method: "POST", body: JSON.stringify(body), headers: { "X-API-Key": key } }),
   revoke: (id: number, key: string) =>
     request<{ revoked: boolean; credential_id: number }>(`/credentials/${id}/revoke`, { method: "POST", headers: { "X-API-Key": key } }),
-  ask: (question: string, history: ChatTurn[]) =>
-    request<AssistantAnswer>("/assistant/ask", { method: "POST", body: JSON.stringify({ question, history }) }),
+  ask: (question: string, history: ChatTurn[], context?: AskContext) =>
+    request<AssistantAnswer>("/assistant/ask", { method: "POST", body: JSON.stringify({ question, history, context }) }),
 };
+
+/** Which class or room the teacher is looking at, so "this class" means something to the assistant. */
+export interface AskContext {
+  session_id?: string;
+  room?: string;
+}
 
 export const useMe = () => useQuery({ queryKey: ["me"], queryFn: api.me, staleTime: 60_000, retry: false });
 export const useVotes = (id: string | undefined, live = false) =>

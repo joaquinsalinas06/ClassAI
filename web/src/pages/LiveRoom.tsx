@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type CSSProperties } from "react";
 import { Link, useParams as useRouteParams } from "react-router";
 import { useApp } from "../app/context";
 import { roomName } from "../app/Shell";
+import { ClassChat } from "../features/AssistantChat";
 import { Gauge } from "../charts/Gauge";
 import { AttendanceList } from "../features/AttendanceList";
 import { NewSessionButton, SessionRowActions } from "../features/SessionActions";
@@ -359,6 +360,9 @@ export function LiveRoom() {
           /></div>
         </div>
       </div>
+      <ErrorBoundary label="el asistente">
+        <div {...rise(7)}><ClassChat key={state.sessionId ?? room} context={{ room, ...(state.sessionId ? { session_id: state.sessionId } : {}) }} live /></div>
+      </ErrorBoundary>
     </div>
   );
 }
