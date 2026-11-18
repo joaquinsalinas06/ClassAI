@@ -4,9 +4,11 @@
 #include <TJpg_Decoder.h>
 #include <driver/i2s.h>
 #include <sixseven_inferencing.h>
-#include "audio_data.h"
-#include "src/video_data.h"
-#include "src/alert_data.h"
+#include "audio_data.h"    //este es el audio que se reproduce junto al video del sixseven
+#include "src/video_data.h"  //este es el video del main en bucle
+#include "src/alert_data.h"  //este es el video de alerta de sixseven
+#include "src/ventilador_data.h"  //este es el video de kirby con el ventilador (FAN_FRAMES, fanOffsets, fanData)
+#include "src/hey_kirby_data.h"   //este es el video de kirby escuchando tras "hey kirby" (HEY_FRAMES, heyOffsets, heyData)
 
 #define TFT_CS   5
 #define TFT_DC   27
@@ -26,13 +28,22 @@
 #define AMP_PORT I2S_NUM_1
 
 #define MIC_SHIFT     15    // 12 = más sensible, 16 = menos
-#define UMBRAL        0.98f   // probabilidad mínima de sixseven
-#define HITS_NEEDED   1       // ventanas seguidas que deben superar el umbral
-#define VOLUME        90     // volumen del audio, 0 a 100
+#define VOLUME        100     // volumen del audio, 0 a 100
 #define AUDIO_SECONDS 10      // duración del audio (y del clip en pantalla)
-#define COOLDOWN_MS   1500    // pausa tras el audio antes de volver a detectar
+#define COOLDOWN_MS   1500    // pausa tras una accion antes de volver a detectar
 #define VIDEO_FPS     12
-#define MIN_PEAK 800   
+#define MIN_PEAK 800          // volumen minimo para aceptar una palabra
+
+// --- Palabra de activacion y ordenes ---
+#define UMBRAL_HEY      0.98f // probabilidad minima de "hey kirby"
+#define HITS_HEY        1     // ventanas seguidas (cada 250 ms) que deben superar el umbral
+#define UMBRAL_67       0.95f // probabilidad minima de "sixseven" (solo tras "hey kirby")
+#define UMBRAL_FAN      0.95f // probabilidad minima de "ventilador" (solo tras "hey kirby")
+#define HITS_ORDEN      1     // ventanas seguidas para aceptar una orden
+#define LISTEN_MS       10000 // tiempo que Kirby espera la orden tras "hey kirby" (= video hey_kirby, 120 fotogramas a 12 fps)
+#define LISTEN_IGNORE_MS 1000 // la ventana de 1 s aun contiene "hey kirby": se ignora al inicio
+#define FAN_PLAYS       1     // veces que se reproduce el video del ventilador
+#define SIXSEVEN_DIRECTO 0    // 1 = "sixseven" tambien funciona sin decir "hey kirby"
 
 SPIClass spiTFT(VSPI);
 Adafruit_ST7789 tft(&spiTFT, TFT_CS, TFT_DC, TFT_RST);
@@ -43,8 +54,12 @@ static volatile bool bufReady = false;
 static uint32_t bufCount = 0;
 static uint8_t readBuf = 0;
 static volatile bool playing = false;
-static volatile bool alertOn = false;
 static volatile uint32_t alertFrame = 0;
+
+enum Mode : uint8_t { MODE_IDLE, MODE_LISTEN, MODE_ALERT, MODE_FAN };
+static volatile uint8_t mode = MODE_IDLE;     // lo cambia loop(); videoTask solo lo lee
+static volatile uint32_t listenStart = 0;
+static volatile bool fanDone = false;         // videoTask avisa cuando termina el ventilador
 
 bool tftOutput(int16_t x, int16_t y, uint16_t w, uint16_t h, uint16_t* bitmap) {
   if (y >= tft.height()) return false;
@@ -143,15 +158,37 @@ void audioTask(void*) {
 }
 
 void videoTask(void*) {
-  uint32_t frame = 0;
+  uint32_t frame = 0, fanFrame = 0, heyFrame = 0;
+  uint8_t lastMode = 0xFF;
   const uint32_t period = 1000 / VIDEO_FPS;
   while (true) {
     uint32_t t0 = millis();
-    if (alertOn) {
+    const uint8_t m = mode;
+    if (m != lastMode) {                      // cambio de estado: los videos empiezan desde 0
+      if (m == MODE_FAN) fanFrame = 0;
+      if (m == MODE_LISTEN) heyFrame = 0;
+      lastMode = m;
+    }
+
+    if (m == MODE_ALERT) {
       uint32_t f = alertFrame;
       TJpgDec.drawJpg(0, 0, alertData + alertOffsets[f],
                       alertOffsets[f + 1] - alertOffsets[f]);
       alertFrame = (f + 1) % ALERT_FRAMES;
+    } else if (m == MODE_FAN) {
+      if (!fanDone) {
+        uint32_t f = fanFrame % FAN_FRAMES;
+        TJpgDec.drawJpg(0, 0, fanData + fanOffsets[f],
+                        fanOffsets[f + 1] - fanOffsets[f]);
+        if (++fanFrame >= (uint32_t)FAN_FRAMES * FAN_PLAYS) fanDone = true;
+      }
+    } else if (m == MODE_LISTEN) {
+      // Video de "escuchando"; si terminara antes de LISTEN_MS se queda en el ultimo fotograma.
+      if (heyFrame < HEY_FRAMES) {
+        TJpgDec.drawJpg(0, 0, heyData + heyOffsets[heyFrame],
+                        heyOffsets[heyFrame + 1] - heyOffsets[heyFrame]);
+        ++heyFrame;
+      }
     } else {
       TJpgDec.drawJpg(0, 0, videoData + videoOffsets[frame],
                       videoOffsets[frame + 1] - videoOffsets[frame]);
@@ -165,6 +202,25 @@ void videoTask(void*) {
 static int getData(size_t offset, size_t length, float *out) {
   numpy::int16_to_float(&sampleBuf[readBuf][offset], out, length);
   return 0;
+}
+
+static float labelValue(const ei_impulse_result_t& result, const char* name) {
+  for (size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
+    if (strcmp(result.classification[i].label, name) == 0) return result.classification[i].value;
+  }
+  return 0;
+}
+
+static void startSixseven() {
+  playing = true;
+  alertFrame = 0;
+  mode = MODE_ALERT;
+  xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 1, NULL, 0);
+}
+
+static void startFan() {
+  fanDone = false;
+  mode = MODE_FAN;
 }
 
 void setup() {
@@ -191,12 +247,11 @@ void setup() {
   initMic();
   xTaskCreatePinnedToCore(captureTask, "capture", 4096, NULL, 2, NULL, 0);
   xTaskCreatePinnedToCore(videoTask, "video", 8192, NULL, 1, NULL, 0);
-  Serial.println("Escuchando...");
+  Serial.println("Escuchando... di \"hey kirby\"");
 }
 
 void loop() {
-  static int hits = 0;
-  static bool showing = false;
+  static int heyHits = 0, hits67 = 0, hitsFan = 0;
   static uint32_t blockUntil = 0;
 
   while (!bufReady) delay(1);
@@ -215,31 +270,64 @@ void loop() {
   ei_impulse_result_t result = {};
   if (run_classifier_continuous(&signal, &result, false) != EI_IMPULSE_OK) return;
 
-  float p67 = 0;
-  for (size_t i = 0; i < EI_CLASSIFIER_LABEL_COUNT; i++) {
-    if (strcmp(result.classification[i].label, "sixseven") == 0) {
-      p67 = result.classification[i].value;
-    }
-  }
-  Serial.printf("sixseven: %.2f  pico: %d\n", p67, peak);
+  const float pHey = labelValue(result, "hey_kirby");
+  const float p67 = labelValue(result, "sixseven");
+  const float pFan = labelValue(result, "ventilador");
+  const uint32_t now = millis();
+  Serial.printf("hey: %.2f  67: %.2f  fan: %.2f  pico: %d  (dsp %d ms, red %d ms)\n",
+                pHey, p67, pFan, peak, result.timing.dsp, result.timing.classification);
 
-  if (showing) {
-    if (!playing) {
-      showing = false;
-      hits = 0;
-      blockUntil = millis() + COOLDOWN_MS;
-      alertOn = false;
-    }
-    return;
-  }
+  switch (mode) {
+    case MODE_ALERT:                                   // sixseven: espera a que acabe el audio
+      if (!playing) {
+        Serial.println("Fin de sixseven, vuelta a reposo");
+        mode = MODE_IDLE; blockUntil = now + COOLDOWN_MS; heyHits = 0;
+      }
+      return;
 
-  hits = (p67 > UMBRAL && peak > MIN_PEAK && millis() > blockUntil) ? hits + 1 : 0;
-  if (hits >= HITS_NEEDED) {
-    Serial.printf("DETECTADO p=%.2f pico=%d\n", p67, peak);
-    showing = true;
-    playing = true;
-    alertFrame = 0;
-    alertOn = true;
-    xTaskCreatePinnedToCore(audioTask, "audio", 4096, NULL, 1, NULL, 0);
+    case MODE_FAN:                                     // ventilador: espera a que acabe el video
+      if (fanDone) {
+        Serial.println("Fin del video del ventilador, vuelta a reposo");
+        mode = MODE_IDLE; blockUntil = now + COOLDOWN_MS; heyHits = 0;
+      }
+      return;
+
+    case MODE_LISTEN: {
+      const uint32_t elapsed = now - listenStart;
+      if (elapsed >= LISTEN_MS) {
+        Serial.println("Sin orden, vuelta a reposo");
+        mode = MODE_IDLE; blockUntil = now + 500; heyHits = 0;
+        return;
+      }
+      if (elapsed < LISTEN_IGNORE_MS || peak <= MIN_PEAK) { hits67 = hitsFan = 0; return; }
+      hitsFan = (pFan > UMBRAL_FAN && pFan >= p67) ? hitsFan + 1 : 0;
+      hits67 = (p67 > UMBRAL_67 && p67 > pFan) ? hits67 + 1 : 0;
+      if (hitsFan >= HITS_ORDEN) {
+        Serial.printf("ORDEN: ventilador p=%.2f pico=%d\n", pFan, peak);
+        startFan();
+      } else if (hits67 >= HITS_ORDEN) {
+        Serial.printf("ORDEN: sixseven p=%.2f pico=%d\n", p67, peak);
+        startSixseven();
+      }
+      return;
+    }
+
+    default:                                           // MODE_IDLE
+      if (now < blockUntil) { heyHits = 0; return; }
+#if SIXSEVEN_DIRECTO
+      if (p67 > 0.98f && peak > MIN_PEAK) {
+        Serial.printf("DETECTADO sixseven directo p=%.2f pico=%d\n", p67, peak);
+        startSixseven();
+        return;
+      }
+#endif
+      heyHits = (pHey > UMBRAL_HEY && peak > MIN_PEAK) ? heyHits + 1 : 0;
+      if (heyHits >= HITS_HEY) {
+        Serial.printf("HEY KIRBY detectado p=%.2f -> escuchando %d s\n", pHey, LISTEN_MS / 1000);
+        heyHits = hits67 = hitsFan = 0;
+        listenStart = now;
+        mode = MODE_LISTEN;
+      }
+      return;
   }
 }
