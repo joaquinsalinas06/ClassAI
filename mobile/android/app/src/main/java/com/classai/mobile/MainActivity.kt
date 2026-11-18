@@ -79,6 +79,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private var registerMode = true
     private var busy = false
     private var loading = false
+    private var generation = 0       // sube al entrar o salir: descarta respuestas de otra sesión
     private var resumed = false
     private var demoNfc = false  // solo debug: el emulador no tiene NFC
     private var classes: List<ClassInfo>? = null
@@ -254,6 +255,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun logout(message: String? = null) {
         val token = session.token
         session.clear()
+        generation++
+        loading = false
         if (token != null) io.execute { StudentApi(BuildConfig.CLASSAI_API_URL) { token }.logout() }
         registerMode = false
         auth.password.text = null
@@ -349,6 +352,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 when (r) {
                     is Result.Ok -> {
                         session.save(r.value.token, r.value.student.code, r.value.student.fullName)
+                        generation++
                         password.text = null
                         authDone()
                     }
@@ -610,6 +614,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         loading = true
         val onScreen = screen
         val wanted = classId
+        val gen = generation
         io.execute {
             var list: Result<List<ClassInfo>>? = null
             var hist: Result<List<HistoryItem>>? = null
@@ -619,6 +624,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             val id = wanted ?: (list as? Result.Ok)?.value?.let { l -> l.firstOrNull { !it.attended }?.id ?: l.firstOrNull()?.id }
             if (onScreen != Screen.HOME && id != null) detail = api.classInfo(id)
             ui.post {
+                if (gen != generation) return@post  // respuesta de una sesión anterior
                 loading = false
                 home.refresh.isRefreshing = false
                 cls.refresh.isRefreshing = false
