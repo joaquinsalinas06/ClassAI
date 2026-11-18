@@ -10,7 +10,7 @@ from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
-from openai import OpenAI, OpenAIError, RateLimitError
+from openai import APIStatusError, OpenAI, OpenAIError, RateLimitError
 from pydantic import BaseModel, Field
 
 from llm_tools import answer_question
@@ -58,6 +58,11 @@ def ask(body: AskIn) -> dict:
     except RateLimitError as error:
         print("Asistente: límite de uso del proveedor LLM")
         raise HTTPException(status_code=429, detail="El asistente recibió muchas preguntas seguidas; espera un minuto e intenta de nuevo") from error
+    except APIStatusError as error:
+        print(f"Asistente: error del proveedor LLM: {type(error).__name__} {error.status_code}: {str(error)[:500]}")
+        if error.status_code == 413:  # Groq: la petición supera el límite de tokens por minuto
+            raise HTTPException(status_code=429, detail="El asistente recibió muchas preguntas seguidas; espera un minuto e intenta de nuevo") from error
+        raise HTTPException(status_code=502, detail="El proveedor del LLM no respondió; intenta de nuevo") from error
     except OpenAIError as error:
         print(f"Asistente: error del proveedor LLM: {type(error).__name__}")
         raise HTTPException(status_code=502, detail="El proveedor del LLM no respondió; intenta de nuevo") from error
