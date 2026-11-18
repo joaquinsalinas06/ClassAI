@@ -1,13 +1,12 @@
 import { useMutation } from "@tanstack/react-query";
-import { ArrowUp, CircleSlash, Wrench } from "lucide-react";
+import { AlertCircle, ArrowUp, Check, CircleSlash, RotateCcw, Wrench } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "motion/react";
-import { Fragment, useEffect, useId, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { LogoMark } from "../app/Logo";
 import { ApiError, api, type AskContext } from "../lib/api";
 import { parseMarkdown } from "../lib/markdown";
 import type { ChatTurn } from "../lib/types";
 import { Button } from "../ui/Button";
-import { Card } from "../ui/Card";
 import { cn } from "../ui/cn";
 import { SPRING } from "../ui/motion";
 
@@ -29,7 +28,11 @@ export interface Message extends ChatTurn {
   tools?: string[];
   fresh?: boolean;
   error?: boolean;
+  /** Transient failure (Groq rate limit, provider down): the question can be sent again. */
+  retry?: boolean;
 }
+
+export const BUSY_MESSAGE = "Muchas consultas seguidas, espera unos segundos e intenta de nuevo.";
 
 const inline = (line: string) =>
   line.split(/(\*\*[^*]+\*\*|`[^`]+`)/g).map((part, i) =>
@@ -84,7 +87,7 @@ export function Typed({ text, animate }: { text: string; animate: boolean }) {
 
 export const UNAVAILABLE_503 = "El asistente no está configurado en este servidor: falta la clave del modelo de lenguaje.";
 
-/** Conversation state shared by the Assistant page and the per-class mini chat. */
+/** Conversation state shared by the Assistant page and the floating widget. */
 export function useAssistantChat(context?: AskContext) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [unavailable, setUnavailable] = useState<string | null>(null);
@@ -98,18 +101,29 @@ export function useAssistantChat(context?: AskContext) {
         setUnavailable(error.status === 503 ? UNAVAILABLE_503 : "Este servidor todavía no ofrece el asistente.");
         return;
       }
-      setMessages((m) => [...m, { id: ++counter.current, role: "assistant", content: error instanceof ApiError ? error.message : "No hubo respuesta del servidor.", error: true }]);
+      const busy = error instanceof ApiError && (error.status === 429 || error.status === 502);
+      const content = busy ? BUSY_MESSAGE : error instanceof ApiError ? error.message : "No hubo respuesta del servidor.";
+      setMessages((m) => [...m, { id: ++counter.current, role: "assistant", content, error: true, retry: busy }]);
     },
   });
+  const historyOf = (list: Message[]) => list.filter((m) => !m.error).slice(-10).map(({ role, content }) => ({ role, content }));
   const send = (question: string) => {
     const q = question.trim();
     if (!q || ask.isPending || unavailable) return false;
-    const history = messages.filter((m) => !m.error).slice(-10).map(({ role, content }) => ({ role, content }));
+    const history = historyOf(messages);
     setMessages((m) => [...m.map((x) => ({ ...x, fresh: false })), { id: ++counter.current, role: "user", content: q }]);
     ask.mutate({ question: q, history });
     return true;
   };
-  return { messages, reset: () => setMessages([]), send, pending: ask.isPending, unavailable };
+  /** Drops the trailing error and asks the last question again, without repeating the user's bubble. */
+  const retry = () => {
+    const last = messages.at(-1);
+    const question = messages.at(-2);
+    if (!last?.error || question?.role !== "user" || ask.isPending) return;
+    setMessages((m) => m.slice(0, -1));
+    ask.mutate({ question: question.content, history: historyOf(messages.slice(0, -2)) });
+  };
+  return { messages, reset: () => setMessages([]), send, retry, pending: ask.isPending, unavailable };
 }
 
 export function UnavailableNote({ text }: { text: string }) {
@@ -124,43 +138,75 @@ export function UnavailableNote({ text }: { text: string }) {
   );
 }
 
-export function MessageList({ messages, pending, compact }: { messages: Message[]; pending: boolean; compact?: boolean }) {
+const THINKING = ["Consultando los datos", "Revisando las métricas", "Preparando la respuesta"];
+
+/** "Thinking…" that says where it is: finished steps get a check, the current one shimmers. */
+export function Thinking({ size = 26 }: { size?: number }) {
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setStep((s) => Math.min(s + 1, THINKING.length - 1)), 1800);
+    return () => clearInterval(id);
+  }, []);
+  return (
+    <div role="status" aria-live="polite" className="flex gap-3">
+      <span className="mt-0.5 shrink-0"><LogoMark size={size} /></span>
+      <ul className="flex flex-col gap-1.5 pt-0.5 text-label">
+        {THINKING.slice(0, step + 1).map((label, i) => (
+          <li key={label} className="assistant-rise flex items-center gap-2">
+            {i < step ? <Check size={14} className="text-ok-text" aria-hidden /> : <span className="grid size-3.5 place-items-center" aria-hidden><span className="size-1.5 rounded-full bg-fg-2" /></span>}
+            <span className={i < step ? "text-muted" : "assistant-shimmer font-medium"}>{label}{i < step ? "" : "…"}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+export function MessageItem({ m, compact, onRetry }: { m: Message; compact?: boolean; onRetry?: () => void }) {
   const size = compact ? 22 : 26;
+  return (
+    <div data-role={m.role} className={cn("flex gap-3", m.role === "user" && "justify-end")}>
+      {m.role === "assistant" && <span className="mt-0.5 shrink-0">{m.retry ? <AlertCircle size={size - 4} className="text-muted" aria-hidden /> : <LogoMark size={size} />}</span>}
+      {m.role === "user" ? (
+        <p className="max-w-[80%] rounded-lg rounded-br-sm bg-selected px-3.5 py-2.5 text-body break-words text-fg">{m.content}</p>
+      ) : (
+        <div className="min-w-0 flex-1 pt-0.5">
+          <div className={cn("text-body leading-[22px] text-fg-2", m.error && !m.retry && "text-alert-text")} role={m.error ? "alert" : undefined}>
+            <Typed text={m.content} animate={!!m.fresh} />
+          </div>
+          {m.retry && onRetry && (
+            <Button variant="secondary" size="sm" className="mt-2" icon={<RotateCcw size={13} aria-hidden />} onClick={onRetry}>
+              Reintentar
+            </Button>
+          )}
+          {m.tools && m.tools.length > 0 && (
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
+              <span className="inline-flex items-center gap-1 text-caption text-muted"><Wrench size={12} aria-hidden /> Consultó</span>
+              {m.tools.map((t) => (
+                <span key={t} title={t} className="inline-flex h-6 items-center rounded-sm border border-line bg-sunken px-2 text-caption text-fg-2">
+                  {TOOL_LABEL[t] ?? t}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function MessageList({ messages, pending, compact, onRetry }: { messages: Message[]; pending: boolean; compact?: boolean; onRetry?: () => void }) {
   return (
     <ol className={cn("flex flex-col", compact ? "gap-4" : "gap-5 pb-4")} aria-label="Conversación">
       <AnimatePresence initial={false}>
-        {messages.map((m) => (
-          <motion.li key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={SPRING.gentle} className={cn("flex gap-3", m.role === "user" && "justify-end")}>
-            {m.role === "assistant" && <span className="mt-0.5 shrink-0"><LogoMark size={size} /></span>}
-            {m.role === "user" ? (
-              <p className="max-w-[80%] rounded-lg rounded-br-sm bg-selected px-3.5 py-2.5 text-body text-fg">{m.content}</p>
-            ) : (
-              <div className="min-w-0 flex-1 pt-0.5">
-                <div className={cn("text-body leading-[22px] text-fg-2", m.error && "text-alert-text")}>
-                  <Typed text={m.content} animate={!!m.fresh} />
-                </div>
-                {m.tools && m.tools.length > 0 && (
-                  <div className="mt-2.5 flex flex-wrap items-center gap-1.5">
-                    <span className="inline-flex items-center gap-1 text-caption text-muted"><Wrench size={12} aria-hidden /> Consultó</span>
-                    {m.tools.map((t) => (
-                      <span key={t} title={t} className="inline-flex h-6 items-center rounded-sm border border-line bg-sunken px-2 text-caption text-fg-2">
-                        {TOOL_LABEL[t] ?? t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+        {messages.map((m, i) => (
+          <motion.li key={m.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={SPRING.gentle}>
+            <MessageItem m={m} compact={compact} onRetry={i === messages.length - 1 ? onRetry : undefined} />
           </motion.li>
         ))}
         {pending && (
-          <motion.li key="thinking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-3" aria-live="polite">
-            <LogoMark size={size} />
-            <span className="flex items-center gap-1" aria-label="Pensando">
-              {[0, 1, 2].map((i) => (
-                <motion.span key={i} className="size-1.5 rounded-full bg-muted" animate={{ opacity: [0.25, 1, 0.25] }} transition={{ duration: 1.1, repeat: Infinity, delay: i * 0.18 }} />
-              ))}
-            </span>
+          <motion.li key="thinking" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+            <Thinking size={compact ? 22 : 26} />
           </motion.li>
         )}
       </AnimatePresence>
@@ -168,7 +214,7 @@ export function MessageList({ messages, pending, compact }: { messages: Message[
   );
 }
 
-export function AskInput({ onSend, disabled, pending, placeholder, hint }: { onSend: (q: string) => boolean; disabled: boolean; pending: boolean; placeholder: string; hint?: ReactNode }) {
+export function AskInput({ onSend, disabled, pending, placeholder, hint, autoFocus }: { onSend: (q: string) => boolean; disabled: boolean; pending: boolean; placeholder: string; hint?: ReactNode; autoFocus?: boolean }) {
   const [input, setInput] = useState("");
   const id = useId();
   const submit = () => {
@@ -180,6 +226,7 @@ export function AskInput({ onSend, disabled, pending, placeholder, hint }: { onS
       <textarea
         id={id}
         rows={1}
+        autoFocus={autoFocus}
         value={input}
         disabled={disabled}
         onChange={(e) => {
@@ -201,56 +248,5 @@ export function AskInput({ onSend, disabled, pending, placeholder, hint }: { onS
         <ArrowUp size={16} aria-hidden />
       </Button>
     </form>
-  );
-}
-
-const CLASS_SUGGESTIONS = ["¿Cuál fue la temperatura promedio?", "¿Por qué bajó el confort?", "¿Cuánto movimiento hubo?"];
-
-/** "Ask ClassAI about this class": the assistant scoped to a session or a room, embedded at the bottom of a page. */
-export function ClassChat({ context, live, className, style }: { context: AskContext; live?: boolean; className?: string; style?: CSSProperties }) {
-  const chat = useAssistantChat(context);
-  const endRef = useRef<HTMLDivElement>(null);
-  const suggestions = live ? ["¿Cómo está el confort ahora?", "¿Por qué hace calor?", "¿Cuánto movimiento hay?"] : CLASS_SUGGESTIONS;
-  useEffect(() => {
-    if (chat.messages.length) endRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
-  }, [chat.messages.length, chat.pending]);
-
-  return (
-    <Card className={cn("p-4", className)} style={style} aria-label="Pregúntale a ClassAI sobre esta clase">
-      <header className="flex items-center gap-3">
-        <LogoMark size={26} />
-        <div className="min-w-0 flex-1">
-          <h2 className="text-label font-semibold text-fg">Pregúntale a ClassAI sobre esta clase</h2>
-          <p className="text-caption text-muted">Responde con los datos de {live ? "esta aula" : "esta sesión"}; solo consulta, nunca cambia nada.</p>
-        </div>
-        {chat.messages.length > 0 && <Button variant="ghost" size="sm" onClick={chat.reset}>Limpiar</Button>}
-      </header>
-
-      {chat.unavailable && <div className="mt-3"><UnavailableNote text={chat.unavailable} /></div>}
-
-      {chat.messages.length > 0 && <div className="mt-4 max-h-[520px] overflow-y-auto pr-1"><MessageList messages={chat.messages} pending={chat.pending} compact /><div ref={endRef} /></div>}
-
-      {chat.messages.length === 0 && !chat.unavailable && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {suggestions.map((s, i) => (
-            <motion.button
-              key={s}
-              type="button"
-              onClick={() => chat.send(s)}
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ ...SPRING.gentle, delay: 0.05 * i }}
-              className="inline-flex h-8 items-center rounded-full border border-line bg-surface px-3 text-label text-fg-2 shadow-xs transition-colors hover:border-line-strong hover:text-fg"
-            >
-              {s}
-            </motion.button>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-3 rounded-lg border border-line bg-surface p-1.5 shadow-xs">
-        <AskInput onSend={chat.send} disabled={!!chat.unavailable} pending={chat.pending} placeholder="Pregunta sobre esta clase…" />
-      </div>
-    </Card>
   );
 }

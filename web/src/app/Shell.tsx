@@ -7,6 +7,7 @@ import {
 import { motion } from "motion/react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
+import { AssistantWidget } from "../features/AssistantWidget";
 import { Navigate, NavLink, Outlet, useLocation, useMatch, useNavigate } from "react-router";
 import { api, MOCK, UNAUTHORIZED, useHealth, useMe, useRooms } from "../lib/api";
 import { formatRelative } from "../lib/format";
@@ -224,6 +225,7 @@ export function Shell() {
           </main>
         </div>
       </div>
+      <AssistantWidget />
       <CommandPalette open={paletteOpen} onOpenChange={setPaletteOpen} onToggleSidebar={toggleSidebar} />
     </AppContext.Provider>
   );
