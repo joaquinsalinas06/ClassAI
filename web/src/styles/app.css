@@ -223,3 +223,11 @@ svg.lucide { stroke-width: var(--ds-icon-stroke); flex-shrink: 0; }
 }
 @keyframes ds-fade { from { opacity: 0; } }
 
+/* Figtree (OFL), la misma letra de la app Android; variable 300–900, self-hosted. */
+@font-face {
+  font-family: "Figtree Variable";
+  src: url("./fonts/figtree-variable.woff2") format("woff2-variations"), url("./fonts/figtree-variable.woff2") format("woff2");
+  font-weight: 300 900;
+  font-style: normal;
+  font-display: swap;
+}

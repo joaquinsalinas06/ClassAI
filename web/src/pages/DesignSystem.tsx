@@ -131,7 +131,7 @@ export function DesignSystem() {
         </div>
       </Section>
 
-      <Section title="Tipografía" description="Geist Variable para todo, con cifras tabulares en datos. Geist Mono solo para identificadores: códigos, sesiones, tokens y teclas.">
+      <Section title="Tipografía" description="Figtree Variable para todo (la misma letra de la app), con cifras tabulares en datos. Geist Mono solo para identificadores: códigos, sesiones, tokens y teclas.">
         <div className="divide-y divide-line-subtle rounded-lg border border-line">
           {TYPE.map((k) => (
             <div key={k} className="flex items-baseline gap-4 px-4 py-3">
