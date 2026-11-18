@@ -11,13 +11,13 @@ import re
 import sqlite3
 from collections import deque
 from contextlib import asynccontextmanager, closing
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
 import paho.mqtt.client as mqtt
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from fastapi import Path as PathParam
 from fastapi.responses import StreamingResponse
 import multinode
@@ -234,6 +234,56 @@ def nodes(room: str = PathParam(pattern=ROOM_PATTERN, max_length=32)) -> list[di
             return multinode.nodes_from_connection(connection, room)
     except (ConfigurationError, DatabaseTemporarilyUnavailableError, sqlite3.Error, OSError) as error:
         raise HTTPException(status_code=503, detail="Estado de nodos no disponible") from error
+
+
+ZONE_ROLES = ("access", "environment")  # LDR y PIR por zona; el asistente queda fuera
+
+
+def zone_minutes(connection, room: str, start: str, end: str) -> dict:
+    """light_rel y presence por minuto UTC y por nodo, desde readings_raw (incluye el minuto en curso).
+    presence.avg es la fracción de lecturas con movimiento; los null no cuentan."""
+    zones = {role: {"device": f"{room}-{role}", "role": role, "light": [], "presence": []} for role in ZONE_ROLES}
+    by_device = {zone["device"]: zone for zone in zones.values()}
+    light, presence = "json_extract(payload,'$.light_rel')", "json_extract(payload,'$.presence')"
+    rows = connection.execute(
+        f"SELECT device, replace(substr(received_at,1,16),'T',' ') AS minute, "
+        f"COUNT({light}), MIN({light}), MAX({light}), AVG({light}), "
+        f"COUNT({presence}), MIN({presence}), MAX({presence}), AVG({presence}) "
+        "FROM readings_raw WHERE room=? AND device IN (?,?) AND received_at>=? AND received_at<? "
+        "GROUP BY device, minute ORDER BY minute",
+        (room, *by_device, start, end),
+    ).fetchall()
+    for device, minute, *values in rows:
+        for key, (count, low, high, avg) in (("light", values[:4]), ("presence", values[4:])):
+            if count:
+                by_device[device][key].append({"bucket_start": minute, "samples": count, "min": low, "max": high, "avg": avg})
+    return {"room": room, "start": start, "end": end, "zones": list(zones.values())}
+
+
+def zone_query(callback):
+    try:
+        service = TemperatureService.from_environment()
+        with closing(service._connect()) as connection:
+            return callback(connection)
+    except (ConfigurationError, DatabaseTemporarilyUnavailableError, sqlite3.Error, OSError) as error:
+        raise HTTPException(status_code=503, detail="Series por zona no disponibles") from error
+
+
+@router.get("/rooms/{room}/zones", summary="Luz relativa y movimiento por minuto de cada zona (últimos minutos)")
+def room_zones(room: str = PathParam(pattern=ROOM_PATTERN, max_length=32),
+               minutes: int = Query(60, ge=1, le=720)) -> dict:
+    now = datetime.now(timezone.utc)
+    return zone_query(lambda c: zone_minutes(c, room, iso_utc(now - timedelta(minutes=minutes)), iso_utc(now + timedelta(minutes=1))))
+
+
+@router.get("/sessions/{session_id}/zones", summary="Luz relativa y movimiento por minuto de cada zona durante una sesión")
+def session_zones(session_id: str) -> dict:
+    def query(connection):
+        row = connection.execute("SELECT room, started_at, ended_at FROM sessions WHERE id=?", (session_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="La sesión no existe")
+        return zone_minutes(connection, row[0], row[1], row[2] or iso_utc(datetime.now(timezone.utc) + timedelta(minutes=1)))
+    return zone_query(query)
 
 
 @router.get("/live/{room}", summary="Telemetría, eventos, config y status del aula en vivo (SSE)")

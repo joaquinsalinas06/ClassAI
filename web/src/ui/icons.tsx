@@ -2,18 +2,20 @@ import {
   AudioLines, CircleAlert, CircleCheck, Droplets, Gauge, PersonStanding, Sun, Thermometer, TriangleAlert, WifiOff,
   type LucideProps,
 } from "lucide-react";
-import type { ChartMetric, ComfortState } from "../lib/types";
+import type { ComfortState, TrendMetric } from "../lib/types";
 
-export const METRIC_ICON: Record<ChartMetric | "presence", React.ComponentType<LucideProps>> = {
+export const METRIC_ICON: Record<TrendMetric | "presence", React.ComponentType<LucideProps>> = {
   comfort: Gauge,
   temp_c: Thermometer,
   rh_pct: Droplets,
   lux: Sun,
   noise_rel: AudioLines,
   presence: PersonStanding,
+  light: Sun,
+  motion: PersonStanding,
 };
 
-export function MetricIcon({ metric, size = 16, className }: { metric: ChartMetric | "presence"; size?: number; className?: string }) {
+export function MetricIcon({ metric, size = 16, className }: { metric: TrendMetric | "presence"; size?: number; className?: string }) {
   const Icon = METRIC_ICON[metric];
   return <Icon size={size} className={className} aria-hidden />;
 }

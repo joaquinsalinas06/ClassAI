@@ -15,7 +15,8 @@ import { ApiError, useFeedback } from "../lib/api";
 import { STATE_HINT, comfortState } from "../lib/comfort";
 import { formatDuration, formatNumber, formatRelative, formatTime, parseTime, withUnit } from "../lib/format";
 import type { Arrival } from "../lib/live";
-import type { ChartMetric, ComfortState, FeedbackKind, NodeSnapshot } from "../lib/types";
+import { ZONE_LABEL, ZONE_ROLES } from "../lib/zones";
+import type { ComfortState, FeedbackKind, NodeSnapshot, TrendMetric } from "../lib/types";
 import { Badge, StateBadge } from "../ui/Badge";
 import { buttonClass } from "../ui/Button";
 import { Card } from "../ui/Card";
@@ -183,34 +184,6 @@ function NodePanel({ device, uptimeMs, version, configVersion, irC, online }: {
   );
 }
 
-function ZoneNodes({ nodes, now, embedded = false }: { nodes: Record<string, NodeSnapshot>; now: number; embedded?: boolean }) {
-  const entries = Object.values(nodes);
-  const content = (
-    <>
-      <h2 className="text-label font-semibold text-fg">Nodos por zona</h2>
-      {entries.length === 0 ? (
-        <p className="mt-2 text-small text-muted">Esperando nodos del aula.</p>
-      ) : (
-        <div className={cn("mt-2 flex flex-col", embedded ? "gap-2.5" : "gap-3")}>{entries.map(node => {
-          const at = parseTime(node.received_at);
-          const stale = !at || now - at > 15_000;
-          const label = node.role === "access" ? "Acceso" : node.role === "environment" ? "Ambiente" : "Asistente";
-          return <div key={node.device} className={cn("border-b border-line-subtle last:border-b-0", embedded ? "pb-2 last:pb-0" : "pb-3")}>
-            <div className="flex items-center justify-between gap-2"><h3 className="text-label">{label}</h3>
-              <Badge size="sm" tone={node.status === "online" && !stale ? "ok" : "offline"}>{node.status === "offline" ? "Sin conexión" : stale ? "Sin datos recientes" : "En línea"}</Badge></div>
-            <p className="mt-1 break-all font-mono text-caption text-muted">{node.device}</p>
-            <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Movimiento de entrada; sin conteo de personas" : "Esperando mediciones"}</p>
-            {node.role === "assistant" && <p className="text-small text-muted">Agente: {node.telemetry?.agent_online ? node.telemetry.voice_state ?? "conectado" : "sin conexión"}</p>}
-            <p className="text-caption text-muted">{at ? `Última lectura ${formatRelative(at)}` : "Sin lecturas"}</p>
-          </div>;
-        })}</div>
-      )}
-    </>
-  );
-  if (embedded) return <div className="flex min-w-0 flex-col justify-between bg-surface p-4">{content}</div>;
-  return <Card className="p-4">{content}</Card>;
-}
-
 /** A quiet toast per student who taps in while the page is open ("Valeria Quispe llegó · 10:42"); bursts are grouped. */
 function useArrivalToasts(arrivals: Arrival[]) {
   const toast = useToast();
@@ -230,13 +203,22 @@ function useArrivalToasts(arrivals: Arrival[]) {
 
 const rise = (i: number) => ({ className: "ds-rise", style: { "--i": i } as CSSProperties });
 
-const LIVE_SENSOR_METRICS = ["temp_c", "rh_pct", "noise_rel"] as const satisfies readonly ChartMetric[];
+const LIVE_METRICS = ["temp_c", "rh_pct", "noise_rel", "light", "motion"] as const satisfies readonly TrendMetric[];
+// 2 columns: the last tile spans both; xl: three narrow tiles, then light and motion wider (room for their 3 curves).
+const tileSpan = (metric: TrendMetric) => (metric === "light" || metric === "motion" ? "xl:col-span-3" : "xl:col-span-2") + (metric === "motion" ? " sm:col-span-2" : "");
+
+/** A node is offline for the light/motion legends when it is missing, reported offline or silent for 15 s. */
+function nodeOffline(nodes: Record<string, NodeSnapshot>, role: string, now: number) {
+  const node = Object.values(nodes).find((n) => n.role === role);
+  const at = parseTime(node?.received_at);
+  return !node || node.status === "offline" || !at || now - at > 15_000;
+}
 
 export function LiveRoom() {
   const { room: routeRoom } = useRouteParams();
   const { room, rooms, live } = useApp();
-  const { state, loading, current, params } = live;
-  const [metric, setMetric] = useState<ChartMetric>("temp_c");
+  const { state, loading, current, params, zones } = live;
+  const [metric, setMetric] = useState<TrendMetric>("temp_c");
   const now = useNow(1_000);
   const roomInfo = rooms?.find((r) => r.id === room);
   useArrivalToasts(state.arrivals);
@@ -255,9 +237,18 @@ export function LiveRoom() {
   const startedAt = state.startedAt ?? parseTime(session?.started_at);
   const inSession = !!state.sessionId;
 
-  const readings: Partial<Record<ChartMetric, number | null | undefined>> = {
+  const readings: Partial<Record<TrendMetric, number | null | undefined>> = {
     temp_c: reading?.temp_c, rh_pct: reading?.rh_pct, lux: reading?.lux, noise_rel: reading?.noise_rel, comfort,
+    light: zones.light.at(-1)?.v, motion: zones.motion.at(-1)?.v,
   };
+  const points = { ...state.points, light: zones.light, motion: zones.motion };
+  // Both zones always in the tile legends (with "sin conexión"), even before their first reading.
+  const legend = (kind: "light" | "motion") => ZONE_ROLES.map((role) => ({
+    ...(zones.lines[kind].find((l) => l.role === role) ?? { role, label: ZONE_LABEL[role][kind], color: ZONE_LABEL[role].color, points: [] }),
+    offline: nodeOffline(state.nodes, role, now),
+  }));
+  const tileLines = { light: legend("light"), motion: legend("motion") };
+  const lines = { light: tileLines.light.filter((l) => l.points.length > 0), motion: tileLines.motion.filter((l) => l.points.length > 0) };
 
   return (
     <div className="flex flex-col gap-5">
@@ -303,10 +294,12 @@ export function LiveRoom() {
         <div className="ds-rise lg:col-span-7 xl:col-span-8" style={{ "--i": 1 } as CSSProperties}>
           <ErrorBoundary label="las métricas">
             <MetricTiles
-              metrics={LIVE_SENSOR_METRICS}
-              extraTile={<ZoneNodes nodes={state.nodes} now={now} embedded />}
+              metrics={LIVE_METRICS}
+              className="xl:grid-cols-6"
+              tileClass={tileSpan}
               readings={readings}
-              points={state.points}
+              points={points}
+              lines={tileLines}
               config={config}
               live={!offline}
               stale={offline}
@@ -325,12 +318,13 @@ export function LiveRoom() {
             <TrendPanel
               title={inSession ? "Tendencia de la clase" : "Lecturas recientes"}
               description={inSession ? "Promedio por minuto desde el inicio, más lecturas en vivo" : "Desde que abriste esta página"}
-              points={state.points}
+              points={points}
+              lines={lines}
               config={config}
               metric={metric}
               onMetric={setMetric}
               live={!offline}
-              loading={loading && state.points[metric].length < 2}
+              loading={loading && (points[metric]?.length ?? 0) < 2}
               xExtent={inSession && startedAt ? [startedAt, Math.max(now, lastAt ?? 0)] : undefined}
               emptyHint={offline ? "El nodo está sin conexión." : undefined}
             />

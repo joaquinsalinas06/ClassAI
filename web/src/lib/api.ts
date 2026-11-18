@@ -4,7 +4,7 @@ import { keepPreviousData, QueryClient, useMutation, useQuery, useQueryClient } 
 import type {
   AssistantAnswer, AttendanceRow, ChatTurn, ComfortParams, CredentialIn, CredentialOut, CurrentClass, FeedbackKind,
   FeedbackResponse, ListResponse, LiveEvent, LiveStatus, Room, SeriesMetric, SeriesPoint, SessionRow, SessionSummary,
-  SummaryRow, Telemetry, ComfortConfig, NodeSnapshot, SessionState,
+  SummaryRow, Telemetry, ComfortConfig, NodeSnapshot, SessionState, ZonesResponse,
 } from "./types";
 import type { Connection } from "./live";
 
@@ -93,6 +93,10 @@ export const api = {
   health: () => request<{ status: string; database: string }>("/health"),
   rooms: () => request<Room[]>("/rooms"),
   nodes: (room: string) => MOCK ? Promise.resolve([] as NodeSnapshot[]) : request<NodeSnapshot[]>(`/rooms/${enc(room)}/nodes`),
+  roomZones: (room: string, minutes = 60) =>
+    MOCK ? Promise.resolve<ZonesResponse>({ room, start: "", end: "", zones: [] }) : request<ZonesResponse>(`/rooms/${enc(room)}/zones${qs({ minutes })}`),
+  sessionZones: (id: string) =>
+    MOCK ? Promise.resolve<ZonesResponse>({ room: "", start: "", end: "", zones: [] }) : request<ZonesResponse>(`/sessions/${enc(id)}/zones`),
   current: (room: string) => request<CurrentClass>(`/classes/current${qs({ room })}`),
   sessions: (f: SessionFilters) =>
     request<ListResponse<SessionRow>>(`/sessions${qs({ room: f.room, course: f.course, start: f.start, end: f.end, limit: f.limit ?? 200 })}`),

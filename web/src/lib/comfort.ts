@@ -1,5 +1,5 @@
 // Comfort model mirrored from backend/tuner.py (reference of firmware comfort.h) plus metric metadata.
-import type { ChartMetric, ComfortConfig, ComfortState, Readings } from "./types";
+import type { ChartMetric, ComfortConfig, ComfortState, Readings, TrendMetric } from "./types";
 import { formatNumber, withUnit } from "./format";
 
 export const FACTORY_CONFIG: Omit<ComfortConfig, "room"> = {
@@ -56,7 +56,7 @@ export const stateKey = (state: ComfortState | null | undefined) =>
   state === "OK" ? "ok" : state === "ALERT" ? "alert" : state === "REGULAR" ? "regular" : "offline";
 
 export interface MetricMeta {
-  key: ChartMetric;
+  key: TrendMetric;
   label: string;
   short: string;
   unit: string;
@@ -64,26 +64,31 @@ export interface MetricMeta {
   color: string; // CSS var
   /** Sensible y-axis floor/ceiling so a flat line doesn't look dramatic. */
   minSpan: number;
+  /** Badge text when the metric has no target band. */
+  note?: string;
 }
 
-export const METRICS: Record<ChartMetric, MetricMeta> = {
+export const METRICS: Record<TrendMetric, MetricMeta> = {
   comfort: { key: "comfort", label: "Índice de confort", short: "Confort", unit: "", decimals: 0, color: "var(--ds-metric-comfort)", minSpan: 30 },
   temp_c: { key: "temp_c", label: "Temperatura", short: "Temperatura", unit: "°C", decimals: 1, color: "var(--ds-metric-temp)", minSpan: 4 },
   rh_pct: { key: "rh_pct", label: "Humedad relativa", short: "Humedad", unit: "%", decimals: 0, color: "var(--ds-metric-rh)", minSpan: 20 },
   lux: { key: "lux", label: "Iluminación", short: "Luz", unit: "lx", decimals: 0, color: "var(--ds-metric-lux)", minSpan: 200 },
   noise_rel: { key: "noise_rel", label: "Ruido relativo", short: "Ruido", unit: "rel.", decimals: 2, color: "var(--ds-metric-noise)", minSpan: 0.3 },
+  // Uncalibrated LDRs (light_rel 0..1 shown as %): no target band until someone calibrates them to lux.
+  light: { key: "light", label: "Luz relativa", short: "Luz", unit: "%", decimals: 0, color: "var(--ds-metric-lux)", minSpan: 10, note: "Sin calibrar" },
+  motion: { key: "motion", label: "Actividad (movimiento)", short: "Movimiento", unit: "%", decimals: 0, color: "var(--ds-metric-presence)", minSpan: 20, note: "Últimos 5 min" },
 };
 export const SENSOR_METRICS = ["temp_c", "rh_pct", "lux", "noise_rel"] as const satisfies readonly ChartMetric[];
 export const CHART_METRICS = ["comfort", ...SENSOR_METRICS] as const satisfies readonly ChartMetric[];
 
-export function formatMetric(metric: ChartMetric, value: number | null | undefined, unit = true): string {
+export function formatMetric(metric: TrendMetric, value: number | null | undefined, unit = true): string {
   const meta = METRICS[metric];
   const text = formatNumber(value, meta.decimals);
   return unit && value != null && meta.unit ? withUnit(text, meta.unit) : text;
 }
 
 /** Target range for a metric (score 100 zone). Comfort uses [ok_min, 100]. */
-export function bandOf(metric: ChartMetric, cfg: ComfortConfig | null | undefined): [number, number] | null {
+export function bandOf(metric: TrendMetric, cfg: ComfortConfig | null | undefined): [number, number] | null {
   if (!cfg) return null;
   switch (metric) {
     case "temp_c": return cfg.temp_c;
@@ -91,6 +96,7 @@ export function bandOf(metric: ChartMetric, cfg: ComfortConfig | null | undefine
     case "lux": return cfg.lux;
     case "noise_rel": return [0, cfg.noise_rel_max];
     case "comfort": return [cfg.ok_min, 100];
+    default: return null;
   }
 }
 
@@ -104,13 +110,15 @@ export function placement(value: number | null | undefined, band: [number, numbe
   return "in";
 }
 
-const PLACEMENT_TEXT: Record<Exclude<ChartMetric, "comfort">, Record<"low" | "high", string>> = {
+const PLACEMENT_TEXT: Record<Exclude<TrendMetric, "comfort">, Record<"low" | "high", string>> = {
   temp_c: { low: "Hace frío", high: "Hace calor" },
   rh_pct: { low: "Aire seco", high: "Aire húmedo" },
   lux: { low: "Poca luz", high: "Exceso de luz" },
   noise_rel: { low: "Silencio", high: "Ruido alto" },
+  light: { low: "Poca luz", high: "Mucha luz" },
+  motion: { low: "Calma", high: "Mucha actividad" },
 };
-export function placementText(metric: ChartMetric, p: Placement): string {
+export function placementText(metric: TrendMetric, p: Placement): string {
   if (p === "in") return "En rango";
   if (p === "unknown") return "Sin dato";
   if (metric === "comfort") return p === "low" ? "Bajo el objetivo" : "En rango";

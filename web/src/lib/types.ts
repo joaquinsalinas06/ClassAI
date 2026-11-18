@@ -3,6 +3,10 @@ export type ComfortState = "OK" | "REGULAR" | "ALERT";
 export type NodeStatus = "online" | "offline";
 export type ChartMetric = "comfort" | "temp_c" | "rh_pct" | "lux" | "noise_rel";
 export type SeriesMetric = ChartMetric | "presence" | "ir_object_c";
+/** Per-zone metrics built in the web from GET /rooms/{room}/zones and /sessions/{id}/zones (not in CHART_METRICS). */
+export type ZoneMetric = "light" | "motion";
+export type TrendMetric = ChartMetric | ZoneMetric;
+export type ZoneRole = "access" | "environment";
 export type CredentialType = "nfc_card_uid" | "android_hce";
 export type FeedbackKind = "ok" | "hot" | "cold" | "noisy" | "dark";
 
@@ -236,4 +240,17 @@ export interface SessionState {
   session_id: string | null;
   course?: string | null;
   started_at?: string;
+}
+
+export interface ZoneRows {
+  device: string;
+  role: ZoneRole;
+  light: SeriesPoint[];
+  presence: SeriesPoint[];
+}
+export interface ZonesResponse {
+  room: string;
+  start: string;
+  end: string;
+  zones: ZoneRows[];
 }

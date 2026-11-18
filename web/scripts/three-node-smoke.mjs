@@ -25,19 +25,18 @@ try {
   return route.fulfill({status:200,contentType:'application/json',body:JSON.stringify(data)});
  });
  await page.goto(`${process.argv[2]??'http://127.0.0.1:5189'}/aula/a101`);
- await page.getByRole('heading',{name:'Nodos por zona',exact:true}).waitFor();
- await page.getByText('Luz relativa: 60 % · sin calibrar a lux',{exact:true}).waitFor();
- assert.equal(await page.getByText('Luz relativa: 30 % · sin calibrar a lux',{exact:true}).count(),1);
- assert.equal(await page.getByText('Sin movimiento',{exact:true}).count(),1);
+ await page.getByText(/^Ambiente\s*60\s*%$/).waitFor(); // Luz tile: only the environment LDR reports (access null, assistant excluded)
+ assert.equal(await page.getByText(/^Acceso/).count(),0);
+ await page.getByText(/^Entrada\s*0\s*%$/).waitFor(); // Movimiento tile: both PIRs, no motion
  disconnected=true;
  await page.reload();
- await page.getByRole('heading',{name:'Nodos por zona',exact:true}).waitFor();
- assert.equal(await page.getByText('Sin conexión',{exact:true}).count(),1);
+ await page.getByText(/^Interior\s*0\s*%$/).waitFor();
+ assert.ok(await page.getByText('sin conexión',{exact:true}).count()>=1);
  await mkdir('screenshots',{recursive:true});
  await page.screenshot({path:'screenshots/three-nodes-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
  await page.screenshot({path:'screenshots/three-nodes-mobile.png',fullPage:true});
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  assert.deepEqual(errors,[]);
- console.log('PASS: three zones, independent offline status, two relative light readings, no occupancy claim; desktop/mobile. Synthetic data only.');
+ console.log('PASS: light and motion tiles per zone, independent offline status, assistant out of the average; desktop/mobile. Synthetic data only.');
 }finally{await browser.close();}

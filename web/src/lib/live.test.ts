@@ -104,6 +104,12 @@ describe("three node coordination", () => {
     expect(state.latest?.light_rel).toBe(.6);
     expect(state.node).toBe("online");
     expect(state.fan.on).toBe(false);
+    // light per zone, only from fresh readings; the assistant stays out
+    expect(state.zones.light.environment).toEqual([]); // no `now`: the 2026-10-29 reading is old
+    const now = Date.parse(time) + 5_000;
+    const fresh = liveReducer(initialLive("a101"), { type: "node", data: environment, now });
+    expect(fresh.zones.light.environment).toEqual([{ t: Date.parse(time), v: 60 }]);
+    expect(liveReducer(fresh, { type: "node", data: environment, now }).zones.light.environment).toHaveLength(1); // REST re-poll
   });
   it("does not resurrect a closed session from delayed telemetry or REST", () => {
     let state = liveReducer(initialLive("a101"), { type: "session", data: { v: 1, room: "a101", revision: 2, session_id: null } });

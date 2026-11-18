@@ -1,9 +1,11 @@
 import { useQueries, useQuery } from "@tanstack/react-query";
-import { useEffect, useReducer } from "react";
+import { useEffect, useMemo, useReducer } from "react";
 import { api, openLiveStream, useAttendance, useCurrentClass, useParams } from "./api";
 import { CHART_METRICS } from "./comfort";
 import { initialLive, liveReducer } from "./live";
+import { parseTime } from "./format";
 import { toPoints, type Point } from "./series";
+import { buildZones } from "./zones";
 import type { ChartMetric } from "./types";
 
 /** One room, live: SSE stream + REST backfill (current session, 1-min series, attendance, config). */
@@ -43,6 +45,17 @@ export function useLive(room: string | undefined) {
     })),
   });
   const attendance = useAttendance(session?.id);
+  // Light and motion per zone: minute backfill (since the class started, or the last hour) + live node samples.
+  const startedMs = parseTime(session?.started_at);
+  const zoneMinutes = startedMs ? Math.min(720, Math.max(1, Math.ceil((Date.now() - startedMs) / 60_000) + 1)) : 60;
+  const zonesQuery = useQuery({
+    queryKey: ["zones", room, session?.id ?? null],
+    queryFn: () => api.roomZones(room!, zoneMinutes),
+    enabled: !!room && !current.isPending,
+    // Re-read every minute: the live buffer is capped, so the minute backfill keeps the whole window drawn.
+    refetchInterval: 60_000,
+  });
+  const zones = useMemo(() => buildZones(zonesQuery.data, state.zones), [zonesQuery.data, state.zones]);
 
   useEffect(() => {
     if (params.data && params.data.room === room) dispatch({ type: "config", data: params.data.current });
@@ -73,5 +86,5 @@ export function useLive(room: string | undefined) {
   }, [attendance.data]);
 
   const loading = current.isPending || (!!session && series.some((s) => s.isPending));
-  return { state, loading, current, params };
+  return { state, loading, current, params, zones };
 }

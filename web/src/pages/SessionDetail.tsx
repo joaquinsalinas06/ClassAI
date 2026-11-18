@@ -1,4 +1,4 @@
-import { useQueries } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { ArrowLeft, GitCompareArrows, Radio } from "lucide-react";
 import { useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams as useRouteParams } from "react-router";
@@ -14,7 +14,8 @@ import { CHART_METRICS, comfortState } from "../lib/comfort";
 import { formatDate, formatDateLong, formatDelta, formatDuration, formatNumber, formatPercent, formatTime, parseTime, withUnit } from "../lib/format";
 import type { Arrival } from "../lib/live";
 import { toPoints, type Point } from "../lib/series";
-import type { ChartMetric, SummaryRow } from "../lib/types";
+import type { ChartMetric, SummaryRow, TrendMetric } from "../lib/types";
+import { buildZones } from "../lib/zones";
 import { Badge, StateBadge } from "../ui/Badge";
 import { buttonClass } from "../ui/Button";
 import { Card, CardHeader } from "../ui/Card";
@@ -69,7 +70,10 @@ export function SessionDetail() {
   const params = useParams(room);
   const attendance = useAttendance(id);
   const { points, loading } = useSessionPoints(id);
-  const [metric, setMetric] = useState<ChartMetric>("comfort");
+  const [metric, setMetric] = useState<TrendMetric>("comfort");
+  const zonesQuery = useQuery({ queryKey: ["session-zones", id], queryFn: () => api.sessionZones(id!), enabled: !!id, staleTime: 5 * 60_000 });
+  const zones = useMemo(() => buildZones(zonesQuery.data), [zonesQuery.data]);
+  const allPoints = useMemo(() => ({ ...points, light: zones.light, motion: zones.motion }), [points, zones]);
   const peers = useSessions({ course, limit: 40 });
   const [compareId, setCompareId] = useState<string>("");
   const compare = useSessionPoints(compareId || undefined);
@@ -115,14 +119,21 @@ export function SessionDetail() {
   const thisRow = compareSummary.data?.data.find((r) => r.session_id === id);
   const otherRow = compareSummary.data?.data.find((r) => r.session_id === compareId);
 
+  const mean = (p: Point[]) => (p.length ? p.reduce((sum, x) => sum + x.v, 0) / p.length : null);
+  const lightAvg = mean(zones.light);
+  const motionAvg = mean(zones.motion);
   const stats: [string, string, string?][] = finished
     ? [
         ["Asistencia", formatNumber(finished.attendance_count), "estudiantes"],
         ["Temperatura", withUnit(formatNumber(finished.temp_avg, 1), "°C"), `${formatNumber(finished.temp_min, 1)}–${formatNumber(finished.temp_max, 1)} °C`],
         ["Humedad", withUnit(formatNumber(finished.rh_avg), "%"), "promedio"],
-        ["Luz", withUnit(formatNumber(finished.lux_avg), "lx"), "promedio"],
+        finished.lux_avg == null && lightAvg != null
+          ? ["Luz", withUnit(formatNumber(lightAvg), "%"), "relativa, promedio de nodos"]
+          : ["Luz", withUnit(formatNumber(finished.lux_avg), "lx"), "promedio"],
         ["Ruido", formatNumber(finished.noise_avg, 2), finished.noise_high_minutes ? `${formatDuration(finished.noise_high_minutes)} sobre el límite` : "siempre bajo el límite"],
-        ["Presencia", formatPercent(finished.presence_ratio), "del tiempo"],
+        motionAvg != null
+          ? ["Movimiento", withUnit(formatNumber(motionAvg), "%"), "actividad media, ambas zonas"]
+          : ["Presencia", formatPercent(finished.presence_ratio), "del tiempo"],
       ]
     : [];
 
@@ -181,11 +192,12 @@ export function SessionDetail() {
           <div className="ds-rise" style={{ "--i": 1 } as CSSProperties}><TrendPanel
             title="Cómo evolucionó la clase"
             description={`Promedio cada ${BUCKET} minutos${comparePeer ? "; la comparación se alinea por minuto de clase" : ""}`}
-            points={points}
+            points={allPoints}
+            lines={zones.lines}
             config={config}
             metric={metric}
             onMetric={setMetric}
-            loading={loading}
+            loading={metric === "light" || metric === "motion" ? zonesQuery.isPending : loading}
             xExtent={[startedAt, endedAt]}
             compare={shifted && comparePeer ? { points: shifted, label: `${formatDate(comparePeer.started_at)} ${formatTime(comparePeer.started_at)}` } : null}
           /></div>

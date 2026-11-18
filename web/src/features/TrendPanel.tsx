@@ -3,7 +3,8 @@ import { useMemo, useState } from "react";
 import { CHART_METRICS, METRICS, bandOf, formatMetric, placement, placementText } from "../lib/comfort";
 import { formatDuration, formatTime } from "../lib/format";
 import { excursions, extremes, type Point } from "../lib/series";
-import type { ChartMetric, ComfortConfig } from "../lib/types";
+import type { ComfortConfig, TrendMetric } from "../lib/types";
+import type { ZoneLine } from "../lib/zones";
 import { TimeSeries } from "../charts/TimeSeries";
 import { Card, CardHeader } from "../ui/Card";
 import { cn } from "../ui/cn";
@@ -20,16 +21,18 @@ function outOfRangeMinutes(points: Point[], band: [number, number] | null) {
   return excursions(points, band).reduce((sum, r) => sum + (r.end - r.start + spacing), 0) / 60_000;
 }
 
-export function TrendPanel({ title, description, points, config, metric, onMetric, live, xExtent, compare, loading, height = 300, emptyHint }: {
+export function TrendPanel({ title, description, points, lines, config, metric, onMetric, live, xExtent, compare, loading, height = 300, emptyHint }: {
   title: string;
   description?: string;
-  points: Record<ChartMetric, Point[]>;
+  points: Partial<Record<TrendMetric, Point[]>>;
+  /** Per-node lines for light and motion; `points[metric]` is then their average. */
+  lines?: Partial<Record<TrendMetric, (ZoneLine & { offline?: boolean })[]>>;
   config: ComfortConfig | null;
-  metric: ChartMetric;
-  onMetric: (metric: ChartMetric) => void;
+  metric: TrendMetric;
+  onMetric: (metric: TrendMetric) => void;
   live?: boolean;
   xExtent?: [number, number];
-  compare?: { points: Record<ChartMetric, Point[]>; label: string } | null;
+  compare?: { points: Partial<Record<TrendMetric, Point[]>>; label: string } | null;
   loading?: boolean;
   height?: number;
   emptyHint?: string;
@@ -37,7 +40,12 @@ export function TrendPanel({ title, description, points, config, metric, onMetri
   const [asTable, setAsTable] = useState(false);
   const meta = METRICS[metric];
   const band = bandOf(metric, config);
-  const data = points[metric];
+  const data = useMemo(() => points[metric] ?? [], [points, metric]);
+  const nodeLines = lines?.[metric] ?? [];
+  const multi = nodeLines.length > 1;
+  const compared = compare?.points[metric];
+  // The node LDRs replace the legacy lux tab; it only shows up when a (single-node) lux series exists.
+  const tabs: TrendMetric[] = [...CHART_METRICS.filter((m) => m !== "lux" || (points.lux?.length ?? 0) > 0 || metric === "lux"), "light", "motion"];
   const stats = useMemo(() => {
     const ext = extremes(data);
     const avg = data.length ? data.reduce((s, p) => s + p.v, 0) / data.length : null;
@@ -61,14 +69,21 @@ export function TrendPanel({ title, description, points, config, metric, onMetri
           size="sm"
           value={metric}
           onChange={onMetric}
-          items={CHART_METRICS.map((m) => ({ value: m, label: METRICS[m].short, icon: <MetricIcon metric={m} size={13} /> }))}
+          items={tabs.map((m) => ({ value: m, label: METRICS[m].short, icon: <MetricIcon metric={m} size={13} /> }))}
         />
         <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-caption text-muted" aria-label="Leyenda">
-          <li className="flex items-center gap-1.5">
-            <span className="h-0.5 w-3.5 rounded-full" style={{ background: meta.color }} aria-hidden />
-            {meta.short}
+          {multi && nodeLines.map((l) => (
+            <li key={l.role} className="flex items-center gap-1.5">
+              <span className="h-0.5 w-3.5 rounded-full" style={{ background: l.color }} aria-hidden />
+              {l.label}
+              {l.offline && <span className="rounded-sm bg-sunken px-1 text-[11px] text-faint">sin conexión</span>}
+            </li>
+          ))}
+          <li className={cn("flex items-center gap-1.5", multi && "font-medium text-fg-2")}>
+            <span className={cn("w-3.5 rounded-full", multi ? "h-[3px]" : "h-0.5")} style={{ background: meta.color }} aria-hidden />
+            {multi ? "Promedio" : nodeLines[0]?.label ? `${meta.short} · ${nodeLines[0].label}` : meta.short}
           </li>
-          {compare && (
+          {compare && compared && (
             <li className="flex items-center gap-1.5">
               <span className="w-3.5 border-t-2 border-dashed border-[var(--ds-chart-compare)]" aria-hidden />
               {compare.label}
@@ -120,14 +135,15 @@ export function TrendPanel({ title, description, points, config, metric, onMetri
         ) : (
           <TimeSeries
             points={data}
+            extras={multi ? nodeLines : undefined}
             metric={meta}
             band={band}
             live={live}
             height={height}
             xExtent={xExtent}
-            clamp={metric === "comfort" ? [0, 100] : metric === "noise_rel" ? [0, 1] : undefined}
+            clamp={metric === "comfort" || metric === "light" || metric === "motion" ? [0, 100] : metric === "noise_rel" ? [0, 1] : undefined}
             thresholds={metric === "comfort" && config ? [{ value: config.regular_min, label: `Alerta bajo ${config.regular_min}` }] : undefined}
-            compare={compare ? { points: compare.points[metric], label: compare.label } : null}
+            compare={compare && compared ? { points: compared, label: compare.label } : null}
           />
         )}
       </div>
