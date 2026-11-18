@@ -89,3 +89,20 @@ def test_groq_key_is_used_when_deepseek_is_missing(monkeypatch):
     assert assistant_api.ask(body)["answer"] == "28,1 °C"
     assert seen["base_url"] == "https://api.groq.com/openai/v1" and seen["model"] == "openai/gpt-oss-120b"
     assert "session_id=l201-abc" in seen["system"]
+
+
+def test_rate_limit_is_a_clear_429(monkeypatch):
+    import httpx
+    from openai import RateLimitError
+
+    monkeypatch.setenv("GROQ_API_KEY", "g")
+    response = httpx.Response(429, request=httpx.Request("POST", "https://api.groq.com/openai/v1/chat/completions"))
+
+    def create(**kwargs):
+        raise RateLimitError("rate limited", response=response, body=None)
+
+    monkeypatch.setattr(assistant_api, "OpenAI", lambda **kwargs: SimpleNamespace(
+        chat=SimpleNamespace(completions=SimpleNamespace(create=create))))
+    with pytest.raises(HTTPException) as error:
+        assistant_api.ask(assistant_api.AskIn(question="¿Temperatura?"))
+    assert error.value.status_code == 429
