@@ -10,7 +10,7 @@ from typing import Literal, Optional
 
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
-from openai import OpenAI, OpenAIError
+from openai import OpenAI, OpenAIError, RateLimitError
 from pydantic import BaseModel, Field
 
 from llm_tools import answer_question
@@ -48,12 +48,16 @@ def ask(body: AskIn) -> dict:
         raise HTTPException(status_code=503,
                             detail="El asistente no está configurado: configura GROQ_API_KEY o DEEPSEEK_API_KEY y DEEPSEEK_MODEL")
     base_url = (os.getenv("TEMPERATURE_API_BASE_URL") or f"http://127.0.0.1:{os.getenv('API_PORT', '8000')}").rstrip("/")
-    client = OpenAI(api_key=api_key, base_url=provider_url, timeout=60)
+    # El plan gratuito de Groq limita tokens por minuto; el SDK reintenta respetando retry-after.
+    client = OpenAI(api_key=api_key, base_url=provider_url, timeout=60, max_retries=4)
     tools_used: list[str] = []
     try:
         answer = answer_question(client, model, base_url, [turn.model_dump() for turn in body.history],
                                  body.question, tools_used,
                                  context=body.context.model_dump(exclude_none=True) if body.context else None)
+    except RateLimitError as error:
+        print("Asistente: límite de uso del proveedor LLM")
+        raise HTTPException(status_code=429, detail="El asistente recibió muchas preguntas seguidas; espera un minuto e intenta de nuevo") from error
     except OpenAIError as error:
         print(f"Asistente: error del proveedor LLM: {type(error).__name__}")
         raise HTTPException(status_code=502, detail="El proveedor del LLM no respondió; intenta de nuevo") from error
