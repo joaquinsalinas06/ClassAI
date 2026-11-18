@@ -259,13 +259,15 @@ void accessFeedback(){
  const bool showing=result==1||(result&&uint32_t(now-at)<2000);
  const bool motion=millis()>=60000&&digitalRead(35)==HIGH;
  static uint32_t lastMotion=0;if(motion)lastMotion=now;
- const bool awake=lastMotion&&uint32_t(now-lastMotion)<15000;
+ const bool awake=lastMotion&&uint32_t(now-lastMotion)<5000;  // sonríe 5 s tras el último movimiento
  const access_ui::Expression expression=showing?(result==1?access_ui::Waiting:result==2?access_ui::Success:result==4?access_ui::Duplicate:result==5?access_ui::Celebration:result==6?access_ui::NoSession:access_ui::Rejected):(awake?access_ui::Awake:access_ui::Sleeping);
  const auto f=access_ui::rotated180(access_ui::frame(expression,showing?uint32_t(now-at):now));
  const uint32_t testElapsed=uint32_t(now-ledTestAt);
  if(ledTestRunning&&testElapsed>=6000)ledTestRunning=false;
- const bool green=ledTestRunning?(testElapsed/1000)%2==0:showing&&(result==2||result==5)&&f.led;
- const bool red=ledTestRunning?!green:showing&&(result==3||result==6)&&f.led;
+ const bool waiting=!ledTestRunning&&showing&&result==1;const bool blink=(now/250)%2==0;  // esperando confirmación: rojo y verde alternan
+ const bool entered=showing&&(result==2||result==5);  // alumno registrado: verde y rojo intercalados
+ const bool green=ledTestRunning?(testElapsed/1000)%2==0:waiting?blink:entered?f.led:false;
+ const bool red=ledTestRunning?!green:waiting?!blink:entered?!f.led:showing&&(result==3||result==6)&&f.led;
  digitalWrite(26,green?HIGH:LOW);digitalWrite(21,red?HIGH:LOW);
  digitalWrite(25,f.led?HIGH:LOW);
  if(armed&&BUZZER_VALIDATED){
