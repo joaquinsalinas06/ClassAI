@@ -5,6 +5,7 @@ import type {
 import { CHART_METRICS, nextFanState } from "./comfort";
 import { parseTime } from "./format";
 import { appendPoint, type Point } from "./series";
+import { appendZoneSample, emptyZoneLive, ZONE_ROLES, type ZoneLive } from "./zones";
 
 export type Connection = "connecting" | "open" | "reconnecting" | "closed";
 
@@ -30,6 +31,8 @@ export interface LiveState {
   node: NodeStatus | "unknown";
   latest: Telemetry | null;
   nodes: Record<string, NodeSnapshot>;
+  /** Live light/motion samples per zone (access, environment) while the page is open. */
+  zones: ZoneLive;
   sessionRevision: number;
   lastAt: number | null;
   points: Record<ChartMetric, Point[]>;
@@ -44,7 +47,7 @@ export interface LiveState {
 
 export type LiveAction =
   | { type: "reset"; room: string }
-  | { type: "node"; data: NodeSnapshot }
+  | { type: "node"; data: NodeSnapshot; now?: number }
   | { type: "session"; data: SessionState }
   | { type: "connection"; value: Connection }
   | { type: "telemetry"; data: Telemetry; now?: number }
@@ -71,6 +74,7 @@ export function initialLive(room: string): LiveState {
     node: "unknown",
     latest: null,
     nodes: {},
+    zones: emptyZoneLive(),
     sessionRevision: -1,
     lastAt: null,
     points: emptyPoints(),
@@ -105,6 +109,11 @@ export function liveReducer(state: LiveState, action: LiveAction): LiveState {
       if (previous && (at < (parseTime(previous.received_at) ?? 0) ||
         (at === (parseTime(previous.received_at) ?? 0) && (parseTime(data.status_at) ?? 0) < (parseTime(previous.status_at) ?? 0)))) return state;
       const next = { ...state, nodes: { ...state.nodes, [data.device]: data } };
+      // A snapshot only adds a point when it is a new reading and recent (a 17 h old one must not draw a 17 h line).
+      const role = ZONE_ROLES.find((r) => r === data.role);
+      if (role && data.telemetry && at > (parseTime(previous?.received_at) ?? 0) && (action.now ?? Date.now()) - at < 120_000) {
+        next.zones = appendZoneSample(state.zones, role, at, data.telemetry.light_rel, data.telemetry.presence);
+      }
       if (data.role !== "environment") return next;
       if (data.telemetry && at > (parseTime(previous?.received_at) ?? 0)) {
         const updated = liveReducer(next, { type: "telemetry", data: data.telemetry });

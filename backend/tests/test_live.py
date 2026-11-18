@@ -3,6 +3,8 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 
+from contextlib import closing
+
 import pytest
 
 import live
@@ -116,3 +118,35 @@ def test_rooms_merges_table_sessions_and_live_cache(db, monkeypatch):
         {"id": "b204", "name": None, "latitude": None, "longitude": None, "current_session_id": None,
          "status": None, "last_telemetry": None},
     ]
+
+
+
+
+def raw(connection, device, at, **fields):
+    connection.execute("INSERT INTO readings_raw (room, device, session_id, received_at, payload) VALUES ('a101', ?, NULL, ?, ?)",
+                       (device, at, json.dumps({"device": device, **fields})))
+
+
+def test_zone_minutes_per_node_light_and_presence(db, monkeypatch):
+    monkeypatch.setenv("DATABASE_PATH", db)
+    monkeypatch.setenv("LOCAL_TIMEZONE", "America/Lima")
+    with closing(sqlite3.connect(db)) as connection:
+        raw(connection, "a101-access", "2026-10-14T14:00:05Z", light_rel=.4, presence=True)
+        raw(connection, "a101-access", "2026-10-14T14:00:35Z", light_rel=.6, presence=False)
+        raw(connection, "a101-access", "2026-10-14T14:01:05Z", light_rel=None, presence=None)  # sensor inválido: no cuenta
+        raw(connection, "a101-environment", "2026-10-14T14:00:10Z", light_rel=.8, presence=False, temp_c=23)
+        raw(connection, "a101-assistant", "2026-10-14T14:00:10Z", light_rel=.1)  # fuera del promedio
+        raw(connection, "a101-environment", "2026-10-14T15:30:00Z", presence=True)  # después de la sesión
+        connection.commit()
+        result = live.zone_minutes(connection, "a101", "2026-10-14T14:00:00Z", "2026-10-14T15:00:00Z")
+    access, environment = result["zones"]
+    assert (access["role"], environment["device"]) == ("access", "a101-environment")
+    assert access["light"] == [{"bucket_start": "2026-10-14 14:00", "samples": 2, "min": .4, "max": .6, "avg": .5}]
+    assert access["presence"] == [{"bucket_start": "2026-10-14 14:00", "samples": 2, "min": 0, "max": 1, "avg": .5}]
+    assert environment["presence"][0]["avg"] == 0 and len(environment["presence"]) == 1
+    # la sesión acota la ventana; una sesión inexistente es 404
+    assert live.session_zones(SESSION)["zones"][1]["presence"][-1]["bucket_start"] == "2026-10-14 15:30"  # sigue abierta
+    with pytest.raises(live.HTTPException) as missing:
+        live.session_zones("nope")
+    assert missing.value.status_code == 404
+    assert [z["light"] for z in live.room_zones("a101", 30)["zones"]] == [[], []]  # ventana desde ahora

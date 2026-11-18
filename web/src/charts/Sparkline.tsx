@@ -9,8 +9,10 @@ import { useSize } from "./useSize";
 import { DURATION } from "../ui/motion";
 
 /** Compact trend line with the target band behind it. Values are always labelled next to it (relief rule). */
-export function Sparkline({ points, band, color, minSpan, height = 40, live, windowMs, className }: {
+export function Sparkline({ points, extras, band, color, minSpan, height = 40, live, windowMs, className }: {
   points: Point[];
+  /** Thinner lines behind the main one (e.g. one per node while `points` is their average). */
+  extras?: { points: Point[]; color: string }[];
   band?: [number, number] | null;
   color: string;
   minSpan: number;
@@ -30,8 +32,11 @@ export function Sparkline({ points, band, color, minSpan, height = 40, live, win
   let body = null;
   if (ready) {
     const pad = 3;
-    const x = scaleLinear().domain([visible[0]!.t, last!.t]).range([pad, width - pad - (live ? 4 : 0)]);
-    const [lo, hi] = yDomain(visible.map((p) => p.v), band ?? null, minSpan);
+    const from = last!.t - (windowMs ?? Infinity);
+    const others = (extras ?? []).map((e) => ({ color: e.color, points: e.points.filter((p) => p.t >= from) })).filter((e) => e.points.length > 1);
+    const t0 = Math.min(visible[0]!.t, ...others.map((e) => e.points[0]!.t));
+    const x = scaleLinear().domain([t0, last!.t]).range([pad, width - pad - (live ? 4 : 0)]);
+    const [lo, hi] = yDomain([...visible, ...others.flatMap((e) => e.points)].map((p) => p.v), band ?? null, minSpan);
     const y = scaleLinear().domain([lo, hi]).range([height - pad, pad]);
     const path = line<Point>().x((p) => x(p.t)).y((p) => y(p.v)).curve(curveMonotoneX)(visible) ?? "";
     const fill = area<Point>().x((p) => x(p.t)).y0(height).y1((p) => y(p.v)).curve(curveMonotoneX)(visible) ?? "";
@@ -68,8 +73,12 @@ export function Sparkline({ points, band, color, minSpan, height = 40, live, win
           />
         )}
         <g clipPath={`url(#${gradientId}r)`}>
-          <path d={fill} fill={`url(#${gradientId})`} />
-          <path d={path} fill="none" stroke={color} strokeWidth={1.75} strokeLinecap="round" strokeLinejoin="round" />
+          {others.length === 0 && <path d={fill} fill={`url(#${gradientId})`} />}
+          {others.map((e) => (
+            <path key={e.color} d={line<Point>().x((p) => x(Math.min(p.t, last!.t))).y((p) => y(p.v)).curve(curveMonotoneX)(e.points) ?? ""}
+              fill="none" stroke={e.color} strokeWidth={1.25} strokeOpacity={0.9} strokeLinecap="round" strokeLinejoin="round" />
+          ))}
+          <path d={path} fill="none" stroke={color} strokeWidth={others.length ? 2.5 : 1.75} strokeLinecap="round" strokeLinejoin="round" />
           <g transform={`translate(${x(tail.t)},${y(tail.v)})`}>
             {live && <circle r={2.75} fill={color} className="ds-spark-pulse" />}
             <motion.circle

@@ -188,6 +188,17 @@ SSE añade `node` por dispositivo y `session`; replay conserva todos los nodos,
 no solo el último del aula. GET /classes/current usa ambiente para la lectura
 principal. Los consumidores legados siguen aceptando tópicos v1 anteriores.
 
+Series por zona (docente, solo lectura): `GET /rooms/{room}/zones?minutes=60`
+(1..720, ventana hasta ahora) y `GET /sessions/{id}/zones` (inicio a fin de la
+sesión; 404 si no existe). Agregan `readings_raw` por minuto UTC para los nodos
+`{room}-access` y `{room}-environment` (el asistente no entra):
+`{room,start,end,zones:[{device,role,light:[…],presence:[…]}]}` con filas
+`{bucket_start:"YYYY-MM-DD HH:MM",samples,min,max,avg}`. `light` es `light_rel`
+0..1; en `presence`, avg es la fracción de lecturas con movimiento. Los null no
+cuentan y un minuto sin lecturas válidas no aparece. La web dibuja una línea de
+luz por nodo más su promedio y el movimiento por zona (Entrada = acceso,
+Interior = ambiente).
+
 ### Sesión autoritativa
 
 Ejemplo comando: `{v:1,room:"a101",device:"a101-access",role:"access",

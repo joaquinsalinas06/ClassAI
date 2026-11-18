@@ -81,8 +81,22 @@ export function useGrowingTail(points: Point[], enabled: boolean, series?: strin
   return [...points.slice(0, -1), { t: start.t + (tail.t - start.t) * progress, v: start.v + (tail.v - start.v) * progress }];
 }
 
+export interface ExtraLine {
+  points: Point[];
+  color: string;
+  label: string;
+}
+
+/** A thinner line drawn with the main one (same scales); new readings extend it like the main tail. */
+function ExtraPath({ line: l, path, live }: { line: ExtraLine; path: (points: Point[]) => string | null; live: boolean }) {
+  const drawn = useGrowingTail(l.points, live, l.label);
+  return <path d={path(drawn) ?? ""} fill="none" stroke={l.color} strokeWidth={1.5} strokeOpacity={0.9} strokeLinejoin="round" strokeLinecap="round" />;
+}
+
 export interface TimeSeriesProps {
   points: Point[];
+  /** Per-node lines behind `points` (then their average, drawn thicker). */
+  extras?: ExtraLine[];
   metric: MetricMeta;
   band: [number, number] | null;
   height?: number;
@@ -95,7 +109,7 @@ export interface TimeSeriesProps {
   className?: string;
 }
 
-export function TimeSeries({ points, metric, band, height = 280, live, compare, thresholds, clamp, xExtent, className }: TimeSeriesProps) {
+export function TimeSeries({ points, extras = [], metric, band, height = 280, live, compare, thresholds, clamp, xExtent, className }: TimeSeriesProps) {
   const [ref, { width }] = useSize<HTMLDivElement>();
   const reduce = useReducedMotion();
   const uid = useId().replace(/[^a-zA-Z0-9]/g, "");
@@ -112,12 +126,12 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
   const hasData = points.length > 1;
 
   const target = useMemo(() => {
-    const values = [...points.map((p) => p.v), ...(compare?.points.map((p) => p.v) ?? [])];
+    const values = [...points.map((p) => p.v), ...(compare?.points.map((p) => p.v) ?? []), ...extras.flatMap((e) => e.points.map((p) => p.v))];
     const [y0, y1] = yDomain(values, band, metric.minSpan, clamp);
     const x0 = xExtent?.[0] ?? points[0]?.t ?? 0;
     const x1 = Math.max(xExtent?.[1] ?? 0, points[points.length - 1]?.t ?? 1, compare?.points[compare.points.length - 1]?.t ?? 0);
     return [x0, x1 > x0 ? x1 : x0 + MINUTE, y0, y1];
-  }, [points, compare, band, metric.minSpan, clamp, xExtent]);
+  }, [points, compare, extras, band, metric.minSpan, clamp, xExtent]);
   const [dx0, dx1, dy0, dy1] = useTweened(target, !!live && !reduce && hasData) as [number, number, number, number];
 
   const x = scaleLinear().domain([dx0, dx1]).range([0, innerW]);
@@ -140,6 +154,7 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
   const tail = drawn[drawn.length - 1];
   const hovered = hover != null ? points[hover] : undefined;
   const compareAt = hovered && compare ? compare.points[bisect(compare.points, hovered.t)] : undefined;
+  const extrasAt = hovered ? extras.map((e) => ({ ...e, at: e.points[bisect(e.points, hovered.t)] })) : [];
 
   const onPointer = (event: PointerEvent<SVGRectElement>) => {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -265,7 +280,8 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
                     <path d={linePath(compare.points) ?? ""} fill="none" stroke="var(--ds-chart-compare)" strokeWidth={1.75} strokeDasharray="5 4" strokeLinecap="round" />
                   )}
                   <path d={areaPath(drawn) ?? ""} fill={`url(#fill-${uid})`} />
-                  <path d={linePath(drawn) ?? ""} fill="none" stroke={metric.color} strokeWidth={2} strokeLinejoin="round" strokeLinecap="round" />
+                  {extras.map((e) => e.points.length > 1 && <ExtraPath key={e.label} line={e} path={linePath} live={!!live && !reduce} />)}
+                  <path d={linePath(drawn) ?? ""} fill="none" stroke={metric.color} strokeWidth={extras.length ? 3 : 2} strokeLinejoin="round" strokeLinecap="round" />
                 </g>
               )}
             </g>
@@ -340,6 +356,7 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
               <g pointerEvents="none">
                 <line x1={x(hovered.t)} x2={x(hovered.t)} y1={0} y2={innerH} stroke="var(--ds-chart-crosshair)" />
                 {compareAt && <circle cx={x(compareAt.t)} cy={y(compareAt.v)} r={3.5} fill="var(--ds-bg-surface)" stroke="var(--ds-chart-compare)" strokeWidth={2} />}
+                {extrasAt.map((e) => e.at && <circle key={e.label} cx={x(e.at.t)} cy={y(e.at.v)} r={3.5} fill="var(--ds-bg-surface)" stroke={e.color} strokeWidth={2} />)}
                 <circle cx={x(hovered.t)} cy={y(hovered.v)} r={5} fill={metric.color} stroke="var(--ds-bg-surface)" strokeWidth={2.5} />
               </g>
             )}
@@ -372,7 +389,15 @@ export function TimeSeries({ points, metric, band, height = 280, live, compare, 
             <div className="mt-1 flex items-center gap-2">
               <span className="h-0.5 w-3 rounded-full" style={{ background: metric.color }} aria-hidden />
               <span className="num text-label font-semibold text-fg">{formatMetric(metric.key, hovered.v)}</span>
+              {extras.length > 0 && <span className="text-caption text-muted">Promedio</span>}
             </div>
+            {extrasAt.map((e) => e.at && (
+              <div key={e.label} className="mt-0.5 flex items-center gap-2">
+                <span className="h-0.5 w-3 rounded-full" style={{ background: e.color }} aria-hidden />
+                <span className="num text-small text-fg-2">{formatMetric(metric.key, e.at.v)}</span>
+                <span className="truncate text-caption text-muted">{e.label}</span>
+              </div>
+            ))}
             {compareAt && (
               <div className="mt-0.5 flex items-center gap-2">
                 <span className="h-0 w-3 border-t-2 border-dashed border-[var(--ds-chart-compare)]" aria-hidden />
