@@ -9,7 +9,7 @@
     @apk path *.apk
     header @apk {
         Content-Type application/vnd.android.package-archive
-        Content-Disposition "attachment; filename=\"classai.apk\""
+        Content-Disposition attachment
         Cache-Control "no-cache"
     }
     handle {

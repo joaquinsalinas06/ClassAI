@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 import { ArrowUpRight, CircleCheck, Clock, TriangleAlert, UsersRound, WifiOff, type LucideIcon } from "lucide-react";
-import { motion } from "motion/react";
+import { motion, useReducedMotion } from "motion/react";
 import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router";
 import { ComfortBar } from "../charts/ComfortBar";
@@ -28,8 +28,9 @@ function RoomTile({ room, current, config, index, trend }: { room: Room; current
   const offline = room.status === "offline";
   const session = current?.session;
   const lastAt = t?.received_at ?? t?.ts;
+  const reduce = useReducedMotion();
   return (
-    <motion.div initial={{ opacity: 0, transform: "translateY(10px)" }} animate={{ opacity: 1, transform: "translateY(0px)" }} transition={{ ...SPRING.gentle, delay: index * 0.06 }}>
+    <motion.div initial={{ opacity: 0, transform: reduce ? "none" : "translateY(10px)" }} animate={{ opacity: 1, transform: "translateY(0px)" }} transition={{ ...SPRING.gentle, delay: index * 0.06 }}>
       <Link
         to={`/aula/${room.id}`}
         className="group flex h-full flex-col rounded-lg border border-line bg-surface shadow-xs transition-[border-color,box-shadow] duration-150 hover:border-line-strong hover:shadow-sm"

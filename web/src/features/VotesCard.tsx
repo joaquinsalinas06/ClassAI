@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { Activity, Droplets, Lightbulb, Snowflake, Sun, ThumbsUp, Volume2 } from "lucide-react";
 import type { VoteDimension, VoteLevel } from "../lib/api";
 import { useVotes } from "../lib/api";
@@ -9,12 +9,13 @@ import { EASE } from "../ui/motion";
 
 /** Share of the votes as a hairline bar scaled from the left (transform only), so a new vote visibly moves it. */
 function Share({ value, total, color }: { value: number; total: number; color: string }) {
+  const reduce = useReducedMotion();
   return (
     <span className="mt-1.5 block h-1 overflow-hidden rounded-full bg-sunken" aria-hidden>
       <motion.span
         className="block h-full origin-left rounded-full"
         style={{ background: color }}
-        initial={{ transform: "scaleX(0)" }}
+        initial={reduce ? false : { transform: "scaleX(0)" }}
         animate={{ transform: `scaleX(${total ? value / total : 0})` }}
         transition={{ type: "spring", duration: 0.6, bounce: 0.15 }}
       />
@@ -52,6 +53,7 @@ export function VotesCard({ id, live }: { id: string; live: boolean }) {
     })),
   ].sort((a, b) => b.created_at.localeCompare(a.created_at));
   const tempTotal = counts.ok + counts.hot + counts.cold;
+  const reduce = useReducedMotion();
   return (
     <Card>
       <CardHeader title="Cómo se sienten" description={live ? "Votos de los alumnos desde la app, en vivo" : "Votos de los alumnos desde la app"} />
@@ -91,12 +93,12 @@ export function VotesCard({ id, live }: { id: string; live: boolean }) {
         <p className="px-4 py-3 text-small text-muted">{votes.isError ? votes.error.message : "Aún no hay votos."}</p>
       ) : (
         <ul className="max-h-48 overflow-y-auto px-4 py-2" aria-live="polite" aria-relevant="additions">
-          <AnimatePresence initial={false}>
+          <AnimatePresence>
             {rows.map((v) => (
               <motion.li
                 key={`${v.key}-${v.created_at}`}
                 layout="position"
-                initial={{ opacity: 0, transform: "translateX(-12px)" }}
+                initial={{ opacity: 0, transform: reduce ? "none" : "translateX(-12px)" }}
                 animate={{ opacity: 1, transform: "translateX(0px)" }}
                 transition={{ duration: 0.36, ease: EASE.emphasized }}
                 className="flex items-center gap-2 py-1 text-small"

@@ -1,5 +1,5 @@
 import { ChevronDown, CreditCard, ShieldAlert, SmartphoneNfc } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
+import { AnimatePresence, motion, useReducedMotion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 import type { Arrival, Rejection } from "../lib/live";
 import { formatTime, formatNumber } from "../lib/format";
@@ -49,6 +49,7 @@ function ArrivalRhythm({ arrivals, startedAt, endAt }: { arrivals: Arrival[]; st
   }
   // Fixed floor of 5 per bucket so the first arrivals visibly raise the bar instead of filling it at once.
   const max = Math.max(5, ...bins);
+  const reduce = useReducedMotion();
   const grown = useRef(false);
   useEffect(() => {
     grown.current = true;
@@ -61,7 +62,7 @@ function ArrivalRhythm({ arrivals, startedAt, endAt }: { arrivals: Arrival[]; st
           <motion.span
             key={i}
             className={cn("h-full flex-1 origin-bottom rounded-t-[2px] transition-colors duration-300", n ? "bg-[var(--ds-metric-presence)]" : "bg-sunken")}
-            initial={{ transform: "scaleY(0)" }}
+            initial={reduce ? false : { transform: "scaleY(0)" }}
             animate={{ transform: `scaleY(${n ? Math.max(0.14, n / max) : 0.08})` }}
             transition={{ ...SPRING.gentle, delay: grown.current ? 0 : i * 0.025 }}
           />
@@ -88,6 +89,7 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
 }) {
   const [showRejected, setShowRejected] = useState(false);
   const count = loading ? null : arrivals.length;
+  const reduce = useReducedMotion();
   return (
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
@@ -115,14 +117,15 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
           <EmptyState compact illustration="people" title="Nadie ha marcado todavía" description={emptyText ?? "Los estudiantes aparecerán aquí en cuanto acerquen su tarjeta o celular al lector."} />
         ) : (
           <ul className="overflow-y-auto py-1 [mask-image:linear-gradient(to_bottom,black_calc(100%-24px),transparent)]" style={{ maxHeight }} aria-live="polite" aria-relevant="additions">
-            <AnimatePresence initial={false}>
+            {/* no initial={false}: the very first live arrival must animate too (seeded rows opt out per row) */}
+            <AnimatePresence>
               {arrivals.map((a) => {
                 const late = startedAt != null && a.at - startedAt > LATE_AFTER_MS;
                 return (
                   <motion.li
                     key={a.code}
                     layout="position"
-                    initial={a.live ? { opacity: 0, transform: "translateX(-16px)" } : false}
+                    initial={a.live ? { opacity: 0, transform: reduce ? "none" : "translateX(-16px)" } : false}
                     animate={{ opacity: 1, transform: "translateX(0px)" }}
                     transition={{ type: "spring", duration: 0.5, bounce: 0.15 }}
                     className="relative flex items-center gap-3 px-4 py-2"

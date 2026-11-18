@@ -2,11 +2,11 @@ import { area, curveMonotoneX, line } from "d3-shape";
 import { scaleLinear } from "d3-scale";
 import { motion, useReducedMotion } from "motion/react";
 import { useId } from "react";
-import { useGrowingTail } from "./TimeSeries";
+import { DRAW_EASE, useGrowingTail } from "./TimeSeries";
 import type { Point } from "../lib/series";
 import { yDomain } from "../lib/series";
 import { useSize } from "./useSize";
-import { DURATION, EASE } from "../ui/motion";
+import { DURATION } from "../ui/motion";
 
 /** Compact trend line with the target band behind it. Values are always labelled next to it (relief rule). */
 export function Sparkline({ points, band, color, minSpan, height = 40, live, windowMs, className }: {
@@ -49,7 +49,7 @@ export function Sparkline({ points, band, color, minSpan, height = 40, live, win
               style={{ transformBox: "fill-box", transformOrigin: "0% 50%" }}
               initial={{ transform: reduce ? "scaleX(1)" : "scaleX(0)" }}
               animate={{ transform: "scaleX(1)" }}
-              transition={{ duration: DURATION.chart, ease: EASE.emphasized }}
+              transition={{ duration: DURATION.chart, ease: DRAW_EASE }}
             />
           </clipPath>
           <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">

@@ -15,8 +15,10 @@ const STEPS = [
 const isIos = typeof navigator !== "undefined" &&
   (/iPhone|iPad|iPod/i.test(navigator.userAgent) || (/Macintosh/.test(navigator.userAgent) && navigator.maxTouchPoints > 1));
 
+// Reduced motion: fade only.
+const reduce = typeof matchMedia !== "undefined" && matchMedia("(prefers-reduced-motion: reduce)").matches;
 const rise = (i: number) => ({
-  initial: { opacity: 0, transform: "translateY(10px)" },
+  initial: { opacity: 0, transform: reduce ? "none" : "translateY(10px)" },
   animate: { opacity: 1, transform: "translateY(0px)" },
   transition: { duration: 0.42, ease: EASE.emphasized, delay: 0.06 + i * 0.06 },
 });
@@ -84,7 +86,7 @@ export function AppDownload() {
         </div>
 
         <motion.aside
-          initial={{ opacity: 0, transform: "translateY(10px) scale(0.98)" }}
+          initial={{ opacity: 0, transform: reduce ? "none" : "translateY(10px) scale(0.98)" }}
           animate={{ opacity: 1, transform: "translateY(0px) scale(1)" }}
           transition={{ duration: 0.5, ease: EASE.emphasized, delay: 0.22 }}
           className="order-last rounded-xl border border-line bg-surface p-5 shadow-sm md:sticky md:top-14 md:order-none md:mt-20"
