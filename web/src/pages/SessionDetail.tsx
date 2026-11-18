@@ -5,7 +5,6 @@ import { Link, useNavigate, useParams as useRouteParams } from "react-router";
 import { ComfortRing } from "../charts/ComfortRing";
 import { useApp } from "../app/context";
 import { roomName } from "../app/Shell";
-import { ClassChat } from "../features/AssistantChat";
 import { AttendanceList } from "../features/AttendanceList";
 import { SessionRowActions } from "../features/SessionActions";
 import { VotesCard } from "../features/VotesCard";
@@ -268,7 +267,6 @@ export function SessionDetail() {
           <AttendanceList className="ds-rise [--i:3]" arrivals={arrivals} startedAt={startedAt} endAt={endedAt} loading={attendance.isPending} maxHeight={640} emptyText="Nadie registró asistencia en esta clase." />
         </div>
       </div>
-      <ClassChat context={{ session_id: id!, room: found.room }} live={!found.ended_at} className="ds-rise" style={{ "--i": 5 } as CSSProperties} />
     </div>
   );
 }

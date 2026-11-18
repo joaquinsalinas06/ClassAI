@@ -461,7 +461,11 @@ export async function mockRequest(path: string, init: RequestInit = {}): Promise
 
   if (p === "/assistant/ask" && method === "POST") {
     await delay(700);
+    // Lets the retry path be tried without Groq: "límite" behaves like a rate-limited provider.
+    if (/l[ií]mite/i.test(String(body.question ?? ""))) throw new ApiError(429, "Rate limit");
     if (body.context?.session_id) return classAnswer(String(body.context.session_id));
+    const live = body.context?.room && SESSIONS.find((s) => s.room.id === body.context.room && s.end == null);
+    if (live) return classAnswer(live.id);
     return assistantAnswer(String(body.question ?? ""));
   }
 
