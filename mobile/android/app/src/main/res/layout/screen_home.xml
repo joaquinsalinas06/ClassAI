@@ -184,7 +184,7 @@
                                 android:layout_height="wrap_content"
                                 android:layout_marginTop="@dimen/ds_space_0_5"
                                 android:alpha="0.8"
-                                android:fontFamily="@font/geist_mono_medium"
+                                android:fontFamily="@font/figtree_medium"
                                 android:letterSpacing="0.06"
                                 android:textSize="@dimen/ds_text_body_size" />
                         </LinearLayout>
@@ -275,7 +275,7 @@
                     <TextView
                         android:id="@+id/heroTitle"
                         style="@style/ClassAI.Title.Title"
-                        android:layout_width="220dp"
+                        android:layout_width="180dp"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/ds_space_3"
                         android:textColor="@color/ds_app_on_mood"

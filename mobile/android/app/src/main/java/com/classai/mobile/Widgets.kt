@@ -78,6 +78,7 @@ fun View.enter(index: Int = 0, distance: Float = 16f) {
 
 /** Presión táctil: escala 0.97 y vuelve. */
 fun View.pressable() {
+    isClickable = true  // sin esto no llegan UP/CANCEL y la vista quedaría encogida
     setOnTouchListener { v, e ->
         when (e.actionMasked) {
             android.view.MotionEvent.ACTION_DOWN -> if (motionEnabled) v.animate().scaleX(0.97f).scaleY(0.97f)

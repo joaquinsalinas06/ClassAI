@@ -118,7 +118,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:autofillHints="username"
-                    android:fontFamily="@font/geist_mono_medium"
+                    android:fontFamily="@font/figtree_medium"
                     android:imeOptions="actionNext"
                     android:inputType="textVisiblePassword|textNoSuggestions"
                     android:maxLength="32"

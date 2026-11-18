@@ -178,6 +178,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun dp(v: Float) = v * resources.displayMetrics.density
+
+    /** Snackbar sobre la píldora de navegación, sin taparla. */
+    private fun snack(message: String) =
+        Snackbar.make(main.root, message, Snackbar.LENGTH_LONG).apply { if (main.nav.visibility == View.VISIBLE) anchorView = main.nav }.show()
     private fun ms(id: Int) = resources.getInteger(id).toLong()
     private fun haptic(v: View, kind: Int) = v.performHapticFeedback(kind)
     private val confirm get() = if (Build.VERSION.SDK_INT >= 30) HapticFeedbackConstants.CONFIRM else HapticFeedbackConstants.LONG_PRESS
@@ -493,11 +497,13 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         // Parallax: el carnet se queda atrás y se desvanece al bajar; Kirby se desplaza más lento que su tarjeta
         scroll.setOnScrollChangeListener { _: View, _: Int, y: Int, _: Int, _: Int ->
             if (!motionEnabled || idCard.animation != null) return@setOnScrollChangeListener
-            idCard.translationY = y * 0.3f
-            idCard.alpha = 1f - (y / 1400f).coerceIn(0f, 0.5f)
+            // se aleja (escala y alfa), sin invadir lo que viene debajo
+            val k = (y / idCard.bottom.toFloat().coerceAtLeast(1f)).coerceIn(0f, 1f)
+            idCard.scaleX = 1f - 0.06f * k; idCard.scaleY = 1f - 0.06f * k
+            idCard.alpha = 1f - 0.5f * k
             heroKirby.translationY = ((y - hero.top + idCard.height) * 0.08f).coerceIn(-dp(14f), dp(14f))
         }
-        heroAction.setOnClickListener { go(Screen.ROOM) }
+        heroAction.setOnClickListener { this@MainActivity.classes?.firstOrNull()?.let { classId = it.id; current = null }; go(Screen.ROOM) }
         heroAction.pressable()
         headAvatar.ink = getColor(R.color.ds_text_primary)
     }
@@ -647,9 +653,12 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             var list: Result<List<ClassInfo>>? = null
             var hist: Result<List<HistoryItem>>? = null
             var detail: Result<ClassInfo>? = null
-            if (onScreen == Screen.HOME || wanted == null) list = api.classes()
+            list = api.classes()
             if (onScreen == Screen.HOME) hist = api.history()
-            val id = wanted ?: (list as? Result.Ok)?.value?.let { l -> l.firstOrNull { !it.attended }?.id ?: l.firstOrNull()?.id }
+            // La clase elegida sigue solo mientras esté abierta; si el docente la cerró, pasa a la siguiente abierta.
+            val open = (list as? Result.Ok)?.value
+            val id = if (open == null) wanted
+                else wanted?.takeIf { w -> open.any { it.id == w } } ?: open.firstOrNull { !it.attended }?.id ?: open.firstOrNull()?.id
             if (onScreen != Screen.HOME && id != null) detail = api.classInfo(id)
             ui.post {
                 if (gen != generation) return@post  // respuesta de una sesión anterior
@@ -679,17 +688,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (hist is Result.Ok) history = hist.value
         if (hist != null) renderHistory()
         if (s == Screen.HOME) return
-        if (id == null) { renderNoClass(); return }
+        if (id == null) { classId = null; current = null; renderNoClass(); return }
+        if (id != classId) { classId = id; current = null; voteFor = null }
         when (detail) {
             is Result.Ok -> {
-                if (classId == null) classId = id
                 noteAttendance(detail.value)
                 current = detail.value
                 if (s == Screen.ROOM) renderRoom(detail.value) else renderVote(detail.value)
             }
             is Result.Err -> {
                 if (s == Screen.ROOM) { cls.loading.visibility = View.GONE; onFailure(detail.failure, cls.message) }
-                else Snackbar.make(vote.root, detail.failure.message, Snackbar.LENGTH_LONG).show()
+                else snack(detail.failure.message)
                 if (detail.failure.message.contains("no está disponible")) { classId = null; current = null }
             }
             null -> renderNoClass()
@@ -1148,7 +1157,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                     is Result.Err -> {
                         renderSend()
                         if (r.failure is Failure.SessionExpired) logout(r.failure.message)
-                        else { shake(vote.moodCard); Snackbar.make(vote.root, r.failure.message, Snackbar.LENGTH_LONG).show() }
+                        else { shake(vote.moodCard); snack(r.failure.message) }
                     }
                 }
             }
