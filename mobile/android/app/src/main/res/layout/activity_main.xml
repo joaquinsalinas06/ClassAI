@@ -1,6 +1,107 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/host"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/root"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/ds_bg_page" />
+    android:layout_height="match_parent">
+
+    <com.classai.mobile.DriftBackgroundView
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <FrameLayout
+        android:id="@+id/host"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent" />
+
+    <!-- Navegación inferior: píldora flotante -->
+    <LinearLayout
+        android:id="@+id/nav"
+        android:layout_width="wrap_content"
+        android:layout_height="@dimen/app_nav_height"
+        android:layout_gravity="bottom|center_horizontal"
+        android:layout_marginBottom="@dimen/ds_space_4"
+        android:background="@drawable/bg_nav"
+        android:elevation="12dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="@dimen/ds_space_2"
+        android:visibility="gone">
+
+        <LinearLayout android:id="@+id/navHome" style="@style/ClassAI.NavItem">
+            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_home" />
+            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_home" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/navRoom" style="@style/ClassAI.NavItem">
+            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_sensors" />
+            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_room" />
+        </LinearLayout>
+
+        <LinearLayout android:id="@+id/navVote" style="@style/ClassAI.NavItem">
+            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_smile" />
+            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_vote" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <com.classai.mobile.ConfettiView
+        android:id="@+id/confetti"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:importantForAccessibility="no" />
+
+    <!-- Momento de éxito al marcar asistencia -->
+    <LinearLayout
+        android:id="@+id/success"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@color/app_scrim"
+        android:clickable="true"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:padding="@dimen/ds_space_8"
+        android:visibility="gone">
+
+        <FrameLayout
+            android:id="@+id/successBadge"
+            android:layout_width="120dp"
+            android:layout_height="120dp">
+
+            <View
+                android:id="@+id/successHalo"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@drawable/bg_success_halo" />
+
+            <ImageView
+                android:id="@+id/successCheck"
+                android:layout_width="96dp"
+                android:layout_height="96dp"
+                android:layout_gravity="center"
+                android:background="@drawable/bg_success_solid"
+                android:importantForAccessibility="no"
+                android:padding="18dp"
+                android:src="@drawable/avd_check" />
+        </FrameLayout>
+
+        <TextView
+            android:id="@+id/successTitle"
+            style="@style/ClassAI.Serif.Display"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_6"
+            android:gravity="center"
+            android:textColor="@color/ds_text_primary" />
+
+        <TextView
+            android:id="@+id/successBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_2"
+            android:gravity="center"
+            android:textColor="@color/ds_text_secondary"
+            android:textSize="@dimen/ds_text_heading_size" />
+    </LinearLayout>
+</FrameLayout>

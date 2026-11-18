@@ -56,4 +56,18 @@ class StudentAppTest {
         assertNull(timeLabel(null))
         assertEquals("24.1 °C", fmt1(24.14, "°C"))
     }
+
+    @Test fun roomExtras() {
+        val c = parseClass(JSONObject("""{"id":"a","room":"a101","started_at":"2026-11-18T14:00:00Z","ended":false,"attended":true,
+            "metrics":{"temp_c":25.2,"zones":{"entrance":true,"interior":false},"fan_on":true},"present_count":12,
+            "targets":{"temp_c":[21,24],"rh_pct":[40,60],"noise_rel_max":0.1},
+            "trend":[{"minute":"m1","comfort":80,"temp_c":24.0},{"minute":"m2","comfort":84,"temp_c":24.3}]}"""))
+        assertEquals(12, c.presentCount); assertEquals(true, c.metrics!!.entrance); assertEquals(false, c.metrics!!.interior)
+        assertEquals(Mood.HOT, roomMood(c.metrics, c.targets)); assertEquals(Mood.OK, roomMood(null, null))
+        assertEquals(0.3, trendDelta(c.trend.map { it.tempC })!!, 0.001); assertNull(trendDelta(listOf(1.0)))
+        assertEquals(1f, noiseLevel(0.9)); assertEquals(0f, noiseLevel(null))
+        assertEquals("hace 1 h 5 min", elapsedLabel("2026-11-18T14:00:00Z", java.time.Instant.parse("2026-11-18T15:05:00Z")))
+        assertEquals("+0,3 °C", signed1(0.3, " °C"))
+        assertEquals(1, parseHistory(JSONObject("""{"history":[{"session_id":"a","course":"IoT","attended_at":"x"}]}""")).size)
+    }
 }

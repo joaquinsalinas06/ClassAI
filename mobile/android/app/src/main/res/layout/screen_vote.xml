@@ -1,0 +1,152 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:clipChildren="false"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/ds_space_5"
+        android:paddingTop="@dimen/ds_space_4"
+        android:paddingBottom="@dimen/app_nav_clearance">
+
+        <LinearLayout
+            android:id="@+id/noClass"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_10"
+            android:gravity="center_horizontal"
+            android:orientation="vertical"
+            android:visibility="gone">
+
+            <com.classai.mobile.SignalView
+                android:layout_width="match_parent"
+                android:layout_height="150dp"
+                android:importantForAccessibility="no" />
+
+            <TextView
+                android:id="@+id/noClassTitle"
+                style="@style/ClassAI.Serif.Title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_5"
+                android:gravity="center" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_2"
+                android:gravity="center"
+                android:text="@string/vote_no_class"
+                android:textColor="@color/ds_text_secondary"
+                android:textSize="15sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/course"
+                style="@style/ClassAI.Label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:textSize="@dimen/ds_text_body_size" />
+
+            <!-- Tarjeta de ánimo: cambia de color y de Kirby según la opción -->
+            <LinearLayout
+                android:id="@+id/moodCard"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_3"
+                android:background="@drawable/bg_hero"
+                android:elevation="10dp"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/ds_space_5"
+                android:paddingTop="@dimen/ds_space_6"
+                android:paddingBottom="@dimen/ds_space_5">
+
+                <TextView
+                    android:id="@+id/question"
+                    style="@style/ClassAI.Serif.Display"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:gravity="center"
+                    android:textColor="@color/app_on_mood"
+                    android:textSize="36sp" />
+
+                <com.classai.mobile.KirbyView
+                    android:id="@+id/kirby"
+                    android:layout_width="match_parent"
+                    android:layout_height="250dp"
+                    android:layout_marginTop="@dimen/ds_space_5" />
+
+                <!-- Selector deslizable -->
+                <FrameLayout
+                    android:id="@+id/selector"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="@dimen/ds_space_5">
+
+                    <View
+                        android:id="@+id/selectorThumb"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:background="@drawable/bg_mood_outline" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:orientation="horizontal">
+
+                        <TextView android:id="@+id/optCold" style="@style/ClassAI.MoodOption" android:text="@string/vote_cold" />
+                        <TextView android:id="@+id/optOk" style="@style/ClassAI.MoodOption" android:text="@string/vote_ok" />
+                        <TextView android:id="@+id/optHot" style="@style/ClassAI.MoodOption" android:text="@string/vote_hot" />
+                    </LinearLayout>
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/moodCaption"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/ds_space_4"
+                    android:background="@drawable/bg_glass_box"
+                    android:gravity="center"
+                    android:minHeight="64dp"
+                    android:padding="@dimen/ds_space_3"
+                    android:textColor="@color/app_on_mood"
+                    android:textSize="15sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/send"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp"
+                    android:layout_marginTop="@dimen/ds_space_4"
+                    android:textColor="@color/app_card_on"
+                    app:backgroundTint="@color/app_on_mood"
+                    app:iconGravity="textStart"
+                    app:iconTint="@color/ds_state_ok_solid" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/footnote"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_4"
+                android:gravity="center"
+                android:text="@string/vote_footnote"
+                android:textColor="@color/ds_text_muted"
+                android:textSize="@dimen/ds_text_caption_size" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

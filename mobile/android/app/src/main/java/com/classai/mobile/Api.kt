@@ -9,10 +9,16 @@ import java.net.URL
 data class Student(val code: String, val fullName: String)
 data class AuthResult(val token: String, val student: Student)
 data class Metrics(val tempC: Double?, val rhPct: Double?, val noiseRel: Double?, val comfort: Double?,
-                   val state: String?, val presence: Boolean?)
+                   val state: String?, val presence: Boolean?, val lightRel: Double? = null,
+                   val fanOn: Boolean? = null, val entrance: Boolean? = null, val interior: Boolean? = null)
+/** Rangos objetivo del aula; los campos nuevos del backend son opcionales (un backend viejo no los manda). */
+data class Targets(val tempLow: Double, val tempHigh: Double, val rhLow: Double, val rhHigh: Double, val noiseMax: Double)
+data class TrendPoint(val minute: String, val comfort: Double?, val tempC: Double?)
 data class ClassInfo(val id: String, val room: String, val course: String, val startedAt: String,
                      val ended: Boolean, val attended: Boolean, val attendedAt: String?,
-                     val myVote: String?, val metrics: Metrics?)
+                     val myVote: String?, val metrics: Metrics?, val presentCount: Int? = null,
+                     val targets: Targets? = null, val trend: List<TrendPoint> = emptyList())
+data class HistoryItem(val sessionId: String, val room: String, val course: String, val attendedAt: String)
 
 enum class Op { REGISTER, LOGIN, DATA, VOTE }
 
@@ -53,13 +59,32 @@ fun parseClass(c: JSONObject): ClassInfo = ClassInfo(
     attended = c.optBoolean("attended"), attendedAt = c.optStringOrNull("attended_at"),
     myVote = c.optStringOrNull("my_vote"),
     metrics = c.optJSONObject("metrics")?.takeIf { it.length() > 0 }?.let {
+        val zones = it.optJSONObject("zones")
         Metrics(it.optDoubleOrNull("temp_c"), it.optDoubleOrNull("rh_pct"), it.optDoubleOrNull("noise_rel"),
-            it.optDoubleOrNull("comfort"), it.optStringOrNull("state"),
-            if (it.isNull("presence") || !it.has("presence")) null else it.optBoolean("presence"))
+            it.optDoubleOrNull("comfort"), it.optStringOrNull("state"), it.optBoolOrNull("presence"),
+            it.optDoubleOrNull("light_rel"), it.optBoolOrNull("fan_on"),
+            zones?.optBoolOrNull("entrance"), zones?.optBoolOrNull("interior"))
     },
+    presentCount = if (c.has("present_count") && !c.isNull("present_count")) c.optInt("present_count") else null,
+    targets = c.optJSONObject("targets")?.let { t ->
+        val temp = t.optJSONArray("temp_c"); val rh = t.optJSONArray("rh_pct")
+        if (temp == null || rh == null || temp.length() < 2 || rh.length() < 2) null
+        else Targets(temp.getDouble(0), temp.getDouble(1), rh.getDouble(0), rh.getDouble(1), t.optDouble("noise_rel_max", 0.1))
+    },
+    trend = c.optJSONArray("trend")?.let { a ->
+        List(a.length()) { i -> a.getJSONObject(i).let { p -> TrendPoint(p.optString("minute"), p.optDoubleOrNull("comfort"), p.optDoubleOrNull("temp_c")) } }
+    }.orEmpty(),
 )
 
+fun parseHistory(json: JSONObject): List<HistoryItem> {
+    val a = json.getJSONArray("history")
+    return List(a.length()) { i -> a.getJSONObject(i).let {
+        HistoryItem(it.getString("session_id"), it.optString("room"), it.optString("course"), it.getString("attended_at"))
+    } }
+}
+
 private fun JSONObject.optStringOrNull(k: String): String? = if (isNull(k)) null else optString(k).ifEmpty { null }
+private fun JSONObject.optBoolOrNull(k: String): Boolean? = if (isNull(k) || !has(k)) null else optBoolean(k)
 private fun JSONObject.optDoubleOrNull(k: String): Double? = if (isNull(k) || !has(k)) null else optDouble(k).takeUnless { it.isNaN() }
 
 /** Cliente HTTP bloqueante: llamar desde un hilo de fondo. */
@@ -120,6 +145,9 @@ class StudentApi(private val base: String, private val token: () -> String?) {
     fun classes() = run(Op.DATA, "GET", "/student/classes") { j ->
         val a = j.getJSONArray("classes"); List(a.length()) { parseClass(a.getJSONObject(it)) }
     }
+
+    /** Un backend sin /student/history responde 404: la app lo trata como historial vacío. */
+    fun history() = run(Op.DATA, "GET", "/student/history", parse = ::parseHistory)
 
     fun classInfo(id: String) = run(Op.DATA, "GET", "/student/classes/$id", parse = ::parseClass)
 

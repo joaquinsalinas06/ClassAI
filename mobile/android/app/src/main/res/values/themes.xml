@@ -40,6 +40,95 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="shapeAppearanceCornerMedium">@style/Shape.ClassAI.Medium</item>
         <item name="shapeAppearanceCornerLarge">@style/Shape.ClassAI.Large</item>
+        <item name="android:fontFamily">@font/geist</item>
+        <item name="fontFamily">@font/geist</item>
+        <item name="android:windowBackground">@color/ds_bg_page</item>
+        <item name="textAppearanceLabelLarge">@style/ClassAI.Text.Button</item>
+        <item name="materialButtonStyle">@style/ClassAI.Button</item>
+        <item name="snackbarStyle">@style/ClassAI.Snackbar</item>
+        <item name="android:textColorHighlight">@color/ds_intent_info_subtle</item>
+        <item name="colorControlActivated">@color/ds_border_focus</item>
+    </style>
+
+    <style name="ClassAI.Snackbar" parent="Widget.Material3.Snackbar">
+        <item name="shapeAppearance">@style/Shape.ClassAI.Pill</item>
+    </style>
+
+    <style name="Shape.ClassAI.Pill" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">50%</item>
+    </style>
+
+    <style name="ClassAI.Text.Button" parent="TextAppearance.Material3.LabelLarge">
+        <item name="android:fontFamily">@font/geist_semibold</item>
+        <item name="fontFamily">@font/geist_semibold</item>
+        <item name="android:textSize">@dimen/ds_text_heading_size</item>
+        <item name="android:letterSpacing">0</item>
+    </style>
+
+    <!-- Botón principal: píldora en tinta de marca -->
+    <style name="ClassAI.Button" parent="Widget.Material3.Button">
+        <item name="android:minHeight">@dimen/app_touch</item>
+        <item name="android:insetTop">0dp</item>
+        <item name="android:insetBottom">0dp</item>
+        <item name="cornerRadius">@dimen/ds_radius_full</item>
+        <item name="android:textAppearance">@style/ClassAI.Text.Button</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="ClassAI.Button.Tonal" parent="Widget.Material3.Button.TonalButton">
+        <item name="android:minHeight">@dimen/app_touch</item>
+        <item name="cornerRadius">@dimen/ds_radius_full</item>
+        <item name="android:textAppearance">@style/ClassAI.Text.Button</item>
+        <item name="android:textSize">@dimen/ds_text_body_size</item>
+        <item name="backgroundTint">@color/ds_bg_selected</item>
+        <item name="android:textColor">@color/ds_text_primary</item>
+        <item name="iconTint">@color/ds_text_primary</item>
+    </style>
+
+    <!-- Tipografía con personalidad: Instrument Serif para títulos, Geist para todo lo demás -->
+    <style name="ClassAI.Serif" parent="">
+        <item name="android:fontFamily">@font/instrument_serif</item>
+        <item name="fontFamily">@font/instrument_serif</item>
+        <item name="android:textColor">@color/ds_text_primary</item>
+        <item name="android:letterSpacing">-0.01</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="ClassAI.Serif.Display">
+        <item name="android:textSize">@dimen/app_serif_display</item>
+        <item name="android:lineSpacingMultiplier">0.95</item>
+    </style>
+    <style name="ClassAI.Serif.Title">
+        <item name="android:textSize">@dimen/app_serif_title</item>
+    </style>
+    <style name="ClassAI.Serif.Heading">
+        <item name="android:textSize">@dimen/app_serif_heading</item>
+    </style>
+
+    <style name="ClassAI.Label" parent="">
+        <item name="android:fontFamily">@font/geist_medium</item>
+        <item name="android:textSize">@dimen/ds_text_label_size</item>
+        <item name="android:textColor">@color/ds_text_muted</item>
+    </style>
+    <style name="ClassAI.Number" parent="">
+        <item name="android:fontFamily">@font/geist_semibold</item>
+        <item name="android:textColor">@color/ds_text_primary</item>
+        <item name="android:textSize">@dimen/ds_text_metric_size</item>
+        <item name="android:letterSpacing">-0.03</item>
+        <item name="android:fontFeatureSettings">tnum</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="ClassAI.Chip" parent="">
+        <item name="android:fontFamily">@font/geist_medium</item>
+        <item name="android:textSize">@dimen/ds_text_caption_size</item>
+        <item name="android:paddingStart">10dp</item>
+        <item name="android:paddingEnd">10dp</item>
+        <item name="android:paddingTop">4dp</item>
+        <item name="android:paddingBottom">4dp</item>
+        <item name="android:background">@drawable/bg_chip</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:drawablePadding">@dimen/ds_space_1_5</item>
+        <item name="android:textColor">@color/ds_text_secondary</item>
     </style>
 
     <style name="Shape.ClassAI.Medium" parent="">
@@ -53,45 +142,101 @@
     </style>
 
     <style name="ClassAI.Field" parent="Widget.Material3.TextInputLayout.OutlinedBox">
-        <item name="boxCornerRadiusTopStart">@dimen/ds_radius_md</item>
-        <item name="boxCornerRadiusTopEnd">@dimen/ds_radius_md</item>
-        <item name="boxCornerRadiusBottomStart">@dimen/ds_radius_md</item>
-        <item name="boxCornerRadiusBottomEnd">@dimen/ds_radius_md</item>
-        <item name="startIconTint">?attr/colorPrimary</item>
+        <item name="boxCornerRadiusTopStart">@dimen/ds_radius_lg</item>
+        <item name="boxCornerRadiusTopEnd">@dimen/ds_radius_lg</item>
+        <item name="boxCornerRadiusBottomStart">@dimen/ds_radius_lg</item>
+        <item name="boxCornerRadiusBottomEnd">@dimen/ds_radius_lg</item>
+        <item name="boxBackgroundColor">@color/ds_bg_sunken</item>
+        <item name="boxStrokeColor">@color/field_stroke</item>
+        <item name="boxStrokeWidth">1dp</item>
+        <item name="boxStrokeWidthFocused">2dp</item>
+        <item name="boxStrokeErrorColor">@color/ds_state_alert_solid</item>
+        <item name="errorTextColor">@color/ds_state_alert_text</item>
+        <item name="errorIconTint">@color/ds_state_alert_text</item>
+        <item name="hintTextColor">@color/ds_border_focus</item>
+        <item name="android:textColorHint">@color/ds_text_muted</item>
+        <item name="startIconTint">@color/ds_text_muted</item>
+        <item name="endIconTint">@color/ds_text_muted</item>
+        <item name="helperTextTextColor">@color/ds_text_muted</item>
         <item name="android:layout_marginTop">@dimen/ds_space_3</item>
     </style>
 
-    <style name="ClassAI.Vote" parent="Widget.Material3.Button.OutlinedButton">
-        <item name="android:textSize">@dimen/ds_text_body_size</item>
-        <item name="android:insetTop">0dp</item>
-        <item name="android:insetBottom">0dp</item>
-        <item name="android:paddingStart">4dp</item>
-        <item name="android:paddingEnd">4dp</item>
+    <style name="ClassAI.Zone" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:background">@drawable/bg_card_sunken</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:padding">@dimen/ds_space_3</item>
+    </style>
+    <style name="ClassAI.ZoneValue" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:fontFamily">@font/geist_semibold</item>
         <item name="android:textColor">@color/ds_text_primary</item>
-        <item name="android:maxLines">2</item>
+        <item name="android:textSize">@dimen/ds_text_body_size</item>
+    </style>
+    <style name="ClassAI.MoodOption" parent="">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/instrument_serif</item>
+        <item name="android:textSize">26sp</item>
+        <item name="android:textColor">@color/app_on_mood</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+    <style name="ClassAI.NavItem" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:minWidth">56dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:orientation">horizontal</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+    <style name="ClassAI.NavIcon" parent="">
+        <item name="android:layout_width">@dimen/ds_icon_lg</item>
+        <item name="android:layout_height">@dimen/ds_icon_lg</item>
+        <item name="android:importantForAccessibility">no</item>
+        <item name="tint">@color/ds_text_muted</item>
+    </style>
+    <style name="ClassAI.NavLabel" parent="">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">@dimen/ds_space_2</item>
+        <item name="android:fontFamily">@font/geist_semibold</item>
+        <item name="android:textSize">@dimen/ds_text_body_size</item>
+        <item name="android:textColor">@color/ds_brand_on_ink</item>
+        <item name="android:visibility">gone</item>
     </style>
 
     <!-- El par ink/on-ink invierte juntos en modo oscuro. -->
     <style name="ClassAI.CardText" parent="">
-        <item name="android:textColor">@color/ds_brand_on_ink</item>
+        <item name="android:textColor">@color/app_card_on</item>
     </style>
     <style name="ClassAI.Text.Body" parent="TextAppearance.Material3.BodyLarge">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/geist</item>
         <item name="android:textSize">@dimen/ds_text_body_size</item>
         <item name="lineHeight">@dimen/ds_text_body_line</item>
     </style>
     <style name="ClassAI.Text.Caption" parent="TextAppearance.Material3.BodySmall">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/geist</item>
         <item name="android:textSize">@dimen/ds_text_caption_size</item>
         <item name="lineHeight">@dimen/ds_text_caption_line</item>
     </style>
     <style name="ClassAI.Text.Heading" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/geist</item>
         <item name="android:textSize">@dimen/ds_text_heading_size</item>
         <item name="lineHeight">@dimen/ds_text_heading_line</item>
     </style>
     <style name="ClassAI.Text.Title" parent="TextAppearance.Material3.TitleLarge">
-        <item name="android:fontFamily">sans-serif</item>
+        <item name="android:fontFamily">@font/geist</item>
         <item name="android:textSize">@dimen/ds_text_title_size</item>
         <item name="lineHeight">@dimen/ds_text_title_line</item>
     </style>
