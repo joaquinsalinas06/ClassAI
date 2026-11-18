@@ -15,6 +15,8 @@ class StudentAppTest {
         assertTrue(failureFor(Op.VOTE, 409).message.contains("terminó"))
         assertTrue(failureFor(Op.LOGIN, null).message.startsWith("Sin conexión"))
         assertTrue(failureFor(Op.DATA, 503).message.contains("servidor"))
+        assertEquals("Revisa los datos ingresados.", failureFor(Op.REGISTER, 422, "[{\"type\":\"missing\"}]").message)
+        assertTrue(failureFor(Op.VOTE, 422).message.contains("aún no recibe"))
     }
 
     @Test fun parseAuthResponse() {
@@ -69,5 +71,14 @@ class StudentAppTest {
         assertEquals("hace 1 h 5 min", elapsedLabel("2026-11-18T14:00:00Z", java.time.Instant.parse("2026-11-18T15:05:00Z")))
         assertEquals("+0,3 °C", signed1(0.3, " °C"))
         assertEquals(1, parseHistory(JSONObject("""{"history":[{"session_id":"a","course":"IoT","attended_at":"x"}]}""")).size)
+    }
+
+    @Test fun votesByDimension() {
+        val old = parseClass(JSONObject("""{"id":"a","ended":false,"attended":false,"my_vote":"hot"}"""))
+        assertEquals(mapOf("temp" to "high"), old.myVotes)
+        val new = parseClass(JSONObject("""{"id":"a","ended":false,"attended":false,"my_vote":"cold","my_votes":{"temp":"low","noise":"ok"}}"""))
+        assertEquals("ok", new.myVotes["noise"])
+        assertEquals("cold", tempKind("low")); assertEquals("Mucho ruido", VoteDim.NOISE.label("high"))
+        assertEquals(Mood.HOT, levelMood("high")); assertEquals("ok", moodLevel(Mood.OK))
     }
 }

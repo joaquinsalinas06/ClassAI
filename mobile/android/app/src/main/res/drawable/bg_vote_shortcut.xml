@@ -1,4 +1,4 @@
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <corners android:radius="@dimen/app_radius_card" />
-    <gradient android:angle="315" android:startColor="@color/app_mood_ok_deep" android:endColor="@color/app_mood_ok" />
+    <gradient android:angle="315" android:startColor="@color/ds_app_mood_ok_deep" android:endColor="@color/ds_app_mood_ok" />
 </shape>

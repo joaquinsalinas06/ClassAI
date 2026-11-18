@@ -38,7 +38,7 @@
 
                 <TextView
                     android:id="@+id/noClassTitle"
-                    style="@style/ClassAI.Serif.Title"
+                    style="@style/ClassAI.Title.Title"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/ds_space_5"
@@ -94,7 +94,7 @@
                                 android:layout_width="wrap_content"
                                 android:layout_height="wrap_content"
                                 android:layout_marginStart="4dp"
-                                android:fontFamily="@font/geist_semibold"
+                                android:fontFamily="@font/figtree_semibold"
                                 android:text="@string/live"
                                 android:textColor="@color/ds_state_alert_text"
                                 android:textSize="@dimen/ds_text_caption_size" />
@@ -110,7 +110,8 @@
 
                     <TextView
                         android:id="@+id/course"
-                        style="@style/ClassAI.Serif.Display"
+                        style="@style/ClassAI.Title.Display"
+                        android:fontFamily="@font/figtree_bold"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/ds_space_3" />
@@ -181,7 +182,7 @@
                         android:importantForAccessibility="no" />
 
                     <TextView
-                        style="@style/ClassAI.Serif.Heading"
+                        style="@style/ClassAI.Title.Heading"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/ds_space_3"
@@ -239,7 +240,7 @@
                         <TextView
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:fontFamily="@font/geist_semibold"
+                            android:fontFamily="@font/figtree_semibold"
                             android:text="@string/attended_title"
                             android:textColor="@color/ds_state_ok_text"
                             android:textSize="@dimen/ds_text_heading_size" />
@@ -307,7 +308,7 @@
 
                     <TextView
                         android:id="@+id/metricsTitle"
-                        style="@style/ClassAI.Serif.Heading"
+                        style="@style/ClassAI.Title.Heading"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginTop="@dimen/ds_space_8" />
@@ -375,7 +376,7 @@
 
                                 <TextView
                                     android:id="@+id/comfortState"
-                                    style="@style/ClassAI.Serif.Title"
+                                    style="@style/ClassAI.Title.Title"
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"
                                     android:layout_marginTop="2dp" />
@@ -659,17 +660,17 @@
 
                         <TextView
                             android:id="@+id/voteShortcutTitle"
-                            style="@style/ClassAI.Serif.Heading"
+                            style="@style/ClassAI.Title.Heading"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:textColor="@color/app_on_mood" />
+                            android:textColor="@color/ds_app_on_mood" />
 
                         <TextView
                             android:id="@+id/voteShortcutBody"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginTop="2dp"
-                            android:textColor="@color/app_on_mood_soft"
+                            android:textColor="@color/ds_app_on_mood_soft"
                             android:textSize="@dimen/ds_text_label_size" />
                     </LinearLayout>
 
@@ -680,7 +681,7 @@
                         android:importantForAccessibility="no"
                         android:padding="6dp"
                         android:src="@drawable/ic_chevron"
-                        app:tint="@color/app_mood_ok_deep" />
+                        app:tint="@color/ds_app_mood_ok_deep" />
                 </LinearLayout>
             </LinearLayout>
         </LinearLayout>

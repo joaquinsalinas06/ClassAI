@@ -79,8 +79,26 @@ fun roomMood(m: Metrics?, t: Targets?): Mood {
     return Mood.OK
 }
 
-fun voteMood(kind: String?): Mood = when (kind) { "cold" -> Mood.COLD; "hot" -> Mood.HOT; else -> Mood.OK }
-fun moodKind(m: Mood): String = when (m) { Mood.COLD -> "cold"; Mood.HOT -> "hot"; Mood.OK -> "ok" }
+fun levelMood(value: String?): Mood = when (value) { "low" -> Mood.COLD; "high" -> Mood.HOT; else -> Mood.OK }
+fun moodLevel(m: Mood): String = when (m) { Mood.COLD -> "low"; Mood.HOT -> "high"; Mood.OK -> "ok" }
+
+/** Lo que el alumno puede votar del aula: low / ok / high de cada sensor. */
+enum class VoteDim(val id: String, val title: String, val question: String, val low: String, val high: String, val subject: String) {
+    TEMP("temp", "Temperatura", "¿cómo está la *temperatura*?", "Frío", "Calor", "la temperatura"),
+    LIGHT("light", "Luz", "¿qué tal la *luz*?", "Poca luz", "Mucha luz", "la luz"),
+    NOISE("noise", "Ruido", "¿cómo está el *ruido*?", "Silencio", "Mucho ruido", "el ruido"),
+    MOTION("motion", "Movimiento", "¿hay mucho *movimiento*?", "Tranquilo", "Mucho movimiento", "el movimiento"),
+    HUMIDITY("humidity", "Humedad", "¿cómo sientes el *aire*?", "Seco", "Húmedo", "la humedad");
+
+    fun label(value: String?): String = when (value) { "low" -> low; "high" -> high; "ok" -> "Bien"; else -> "—" }
+
+    fun caption(value: String): String = if (value == "ok") "Bien: confirmas que ${subject} está a gusto."
+        else "${label(value)}: tu docente lo verá al instante en el panel del aula."
+}
+
+// La temperatura viaja como kind clásico (cold/ok/hot) para que también la entienda un backend anterior.
+fun tempKind(value: String): String = when (value) { "low" -> "cold"; "high" -> "hot"; else -> "ok" }
+fun kindLevel(kind: String?): String? = when (kind) { "cold" -> "low"; "hot" -> "high"; "ok" -> "ok"; else -> null }
 
 // "hace 5 min", "hace 1 h 12 min"; null si no se puede leer
 fun elapsedLabel(iso: String?, now: java.time.Instant = java.time.Instant.now()): String? = try {

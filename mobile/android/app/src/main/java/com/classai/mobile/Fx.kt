@@ -38,8 +38,8 @@ private fun View.now() = SystemClock.uptimeMillis()
 class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
     // Halos de marca (aire azul→verde) sobre neutros: profundidad sin gris plano.
     private val colors = intArrayOf(
-        context.getColor(R.color.app_glow_a), context.getColor(R.color.ds_bg_selected),
-        context.getColor(R.color.app_glow_b), context.getColor(R.color.ds_bg_hover),
+        context.getColor(R.color.ds_app_glow_a), context.getColor(R.color.ds_bg_selected),
+        context.getColor(R.color.ds_app_glow_b), context.getColor(R.color.ds_bg_hover),
     )
     private val paints = colors.map { Paint(Paint.ANTI_ALIAS_FLAG) }
     private var radius = 0f
@@ -75,9 +75,9 @@ class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(
 class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(context, attrs) {
     private val radius = resources.getDimension(R.dimen.ds_radius_xl)
     private val bg = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.app_card_on), 14) }
+    private val deco = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 14) }
     private val decoLine = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        style = Paint.Style.STROKE; strokeWidth = dp(1.2f); color = ColorUtils.setAlphaComponent(context.getColor(R.color.app_card_on), 22)
+        style = Paint.Style.STROKE; strokeWidth = dp(1.2f); color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 22)
     }
     private val sheenPaint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val glowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(4f) }
@@ -102,18 +102,18 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
         clipToOutline = true
         elevation = dp(14f)
         if (Build.VERSION.SDK_INT >= 28) {
-            outlineSpotShadowColor = context.getColor(R.color.app_card_shadow)
-            outlineAmbientShadowColor = context.getColor(R.color.app_card_shadow)
+            outlineSpotShadowColor = context.getColor(R.color.ds_app_card_shadow)
+            outlineAmbientShadowColor = context.getColor(R.color.ds_app_card_shadow)
         }
     }
 
     override fun onSizeChanged(w: Int, h: Int, ow: Int, oh: Int) {
         bg.shader = LinearGradient(0f, 0f, w * 0.4f, h.toFloat(),
-            context.getColor(R.color.app_card_top), context.getColor(R.color.app_card_bottom), Shader.TileMode.CLAMP)
+            context.getColor(R.color.ds_app_card_top), context.getColor(R.color.ds_app_card_bottom), Shader.TileMode.CLAMP)
         // Brillo blanco sobre la perla.
         val band = w * 0.45f
         sheenPaint.shader = LinearGradient(0f, 0f, band, band * 0.5f,
-            intArrayOf(0, 90, 120, 80, 0).map { ColorUtils.setAlphaComponent(Color.WHITE, it) }.toIntArray(),
+            intArrayOf(0, 90, 120, 80, 0).map { ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_on_mood), it) }.toIntArray(),
             floatArrayOf(0f, 0.35f, 0.55f, 0.75f, 1f), Shader.TileMode.CLAMP)
         glowPaint.shader = LinearGradient(0f, 0f, w.toFloat(), h.toFloat(),
             context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_ok_border), Shader.TileMode.CLAMP)
@@ -169,8 +169,8 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
 
 /** Ondas NFC: anillos que se expanden mientras el carnet está listo para el lector. */
 class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, attrs) {
-    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = context.getColor(R.color.app_card_on) }
-    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.app_card_on), 22) }
+    private val ring = Paint(Paint.ANTI_ALIAS_FLAG).apply { style = Paint.Style.STROKE; strokeWidth = dp(2f); color = context.getColor(R.color.ds_app_card_on) }
+    private val halo = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = ColorUtils.setAlphaComponent(context.getColor(R.color.ds_app_card_on), 22) }
     private val t0 = now()
 
     var active = false
@@ -206,11 +206,11 @@ class AvatarView(context: Context, attrs: AttributeSet? = null) : View(context, 
     private val fill = Paint(Paint.ANTI_ALIAS_FLAG)
     private val text = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         textAlign = Paint.Align.CENTER
-        typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.geist_semibold)
+        typeface = androidx.core.content.res.ResourcesCompat.getFont(context, R.font.figtree_semibold)
     }
 
     /** Tinta del avatar: la del carnet por defecto; en la cabecera, la del texto. */
-    var ink = context.getColor(R.color.app_card_on)
+    var ink = context.getColor(R.color.ds_app_card_on)
         set(v) { field = v; applyInk() }
 
     init { applyInk() }
@@ -326,7 +326,7 @@ class ConfettiView(context: Context, attrs: AttributeSet? = null) : View(context
         animator?.cancel()
         if (!motionEnabled || !isShown) return
         val colors = intArrayOf(context.getColor(R.color.ds_state_ok_solid), context.getColor(R.color.ds_state_regular_solid),
-            context.getColor(R.color.ds_brand_air_from), context.getColor(R.color.ds_brand_air_to), context.getColor(R.color.app_mood_ok))
+            context.getColor(R.color.ds_brand_air_from), context.getColor(R.color.ds_brand_air_to), context.getColor(R.color.ds_app_mood_ok))
         pieces = List(70) { i ->
             val angle = kotlin.random.Random.nextFloat() * 2f * Math.PI.toFloat()
             val speed = dp(100f + kotlin.random.Random.nextFloat() * 180f)

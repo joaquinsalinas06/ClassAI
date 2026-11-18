@@ -49,6 +49,7 @@
         android:id="@+id/confetti"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:elevation="20dp"
         android:importantForAccessibility="no" />
 
     <!-- Momento de éxito al marcar asistencia -->
@@ -56,7 +57,9 @@
         android:id="@+id/success"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/app_scrim"
+        android:background="@color/ds_app_scrim"
+        android:clipChildren="false"
+        android:elevation="16dp"
         android:clickable="true"
         android:focusable="true"
         android:gravity="center"
@@ -67,7 +70,8 @@
         <FrameLayout
             android:id="@+id/successBadge"
             android:layout_width="120dp"
-            android:layout_height="120dp">
+            android:layout_height="120dp"
+            android:clipChildren="false">
 
             <View
                 android:id="@+id/successHalo"
@@ -88,7 +92,7 @@
 
         <TextView
             android:id="@+id/successTitle"
-            style="@style/ClassAI.Serif.Display"
+            style="@style/ClassAI.Title.Display"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/ds_space_6"

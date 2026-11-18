@@ -17,7 +17,8 @@ data class TrendPoint(val minute: String, val comfort: Double?, val tempC: Doubl
 data class ClassInfo(val id: String, val room: String, val course: String, val startedAt: String,
                      val ended: Boolean, val attended: Boolean, val attendedAt: String?,
                      val myVote: String?, val metrics: Metrics?, val presentCount: Int? = null,
-                     val targets: Targets? = null, val trend: List<TrendPoint> = emptyList())
+                     val targets: Targets? = null, val trend: List<TrendPoint> = emptyList(),
+                     val myVotes: Map<String, String> = emptyMap())
 data class HistoryItem(val sessionId: String, val room: String, val course: String, val attendedAt: String)
 
 enum class Op { REGISTER, LOGIN, DATA, VOTE }
@@ -38,7 +39,10 @@ fun failureFor(op: Op, status: Int?, detail: String? = null): Failure = when {
     status == 401 -> Failure.SessionExpired()
     op == Op.VOTE && status == 409 -> Failure.Msg("La clase ya terminó, no se puede votar.")
     status == 404 -> Failure.Msg("Esa clase ya no está disponible.")
-    status == 422 -> Failure.Msg(detail?.takeIf { it.isNotBlank() && it.length < 120 } ?: "Revisa los datos ingresados.")
+    // Un servidor anterior a los votos por dimensión responde 422 a luz, ruido, movimiento y humedad.
+    op == Op.VOTE && status == 422 -> Failure.Msg("El servidor del aula aún no recibe este voto. Prueba con la temperatura.")
+    status == 422 -> Failure.Msg(detail?.takeIf { it.isNotBlank() && it.length < 120 && !it.startsWith("[") && !it.startsWith("{") }
+        ?: "Revisa los datos ingresados.")
     status >= 500 -> Failure.Msg("El servidor no responde. Intenta de nuevo en un momento.")
     else -> Failure.Msg("Algo salió mal. Intenta de nuevo.")
 }
@@ -71,6 +75,9 @@ fun parseClass(c: JSONObject): ClassInfo = ClassInfo(
         if (temp == null || rh == null || temp.length() < 2 || rh.length() < 2) null
         else Targets(temp.getDouble(0), temp.getDouble(1), rh.getDouble(0), rh.getDouble(1), t.optDouble("noise_rel_max", 0.1))
     },
+    // my_votes es nuevo: con un backend anterior, la temperatura sale de my_vote.
+    myVotes = c.optJSONObject("my_votes")?.let { v -> v.keys().asSequence().associateWith { v.getString(it) } }
+        ?: listOfNotNull(kindLevel(c.optStringOrNull("my_vote"))?.let { "temp" to it }).toMap(),
     trend = c.optJSONArray("trend")?.let { a ->
         List(a.length()) { i -> a.getJSONObject(i).let { p -> TrendPoint(p.optString("minute"), p.optDoubleOrNull("comfort"), p.optDoubleOrNull("temp_c")) } }
     }.orEmpty(),
@@ -151,6 +158,6 @@ class StudentApi(private val base: String, private val token: () -> String?) {
 
     fun classInfo(id: String) = run(Op.DATA, "GET", "/student/classes/$id", parse = ::parseClass)
 
-    fun vote(id: String, kind: String) =
-        run(Op.VOTE, "POST", "/student/classes/$id/feedback", JSONObject().put("kind", kind)) { it.getString("kind") }
+    fun vote(id: String, dimension: String, value: String) = run(Op.VOTE, "POST", "/student/classes/$id/feedback",
+        if (dimension == "temp") JSONObject().put("kind", tempKind(value)) else JSONObject().put("dimension", dimension).put("value", value)) { true }
 }

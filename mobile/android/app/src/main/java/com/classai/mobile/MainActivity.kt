@@ -275,7 +275,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // ------------------------------------------------------------ acceso
 
     private fun setupAuth() = with(auth) {
-        title.text = serif(getString(R.string.login_title))
+        title.text = emph(getString(R.string.login_title))
         submit.setOnClickListener { submitAuth() }
         submit.pressable()
         segRegister.setOnClickListener { if (!registerMode && !busy) { registerMode = true; applyMode(true); setAuthError(null) } }
@@ -304,7 +304,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             duration = ms(R.integer.ds_motion_base); interpolator = Motion.standard
         })
         placeThumb(animate)
-        formTitle.text = serif(getString(if (registerMode) R.string.form_register else R.string.form_login))
+        formTitle.text = emph(getString(if (registerMode) R.string.form_register else R.string.form_login))
         nameLayout.visibility = if (registerMode) View.VISIBLE else View.GONE
         submit.setText(if (registerMode) R.string.action_register else R.string.action_login)
         submit.icon = null
@@ -372,10 +372,10 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     private fun authDone() = with(auth.submit) {
         val ok = getColor(R.color.ds_state_ok_solid)
         backgroundTintList = ColorStateList.valueOf(ok)
-        setTextColor(getColor(R.color.app_on_mood))
+        setTextColor(getColor(R.color.ds_app_on_mood))
         text = "¡Listo!"
         val avd = getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable
-        avd.setTint(getColor(R.color.app_on_mood))
+        avd.setTint(getColor(R.color.ds_app_on_mood))
         icon = avd; iconTint = null; iconSize = dp(24f).toInt()
         avd.start()
         haptic(this, confirm)
@@ -401,9 +401,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val hce = packageManager.hasSystemFeature("android.hardware.nfc.hce")
         val s = cardStatus(adapter != null || demoNfc, hce || demoNfc, adapter?.isEnabled == true || demoNfc)
         val fg = getColor(when (s) {
-            CardStatus.ACTIVE -> R.color.app_card_chip_ok
-            CardStatus.NFC_OFF -> R.color.app_card_chip_warn
-            else -> R.color.app_card_chip_off
+            CardStatus.ACTIVE -> R.color.ds_app_card_chip_ok
+            CardStatus.NFC_OFF -> R.color.ds_app_card_chip_warn
+            else -> R.color.ds_app_card_chip_off
         })
         with(home) {
             chipText.text = s.label
@@ -476,7 +476,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun enterHome(entering: Boolean) = with(home) {
         val name = session.name.orEmpty()
-        headName.text = serif("*${name.substringBefore(' ').ifBlank { "Hola" }}*")
+        headName.text = emph("*${name.substringBefore(' ').ifBlank { "Hola" }}*")
         greeting.text = when (java.time.LocalTime.now().hour) { in 5..11 -> "Buenos días,"; in 12..18 -> "Buenas tardes,"; else -> "Buenas noches," }
         headAvatar.initials = initials(name)
         cardName.text = name
@@ -502,17 +502,17 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         val mood = roomMood(first?.metrics, first?.targets)
         heroKirby.show(if (first == null) Mood.OK else mood)
         tintHero(getColor(when (if (first == null) Mood.OK else mood) {
-            Mood.OK -> R.color.app_kirby_ok_edge; Mood.HOT -> R.color.app_kirby_hot_edge; Mood.COLD -> R.color.app_kirby_cold_edge
+            Mood.OK -> R.color.ds_app_kirby_ok_edge; Mood.HOT -> R.color.ds_app_kirby_hot_edge; Mood.COLD -> R.color.ds_app_kirby_cold_edge
         }))
         if (first == null) {
             heroKicker.text = if (skeleton) "Cargando…" else "Sin clases ahora"
-            heroTitle.text = serif("Tómate un *respiro*")
+            heroTitle.text = emph("Tómate un *respiro*")
             heroBody.text = getString(R.string.classes_empty)
             heroAction.visibility = View.GONE
         } else {
             val m = first.metrics
             heroKicker.text = "●  En vivo · Aula ${first.room.uppercase()}"
-            heroTitle.text = serif(when {
+            heroTitle.text = emph(when {
                 m?.tempC == null -> "Tu clase está *en vivo*"
                 mood == Mood.HOT -> "Hace *calor* en el aula"
                 mood == Mood.COLD -> "Hace *frío* en el aula"
@@ -630,8 +630,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 cls.refresh.isRefreshing = false
                 if (screen == onScreen) apply(onScreen, list, hist, detail, id)
                 if (resumed && screen != Screen.AUTH) {
+                    // Si cambió de pestaña mientras tanto, pide lo de la pestaña nueva ya mismo.
                     val fast = screen != Screen.HOME && current?.attended == false
-                    ui.postDelayed(refreshTick, if (fast) 2500L else 5000L)
+                    ui.postDelayed(refreshTick, if (screen != onScreen) 0L else if (fast) 2500L else 5000L)
                 }
             }
         }
@@ -679,8 +680,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (empty.visibility != View.VISIBLE) { empty.visibility = View.VISIBLE; empty.enter() }
             content.visibility = View.GONE
         }
-        cls.noClassTitle.text = serif("Sin clases *abiertas*")
-        vote.noClassTitle.text = serif("Nada que votar *aún*")
+        cls.noClassTitle.text = emph("Sin clases *abiertas*")
+        vote.noClassTitle.text = emph("Nada que votar *aún*")
     }
 
     // ------------------------------------------------------------ aula
@@ -706,7 +707,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun enterRoom() = with(cls) {
-        metricsTitle.text = serif(getString(R.string.metrics_title))
+        metricsTitle.text = emph(getString(R.string.metrics_title))
         message.visibility = View.GONE
         val c = current
         if (c != null && c.id == classId) renderRoom(c, entering = true)
@@ -725,10 +726,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         noClass.visibility = View.GONE; content.visibility = View.VISIBLE; loading.visibility = View.GONE
         message.visibility = View.GONE
         head.visibility = View.VISIBLE
-        course.text = serif(c.course.ifBlank { "Clase" }.let { t ->
-            val words = t.split(" ")
-            if (words.size > 1) words.dropLast(1).joinToString(" ") + " *${words.last()}*" else t
-        })
+        course.text = c.course.ifBlank { "Clase" }
         room.text = "Aula ${c.room.uppercase()}"
         since.text = timeLabel(c.startedAt)?.let { "desde $it" } ?: "—"
         elapsed.text = if (c.ended) "" else elapsedLabel(c.startedAt).orEmpty()
@@ -743,16 +741,15 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         attended.visibility = if (c.attended) View.VISIBLE else View.GONE
         attendedText.text = if (c.ended) "La clase terminó" else "Ya cuentas como presente"
         attendedTime.text = timeLabel(c.attendedAt).orEmpty()
-        (attendedIcon.drawable as? AnimatedVectorDrawable)?.let { it.setTint(getColor(R.color.app_on_mood)); if (firstPaint) { it.reset(); it.start() } }
+        (attendedIcon.drawable as? AnimatedVectorDrawable)?.let { it.setTint(getColor(R.color.ds_app_on_mood)); if (firstPaint) { it.reset(); it.start() } }
         renderMetrics(c)
         voteShortcut.visibility = if (c.ended) View.GONE else View.VISIBLE
-        voteShortcutTitle.text = serif(if (c.myVote == null) "¿Cómo te *sientes*?" else "Tu voto: *${voteLabel(c.myVote)}*")
-        voteShortcutBody.text = if (c.myVote == null) "Cuéntale al aula con un toque" else "Toca para cambiarlo"
+        val n = c.myVotes.size
+        voteShortcutTitle.text = emph(if (n == 0) "¿Cómo te *sientes*?" else "Votaste *$n de ${VoteDim.values().size}*")
+        voteShortcutBody.text = if (n == 0) "Temperatura, luz, ruido, movimiento y humedad" else "Toca para votar o cambiar tus votos"
         if (firstPaint) listOf<View>(head, tapPanel, attended, metrics, metricsEmpty, voteShortcut)
             .filter { it.visibility == View.VISIBLE }.forEachIndexed { i, v -> v.enter(i) }
     }
-
-    private fun voteLabel(kind: String?) = when (kind) { "hot" -> "calor"; "cold" -> "frío"; "ok" -> "bien"; else -> "—" }
 
     private fun renderMetrics(c: ClassInfo) = with(cls) {
         val m = c.metrics
@@ -766,7 +763,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         gauge.tint = getColor(levelColor(level))
         gauge.setValue(m.comfort)
         comfortValue.countTo(m.comfort) { "%.0f".format(es, it) }
-        comfortState.text = serif(when (level) { Level.OK -> "*Confortable*"; Level.REGULAR -> "*Regular*"; Level.ALERT -> "*Incómodo*"; Level.NONE -> "Sin dato" })
+        comfortState.text = emph(when (level) { Level.OK -> "*Confortable*"; Level.REGULAR -> "*Regular*"; Level.ALERT -> "*Incómodo*"; Level.NONE -> "Sin dato" })
         comfortState.setTextColor(getColor(when (level) { Level.OK -> R.color.ds_state_ok_text; Level.REGULAR -> R.color.ds_state_regular_text; Level.ALERT -> R.color.ds_state_alert_text; Level.NONE -> R.color.ds_text_primary }))
         val comfortSeries = c.trend.mapNotNull { it.comfort }
         trendChip(comfortTrend, trendDelta(comfortSeries), "", higherIsBetter = true, decimals = 0, suffix = " en 5 min")
@@ -847,11 +844,11 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private fun celebrate(c: ClassInfo) = with(main) {
         haptic(root, confirm)
-        successTitle.text = serif("¡Asistencia *marcada*!")
+        successTitle.text = emph("¡Asistencia *marcada*!")
         successBody.text = listOfNotNull(c.course.ifBlank { null }, timeLabel(c.attendedAt)?.let { "a las $it" }).joinToString(" · ")
         success.visibility = View.VISIBLE
         val avd = successCheck.drawable as AnimatedVectorDrawable
-        avd.setTint(getColor(R.color.app_on_mood))
+        avd.setTint(getColor(R.color.ds_app_on_mood))
         avd.reset(); avd.start()
         if (motionEnabled) {
             success.alpha = 0f
@@ -876,11 +873,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     // ------------------------------------------------------------ voto
 
     private val moods = listOf(Mood.COLD, Mood.OK, Mood.HOT)
+    private var dim = VoteDim.TEMP
+    private val dimIcons = mapOf(VoteDim.TEMP to R.drawable.ic_thermo, VoteDim.LIGHT to R.drawable.ic_light,
+        VoteDim.NOISE to R.drawable.ic_noise, VoteDim.MOTION to R.drawable.ic_people, VoteDim.HUMIDITY to R.drawable.ic_drop)
 
     private fun setupVote() = with(vote) {
         moodCard.clipToOutline = true
         kirby.background = GradientDrawable().apply {
-            cornerRadius = resources.getDimension(R.dimen.app_radius_card); setColor(getColor(R.color.app_mood_glass))
+            cornerRadius = resources.getDimension(R.dimen.app_radius_card); setColor(getColor(R.color.ds_app_mood_glass))
         }
         kirby.clipToOutline = true
         optCold.setOnClickListener { select(Mood.COLD, user = true) }
@@ -888,6 +888,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         optHot.setOnClickListener { select(Mood.HOT, user = true) }
         send.setOnClickListener { sendVote() }
         send.pressable()
+        // Deslizar sobre Kirby: izquierda/derecha cambia el valor
         val detector = GestureDetector(this@MainActivity, object : GestureDetector.SimpleOnGestureListener() {
             override fun onDown(e: MotionEvent) = true
             override fun onFling(e1: MotionEvent?, e2: MotionEvent, vx: Float, vy: Float): Boolean {
@@ -899,10 +900,19 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         })
         kirby.setOnTouchListener { _, e -> detector.onTouchEvent(e) }
         selector.addOnLayoutChangeListener { _, l, _, r, _, _, ol, _, or_ -> if (r - l != or_ - ol) selector.post { placeSelector(false) } }
-        val bg = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(getColor(R.color.app_mood_ok_deep), getColor(R.color.app_mood_ok)))
+        val bg = GradientDrawable(GradientDrawable.Orientation.TL_BR, intArrayOf(getColor(R.color.ds_app_mood_ok_deep), getColor(R.color.ds_app_mood_ok)))
         bg.cornerRadius = resources.getDimension(R.dimen.app_radius_hero)
         moodCard.background = bg
-        moodColors = intArrayOf(getColor(R.color.app_mood_ok_deep), getColor(R.color.app_mood_ok))
+        moodColors = intArrayOf(getColor(R.color.ds_app_mood_ok_deep), getColor(R.color.ds_app_mood_ok))
+        VoteDim.values().forEach { d ->
+            val chip = layoutInflater.inflate(R.layout.item_dim, dims, false) as LinearLayout
+            chip.tag = d
+            (chip.getChildAt(0) as ImageView).setImageResource(dimIcons.getValue(d))
+            ((chip.getChildAt(1) as LinearLayout).getChildAt(0) as TextView).text = d.title
+            chip.setOnClickListener { pickDim(d, user = true) }
+            chip.pressable()
+            dims.addView(chip)
+        }
     }
 
     private fun enterVote() = with(vote) {
@@ -913,18 +923,73 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
 
     private var voteFor: String? = null
 
-    private fun renderVote(c: ClassInfo, entering: Boolean = false) = with(vote) {
+    private fun renderVote(c: ClassInfo, entering: Boolean = false): Unit = with(vote) {
         val firstPaint = entering || content.visibility != View.VISIBLE || voteFor != c.id
         noClass.visibility = View.GONE; content.visibility = View.VISIBLE
         course.text = "${c.course.ifBlank { "Clase" }} · Aula ${c.room.uppercase()}"
-        val name = session.name.orEmpty().substringBefore(' ').ifBlank { null }
-        question.text = serif((name?.let { "$it, ¿cómo" } ?: "¿Cómo") + " te *sientes* ahora?")
-        if (voteFor != c.id) { voteFor = c.id; select(voteMood(c.myVote), user = false) } else if (!sending) renderSend()
+        if (voteFor != c.id) { voteFor = c.id; pickDim(dim, user = false) } else if (!sending) renderSend()
+        renderDims(c)
         listOf(optCold, optOk, optHot).forEach { it.isEnabled = !c.ended }
-        if (firstPaint) { moodCard.enter(0, 24f); footnote.enter(2) }
+        if (firstPaint) { dimsScroll.enter(0); moodCard.enter(1, 24f); summary.enter(2); footnote.enter(3) }
     }
 
-    private fun placeSelector(animate: Boolean) = with(vote) {
+    /** Chips de dimensión (con su voto) y el resumen "Tus votos". */
+    private fun renderDims(c: ClassInfo): Unit = with(vote) {
+        for (i in 0 until dims.childCount) {
+            val chip = dims.getChildAt(i) as LinearLayout
+            val d = chip.tag as VoteDim
+            val active = d == dim
+            val voted = c.myVotes[d.id]
+            chip.background = getDrawable(if (active) R.drawable.bg_nav_active else R.drawable.bg_segment)
+            val fg = getColor(if (active) R.color.ds_brand_on_ink else R.color.ds_text_primary)
+            (chip.getChildAt(0) as ImageView).imageTintList = ColorStateList.valueOf(fg)
+            val texts = chip.getChildAt(1) as LinearLayout
+            (texts.getChildAt(0) as TextView).setTextColor(fg)
+            (texts.getChildAt(1) as TextView).apply {
+                text = voted?.let { "✓ ${d.label(it)}" } ?: "Sin votar"
+                setTextColor(if (active) ColorUtils.setAlphaComponent(fg, 190) else getColor(if (voted != null) R.color.ds_state_ok_text else R.color.ds_text_muted))
+            }
+        }
+        summaryRows.removeAllViews()
+        val votes = VoteDim.values().filter { c.myVotes[it.id] != null }
+        summary.visibility = if (votes.isEmpty()) View.GONE else View.VISIBLE
+        summaryTitle.text = emph("Tus votos · *${votes.size} de ${VoteDim.values().size}*")
+        votes.forEach { d ->
+            val v = c.myVotes.getValue(d.id)
+            val row = layoutInflater.inflate(R.layout.item_vote_summary, summaryRows, false) as LinearLayout
+            val dot = row.getChildAt(0) as ImageView
+            dot.setImageResource(dimIcons.getValue(d))
+            dot.imageTintList = ColorStateList.valueOf(getColor(when (v) { "low" -> R.color.ds_app_mood_cold; "high" -> R.color.ds_app_mood_hot; else -> R.color.ds_app_mood_ok }))
+            (row.getChildAt(1) as TextView).text = d.title
+            (row.getChildAt(2) as TextView).text = d.label(v)
+            row.setOnClickListener { pickDim(d, user = true); scroll.smoothScrollTo(0, 0) }
+            summaryRows.addView(row)
+        }
+    }
+
+    private fun pickDim(d: VoteDim, user: Boolean): Unit = with(vote) {
+        val changed = d != dim
+        dim = d
+        if (user && changed) haptic(dims, HapticFeedbackConstants.CLOCK_TICK)
+        val name = session.name.orEmpty().substringBefore(' ').ifBlank { null }
+        val q = d.question.replaceFirstChar { if (name == null) it.uppercase() else it.toString() }
+        if (user && changed && motionEnabled) {
+            question.animate().alpha(0f).translationY(-dp(8f)).setDuration(ms(R.integer.ds_motion_fast)).withEndAction {
+                question.text = emph((name?.let { "$it, " } ?: "") + q)
+                question.translationY = dp(8f)
+                question.animate().alpha(1f).translationY(0f).setDuration(ms(R.integer.ds_motion_base)).setInterpolator(Motion.standard).start()
+            }.start()
+        } else question.text = emph((name?.let { "$it, " } ?: "") + q)
+        optCold.text = d.low; optOk.text = getString(R.string.vote_ok); optHot.text = d.high
+        current?.let { renderDims(it) }
+        select(levelMood(current?.myVotes?.get(d.id)), user = false, force = true)
+        if (user && changed) {
+            val chip = (0 until dims.childCount).map { dims.getChildAt(it) }.first { it.tag == d }
+            dimsScroll.smoothScrollTo(chip.left - dp(20f).toInt(), 0)
+        }
+    }
+
+    private fun placeSelector(animate: Boolean): Unit = with(vote) {
         val w = selector.width / 3
         if (w > 0) {
             if (selectorThumb.layoutParams.width != w) selectorThumb.updateLayoutParams { width = w }
@@ -932,34 +997,31 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             if (animate && motionEnabled) selectorThumb.animate().translationX(x).setDuration(ms(R.integer.ds_motion_base) + 60)
                 .setInterpolator(Motion.standard).start() else selectorThumb.translationX = x
         }
-        val italic = ResourcesCompat.getFont(this@MainActivity, R.font.instrument_serif_italic)
-        val regular = ResourcesCompat.getFont(this@MainActivity, R.font.instrument_serif)
+        val strong = ResourcesCompat.getFont(this@MainActivity, R.font.figtree_extrabold)
+        val regular = ResourcesCompat.getFont(this@MainActivity, R.font.figtree_semibold)
         listOf(optCold, optOk, optHot).forEachIndexed { i, tv ->
             val on = moods[i] == choice
-            tv.typeface = if (on) italic else regular
-            tv.animate().alpha(if (on) 1f else 0.6f).scaleX(if (on) 1.08f else 1f).scaleY(if (on) 1.08f else 1f)
+            tv.typeface = if (on) strong else regular
+            tv.animate().alpha(if (on) 1f else 0.6f).scaleX(if (on) 1.06f else 1f).scaleY(if (on) 1.06f else 1f)
                 .setDuration(if (animate && motionEnabled) ms(R.integer.ds_motion_base) else 0).start()
         }
     }
 
-    private fun select(m: Mood, user: Boolean) = with(vote) {
+    private fun select(m: Mood, user: Boolean, force: Boolean = false): Unit = with(vote) {
         if (current?.ended == true && user) return
         val changed = m != choice
+        if (!changed && !force && user) return
         choice = m
         if (user && changed) haptic(selector, HapticFeedbackConstants.CLOCK_TICK)
-        placeSelector(user)
+        placeSelector(user || force)
         kirby.show(m)
-        moodCaption.text = when (m) {
-            Mood.COLD -> "Hace frío. Tu docente lo verá al instante en el panel del aula."
-            Mood.OK -> "Todo bien: confirmas que el aula está cómoda."
-            Mood.HOT -> "Hace calor. Tu docente lo verá al instante en el panel del aula."
-        }
+        moodCaption.text = dim.caption(moodLevel(m))
         val (deep, base) = when (m) {
-            Mood.COLD -> R.color.app_mood_cold_deep to R.color.app_mood_cold
-            Mood.OK -> R.color.app_mood_ok_deep to R.color.app_mood_ok
-            Mood.HOT -> R.color.app_mood_hot_deep to R.color.app_mood_hot
+            Mood.COLD -> R.color.ds_app_mood_cold_deep to R.color.ds_app_mood_cold
+            Mood.OK -> R.color.ds_app_mood_ok_deep to R.color.ds_app_mood_ok
+            Mood.HOT -> R.color.ds_app_mood_hot_deep to R.color.ds_app_mood_hot
         }
-        tintMood(getColor(deep), getColor(base), animate = user)
+        tintMood(getColor(deep), getColor(base), animate = user || force)
         renderSend()
     }
 
@@ -978,37 +1040,41 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         }
     }
 
-    private fun renderSend() = with(vote.send) {
+    private fun renderSend(): Unit = with(vote.send) {
         val c = current
-        val saved = c?.myVote == moodKind(choice)
+        val mine = c?.myVotes?.get(dim.id)
+        val level = moodLevel(choice)
+        val saved = mine == level
         icon = if (saved) getDrawable(R.drawable.ic_check_circle) else null
         iconTint = ColorStateList.valueOf(getColor(R.color.ds_state_ok_solid))
         text = when {
             c?.ended == true -> "La clase terminó"
-            saved -> "Es tu voto actual"
-            c?.myVote != null -> "Cambiar mi voto a «${voteLabel(moodKind(choice))}»"
-            else -> "Enviar «${voteLabel(moodKind(choice)).replaceFirstChar { it.uppercase() }}»"
+            saved -> "Es tu voto de ${dim.title.lowercase()}"
+            mine != null -> "Cambiar a «${dim.label(level)}»"
+            else -> "Enviar «${dim.label(level)}»"
         }
-        isEnabled = c != null && !c.ended && !saved && !sending
-        alpha = if (isEnabled || saved) 1f else 0.7f
+        isEnabled = c != null && !c.ended && !sending  // un voto ya guardado no reenvía (sendVote lo ignora)
     }
 
     private fun sendVote() {
         val c = current ?: return
-        val kind = moodKind(choice)
-        if (sending || c.myVote == kind) return
+        val d = dim
+        val level = moodLevel(choice)
+        if (sending || c.myVotes[d.id] == level) return
         sending = true
         val b: MaterialButton = vote.send
         b.isEnabled = false
         b.text = "Enviando…"
         io.execute {
-            val r = api.vote(c.id, kind)
+            val r = api.vote(c.id, d.id, level)
             ui.post {
                 sending = false
                 if (classId != c.id) return@post
                 when (r) {
                     is Result.Ok -> {
-                        current = current?.copy(myVote = kind)
+                        current = current?.let { it.copy(myVotes = it.myVotes + (d.id to level),
+                            myVote = if (d == VoteDim.TEMP) tempKind(level) else it.myVote) }
+                        current?.let { renderDims(it) }
                         haptic(b, confirm)
                         val avd = getDrawable(R.drawable.avd_check)!!.mutate() as AnimatedVectorDrawable
                         avd.setTint(getColor(R.color.ds_state_ok_solid))

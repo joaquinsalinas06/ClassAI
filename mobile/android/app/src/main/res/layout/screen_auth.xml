@@ -27,12 +27,12 @@
 
         <TextView
             android:id="@+id/title"
-            style="@style/ClassAI.Serif.Display"
+            style="@style/ClassAI.Title.Display"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/ds_space_6"
             android:gravity="center"
-            android:textSize="44sp" />
+            android:textSize="34sp" />
 
         <TextView
             android:id="@+id/subtitle"
@@ -81,7 +81,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:fontFamily="@font/geist_semibold"
+                        android:fontFamily="@font/figtree_semibold"
                         android:gravity="center"
                         android:text="@string/title_register"
                         android:textSize="@dimen/ds_text_body_size" />
@@ -91,7 +91,7 @@
                         android:layout_width="0dp"
                         android:layout_height="match_parent"
                         android:layout_weight="1"
-                        android:fontFamily="@font/geist_semibold"
+                        android:fontFamily="@font/figtree_semibold"
                         android:gravity="center"
                         android:text="@string/title_login"
                         android:textSize="@dimen/ds_text_body_size" />
@@ -100,7 +100,7 @@
 
             <TextView
                 android:id="@+id/formTitle"
-                style="@style/ClassAI.Serif.Heading"
+                style="@style/ClassAI.Title.Heading"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ds_space_5" />
@@ -189,7 +189,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/ds_space_2"
                     android:layout_weight="1"
-                    android:fontFamily="@font/geist_medium"
+                    android:fontFamily="@font/figtree_medium"
                     android:textColor="@color/ds_state_alert_text"
                     android:textSize="@dimen/ds_text_body_size" />
             </LinearLayout>

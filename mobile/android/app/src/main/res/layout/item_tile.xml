@@ -74,7 +74,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginStart="3dp"
-            android:fontFamily="@font/geist_medium"
+            android:fontFamily="@font/figtree_medium"
             android:textColor="@color/ds_text_muted"
             android:textSize="@dimen/ds_text_heading_size" />
     </LinearLayout>

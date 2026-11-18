@@ -31,7 +31,7 @@
 
             <TextView
                 android:id="@+id/noClassTitle"
-                style="@style/ClassAI.Serif.Title"
+                style="@style/ClassAI.Title.Title"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="@dimen/ds_space_5"
@@ -62,12 +62,27 @@
                 android:gravity="center"
                 android:textSize="@dimen/ds_text_body_size" />
 
+            <!-- Qué votar: una dimensión por sensor del aula -->
+            <HorizontalScrollView
+                android:id="@+id/dimsScroll"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_3"
+                android:scrollbars="none">
+
+                <LinearLayout
+                    android:id="@+id/dims"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal" />
+            </HorizontalScrollView>
+
             <!-- Tarjeta de ánimo: cambia de color y de Kirby según la opción -->
             <LinearLayout
                 android:id="@+id/moodCard"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/ds_space_3"
+                android:layout_marginTop="@dimen/ds_space_4"
                 android:background="@drawable/bg_hero"
                 android:elevation="10dp"
                 android:gravity="center_horizontal"
@@ -78,12 +93,12 @@
 
                 <TextView
                     android:id="@+id/question"
-                    style="@style/ClassAI.Serif.Display"
+                    style="@style/ClassAI.Title.Display"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:gravity="center"
-                    android:textColor="@color/app_on_mood"
-                    android:textSize="36sp" />
+                    android:textColor="@color/ds_app_on_mood"
+                    android:textSize="28sp" />
 
                 <com.classai.mobile.KirbyView
                     android:id="@+id/kirby"
@@ -109,9 +124,9 @@
                         android:layout_height="match_parent"
                         android:orientation="horizontal">
 
-                        <TextView android:id="@+id/optCold" style="@style/ClassAI.MoodOption" android:text="@string/vote_cold" />
+                        <TextView android:id="@+id/optCold" style="@style/ClassAI.MoodOption" />
                         <TextView android:id="@+id/optOk" style="@style/ClassAI.MoodOption" android:text="@string/vote_ok" />
-                        <TextView android:id="@+id/optHot" style="@style/ClassAI.MoodOption" android:text="@string/vote_hot" />
+                        <TextView android:id="@+id/optHot" style="@style/ClassAI.MoodOption" />
                     </LinearLayout>
                 </FrameLayout>
 
@@ -124,7 +139,7 @@
                     android:gravity="center"
                     android:minHeight="64dp"
                     android:padding="@dimen/ds_space_3"
-                    android:textColor="@color/app_on_mood"
+                    android:textColor="@color/ds_app_on_mood"
                     android:textSize="15sp" />
 
                 <com.google.android.material.button.MaterialButton
@@ -132,10 +147,38 @@
                     android:layout_width="match_parent"
                     android:layout_height="56dp"
                     android:layout_marginTop="@dimen/ds_space_4"
-                    android:textColor="@color/app_card_on"
-                    app:backgroundTint="@color/app_on_mood"
+                    android:textColor="@color/ds_app_card_on"
+                    app:backgroundTint="@color/ds_app_on_mood"
                     app:iconGravity="textStart"
                     app:iconTint="@color/ds_state_ok_solid" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/summary"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_4"
+                android:background="@drawable/bg_card"
+                android:elevation="2dp"
+                android:orientation="vertical"
+                android:paddingTop="@dimen/ds_space_4"
+                android:paddingBottom="@dimen/ds_space_2"
+                android:visibility="gone">
+
+                <TextView
+                    android:id="@+id/summaryTitle"
+                    style="@style/ClassAI.Title.Heading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginHorizontal="@dimen/ds_space_4"
+                    android:textSize="18sp" />
+
+                <LinearLayout
+                    android:id="@+id/summaryRows"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/ds_space_2"
+                    android:orientation="vertical" />
             </LinearLayout>
 
             <TextView

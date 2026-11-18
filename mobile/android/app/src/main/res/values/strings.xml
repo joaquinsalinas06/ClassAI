@@ -48,8 +48,8 @@
     <string name="fan_title">Ventilador</string>
 
     <string name="vote_ok">Bien</string>
-    <string name="vote_hot">Calor</string>
-    <string name="vote_cold">Frío</string>
+    
+    
     <string name="vote_no_class">Podrás votar cuando haya una clase abierta.</string>
     <string name="vote_footnote">Un voto por clase. Puedes cambiarlo cuando quieras; tu docente lo ve en vivo.</string>
 </resources>

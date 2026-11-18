@@ -78,14 +78,14 @@ fun TextView.countTo(value: Double?, format: (Double) -> String) {
     anim.start()
 }
 
-// Títulos: Instrument Serif con *palabras* en itálica.
+// Títulos en Figtree: las *palabras* marcadas van en ExtraBold.
 private class FaceSpan(val face: Typeface) : MetricAffectingSpan() {
     override fun updateDrawState(tp: TextPaint) { tp.typeface = face }
     override fun updateMeasureState(tp: TextPaint) { tp.typeface = face }
 }
 
-fun Context.serif(text: String): CharSequence {
-    val italic = ResourcesCompat.getFont(this, R.font.instrument_serif_italic) ?: return text.replace("*", "")
+fun Context.emph(text: String): CharSequence {
+    val italic = ResourcesCompat.getFont(this, R.font.figtree_extrabold) ?: return text.replace("*", "")
     val out = SpannableStringBuilder()
     text.split("*").forEachIndexed { i, part ->
         val start = out.length
