@@ -23,7 +23,7 @@ topic write classai/v1/a101/nodes/a101-assistant/telemetry
 topic write classai/v1/a101/nodes/a101-assistant/status
 topic read classai/v1/a101/session
 topic read classai/v1/a101/config
-topic write classai/v1/a101/nodes/a101-environment/fan/set 
+topic write classai/v1/a101/nodes/a101-environment/fan/set
 
 user classai-ingest
 topic write classai/v1/+/display/attendance
