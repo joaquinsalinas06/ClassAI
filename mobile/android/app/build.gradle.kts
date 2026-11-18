@@ -12,15 +12,13 @@ val localEnv = Properties().apply {
     if (file.exists()) file.inputStream().use { load(it) }
 }
 val classaiApiUrl = (providers.environmentVariable("CLASSAI_API_URL").orNull
-    ?: localEnv.getProperty("CLASSAI_API_URL") ?: "http://10.0.2.2:8000").trim().trimEnd('/')
+    ?: localEnv.getProperty("CLASSAI_API_URL") ?: "https://classai.myschool.com.pe/api").trim().trimEnd('/')
 val apiUri = URI(classaiApiUrl)
 require(apiUri.scheme in listOf("http", "https") && apiUri.host != null &&
     apiUri.userInfo == null && apiUri.query == null && apiUri.fragment == null) {
     "CLASSAI_API_URL must be an http(s) base URL without credentials, query or fragment"
 }
 
-val labDiagnostics = (providers.environmentVariable("CLASSAI_LAB_DIAGNOSTICS").orNull
-    ?: localEnv.getProperty("CLASSAI_LAB_DIAGNOSTICS")) == "1"
 
 android {
     namespace = "com.classai.mobile"
@@ -30,10 +28,14 @@ android {
         applicationId = "com.classai.mobile"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.6"
-        buildConfigField("Boolean", "CLASSAI_LAB_DIAGNOSTICS", labDiagnostics.toString())
+        versionCode = 7
+        versionName = "1.0"
         buildConfigField("String", "CLASSAI_API_URL", "\"${classaiApiUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
+    }
+
+    buildTypes {
+        // APK instalable sin Play Store: se firma con la clave debug (prototipo)
+        release { signingConfig = signingConfigs.getByName("debug") }
     }
 
     buildFeatures {
@@ -46,4 +48,5 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
     testImplementation("junit:junit:4.13.2")
+    testImplementation("org.json:json:20240303") // android.jar solo trae stubs de org.json
 }
