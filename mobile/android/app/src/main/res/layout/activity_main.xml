@@ -15,35 +15,46 @@
         android:layout_width="match_parent"
         android:layout_height="match_parent" />
 
-    <!-- Navegación inferior: píldora flotante -->
-    <LinearLayout
+    <!-- Navegación inferior: píldora flotante a lo ancho con indicador que se desliza -->
+    <FrameLayout
         android:id="@+id/nav"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="@dimen/app_nav_height"
-        android:layout_gravity="bottom|center_horizontal"
+        android:layout_gravity="bottom"
+        android:layout_marginHorizontal="@dimen/ds_space_4"
         android:layout_marginBottom="@dimen/ds_space_4"
         android:background="@drawable/bg_nav"
         android:elevation="12dp"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/ds_space_2"
+        android:padding="@dimen/ds_space_2"
         android:visibility="gone">
 
-        <LinearLayout android:id="@+id/navHome" style="@style/ClassAI.NavItem">
-            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_home" />
-            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_home" />
-        </LinearLayout>
+        <View
+            android:id="@+id/navIndicator"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:background="@drawable/bg_nav_active" />
 
-        <LinearLayout android:id="@+id/navRoom" style="@style/ClassAI.NavItem">
-            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_sensors" />
-            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_room" />
-        </LinearLayout>
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:orientation="horizontal">
 
-        <LinearLayout android:id="@+id/navVote" style="@style/ClassAI.NavItem">
-            <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_smile" />
-            <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_vote" />
+            <LinearLayout android:id="@+id/navHome" style="@style/ClassAI.NavItem">
+                <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_home" />
+                <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_home" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/navRoom" style="@style/ClassAI.NavItem">
+                <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_sensors" />
+                <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_room" />
+            </LinearLayout>
+
+            <LinearLayout android:id="@+id/navVote" style="@style/ClassAI.NavItem">
+                <ImageView style="@style/ClassAI.NavIcon" android:src="@drawable/ic_smile" />
+                <TextView style="@style/ClassAI.NavLabel" android:text="@string/nav_vote" />
+            </LinearLayout>
         </LinearLayout>
-    </LinearLayout>
+    </FrameLayout>
 
     <com.classai.mobile.ConfettiView
         android:id="@+id/confetti"

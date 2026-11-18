@@ -206,7 +206,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (motionEnabled && !entering) {
             incoming.alpha = 0f; incoming.translationX = dir * dp(24f)
             incoming.animate().alpha(1f).translationX(0f).setStartDelay(ms(R.integer.ds_motion_instant))
-                .setDuration(ms(R.integer.ds_motion_base) + 60).setInterpolator(Motion.standard).start()
+                .setDuration(Springs.gentle.settleMs).setInterpolator(Springs.gentle).start()
         } else { incoming.alpha = 1f; incoming.translationX = 0f }
         val tabbed = target != Screen.AUTH
         if (tabbed && main.nav.visibility != View.VISIBLE) {
@@ -230,16 +230,38 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         listOf(main.navHome, main.navRoom, main.navVote).forEach { it.pressable() }
     }
 
+    private var navAt = -1
+
+    /** Indicador que se desliza con resorte; íconos y etiquetas solo cambian transform y alpha. */
     private fun renderNav() {
-        if (motionEnabled) TransitionManager.beginDelayedTransition(main.nav, AutoTransition().apply {
-            duration = ms(R.integer.ds_motion_base); interpolator = Motion.standard
-        })
-        listOf(main.navHome to Screen.HOME, main.navRoom to Screen.ROOM, main.navVote to Screen.VOTE).forEach { (item, s) ->
+        val items = listOf(main.navHome to Screen.HOME, main.navRoom to Screen.ROOM, main.navVote to Screen.VOTE)
+        val index = items.indexOfFirst { it.second == screen }
+        if (index < 0) return
+        val w = main.navHome.width
+        if (w == 0) { main.nav.post { renderNav() }; return }
+        if (main.navIndicator.layoutParams.width != w) main.navIndicator.updateLayoutParams { width = w }
+        val animate = motionEnabled && navAt >= 0 && navAt != index
+        val x = w * index.toFloat()
+        if (animate) main.navIndicator.animate().translationX(x).setDuration(Springs.snappy.settleMs).setInterpolator(Springs.snappy).start()
+        else main.navIndicator.translationX = x
+        navAt = index
+        items.forEach { (item, s) ->
             val active = s == screen
-            item.background = if (active) getDrawable(R.drawable.bg_nav_active) else null
-            (item.getChildAt(0) as ImageView).imageTintList = ColorStateList.valueOf(getColor(if (active) R.color.ds_brand_on_ink else R.color.ds_text_muted))
-            item.getChildAt(1).visibility = if (active) View.VISIBLE else View.GONE
-            item.contentDescription = (item.getChildAt(1) as TextView).text
+            val icon = item.getChildAt(0) as ImageView
+            val label = item.getChildAt(1) as TextView
+            val shift = (label.width + (label.layoutParams as ViewGroup.MarginLayoutParams).marginStart) / 2f
+            val tint = getColor(if (active) R.color.ds_brand_on_ink else R.color.ds_text_muted)
+            fun go(v: View, tx: Float, alpha: Float) {
+                if (animate) v.animate().translationX(tx).alpha(alpha).setDuration(Springs.snappy.settleMs).setInterpolator(Springs.snappy).start()
+                else { v.translationX = tx; v.alpha = alpha }
+            }
+            go(icon, if (active) 0f else shift, 1f)
+            go(label, if (active) 0f else shift * 0.4f, if (active) 1f else 0f)
+            val from = icon.imageTintList?.defaultColor ?: tint
+            if (animate && from != tint) ValueAnimator.ofArgb(from, tint).apply {
+                duration = ms(R.integer.ds_motion_fast); addUpdateListener { icon.imageTintList = ColorStateList.valueOf(it.animatedValue as Int) }
+            }.start() else icon.imageTintList = ColorStateList.valueOf(tint)
+            item.contentDescription = label.text
             item.isSelected = active
         }
     }
@@ -422,8 +444,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 chip.animate().scaleX(1f).scaleY(1f).setDuration(ms(R.integer.ds_motion_base)).setInterpolator(Motion.standard).start()
             }
         }
-        cls.nfcSettings.visibility = if (s == CardStatus.NFC_OFF) View.VISIBLE else View.GONE
-        cls.tapBody.text = if (s == CardStatus.ACTIVE) getString(R.string.tap_body) else s.hint
         status = s
     }
 
@@ -469,6 +489,14 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
                 .show()
         }
         hero.clipToOutline = true
+        hero.pressable()
+        // Parallax: el carnet se queda atrás y se desvanece al bajar; Kirby se desplaza más lento que su tarjeta
+        scroll.setOnScrollChangeListener { _: View, _: Int, y: Int, _: Int, _: Int ->
+            if (!motionEnabled || idCard.animation != null) return@setOnScrollChangeListener
+            idCard.translationY = y * 0.3f
+            idCard.alpha = 1f - (y / 1400f).coerceIn(0f, 0.5f)
+            heroKirby.translationY = ((y - hero.top + idCard.height) * 0.08f).coerceIn(-dp(14f), dp(14f))
+        }
         heroAction.setOnClickListener { go(Screen.ROOM) }
         heroAction.pressable()
         headAvatar.ink = getColor(R.color.ds_text_primary)
@@ -690,7 +718,6 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         refresh.setColorSchemeColors(getColor(R.color.ds_brand_air_from), getColor(R.color.ds_brand_air_to))
         refresh.setProgressBackgroundColorSchemeColor(getColor(R.color.ds_bg_raised))
         refresh.setOnRefreshListener { refresh() }
-        nfcSettings.setOnClickListener { openNfcSettings() }
         voteShortcut.setOnClickListener { go(Screen.VOTE) }
         voteShortcut.pressable()
         waitDot.tint = getColor(R.color.ds_state_regular_solid)
@@ -703,6 +730,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         tile(tileNoise, R.drawable.ic_noise, R.color.ds_metric_noise, "Ruido")
         tile(tileLight, R.drawable.ic_light, R.color.ds_metric_lux, "Luz")
         tileNoise.bar.visibility = View.GONE; tileNoise.bars.visibility = View.VISIBLE
+        listOf(comfortCard, presenceCard, tileTemp.root, tileRh.root, tileNoise.root, tileLight.root).forEach { it.pressable() }
         listOf(tileNoise.value, tileLight.value).forEach { it.textSize = 28f }
     }
 
@@ -713,7 +741,7 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         if (c != null && c.id == classId) renderRoom(c, entering = true)
         else {
             noClass.visibility = View.GONE; content.visibility = View.VISIBLE
-            head.visibility = View.INVISIBLE; tapPanel.visibility = View.GONE; attended.visibility = View.GONE
+            head.visibility = View.INVISIBLE; attended.visibility = View.GONE
             metrics.visibility = View.GONE; metricsEmpty.visibility = View.GONE; voteShortcut.visibility = View.GONE
             loading.visibility = View.VISIBLE
         }
@@ -736,19 +764,49 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
         liveText.setTextColor(getColor(if (c.ended) R.color.ds_state_offline_text else R.color.ds_state_alert_text))
         liveBadge.backgroundTintList = if (c.ended) ColorStateList.valueOf(getColor(R.color.ds_state_offline_subtle)) else null
         present.visibility = if (c.presentCount != null) View.VISIBLE else View.GONE
-        present.text = "${c.presentCount ?: 0} presentes"
-        tapPanel.visibility = if (c.attended || c.ended) View.GONE else View.VISIBLE
-        attended.visibility = if (c.attended) View.VISIBLE else View.GONE
-        attendedText.text = if (c.ended) "La clase terminó" else "Ya cuentas como presente"
-        attendedTime.text = timeLabel(c.attendedAt).orEmpty()
-        (attendedIcon.drawable as? AnimatedVectorDrawable)?.let { it.setTint(getColor(R.color.ds_app_on_mood)); if (firstPaint) { it.reset(); it.start() } }
+        present.text = (c.presentCount ?: 0).let { if (it == 1) "1 presente" else "$it presentes" }
+        renderAttendance(c)
         renderMetrics(c)
         voteShortcut.visibility = if (c.ended) View.GONE else View.VISIBLE
         val n = c.myVotes.size
         voteShortcutTitle.text = emph(if (n == 0) "¿Cómo te *sientes*?" else "Votaste *$n de ${VoteDim.values().size}*")
         voteShortcutBody.text = if (n == 0) "Temperatura, luz, ruido, movimiento y humedad" else "Toca para votar o cambiar tus votos"
-        if (firstPaint) listOf<View>(head, tapPanel, attended, metrics, metricsEmpty, voteShortcut)
-            .filter { it.visibility == View.VISIBLE }.forEachIndexed { i, v -> v.enter(i) }
+        // Coreografía: cada bloque y cada tarjeta de métrica entra por su cuenta
+        if (firstPaint) listOf<View>(head, attended, metricsTitle, comfortCard, tileTemp.root, tileRh.root, tileNoise.root,
+            tileLight.root, presenceCard, metricsEmpty, voteShortcut)
+            .filter { it.visibility == View.VISIBLE && (it.parent as View).visibility == View.VISIBLE }
+            .forEachIndexed { i, v -> v.enter(i) }
+    }
+
+    /** Una línea: verde con la hora si ya marcó; ámbar con la instrucción si no (toca para activar NFC si está apagado). */
+    private fun renderAttendance(c: ClassInfo) = with(cls) {
+        val ok = c.attended
+        attended.visibility = if (ok || !c.ended) View.VISIBLE else View.GONE
+        attended.background = getDrawable(if (ok) R.drawable.bg_ok_banner else R.drawable.bg_warn_banner)
+        val fg = getColor(if (ok) R.color.ds_state_ok_text else R.color.ds_state_regular_text)
+        attendedText.setTextColor(fg); attendedTime.setTextColor(fg)
+        attendedText.text = when {
+            ok -> "Asistencia marcada"
+            status == CardStatus.NFC_OFF -> "Activa NFC para marcar asistencia"
+            status == CardStatus.ACTIVE -> "Aún no marcas asistencia · acerca tu celular al lector"
+            else -> "Aún no marcas asistencia · " + (status?.hint ?: "")
+        }
+        attendedTime.text = if (ok) timeLabel(c.attendedAt).orEmpty() else ""
+        attendedIcon.background = getDrawable(if (ok) R.drawable.bg_success_solid else R.drawable.bg_warn_solid)
+        if (ok) {
+            if (attendedIcon.tag != "ok") {  // el check se dibuja una vez, al cambiar de estado
+                attendedIcon.tag = "ok"
+                attendedIcon.imageTintList = null
+                attendedIcon.setImageResource(R.drawable.avd_check)
+                (attendedIcon.drawable as? AnimatedVectorDrawable)?.let { it.setTint(getColor(R.color.ds_app_on_mood)); it.start() }
+            }
+            attended.setOnClickListener(null); attended.isClickable = false
+        } else {
+            attendedIcon.tag = "pending"
+            attendedIcon.setImageResource(R.drawable.ic_contactless)
+            attendedIcon.imageTintList = ColorStateList.valueOf(getColor(R.color.ds_app_on_mood))
+            attended.setOnClickListener { if (status == CardStatus.NFC_OFF) openNfcSettings() }
+        }
     }
 
     private fun renderMetrics(c: ClassInfo) = with(cls) {
@@ -854,8 +912,9 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
             success.alpha = 0f
             success.animate().alpha(1f).setDuration(ms(R.integer.ds_motion_base)).start()
             successBadge.scaleX = 0.8f; successBadge.scaleY = 0.8f
-            successBadge.animate().scaleX(1f).scaleY(1f).setDuration(ms(R.integer.ds_motion_slow) + 120)
-                .setInterpolator(android.view.animation.OvershootInterpolator(2f)).start()
+            successBadge.scaleX = 0.6f; successBadge.scaleY = 0.6f
+            successBadge.animate().scaleX(1f).scaleY(1f).setDuration(Springs.bouncy.settleMs)
+                .setInterpolator(Springs.bouncy).start()
             successHalo.scaleX = 0.6f; successHalo.scaleY = 0.6f; successHalo.alpha = 1f
             successHalo.animate().scaleX(1.25f).scaleY(1.25f).alpha(0.5f).setDuration(900).setInterpolator(Motion.standard).start()
             listOf<View>(successTitle, successBody).forEachIndexed { i, v -> v.enter(i + 3, 20f) }

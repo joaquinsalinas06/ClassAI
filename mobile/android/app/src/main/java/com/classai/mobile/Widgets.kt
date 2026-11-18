@@ -37,16 +37,43 @@ object Motion {
     val emphasized = PathInterpolator(0.3f, 0f, 0f, 1f)
 }
 
+/**
+ * Resorte amortiguado como interpolador (masa 1), con los springs de design/tokens.json (motion.spring).
+ * Solo mueve transform y alpha; la duración del animador es la del asentamiento ([settleMs]).
+ */
+class SpringInterpolator(stiffness: Float, damping: Float) : android.animation.TimeInterpolator {
+    private val w0 = kotlin.math.sqrt(stiffness)
+    private val zeta = damping / (2f * w0)
+    val settleMs: Long = (1000 * 5f / (zeta.coerceAtMost(1f) * w0)).toLong()
+    private val wd = w0 * kotlin.math.sqrt((1 - zeta * zeta).coerceAtLeast(0.0001f))
+
+    override fun getInterpolation(t: Float): Float {
+        if (t >= 1f) return 1f
+        val time = t * settleMs / 1000f
+        val decay = kotlin.math.exp(-zeta * w0 * time)
+        return if (zeta < 1f) 1f - decay * (kotlin.math.cos(wd * time) + zeta * w0 / wd * sin(wd * time))
+        else 1f - decay * (1f + w0 * time)
+    }
+}
+
+object Springs {
+    val snappy = SpringInterpolator(520f, 38f)   // indicadores, chips, selector
+    val gentle = SpringInterpolator(220f, 28f)   // entradas y paneles
+    val gauge = SpringInterpolator(70f, 18f)     // medidor y contadores
+    val bouncy = SpringInterpolator(300f, 16f)   // momento de éxito: rebote visible
+}
+
 fun View.ms(id: Int) = resources.getInteger(id).toLong()
 private fun View.dp(v: Float) = v * resources.displayMetrics.density
 
 /** Entrada: aparece y sube 16 dp, escalonada. Sin animaciones, aparece directo. */
 fun View.enter(index: Int = 0, distance: Float = 16f) {
     animate().cancel()
-    if (!motionEnabled) { alpha = 1f; translationY = 0f; return }
-    alpha = 0f; translationY = dp(distance)
-    animate().alpha(1f).translationY(0f).setStartDelay(index * 55L)
-        .setDuration(ms(R.integer.ds_motion_slow)).setInterpolator(Motion.standard).start()
+    if (!motionEnabled) { alpha = 1f; translationY = 0f; scaleX = 1f; scaleY = 1f; return }
+    // Cada elemento con su propio retraso y distancia: los de abajo viajan un poco más.
+    alpha = 0f; translationY = dp(distance + index * 4f); scaleX = 0.97f; scaleY = 0.97f
+    animate().alpha(1f).translationY(0f).scaleX(1f).scaleY(1f).setStartDelay(40L + index * 70L)
+        .setDuration(Springs.gentle.settleMs).setInterpolator(Springs.gentle).start()
 }
 
 /** Presión táctil: escala 0.97 y vuelve. */
@@ -70,8 +97,8 @@ fun TextView.countTo(value: Double?, format: (Double) -> String) {
     if (value == null) { text = "—"; return }
     if (previous == null || previous == value || !motionEnabled) { text = format(value); return }
     val anim = ValueAnimator.ofFloat(previous.toFloat(), value.toFloat()).apply {
-        duration = ms(R.integer.ds_motion_update) + 220
-        interpolator = Motion.emphasized
+        duration = Springs.gauge.settleMs
+        interpolator = Springs.gauge
         addUpdateListener { text = format((it.animatedValue as Float).toDouble()) }
     }
     setTag(R.id.count_anim, anim)
@@ -114,7 +141,7 @@ class GaugeView(context: Context, attrs: AttributeSet? = null) : View(context, a
         anim?.cancel()
         if (!motionEnabled) { shown = target; invalidate(); return }
         anim = ValueAnimator.ofFloat(shown, target).apply {
-            duration = ms(R.integer.ds_motion_chart); interpolator = Motion.emphasized
+            duration = Springs.gauge.settleMs; interpolator = Springs.gauge
             addUpdateListener { shown = it.animatedValue as Float; invalidate() }
             start()
         }
@@ -372,11 +399,40 @@ class KirbyView(context: Context, attrs: AttributeSet? = null) : FrameLayout(con
     /** Desplaza el encuadre (−1 izquierda .. 1 derecha) para dejar sitio al texto. */
     var focusX = 0f
 
+    private val stage = FrameLayout(context)
+    private var ambient: ValueAnimator? = null
+
     init {
-        addView(poster, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-        addView(video, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        stage.addView(poster, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        stage.addView(video, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
+        addView(stage, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
         video.surfaceTextureListener = this
         importantForAccessibility = IMPORTANT_FOR_ACCESSIBILITY_NO
+        // Margen de escala para que flotar y respirar nunca descubra los bordes del recorte
+        stage.scaleX = 1.08f; stage.scaleY = 1.08f
+    }
+
+    /** Kirby flota (4,2 s) y respira (3 s) con periodos distintos: nunca se ve un bucle exacto. */
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        if (!motionEnabled || ambient != null) return
+        val t0 = System.nanoTime()
+        ambient = ValueAnimator.ofFloat(0f, 1f).apply {
+            duration = 1000; repeatCount = ValueAnimator.INFINITE
+            addUpdateListener {
+                val t = (System.nanoTime() - t0) / 1e9f
+                stage.translationY = dp(5f) * sin(t * 2f * Math.PI.toFloat() / 4.2f)
+                stage.translationX = dp(2f) * sin(t * 2f * Math.PI.toFloat() / 6.1f)
+                val breathe = 1.08f + 0.012f * sin(t * 2f * Math.PI.toFloat() / 3f)
+                stage.scaleX = breathe; stage.scaleY = breathe
+            }
+            start()
+        }
+    }
+
+    override fun onDetachedFromWindow() {
+        ambient?.cancel(); ambient = null
+        super.onDetachedFromWindow()
     }
 
     fun show(m: Mood) {
@@ -389,9 +445,10 @@ class KirbyView(context: Context, attrs: AttributeSet? = null) : FrameLayout(con
             Mood.OK -> R.raw.kirby_esp to R.drawable.kirby_esp
         }
         if (!first && motionEnabled) {
-            // crossfade: el póster nuevo aparece debajo y el video se desvanece
-            poster.alpha = 0.4f
-            poster.animate().alpha(1f).setDuration(ms(R.integer.ds_motion_base)).start()
+            // morph: el póster nuevo entra con un pequeño "pop" mientras el video anterior se desvanece
+            poster.alpha = 0.3f; poster.scaleX = 0.94f; poster.scaleY = 0.94f
+            poster.animate().alpha(1f).scaleX(1f).scaleY(1f).setDuration(Springs.bouncy.settleMs)
+                .setInterpolator(Springs.bouncy).start()
         }
         poster.setImageResource(still)
         video.animate().alpha(0f).setDuration(ms(R.integer.ds_motion_fast)).start()

@@ -59,7 +59,7 @@ class DriftBackgroundView(context: Context, attrs: AttributeSet? = null) : View(
         canvas.drawColor(context.getColor(R.color.ds_bg_page))
         val t = if (motionEnabled) (now() - t0) / 1000f else 0f
         paints.forEachIndexed { i, p ->
-            val speed = 0.11f + i * 0.04f
+            val speed = 0.17f + i * 0.06f  // cada halo a su velocidad
             val cx = width * (0.5f + 0.42f * sin(t * speed + i * 1.7f))
             val cy = height * (0.15f + i * 0.25f + 0.1f * cos(t * speed * 0.8f + i))
             canvas.save()
@@ -139,7 +139,7 @@ class IdCardView(context: Context, attrs: AttributeSet? = null) : FrameLayout(co
         super.dispatchDraw(canvas)
         val w = width.toFloat()
         // barrido periódico cada ~6 s; entre barridos, brillo tenue según inclinación
-        val period = 14000L
+        val period = 6500L
         val t = now()
         val sinceSweep = t - sweepStart
         val p = if (motionEnabled) {
@@ -192,11 +192,14 @@ class WavesView(context: Context, attrs: AttributeSet? = null) : View(context, a
             canvas.drawCircle(cx, cy, (rMin + rMax) / 2, ring)
             return
         }
-        val t = (now() - t0) / 3000f
-        val f = t % 1f
-        ring.alpha = (90 * (1 - f)).toInt()
-        canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
-        if (isShown) postInvalidateDelayed(48)
+        // Tres anillos desfasados que laten hacia afuera, cada uno a su ritmo
+        val t = (now() - t0) / 2600f
+        for (i in 0..2) {
+            val f = (t + i / 3f) % 1f
+            ring.alpha = (110 * (1 - f) * (1 - f)).toInt()
+            canvas.drawCircle(cx, cy, rMin + f * (rMax - rMin), ring)
+        }
+        if (isShown) postInvalidateOnAnimation()
     }
 }
 
