@@ -1,6 +1,6 @@
 import { ChevronDown, CreditCard, ShieldAlert, SmartphoneNfc } from "lucide-react";
 import { AnimatePresence, motion } from "motion/react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Arrival, Rejection } from "../lib/live";
 import { formatTime, formatNumber } from "../lib/format";
 import type { CredentialType, RejectReason } from "../lib/types";
@@ -10,7 +10,7 @@ import { Badge } from "../ui/Badge";
 import { Card, CardHeader } from "../ui/Card";
 import { cn } from "../ui/cn";
 import { EmptyState } from "../ui/EmptyState";
-import { SPRING } from "../ui/motion";
+import { EASE, SPRING } from "../ui/motion";
 import { Skeleton } from "../ui/Skeleton";
 import { Tooltip } from "../ui/Tooltip";
 
@@ -47,17 +47,23 @@ function ArrivalRhythm({ arrivals, startedAt, endAt }: { arrivals: Arrival[]; st
     const i = Math.floor((a.at - startedAt) / bucket);
     if (i >= 0 && i < count) bins[i]!++;
   }
-  const max = Math.max(1, ...bins);
+  // Fixed floor of 5 per bucket so the first arrivals visibly raise the bar instead of filling it at once.
+  const max = Math.max(5, ...bins);
+  const grown = useRef(false);
+  useEffect(() => {
+    grown.current = true;
+  }, []);
   return (
     <div className="px-4 pb-3">
       <div className="flex h-8 items-end gap-[2px]" role="img" aria-label="Ritmo de llegada por bloques de 3 minutos">
         {bins.map((n, i) => (
+          // Full-height bars scaled from the baseline: they grow from 0 on mount (staggered) and spring up on each arrival.
           <motion.span
             key={i}
-            className={cn("flex-1 rounded-t-[2px]", n ? "bg-[var(--ds-metric-presence)]" : "bg-sunken")}
-            initial={false}
-            animate={{ height: n ? `${Math.max(14, (n / max) * 100)}%` : "8%" }}
-            transition={SPRING.gentle}
+            className={cn("h-full flex-1 origin-bottom rounded-t-[2px] transition-colors duration-300", n ? "bg-[var(--ds-metric-presence)]" : "bg-sunken")}
+            initial={{ transform: "scaleY(0)" }}
+            animate={{ transform: `scaleY(${n ? Math.max(0.14, n / max) : 0.08})` }}
+            transition={{ ...SPRING.gentle, delay: grown.current ? 0 : i * 0.025 }}
           />
         ))}
       </div>
@@ -81,6 +87,7 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
   emptyText?: string;
 }) {
   const [showRejected, setShowRejected] = useState(false);
+  const count = loading ? null : arrivals.length;
   return (
     <Card className={cn("flex flex-col", className)}>
       <CardHeader
@@ -88,7 +95,7 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
         description="Tarjeta o celular en el lector NFC"
         actions={
           <div className="text-right">
-            <AnimatedNumber value={loading ? null : arrivals.length} format={(n) => formatNumber(n)} className="text-heading font-semibold text-fg" />
+            <AnimatedNumber value={count} bump format={(n) => formatNumber(n)} className="text-heading font-semibold text-fg" />
             <span className="ml-1 text-caption text-muted">presentes</span>
           </div>
         }
@@ -115,9 +122,9 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
                   <motion.li
                     key={a.code}
                     layout="position"
-                    initial={a.live ? { opacity: 0, y: -10 } : false}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={SPRING.snappy}
+                    initial={a.live ? { opacity: 0, transform: "translateX(-16px)" } : false}
+                    animate={{ opacity: 1, transform: "translateX(0px)" }}
+                    transition={{ type: "spring", duration: 0.5, bounce: 0.15 }}
                     className="relative flex items-center gap-3 px-4 py-2"
                   >
                     {a.live && (
@@ -126,7 +133,7 @@ export function AttendanceList({ arrivals, rejections = [], startedAt, endAt, lo
                         className="absolute inset-0 bg-ok-subtle"
                         initial={{ opacity: 1 }}
                         animate={{ opacity: 0 }}
-                        transition={{ duration: 2.4, ease: "easeOut", delay: 0.4 }}
+                        transition={{ duration: 2.8, ease: EASE.standard, delay: 0.8 }}
                       />
                     )}
                     <Avatar name={a.full_name} seed={a.code} size={32} className="relative" />
