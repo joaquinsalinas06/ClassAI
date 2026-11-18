@@ -117,7 +117,7 @@ def test_noise_baseline_requires_minimum_data():
     values = [("s1", i / 100) for i in range(20)] + [("s2", i / 100) for i in range(20, 40)]
     assert tuner.noise_baseline(values) == pytest.approx(0.351)
     assert tuner.noise_baseline([("s1", 0.95)] * 20 + [("s2", 0.95)] * 20) == 0.8
-    assert tuner.noise_baseline([("s1", 0.01)] * 20 + [("s2", 0.01)] * 20) == 0.2
+    assert tuner.noise_baseline([("s1", 0.01)] * 20 + [("s2", 0.01)] * 20) == 0.05
 
 
 def test_build_config_contract_shape_and_rules(db):
@@ -140,7 +140,7 @@ def test_build_config_contract_shape_and_rules(db):
     json.dumps(cfg, allow_nan=False)
 
     # Otro curso sin historial suficiente: ruido de fábrica.
-    assert tuner.build_config(db, "a101", "NEW", START, START)["noise_rel_max"] == 0.5
+    assert tuner.build_config(db, "a101", "NEW", START, START)["noise_rel_max"] == 0.1
 
 
 def test_evening_lux_and_fallback_without_coordinates(db):

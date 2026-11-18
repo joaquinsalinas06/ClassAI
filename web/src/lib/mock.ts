@@ -140,8 +140,8 @@ function baseConfig(room: MockRoom, version: number, shiftTemp = 0): ComfortConf
     temp_c: [Number((22.2 + shiftTemp).toFixed(1)), Number((27.2 + shiftTemp).toFixed(1))],
     rh_pct: [40, 60],
     lux: [300, 500],
-    noise_rel_max: room.id === "b204" ? 0.47 : room.id === "a101" ? 0.42 : 0.5,
-    weights: { temp: 0.35, rh: 0.2, lux: 0.2, noise: 0.25 },
+    noise_rel_max: room.id === "b204" ? 0.12 : room.id === "a101" ? 0.1 : 0.1,
+    weights: { temp: 0.47, rh: 0.01, lux: 0.2, noise: 0.32 },
     ok_min: 80,
     regular_min: 60,
     source: {
@@ -154,7 +154,7 @@ function baseConfig(room: MockRoom, version: number, shiftTemp = 0): ComfortConf
 function paramsFor(roomId: string): ComfortParams {
   const room = roomById(roomId);
   if (!room) {
-    const factory: ComfortConfig = { ...baseConfig(ROOMS[0]!, 0), room: roomId, temp_c: [21, 24], noise_rel_max: 0.5,
+    const factory: ComfortConfig = { ...baseConfig(ROOMS[0]!, 0), room: roomId, temp_c: [21, 24], noise_rel_max: 0.1,
       source: { temp: "factory", rh: "factory", noise: "factory", lux: "factory" } };
     return { room: roomId, current: factory, history: [] };
   }

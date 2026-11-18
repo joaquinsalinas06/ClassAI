@@ -180,24 +180,35 @@ function NodePanel({ device, uptimeMs, version, configVersion, irC, online }: {
   );
 }
 
-function ZoneNodes({ nodes, now }: { nodes: Record<string, NodeSnapshot>; now: number }) {
-  return <Card className="p-4">
-    <h2 className="text-label font-semibold text-fg">Nodos por zona</h2>
-    <div className="mt-2 flex flex-col gap-3">{Object.values(nodes).map(node => {
-      const at = parseTime(node.received_at);
-      const stale = !at || now - at > 15_000;
-      const label = node.role === "access" ? "Acceso" : node.role === "environment" ? "Ambiente" : "Asistente";
-      return <div key={node.device} className="border-b border-line-subtle pb-3 last:border-b-0">
-        <div className="flex items-center justify-between gap-2"><h3 className="text-label">{label}</h3>
-          <Badge size="sm" tone={node.status === "online" && !stale ? "ok" : "offline"}>{node.status === "offline" ? "Sin conexión" : stale ? "Sin datos recientes" : "En línea"}</Badge></div>
-        <p className="mt-1 break-all font-mono text-caption text-muted">{node.device}</p>
-        <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Movimiento de entrada; sin conteo de personas" : "Esperando mediciones"}</p>
-        {node.role === "assistant" && <p className="text-small text-muted">Agente: {node.telemetry?.agent_online ? node.telemetry.voice_state ?? "conectado" : "sin conexión"}</p>}
-        <p className="text-caption text-muted">{at ? `Última lectura ${formatRelative(at)}` : "Sin lecturas"}</p>
-      </div>;
-    })}</div>
-  </Card>;
+function ZoneNodes({ nodes, now, embedded = false }: { nodes: Record<string, NodeSnapshot>; now: number; embedded?: boolean }) {
+  const entries = Object.values(nodes);
+  const content = (
+    <>
+      <h2 className="text-label font-semibold text-fg">Nodos por zona</h2>
+      {entries.length === 0 ? (
+        <p className="mt-2 text-small text-muted">Esperando nodos del aula.</p>
+      ) : (
+        <div className={cn("mt-2 flex flex-col", embedded ? "gap-2.5" : "gap-3")}>{entries.map(node => {
+          const at = parseTime(node.received_at);
+          const stale = !at || now - at > 15_000;
+          const label = node.role === "access" ? "Acceso" : node.role === "environment" ? "Ambiente" : "Asistente";
+          return <div key={node.device} className={cn("border-b border-line-subtle last:border-b-0", embedded ? "pb-2 last:pb-0" : "pb-3")}>
+            <div className="flex items-center justify-between gap-2"><h3 className="text-label">{label}</h3>
+              <Badge size="sm" tone={node.status === "online" && !stale ? "ok" : "offline"}>{node.status === "offline" ? "Sin conexión" : stale ? "Sin datos recientes" : "En línea"}</Badge></div>
+            <p className="mt-1 break-all font-mono text-caption text-muted">{node.device}</p>
+            <p className="text-small text-fg-2">{typeof node.telemetry?.light_rel === "number" ? `Luz relativa: ${Math.round(node.telemetry.light_rel * 100)} % · sin calibrar a lux` : node.role === "access" ? "Movimiento de entrada; sin conteo de personas" : "Esperando mediciones"}</p>
+            {node.role === "assistant" && <p className="text-small text-muted">Agente: {node.telemetry?.agent_online ? node.telemetry.voice_state ?? "conectado" : "sin conexión"}</p>}
+            <p className="text-caption text-muted">{at ? `Última lectura ${formatRelative(at)}` : "Sin lecturas"}</p>
+          </div>;
+        })}</div>
+      )}
+    </>
+  );
+  if (embedded) return <div className="flex min-w-0 flex-col justify-between bg-surface p-4">{content}</div>;
+  return <Card className="p-4">{content}</Card>;
 }
+
+const LIVE_SENSOR_METRICS = ["temp_c", "rh_pct", "noise_rel"] as const satisfies readonly ChartMetric[];
 
 export function LiveRoom() {
   const { room: routeRoom } = useRouteParams();
@@ -264,6 +275,8 @@ export function LiveRoom() {
         <div className="lg:col-span-7 xl:col-span-8">
           <ErrorBoundary label="las métricas">
             <MetricTiles
+              metrics={LIVE_SENSOR_METRICS}
+              extraTile={<ZoneNodes nodes={state.nodes} now={now} embedded />}
               readings={readings}
               points={state.points}
               config={config}
@@ -309,7 +322,6 @@ export function LiveRoom() {
               </Card>
             )}
           </ErrorBoundary>
-          {Object.keys(state.nodes).length > 0 && <ZoneNodes nodes={state.nodes} now={now} />}
           <NodePanel
             device={state.latest?.device ?? `esp32-${room}`}
             uptimeMs={state.latest?.uptime_ms}

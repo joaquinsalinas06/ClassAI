@@ -119,7 +119,7 @@ Campos comunes: `v`, `event`, `event_id` (string único por nodo, p.ej. `"{devic
 - Rangos `[min, max]` = zona de puntuación 100. Fuera del rango, la puntuación cae linealmente a 0 a una distancia igual al ancho del rango (temperatura: 0 a ±3 °C fuera).
 - `noise_rel_max`: hasta ese valor S_R = 100; cae linealmente a 0 en `noise_rel_max + 0.3`.
 - Pesos suman 1. El ESP32 guarda el último config válido en NVS y lo usa sin red. Un config con `v` distinto o campos faltantes se ignora.
-- Valores de fábrica (`params_version: 0`): temp `[21, 24]`, rh `[40, 60]`, lux `[300, 500]`, `noise_rel_max 0.5`, pesos de #25, `ok_min 80`, `regular_min 60`.
+- Valores de fábrica (`params_version: 0`): temp `[21, 24]`, rh `[40, 60]`, lux `[300, 500]`, `noise_rel_max 0.1`, pesos `temp 0.47` / `rh 0.01` / `lux 0.20` / `noise 0.32`, `ok_min 80`, `regular_min 60`.
 
 ## Status
 
