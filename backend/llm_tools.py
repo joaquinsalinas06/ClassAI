@@ -11,6 +11,7 @@ from urllib.parse import quote
 from zoneinfo import ZoneInfo
 
 import requests
+from openai import BadRequestError
 
 
 LOCAL_TIMEZONE = "America/Lima"
@@ -81,11 +82,12 @@ TOOLS = [
     _tool("list_rooms", "Aulas conocidas: id interno, nombre visible (p.ej. L201), estado y última lectura."),
     _tool("get_current_class", "Sesión abierta de un aula (curso, inicio, asistentes) y su última lectura.",
           {"room": ROOM}, ("room",)),
-    _tool("list_sessions", "Últimas 10 sesiones (de la más reciente a la más antigua) filtrando por aula, curso y rango de "
+    _tool("list_sessions", "Hasta 10 sesiones (de la más reciente a la más antigua) filtrando por aula, curso y rango de "
           "fechas de inicio. Solo sirve para encontrar el session_id; los datos de la clase vienen de get_session_overview.",
           {"room": ROOM, "course": {"type": "string"},
            "start": {"type": "string", "description": "Inicio ISO 8601."},
-           "end": {"type": "string", "description": "Fin ISO 8601 exclusivo."}}),
+           "end": {"type": "string", "description": "Fin ISO 8601 exclusivo."},
+           "limit": {"type": "integer", "minimum": 1, "maximum": 10}}),
     _tool("get_metric_series", "Serie temporal de una métrica de una sesión agrupada en buckets de minutos.",
           {"session_id": SESSION, "metric": {"type": "string", "enum": METRICS},
            "bucket_minutes": {"type": "integer", "minimum": 1, "maximum": 60}}, ("session_id", "metric")),
@@ -363,7 +365,8 @@ def execute_tool(base_url: str, name: str, arguments: dict[str, Any]) -> dict[st
         return _strip_hidden(_explain_comfort(base_url, arguments.get("room"), arguments.get("session_id")))
     names = None
     if name == "list_sessions":
-        names, arguments["limit"] = _room_names(base_url), 10
+        limit = arguments.get("limit")
+        names, arguments["limit"] = _room_names(base_url), max(1, min(10, limit)) if isinstance(limit, int) else 10
     route = ROUTES[name]
     if "{session_id}" in route:
         route = route.format(session_id=quote(str(arguments.pop("session_id")), safe=""))
@@ -416,10 +419,21 @@ def answer_question(client, model: str, base_url: str, history: list[dict], ques
         if tools_used is not None:
             tools_used.append(name)
 
-    for _ in range(5):
-        response = client.chat.completions.create(
-            model=model, messages=messages, tools=TOOLS, tool_choice="auto", temperature=0.2,
-        )
+    retried = False
+    for _ in range(6):
+        try:
+            response = client.chat.completions.create(
+                model=model, messages=messages, tools=TOOLS, tool_choice="auto", temperature=0.2,
+            )
+        except BadRequestError as error:
+            # Groq rechaza (400 tool_use_failed) una llamada que no cumple el esquema; se reintenta una vez avisando al modelo.
+            print(f"Asistente: llamada de herramienta rechazada: {str(error)[:500]}")
+            if retried or "tool" not in str(error).lower():
+                raise
+            retried = True
+            messages.append({"role": "system", "content": "Tu llamada anterior fue rechazada por no cumplir el esquema. "
+                             "Usa solo las herramientas declaradas, con sus parámetros exactos y una llamada por herramienta."})
+            continue
         assistant_message = response.choices[0].message
         if not assistant_message.tool_calls:
             return assistant_message.content or "No pude generar una respuesta."

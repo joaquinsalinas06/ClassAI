@@ -192,3 +192,24 @@ def test_context_session_question_gets_zone_motion(api):
     assert len(sent) == 1 and sent[0][-2]["tool_calls"][0]["function"]["name"] == "get_session_overview"
     tool_result = json.loads(sent[0][-1]["content"])
     assert tool_result["movimiento_actividad_pct"]["combinado"]["media_pct"] == 33.3
+
+
+def test_rejected_tool_call_is_retried_once(api):
+    import httpx
+    from openai import BadRequestError
+
+    rejected = BadRequestError("tool call validation failed: tool_use_failed", body=None,
+                               response=httpx.Response(400, request=httpx.Request("POST", "https://api.groq.com")))
+    replies = [rejected, SimpleNamespace(content="### Listo", tool_calls=None)]
+    sent = []
+
+    def create(**kwargs):
+        sent.append(list(kwargs["messages"]))
+        reply = replies.pop(0)
+        if isinstance(reply, Exception):
+            raise reply
+        return SimpleNamespace(choices=[SimpleNamespace(message=reply)])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    assert llm_tools.answer_question(client, "m", BASE, [], "¿hoy o ayer?") == "### Listo"
+    assert "rechazada" in sent[1][-1]["content"]
