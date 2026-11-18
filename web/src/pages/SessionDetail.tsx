@@ -1,6 +1,6 @@
 import { useQueries } from "@tanstack/react-query";
 import { ArrowLeft, GitCompareArrows, Radio } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useMemo, useState, type CSSProperties } from "react";
 import { Link, useNavigate, useParams as useRouteParams } from "react-router";
 import { ComfortRing } from "../charts/ComfortRing";
 import { AttendanceList } from "../features/AttendanceList";
@@ -152,7 +152,7 @@ export function SessionDetail() {
       </div>
 
       {finished && (
-        <Card className="grid grid-cols-2 gap-px overflow-hidden bg-line-subtle md:grid-cols-3 xl:grid-cols-[1.7fr_repeat(6,1fr)]">
+        <Card className="ds-rise grid grid-cols-2 gap-px overflow-hidden bg-line-subtle md:grid-cols-3 xl:grid-cols-[1.7fr_repeat(6,1fr)]">
           <div className="col-span-2 flex items-center gap-4 bg-surface p-4 md:col-span-3 xl:col-span-1">
             <ComfortRing value={comfortAvg != null ? Math.round(comfortAvg) : null} state={comfortAvg != null ? comfortState(config ?? { ok_min: 80, regular_min: 60 }, comfortAvg) : null} size={64} />
             <div>
@@ -175,7 +175,7 @@ export function SessionDetail() {
 
       <div className="grid gap-5 lg:grid-cols-12">
         <div className="flex min-w-0 flex-col gap-5 lg:col-span-8">
-          <TrendPanel
+          <div className="ds-rise" style={{ "--i": 1 } as CSSProperties}><TrendPanel
             title="Cómo evolucionó la clase"
             description={`Promedio cada ${BUCKET} minutos${comparePeer ? "; la comparación se alinea por minuto de clase" : ""}`}
             points={points}
@@ -185,9 +185,9 @@ export function SessionDetail() {
             loading={loading}
             xExtent={[startedAt, endedAt]}
             compare={shifted && comparePeer ? { points: shifted, label: `${formatDate(comparePeer.started_at)} ${formatTime(comparePeer.started_at)}` } : null}
-          />
+          /></div>
 
-          <Card>
+          <Card className="ds-rise" style={{ "--i": 4 } as CSSProperties}>
             <CardHeader
               icon={<GitCompareArrows size={16} />}
               title="Comparar con otra clase"
@@ -248,8 +248,8 @@ export function SessionDetail() {
           </Card>
         </div>
         <div className="flex flex-col gap-5 lg:col-span-4">
-          <VotesCard id={id!} live={!found.ended_at} />
-          <AttendanceList arrivals={arrivals} startedAt={startedAt} endAt={endedAt} loading={attendance.isPending} maxHeight={640} emptyText="Nadie registró asistencia en esta clase." />
+          <div className="ds-rise" style={{ "--i": 2 } as CSSProperties}><VotesCard id={id!} live={!found.ended_at} /></div>
+          <AttendanceList className="ds-rise [--i:3]" arrivals={arrivals} startedAt={startedAt} endAt={endedAt} loading={attendance.isPending} maxHeight={640} emptyText="Nadie registró asistencia en esta clase." />
         </div>
       </div>
     </div>
