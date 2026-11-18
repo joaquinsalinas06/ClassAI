@@ -85,6 +85,8 @@ def test_groq_key_is_used_when_deepseek_is_missing(monkeypatch):
         return SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
 
     monkeypatch.setattr(assistant_api, "OpenAI", fake_openai)
+    monkeypatch.setattr(llm_tools.requests, "get", lambda *args, **kwargs: SimpleNamespace(
+        raise_for_status=lambda: None, json=lambda: {"found": False}))
     body = assistant_api.AskIn(question="¿Temperatura?", context={"session_id": "l201-abc"})
     assert assistant_api.ask(body)["answer"] == "28,1 °C"
     assert seen["base_url"] == "https://api.groq.com/openai/v1" and seen["model"] == "openai/gpt-oss-120b"

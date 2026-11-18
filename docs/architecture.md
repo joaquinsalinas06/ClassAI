@@ -92,9 +92,8 @@ Cada config publicado: `params_version` = último del aula + 1 (fijado dentro de
 | Proveedor compatible con OpenAI (`LLM_BASE_URL`, `DEEPSEEK_MODEL`; DeepSeek por defecto) | Cambiar de proveedor sin tocar código |
 | MCP | Opcional después: las mismas herramientas se pueden exponer como servidor MCP sin cambiar la API |
 
-Herramientas: `get_current_class`, `get_session_summary`, `list_sessions`, `compare_sessions`, `get_metric_series`,
-`get_attendance`, `explain_comfort_decision` (→ `GET /comfort/params/{room}`, y con `session_id` el config que usó esa sesión)
-y las 4 de temperatura legada.
+Herramientas: `get_session_overview`, `get_room_now`, `get_current_class`, `list_sessions`, `get_metric_series`,
+`get_attendance`, `explain_comfort_decision` (→ `GET /comfort/params/{room}`, y con `session_id` el config que usó esa sesión).
 
 ## 6. Niveles de datos
 

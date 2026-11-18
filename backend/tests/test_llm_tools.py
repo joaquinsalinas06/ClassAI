@@ -45,11 +45,9 @@ def test_unknown_tool_is_rejected_without_calls(api):
 def test_routes_quote_path_and_drop_unknown_arguments(api):
     llm_tools.execute_tool(BASE, "get_metric_series",
                            {"session_id": "../credentials", "metric": "lux", "bucket_minutes": 5, "url": "http://evil"})
-    llm_tools.execute_tool(BASE, "compare_sessions", {"session_ids": ["a", "b"]})
     llm_tools.execute_tool(BASE, "get_current_class", {"room": "a101"})
     assert api.calls == [
         (f"{BASE}/sessions/..%2Fcredentials/series", {"metric": "lux", "bucket_minutes": 5}),
-        (f"{BASE}/sessions/compare", {"ids": ["a", "b"]}),
         (f"{BASE}/classes/current", {"room": "a101"}),
     ]
 
@@ -102,7 +100,7 @@ def test_room_names_are_normalized_and_listed(api):
     api.responses["/rooms"] = [{"id": "l201", "name": "L201"}]
     assert llm_tools.execute_tool(BASE, "list_rooms", {}) == [{"id": "l201", "name": "L201"}]
     llm_tools.execute_tool(BASE, "list_sessions", {"room": " L201 ", "start": "2026-11-17T00:00:00-05:00"})
-    assert api.calls[-1] == (f"{BASE}/sessions", {"room": "l201", "start": "2026-11-17T00:00:00-05:00"})
+    assert api.calls[-1] == (f"{BASE}/sessions", {"room": "l201", "start": "2026-11-17T00:00:00-05:00", "limit": 10})
     assert "L201 es el id l201" in llm_tools.SYSTEM_PROMPT
 
 
@@ -110,3 +108,87 @@ def test_context_note_points_to_the_viewed_session():
     note = llm_tools.build_context_note({"session_id": "l201-abc", "room": "l201"})
     assert "session_id=l201-abc" in note and "id=l201" in note
     assert llm_tools.build_context_note(None) == llm_tools.build_context_note({}) == ""
+
+
+def _access_only_session(api):
+    """Sesión de M602 (a101) donde solo reportó el nodo de acceso: luz y movimiento, sin ambiente."""
+    sid = "a101-s1"
+    api.responses["/rooms"] = [{"id": "a101", "name": "M602"}]
+    api.responses[f"/sessions/{sid}/summary"] = {
+        "found": True, "status": "finalizada", "room": "a101", "course": "IoT", "minutes": 4,
+        "started_at": "2026-11-18T21:30:00Z", "ended_at": "2026-11-18T21:34:00Z",
+        "temp_avg": None, "comfort_avg": None, "presence_ratio": None, "lux_avg": None}
+    minute = lambda m, avg: {"bucket_start": f"2026-11-18 21:3{m}", "samples": 12, "min": 0, "max": 1, "avg": avg}  # noqa: E731
+    api.responses[f"/sessions/{sid}/zones"] = {"room": "a101", "zones": [
+        {"device": "a101-access", "role": "access",
+         "light": [minute(0, 0.7), minute(1, 0.9), minute(2, 0.8)],
+         "presence": [minute(0, 0.0), minute(1, 1.0), minute(2, 0.5)]},
+        {"device": "a101-environment", "role": "environment", "light": [], "presence": []}]}
+    api.responses[f"/sessions/{sid}/attendance"] = {"data": [
+        {"code": "2021", "full_name": "Ana", "recorded_at": "2026-11-18T21:32:00Z", "token": "9F2C"}]}
+    api.responses[f"/sessions/{sid}/votes"] = {
+        "counts": {"ok": 0, "hot": 1, "cold": 0}, "data": [{"full_name": "Ana", "kind": "hot", "created_at": "2026-11-18T21:33:00Z"}],
+        "dimensions": {"motion": {"low": 0, "ok": 0, "high": 1}}, "dimension_data": []}
+    return sid
+
+
+def test_overview_uses_zones_when_environment_node_is_missing(api):
+    result = llm_tools.execute_tool(BASE, "get_session_overview", {"session_id": _access_only_session(api)})
+    assert result["sesion"] == {"session_id": "a101-s1", "curso": "IoT", "aula": "M602", "fecha": "2026-11-18",
+                                "inicio": "16:30", "fin": "16:34", "duracion_min": 4, "estado": "finalizada"}
+    assert result["ambiente"] is None
+    assert "SIN lecturas" in result["data_availability"]["nodo_environment"]
+    assert "temperatura, humedad, ruido ni confort" in result["data_availability"]["nodo_environment"]
+    assert result["data_availability"]["nodo_access"] == "con lecturas (3 min)"
+    light = result["luz_pct"]["promedio_zonas"]
+    assert (light["media_pct"], light["max_pct"], light["hora_max"]) == (80.0, 90.0, "16:31")
+    motion = result["movimiento_actividad_pct"]["combinado"]
+    # actividad móvil de 5 min como la web: 0 %, 50 %, 50 %
+    assert (motion["media_pct"], motion["max_pct"], motion["hora_max"], motion["minutos_con_movimiento"]) == (33.3, 50.0, "16:31", 2)
+    assert result["asistencia"]["alumnos"] == [{"nombre": "Ana", "codigo": "2021", "hora": "16:32", "min_tras_inicio": 2}]
+    assert result["votos"]["temperatura"] == {"calor": 1} and result["votos"]["por_dimension"] == {"movimiento": {"alto": 1}}
+    assert "9F2C" not in json.dumps(result)
+
+
+def test_room_now_reports_node_age_and_zones(api):
+    api.responses["/rooms/a101/nodes"] = [
+        {"role": "access", "status": "online", "stale": False, "received_at": "2026-11-18T22:00:00Z",
+         "telemetry": {"light_rel": 0.6954, "presence": False}}]
+    api.responses["/classes/current"] = {"room": "a101", "session": None}
+    api.responses["/rooms/a101/zones"] = {"zones": []}
+    result = llm_tools.execute_tool(BASE, "get_room_now", {"room": "A101", "minutes": 15})
+    assert result["nodos"]["nodo_access"]["lectura"] == {"presence": False, "luz_pct": 69.5}
+    assert result["sesion_abierta"] == "ninguna"
+    assert (f"{BASE}/rooms/a101/zones", {"minutes": 15}) in api.calls
+    assert llm_tools.execute_tool(BASE, "get_room_now", {"room": "a101", "minutes": "x"}) == {"error": "minutes debe ser un entero"}
+
+
+def test_prompt_forbids_false_no_data_and_asks_for_a_table():
+    prompt = llm_tools.SYSTEM_PROMPT
+    assert "get_session_overview" in prompt and "Nunca digas \"no hay datos\"" in prompt
+    assert "tabla markdown" in prompt and "data_availability" in prompt and "list_sessions" in prompt
+    assert "get_session_overview(session_id=a101-s1)" in llm_tools.build_context_note({"session_id": "a101-s1"})
+
+
+def test_context_session_question_gets_zone_motion(api):
+    """LLM simulado: con context.session_id el overview llega en el primer turno, con el movimiento aunque falte el ambiente."""
+    sid = _access_only_session(api)
+    replies = [
+        SimpleNamespace(content="### Movimiento\n| Métrica | Valor |\n|---|---|\n| Actividad media | 33,3 % |", tool_calls=None),
+    ]
+    sent = []
+
+    def create(**kwargs):
+        sent.append(json.loads(json.dumps(kwargs["messages"], default=str)))
+        message = replies.pop(0)
+        message.model_dump = lambda exclude_none: {"role": "assistant", "content": message.content}
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    used = []
+    answer = llm_tools.answer_question(client, "m", BASE, [], "¿Cuánto movimiento hubo?", used, context={"session_id": sid})
+    assert answer.startswith("### Movimiento") and used == ["get_session_overview"]
+    assert f"get_session_overview(session_id={sid})" in sent[0][0]["content"]
+    assert len(sent) == 1 and sent[0][-2]["tool_calls"][0]["function"]["name"] == "get_session_overview"
+    tool_result = json.loads(sent[0][-1]["content"])
+    assert tool_result["movimiento_actividad_pct"]["combinado"]["media_pct"] == 33.3
