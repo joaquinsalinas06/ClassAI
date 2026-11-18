@@ -190,3 +190,12 @@ CREATE TABLE IF NOT EXISTS student_feedback (
     kind TEXT NOT NULL CHECK(kind IN ('ok','hot','cold','noisy','dark')), created_at TEXT NOT NULL,
     PRIMARY KEY(session_id, student_id)
 );
+
+-- Votos por dimensión distinta de la temperatura (que sigue en student_feedback): uno por alumno,
+-- sesión y dimensión. low/ok/high = poca luz/bien/mucha luz, silencio/bien/mucho ruido, etc.
+CREATE TABLE IF NOT EXISTS student_votes (
+    session_id TEXT NOT NULL REFERENCES sessions(id), student_id INTEGER NOT NULL REFERENCES students(id),
+    dimension TEXT NOT NULL CHECK(dimension IN ('light','noise','motion','humidity')),
+    value TEXT NOT NULL CHECK(value IN ('low','ok','high')), created_at TEXT NOT NULL,
+    PRIMARY KEY(session_id, student_id, dimension)
+);

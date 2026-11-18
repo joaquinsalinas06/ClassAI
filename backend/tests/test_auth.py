@@ -121,8 +121,17 @@ def test_session_crud_and_votes_of_registered_student(client):
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "hot"}, headers=bearer).json()["saved"]
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "cold"}, headers=bearer).status_code == 200
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "tibio"}, headers=bearer).status_code == 422
+    # Votos por dimensión: uno por sensor; temp sigue en el voto clásico.
+    for dimension, value in (("light", "low"), ("noise", "high"), ("noise", "ok"), ("motion", "high")):
+        assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": dimension, "value": value}, headers=bearer).json()["saved"]
+    assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": "light"}, headers=bearer).status_code == 422
+    assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": "olor", "value": "ok"}, headers=bearer).status_code == 422
+    mine = student.get(f"/student/classes/{sid}", headers=bearer).json()["my_votes"]
+    assert mine == {"temp": "low", "light": "low", "noise": "ok", "motion": "high"}
     votes = client.get(f"/sessions/{sid}/votes").json()
     assert votes["counts"] == {"ok": 0, "hot": 0, "cold": 1} and votes["data"][0]["full_name"] == "Valeria Quispe"
+    assert votes["dimensions"]["noise"] == {"low": 0, "ok": 1, "high": 0} and votes["dimensions"]["humidity"]["ok"] == 0
+    assert {(v["dimension"], v["value"]) for v in votes["dimension_data"]} == {("light", "low"), ("noise", "ok"), ("motion", "high")}
     detail = client.get(f"/sessions/{sid}").json()
     assert detail["attendance_count"] == 1 and detail["votes"]["cold"] == 1
 

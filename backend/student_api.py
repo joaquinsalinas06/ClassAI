@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from auth import STUDENT_TTL, connect, hash_password, issue_token, now, revoke_token, token_subject, verify_password
 from temperature_service import iso_utc, normalize_credential
@@ -29,7 +29,27 @@ class LoginIn(BaseModel):
 
 
 class VoteIn(BaseModel):
-    kind: Literal["ok", "hot", "cold", "noisy", "dark"]
+    """`kind` (temperatura, como siempre) o `dimension` + `value` para cualquier sensor del aula."""
+    kind: Optional[Literal["ok", "hot", "cold", "noisy", "dark"]] = None
+    dimension: Optional[Literal["temp", "light", "noise", "motion", "humidity"]] = None
+    value: Optional[Literal["low", "ok", "high"]] = None
+
+    @model_validator(mode="after")
+    def one_form(self):
+        if (self.kind is None) == (self.dimension is None or self.value is None):
+            raise ValueError("envía kind, o dimension y value")
+        return self
+
+
+TEMP_KIND = {"low": "cold", "ok": "ok", "high": "hot"}
+KIND_TEMP = {v: k for k, v in TEMP_KIND.items()}
+
+
+def my_votes(db: sqlite3.Connection, session_id: str, student: int, temp_kind: Optional[str]) -> dict:
+    votes = {"temp": KIND_TEMP[temp_kind]} if temp_kind in KIND_TEMP else {}
+    votes.update(db.execute("SELECT dimension, value FROM student_votes WHERE session_id=? AND student_id=?",
+                            (session_id, student)).fetchall())
+    return votes
 
 
 def bearer(authorization: Optional[str]) -> Optional[str]:
@@ -221,6 +241,7 @@ def class_detail(session_id: str, authorization: Optional[str] = Header(default=
             raise HTTPException(404, "Clase no encontrada")
         result = class_row(row)
         result["metrics"] = live_metrics(db, result["room"]) if not result["ended"] else {}
+        result["my_votes"] = my_votes(db, session_id, student, result["my_vote"])
         result["present_count"] = db.execute("SELECT COUNT(*) FROM attendance WHERE session_id=?", (session_id,)).fetchone()[0]
         result["targets"] = room_config(db, result["room"])
         result["trend"] = class_trend(db, result["room"], result["started_at"])
@@ -238,10 +259,20 @@ def vote(session_id: str, body: VoteIn, authorization: Optional[str] = Header(de
         if session[0] is not None:
             raise HTTPException(409, "La clase ya terminó")
         at = iso_utc(now())
-        db.execute(
-            "INSERT INTO student_feedback VALUES (?,?,?,?) ON CONFLICT(session_id,student_id) "
-            "DO UPDATE SET kind=excluded.kind, created_at=excluded.created_at",
-            (session_id, student, body.kind, at),
-        )
+        kind = body.kind or (TEMP_KIND[body.value] if body.dimension == "temp" else None)
+        if kind:
+            db.execute(
+                "INSERT INTO student_feedback VALUES (?,?,?,?) ON CONFLICT(session_id,student_id) "
+                "DO UPDATE SET kind=excluded.kind, created_at=excluded.created_at",
+                (session_id, student, kind, at),
+            )
+        else:
+            db.execute(
+                "INSERT INTO student_votes VALUES (?,?,?,?,?) ON CONFLICT(session_id,student_id,dimension) "
+                "DO UPDATE SET value=excluded.value, created_at=excluded.created_at",
+                (session_id, student, body.dimension, body.value, at),
+            )
         db.commit()
-        return {"saved": True, "session_id": session_id, "kind": body.kind, "created_at": at}
+        result = {"saved": True, "session_id": session_id, "created_at": at}
+        result.update({"kind": kind} if kind else {"dimension": body.dimension, "value": body.value})
+        return result
