@@ -5,30 +5,33 @@
     <string name="aid_description">ClassAI asistencia</string>
 
     <string name="login_title">ClassAI</string>
-    <string name="login_subtitle">Tu código, una vez. Tu carnet, siempre contigo.</string>
-    <string name="field_code">Código universitario</string>
-    <string name="field_code_helper">Usa el código con el que te registró tu docente</string>
-    <string name="action_link">Crear mi carnet</string>
+    <string name="login_subtitle">Marca asistencia con tu celular y cuéntanos cómo te sientes en clase.</string>
     <string name="login_privacy">Al acercarte al lector, el teléfono solo entrega un código anónimo. Tus datos personales no viajan por NFC.</string>
+    <string name="field_code">Código universitario</string>
+    <string name="field_name">Nombre completo</string>
+    <string name="field_password">Contraseña</string>
+    <string name="title_register">Crea tu cuenta</string>
+    <string name="title_login">Inicia sesión</string>
+    <string name="action_register">Crear cuenta</string>
+    <string name="action_login">Entrar</string>
+    <string name="toggle_to_login">¿Ya tienes cuenta? Inicia sesión</string>
+    <string name="toggle_to_register">¿Primera vez? Crea tu cuenta</string>
 
-    <string name="card_toolbar">Mi carnet</string>
-    <string name="card_brand">ClassAI · UTEC</string>
-    <string name="card_student">ESTUDIANTE</string>
-    <string name="action_retry">Reintentar vinculación</string>
-    <string name="action_nfc_settings">Abrir ajustes NFC</string>
-    <string name="reads_title">Últimas lecturas</string>
-    <string name="reads_empty_title">Aún no hay lecturas</string>
-    <string name="reads_empty_body">Desbloquea el teléfono y acerca su parte trasera al lector NFC del aula. No necesitas pulsar el carnet.</string>
-    <string name="read_ok">Lector leyó tu credencial ✓</string>
-    <string name="success_title">Credencial leída</string>
-    <string name="success_body">El lector recibió tu credencial. Tu asistencia se valida en clase.</string>
-
-    <string name="menu_unlink">Cambiar de estudiante</string>
+    <string name="card_brand">ClassAI</string>
     <string name="cd_logo">Logo de ClassAI</string>
     <string name="cd_avatar">Avatar del estudiante</string>
-    <string name="cd_success">Lectura correcta</string>
-    <string name="details_show">Ver detalles técnicos</string>
-    <string name="details_hide">Ocultar detalles técnicos</string>
-    <string name="details_token">Credencial privada · solo para diagnóstico</string>
-    <string name="action_copy">Copiar credencial</string>
+    <string name="action_logout">Cerrar sesión</string>
+    <string name="action_back">Volver</string>
+    <string name="action_nfc_settings">Abrir ajustes NFC</string>
+    <string name="classes_title">Clases abiertas</string>
+    <string name="classes_empty">No hay clases abiertas ahora. Cuando tu docente inicie una, aparecerá aquí.</string>
+
+    <string name="tap_title">Acerca tu celular al lector</string>
+    <string name="tap_body">Desbloquea el teléfono y apoya su parte trasera en el lector del aula.</string>
+    <string name="metrics_title">El aula ahora</string>
+    <string name="metrics_empty">Aún no hay lecturas del aula.</string>
+    <string name="vote_title">¿Cómo te sientes?</string>
+    <string name="vote_ok">🙂\nTodo bien</string>
+    <string name="vote_hot">🥵\nCalor</string>
+    <string name="vote_cold">🥶\nFrío</string>
 </resources>
