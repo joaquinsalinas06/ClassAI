@@ -112,7 +112,9 @@ def _strip_hidden(value: Any) -> Any:
 
 def _get(base_url: str, route: str, params: Optional[dict] = None) -> dict:
     try:
-        response = requests.get(f"{base_url}{route}", params=params, timeout=15)
+        from auth import INTERNAL_HEADER, INTERNAL_KEY  # mismo proceso que la API
+
+        response = requests.get(f"{base_url}{route}", params=params, timeout=15, headers={INTERNAL_HEADER: INTERNAL_KEY})
         response.raise_for_status()
         return response.json()
     except requests.RequestException as error:

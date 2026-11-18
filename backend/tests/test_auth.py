@@ -78,11 +78,24 @@ def test_session_crud_and_votes_of_registered_student(client):
     assert [c["id"] for c in classes] == [sid] and classes[0]["course"] == "CS5055 IoT"
 
     # El token HCE registrado es el que resuelve la asistencia del nodo de acceso.
+    import json
+    from datetime import datetime, timezone
+    from types import SimpleNamespace
+
     import backend
-    with sqlite3.connect(client.database) as db:
-        event = {"event_id": "e1", "event": "ATTENDANCE_RECORDED", "room": "a101", "device": "a101-access",
-                 "session_id": sid, "ts": None, "credential": {"type": "android_hce", "token": TOKEN}}
-        assert backend.store_event(db, event, "{}", "2099-01-01T00:00:00Z") == "asistencia registrada"
+    import multinode
+    database = backend.Database(str(client.database))
+    assert database.ensure_ready()
+    sent = []
+    mqtt_client = SimpleNamespace(publish=lambda topic, payload, **kw: sent.append((topic, json.loads(payload))))
+    tap = {"v": 1, "room": "a101", "device": "a101-access", "role": "access", "event": "ATTENDANCE_RECORDED",
+           "event_id": "a101-access-1-1", "session_id": sid, "ts": None, "uptime_ms": 1,
+           "credential": {"type": "android_hce", "token": TOKEN}}
+    message = SimpleNamespace(topic="classai/v1/a101/nodes/a101-access/events", payload=json.dumps(tap).encode())
+    assert multinode.handle(message, datetime.now(timezone.utc), database, backend.SensorMinuteAccumulator(), mqtt_client)
+    ack = next(body for topic, body in sent if topic.endswith("/ack"))
+    assert ack["accepted"] is True and ack["outcome"] == "new" and ack["attendance_count"] == 1
+    database.close()
     assert student.get(f"/student/classes/{sid}", headers=bearer).json()["attended"] is True
 
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "hot"}, headers=bearer).json()["saved"]
@@ -142,3 +155,13 @@ def test_startup_over_previous_demo_schema(tmp_path, monkeypatch):
     client = TestClient(api.app, base_url="https://testserver")
     assert client.post("/student/register", json={"code": "X1", "full_name": "Ana", "password": "secreta1"}).status_code == 201
     assert auth.verify_password("clave-segura-1", sqlite3.connect(database).execute("SELECT password_hash FROM teachers").fetchone()[0])
+
+
+def test_assistant_tools_reach_protected_routes(client, monkeypatch):
+    """llm_tools llama a la API por HTTP sin cookie: la clave interna del proceso la deja pasar."""
+    import llm_tools
+
+    monkeypatch.setattr(llm_tools.requests, "get", lambda url, params=None, timeout=None, headers=None:
+                        client.get(url.replace("http://api", ""), params=params, headers=headers))
+    assert "error" not in llm_tools._get("http://api", "/sessions")
+    assert client.get("/sessions", headers={auth.INTERNAL_HEADER: "otra"}).status_code == 401

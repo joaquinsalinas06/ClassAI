@@ -54,7 +54,7 @@ def test_answer_and_tools_used(monkeypatch):
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     monkeypatch.setattr(assistant_api, "OpenAI", lambda **kwargs: client)
     calls = []
-    monkeypatch.setattr(llm_tools.requests, "get", lambda url, params=None, timeout=None: calls.append((url, params))
+    monkeypatch.setattr(llm_tools.requests, "get", lambda url, params=None, timeout=None, headers=None: calls.append((url, params))
                         or SimpleNamespace(raise_for_status=lambda: None, json=lambda: {"room": "a101"}))
 
     body = assistant_api.AskIn(question="¿Cómo está la a101?", history=[{"role": "user", "content": "hola"},

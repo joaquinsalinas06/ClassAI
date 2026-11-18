@@ -19,6 +19,11 @@ STUDENT_TTL = timedelta(days=30)
 PUBLIC_PATHS = {"/health", "/auth/login", "/auth/logout", "/auth/me", "/mobile/enroll", "/assistant/voice", "/credentials"}
 PUBLIC_PREFIXES = ("/student/", "/credentials/")
 
+# El asistente consulta la propia API por HTTP (llm_tools). Clave aleatoria por proceso:
+# sirve porque la API corre con un solo worker; nunca sale del proceso.
+INTERNAL_HEADER = "X-ClassAI-Internal"
+INTERNAL_KEY = secrets.token_urlsafe(32)
+
 router = APIRouter(prefix="/auth", tags=["auth"])
 
 
@@ -87,6 +92,8 @@ def teacher_guard(request: Request) -> None:
     """Dependencia global: todo lo que no sea público exige la cookie del docente."""
     path = request.url.path
     if path in PUBLIC_PATHS or path.startswith(PUBLIC_PREFIXES):
+        return
+    if hmac.compare_digest(request.headers.get(INTERNAL_HEADER, ""), INTERNAL_KEY):
         return
     if current_teacher(request) is None:
         raise HTTPException(401, "Inicia sesión como docente")
