@@ -213,3 +213,29 @@ def test_rejected_tool_call_is_retried_once(api):
     client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
     assert llm_tools.answer_question(client, "m", BASE, [], "¿hoy o ayer?") == "### Listo"
     assert "rechazada" in sent[1][-1]["content"]
+
+
+def test_list_sessions_brings_zone_motion_for_comparisons(api):
+    sid = _access_only_session(api)
+    api.responses["/sessions"] = {"found": True, "data": [
+        {"session_id": sid, "room": "a101", "course": "IoT", "started_at": "2026-11-18T21:30:00Z",
+         "ended_at": "2026-11-18T21:34:00Z", "minutes": 4, "temp_avg": None, "attendance_count": 1}]}
+    row = llm_tools.execute_tool(BASE, "list_sessions", {"start": "2026-11-17T00:00:00-05:00"})["data"][0]
+    assert (row["aula"], row["inicio"], row["movimiento_medio_pct"], row["luz_media_pct"], row["temp_media_c"]) == (
+        "M602", "2026-11-18 16:30", 33.3, 80.0, None)
+
+
+def test_last_round_forces_an_answer(api):
+    looping = SimpleNamespace(content=None, tool_calls=[SimpleNamespace(
+        id="c", function=SimpleNamespace(name="list_rooms", arguments="{}"))])
+    looping.model_dump = lambda exclude_none: {"role": "assistant", "content": None}
+    choices = []
+
+    def create(**kwargs):
+        choices.append(kwargs["tool_choice"])
+        message = looping if kwargs["tool_choice"] == "auto" else SimpleNamespace(content="### Respuesta", tool_calls=None)
+        return SimpleNamespace(choices=[SimpleNamespace(message=message)])
+
+    client = SimpleNamespace(chat=SimpleNamespace(completions=SimpleNamespace(create=create)))
+    assert llm_tools.answer_question(client, "m", BASE, [], "compara") == "### Respuesta"
+    assert choices == ["auto"] * 5 + ["none"]
