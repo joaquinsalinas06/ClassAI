@@ -1,7 +1,8 @@
 # Inventario físico y propiedad
 
-Fuente: declaraciones de Joaquín del **23/10/2026**; no es un conteo automático
-ni una verificación de almacén. Los IDs identifican piezas o lotes de este
+Fuente: declaraciones de Joaquín del **23/10/2026**, con actualización de recepción
+y cantidades comunicadas el **02/11/2026**; no es un conteo automático ni una
+verificación independiente de almacén. Los IDs identifican piezas o lotes de este
 inventario, no GPIO ni identidades MQTT.
 
 **Estados:** `en mano` = declarado recibido; `pedido` = recepción sin confirmar;
@@ -21,7 +22,7 @@ A están pendientes de devolución. Se conserva el alias sin inventar apellido.
 | A-01 | ESP32 con micro USB | 1 placa | en mano; identificada por Joaquín 26/10 | Placa de Adrián según Joaquín; ESP32-D0WDQ6 rev 1.0, flash 4 MiB, identidad distinta de B-02 y respaldo propio privado verificado. M-08A/B-10: caras 8×8 observadas; último firmware aislado de caras. Puerto debe reidentificarse al cambiar placa; R-050–R-052 |
 | A-02 | Jumpers | ~14 cables | en mano | ~8 iniciales + ~6 posteriores; parte serían macho–hembra, tipos sin separar |
 | A-03 | USB a micro USB | 1 cable | en mano | Cable prestado junto con A-01; no duplicarlo como accesorio de la U |
-| A-04 | Protoboard descrita como doble/dividida o cortada a la mitad | 1 unidad/conjunto declarado | en mano | Montajes temporales; dimensiones, puntos y número de mitades útiles por confirmar |
+| A-04 | Protoboards de Adrián («Auki»); una descrita anteriormente como doble/dividida | 2 protoboards declaradas | en mano; recuento actualizado 02/11 | Son dos placas del préstamo A, no personales de Joaquín. Confirmar dimensiones, continuidad, etiquetas individuales y si alguna se describió antes por sus mitades; no contar esas mitades como placas adicionales |
 
 ## B — Préstamo formal de la universidad
 
@@ -86,23 +87,62 @@ no confundir con fabricante genuino o comportamiento ya probado.
 
 ## E — Compras exclusivamente personales de Joaquín
 
-Propietario: **Joaquín**, quien conserva estas piezas al finalizar el proyecto.
-No hay obligación de devolución por pertenecerle. Pedidos con fecha 15/10/2026;
-**«Esperando entrega» en el texto compartido**, recepción física todavía no
-confirmada. No publicar números de pedido, enlaces de cuenta o seguimiento.
+Propietario: **Joaquín**, quien debe recuperar estas piezas al finalizar el
+proyecto si las presta para el uso común. Pedidos originales del 15/10/2026:
+E-01 recibida según declaración del 29/10; E-02, E-03 y E-04 declaradas en mano
+el 02/11. No publicar números de pedido, enlaces de cuenta o seguimiento.
+Las piezas internas de los kits se registran como contenido de E-03/E-04,
+**no como compras duplicadas**.
 
 | ID | Pieza / variante comprada | Cantidad y unidad | Estado | Uso / observaciones |
 |---|---|---|---|---|
-| E-01 | ESP32, variante **38Pin Type C** | 1 placa | en mano; recepción declarada 29/10/2026 | 38 contactos físicos, no 38 GPIO libres. SoC/módulo, controlador USB y pinout exactos por verificar al recibir |
-| E-02 | Protoboard, variante **400 Points Breadboar** | 1 placa | pedido | Sin cables: confirmado por Joaquín. Es independiente de la mini del kit E-04 |
-| E-03 | Kit Dupont, variante **20cm KIT** | 1 kit | pedido | Se esperan macho–macho, macho–hembra y hembra–hembra; cantidades internas no fijadas. Las menciones 10/20/40 son aproximaciones, no conteos |
-| E-04 | Kit de inicio R3 | 1 kit | pedido | **NO incluye placa Arduino**, confirmado por Joaquín. Mini protoboard, LEDs, botones, jumpers, resistencias y posibles fotorresistencias; contenido y cantidades por verificar. No contarlos también como compras separadas |
+| E-01 | ESP32, variante **38Pin Type C** | 1 placa | en mano; recepción declarada 29/10, ratificada 02/11 | Placa **personal de Joaquín**, con puerto USB-C y 38 contactos físicos (no 38 GPIO libres). SoC/módulo, controlador USB y pinout exacto aún por verificar sobre la pieza |
+| E-02 | Protoboard, variante **400 Points Breadboar** | 1 placa | en mano; declarado 02/11 | Personal de Joaquín, independiente de la mini del kit E-04. Reconfirmar tamaño/puntos reales; sin cables incluidos en esta compra |
+| E-03 | Kit Dupont **20 cm** | 1 kit: 120 cables declarados | en mano; declarado 02/11 | Personales de Joaquín: **40 macho–macho + 40 macho–hembra + 40 hembra–hembra**. Todos de 20 cm. Conteo declarado, no verificado uno por uno; los 20 M–M adicionales se registran en E-04 |
+| E-04 | Kit de inicio R3 y accesorios personales recibidos juntos | 1 kit / lote | en mano; declarado 02/11 | **NO incluye placa Arduino**. Una mini protoboard, **20 cables M–M adicionales de 20 cm**, **6 pulsadores**, LEDs amarillos/rojos/verdes (~4–5 por color, sujeto a recuento), resistencias de **1 kΩ, 10 kΩ, 100 kΩ y posiblemente 100 Ω** (unidades por contar), **1 adaptador de batería** (tipo por confirmar). Fotoresistencias posibles, no contadas como nuevas aquí. Verificar qué accesorios pertenecen exactamente al kit; no duplicar E-03 |
 
 Enlaces públicos de producto (no sustituyen inspección de la variante):
 [E-01](https://www.aliexpress.com/item/1005012688550347.html),
 [E-02](https://www.aliexpress.com/item/1005003073275216.html),
 [E-03](https://www.aliexpress.com/item/1005009071621102.html),
 [E-04](https://www.aliexpress.com/item/32392610240.html).
+
+## Corte vigente de hardware y devolución · 02/11/2026
+
+Joaquín reporta **3 ESP32** disponibles (A-01, B-02, E-01) y **5 protoboards
+físicas** en total, superando el corte histórico de cuatro del 29/10.
+Desglose por **propietario**: **2 de Adrián/Auki (A-04)**, **1 de la
+universidad (B-01)** y **2 personales de Joaquín (E-02 y la mini de E-04)**.
+La descripción «transparente / de clase» se asocia provisionalmente a B-01:
+confirmar visualmente cada placa, sin atribuir propiedad por el color. Solo
+cuatro protoboards están asignadas a P1–P4 en la propuesta actual; la quinta
+queda disponible para reserva o pruebas.
+
+### Suministro personal de Joaquín (E) — recuperar al desmontar
+
+| IDs / pertenencia | Cantidad declarada en mano | Control de devolución a Joaquín |
+|---|---|---|
+| E-01 · ESP32 USB-C, 38 pines | 1 placa | Pendiente de retorno al propietario al cerrar las experiencias |
+| E-02 + E-04 · protoboards propias | 2 placas (1 regular + 1 mini) | Pendiente; registrar por separado, no confundir con A-04/B-01 |
+| E-03 · jumpers 20 cm | 40 M–M + 40 M–H + 40 H–H = 120 | Pendiente; verificar tipos en devolución |
+| E-04 · jumpers extra 20 cm | 20 M–M | Pendiente; **60 M–M personales en total** con E-03 |
+| E-04 · pulsadores | 6 unidades | Pendiente |
+| E-04 · LEDs amarillos, rojos y verdes | ~4–5 de cada color, por confirmar | Pendiente; separar de B-05/B-06/C-05 y otros LEDs de préstamo |
+| E-04 · resistencias | Lotes 1 kΩ, 10 kΩ, 100 kΩ; 100 Ω sin confirmar | Pendiente; contar por valor y separar de C-01/C-02/C-03 |
+| E-04 · adaptador de batería | 1 unidad | Pendiente; confirmar modelo y conector |
+
+**Total de cables personales declarado: 140 jumpers de 20 cm**, desglosados
+en **60 M–M, 40 M–H y 40 H–H**. Es un conteo comunicado, **no una inspección
+pieza por pieza**. No sumar a ese total A-02, C-07 ni C-08, que pertenecen a
+terceros; tampoco asumir que todos los jumpers se pueden montar
+simultáneamente en cualquier banco.
+
+Al final de cada experiencia: separar lotes E del material A/B/C/D, anotar
+faltantes o daños, verificar cantidades devueltas y dejar constancia de
+**fecha real y persona que entrega/recibe** en el historial de movimientos.
+Si un componente personal queda instalado entre experiencias, continúa
+siendo de Joaquín. No se define ninguna fecha artificial de devolución.
+La propiedad D sigue siendo colectiva; A/B/C continúan siendo préstamos.
 
 ## Trazabilidad de anuncios y revisión fotográfica
 
@@ -123,7 +163,7 @@ Lista de vendedores/variantes visibles, sin número de orden y sin atribuirles f
 | E-03 | Realpoy Module Wholesale Store | 20cm KIT |
 | E-04 | S+S+S+ Store | Kit R3 Mini Breadboard **sin Arduino** |
 
-Ver [identificacion-fisica.md](identificacion-fisica.md) para transcripciones, enlaces técnicos, alimentación y lista mínima de faltantes. Fotografías del 24/10 confirman la presencia física de D-01/D-04/D-05/B-08/B-09/B-10/B-11; **no certifican pruebas de funcionamiento**. La recepción E continúa sin confirmar.
+Ver [identificacion-fisica.md](identificacion-fisica.md) para transcripciones, enlaces técnicos, alimentación y lista mínima de faltantes. Fotografías del 24/10 confirman la presencia física de D-01/D-04/D-05/B-08/B-09/B-10/B-11; **no certifican pruebas de funcionamiento**. La actualización de recepción personal E del 02/11 figura abajo; las fotos del 24/10 no verificaban entonces esa recepción.
 
 ## Seguimiento de préstamos, recepciones y devoluciones
 
@@ -136,17 +176,18 @@ actualizar disponibilidad de los IDs afectados y revisar montajes que los usan.
 | Por completar | A-* | Préstamo declarado; fecha de entrega no comunicada | Adrián → Joaquín | Pendiente devolver; fecha por acordar |
 | Por completar | B-* | Préstamo formal declarado | Universidad → Joaquín | Responsable/acta/vencimiento por confirmar |
 | Por completar | C-* | Préstamo temporal autorizado declarado | Profesor → Joaquín | Confirmar devolución o cesión de consumibles |
+| 02/11/2026 | E-02, E-03, E-04; E-01 ya recibida 29/10 | Recepción personal declarada / actualización de cantidades | Joaquín (propietario y custodio) | En mano; devolución al propietario tras experiencias, fecha real pendiente |
 
 ## Datos que faltan para cerrar el inventario
 
-- Contar y separar tipos de A-02; contar resistencias, D-11 y contenido de kits al recibir.
+- Contar y separar tipos de A-02; contar resistencias, D-11 y revisar físicamente los lotes E-03/E-04 recibidos.
 - Confirmar responsable y fechas/condiciones de A/B/C; distribución final de D.
 - Fotografiar/leer cada ESP32 y asociarlo a A-01/B-02/E-01 antes de asignarle un rol.
 - D-04 ya identificada por serigrafía ST7789 V1.1, falta VCC/BL y prueba de panel; ventilador DC 5V confirmado sin corriente medida.
 - B-09 ya fotografiado con signo + pero tipo/tensión sin verificar; B-10 es matriz 8×8 con MAX7219 por confirmar; B-11 son dos bobinas 5V TONG LING, faltan disparo 3,3V/jumper/consumo.
 - Identificar B-08, el PIR B-04 y el orden de terminales de cada placa real.
-- Confirmar recepción de E; disponer de cable de DATOS USB-C apropiado para E-01
-  (no se ha inventariado uno, y los micro USB no encajan).
+- Verificar cantidades individuales y estado de los lotes personales E-02/E-03/E-04; disponer de cable de DATOS USB-C apropiado para E-01
+  (no se ha inventariado uno como parte del lote, y los micro USB no encajan).
 
 ## Aclaración para el banco de ambiente · 24/10/2026
 
@@ -222,3 +263,7 @@ A/B siguen siendo préstamos y E-01 sigue siendo de Joaquín.
 30/10/2026: Joaquín autoriza incluir H–H en el diseño de los tres montajes
 integrados. No se registra una recepción ni cantidad nueva de cables por esa
 autorización; el visor presenta el presupuesto necesario por tipo.
+
+02/11/2026: el inventario personal E y las cinco protoboards del corte vigente sustituyen
+los totales de disponibilidad anteriores. Los apartados fechados 24–30/10
+se conservan como **histórico**, no como afirmación de stock actual.

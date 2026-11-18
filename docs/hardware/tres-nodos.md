@@ -12,8 +12,10 @@ medición ni aprobación eléctrica conjunta.** A/B son préstamos; E-01 es pers
 | environment / A-01 | B-03 DHT11, B-08 AO, LDR1, D-06 PIR, LEDs verde/amarillo/rojo, B-11 relé y D-05 ventilador | P2 |
 | assistant / E-01 | D-04 TFT, D-07 INMP441, D-08 amplificador, una D-09 bocina, LDR2 | P3/P4 |
 
-P1–P4 son posiciones lógicas de las cuatro protoboards existentes, no compras
-ni IDs de propietario nuevos. Confirmar la asociación de cada una con inventario.
+P1–P4 son posiciones lógicas de cuatro protoboards **empleadas entre cinco
+unidades disponibles al 02/11**; la quinta se reserva para pruebas. No son
+compras ni IDs de propietario nuevos. Confirmar la asociación física y
+propiedad de cada una con el inventario (Auki ×2, universidad ×1, Joaquín ×2).
 Colocar ESP32 fuera de las tiras si tapa contactos. Dejar USB accesible; cables
 cortos para SPI/I²S y LDR. El nodo de acceso va junto a la entrada; ambiente en
 zona de estudiantes sin corriente de aire directa del fan; asistente en mesa
@@ -72,8 +74,10 @@ Compartir riel no aumenta capacidad del regulador o del USB.
 
 La disponibilidad de resistencias no implica que haya adaptadores AHCT o
 transistores. Las ramas inciertas permanecen desconectadas. La laptop de cada
-nodo no certifica margen USB–VIN. No se ha contado tipo/longitud de cada jumper:
-las tablas son conexiones funcionales, no un trazado agujero por agujero aprobado.
+nodo no certifica margen USB–VIN. El 02/11 Joaquín declara 140 jumpers propios de 20 cm (60 M–M, 40 M–H,
+40 H–H) además de préstamos sin conteo exacto; esa disponibilidad no valida
+el alcance real de cada trazado. Las tablas son conexiones funcionales,
+no un cableado agujero por agujero aprobado.
 Preservar los bancos y revisiones guardadas del visualizador.
 
 ## Preparar firmware sin cargar

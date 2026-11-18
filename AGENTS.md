@@ -53,8 +53,10 @@ Antes de asignar placas, cablear o preparar un ensayo, leer
 carpeta. Mantener IDs y propiedad: A/B/C son préstamos, D es compra del equipo y
 E es personal de Joaquín. No inventar plazos, cantidades de kits ni recepción.
 Asociar el dispositivo físico a su ID antes de cargar firmware y registrar
-montaje/desmontaje. El tercer ESP32 sigue pendiente de recepción; la propuesta
-multinodo no está implementada. Verificar niveles/pinout reales y conflictos TFT
+montaje/desmontaje. Al 02/11 hay tres ESP32 (incluida E-01 personal)
+y cinco protoboards: dos A, una B y dos E. Los 140 jumpers de 20 cm de E
+son propiedad de Joaquín y deben recuperarse al cerrar las experiencias.
+La propuesta multinodo no está validada físicamente. Verificar niveles/pinout reales y conflictos TFT
 antes de usar el firmware integrado; no publicar secretos ni respaldos de flash.
 
 ## Skill de montajes
