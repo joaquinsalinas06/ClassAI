@@ -313,8 +313,8 @@ class MainActivity : AppCompatActivity(), SensorEventListener {
     }
 
     private fun setAuthError(message: String?) = with(auth) {
-        errorText.text = message
         val show = !message.isNullOrEmpty()
+        if (show) errorText.text = message  // al ocultar, el texto se queda mientras se desvanece
         if (show == (error.visibility == View.VISIBLE)) return
         if (motionEnabled) TransitionManager.beginDelayedTransition(form, AutoTransition().apply { duration = ms(R.integer.ds_motion_base) })
         error.visibility = if (show) View.VISIBLE else View.GONE

@@ -22,15 +22,23 @@ adb install -r app/build/outputs/apk/release/app-release.apk
 1. **Acceso**: código universitario + contraseña (+ nombre al crear la cuenta). Un 409 al registrar
    lleva al login ("Ese código ya tiene cuenta"); un 401 posterior devuelve al acceso.
    El token de sesión (30 días) queda en SharedPreferences privadas: al reabrir la app sigue dentro.
-2. **Inicio**: carnet digital animado (estado NFC/HCE) y las clases abiertas. Pull-to-refresh y refresco cada 5 s.
-3. **Clase**: sin asistencia muestra "Acerca tu celular al lector"; al pasar el celular por el lector
-   (refresco cada 2,5 s) aparece la asistencia, las métricas del aula (temperatura, humedad, ruido,
-   confort) y los votos Todo bien / Calor / Frío con el voto actual marcado.
-4. En register y login se envía `nfc_token` (los 16 bytes que el teléfono responde a GET_CREDENTIAL, HEX)
+2. **Inicio** (pestaña Inicio): saludo, carnet digital gris perla (estado NFC/HCE, ondas, brillo e inclinación),
+   la tarjeta del aula con Kirby (cambia según la temperatura), las clases abiertas y "Últimas lecturas"
+   (`GET /student/history`). Pull-to-refresh y refresco cada 5 s.
+3. **Aula**: encabezado "En vivo"; sin asistencia, la ilustración "Tu teléfono → Lector del aula" (refresco cada 2,5 s).
+   Al aparecer la asistencia: check animado, confeti y vibración. Debajo, el aula completa: medidor de confort con
+   tendencia, temperatura, humedad, ruido y luz, movimiento por zona (entrada e interior), presentes y ventilador.
+4. **Votar**: una tarjeta por sensor (temperatura, luz, ruido, movimiento, humedad) con Kirby, selector deslizable
+   low / bien / high y el resumen "Tus votos". Contra un backend anterior, solo la temperatura se guarda.
+5. En register y login se envía `nfc_token` (los 16 bytes que el teléfono responde a GET_CREDENTIAL, HEX)
    para que el servidor vincule el teléfono; el tap en sí no usa red.
 
 Contrato HTTP: `docs/contracts.md`, sección "Alumno (app)". Sin iOS; el token HCE es estático
 (identificación, no autenticación fuerte). `requireDeviceUnlock=true`: el teléfono debe estar desbloqueado.
+
+Diseño: colores en `design/tokens.json` (`theme.*.app`), tipografía Figtree (OFL) en `res/font`, Kirby en
+`res/raw` (videos de `kirbycode/data` recortados a 640×480 y sin audio). Las animaciones respetan
+"Quitar animaciones" del sistema. En builds debug, `--ez demo_nfc true` simula un teléfono con NFC en el emulador.
 
 ## Protocolo (resumen)
 

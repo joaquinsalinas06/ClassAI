@@ -28,8 +28,8 @@ android {
         applicationId = "com.classai.mobile"
         minSdk = 26
         targetSdk = 36
-        versionCode = 7
-        versionName = "1.0"
+        versionCode = 8
+        versionName = "2.0"
         buildConfigField("String", "CLASSAI_API_URL", "\"${classaiApiUrl.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
     }
 
