@@ -12,6 +12,8 @@ import { cn } from "../ui/cn";
 import { SPRING } from "../ui/motion";
 
 export const TOOL_LABEL: Record<string, string> = {
+  get_session_overview: "Datos de la clase",
+  get_room_now: "Aula ahora",
   list_rooms: "Aulas",
   get_current_class: "Clase actual",
   get_session_summary: "Resumen de sesión",
