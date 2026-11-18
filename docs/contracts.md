@@ -228,3 +228,67 @@ POST /synthesize recibe `{text}` y devuelve WAV. El perfil de despliegue usa
 faster-whisper con modelo local y espeak-ng español; no expone su puerto a
 Internet ni descarga modelos al iniciar. El agente remuestrea a32kHz para el
 amplificador. Palabra inicial preentrenada, no reconocimiento de «ClassAI».
+
+## API HTTP de autenticación, sesiones y alumnos
+
+Base pública: `https://classai.myschool.com.pe/api` (Caddy quita `/api`; FastAPI ve `/auth/login`).
+Errores: `{"detail": "mensaje en español"}`. Tiempos ISO 8601 UTC (`2026-11-18T14:00:00Z`).
+
+### Docente (web) — cookie
+
+La cookie `classai_session` es httpOnly, Secure y SameSite=Lax, y dura 12 h. Todas las rutas del
+panel (`/sessions*`, `/classes/current`, `/live/*`, `/rooms*`, `/feedback`, `/assistant/ask`, etc.)
+responden **401** si no está la cookie. Las rutas públicas son `/health`, `/auth/*`, `/student/*` y
+`/mobile/enroll`, más `/credentials*` (X-API-Key) y `/assistant/voice` (X-Voice-Key).
+
+| Método | Ruta | Body | Respuesta |
+|---|---|---|---|
+| POST | `/auth/login` | `{"username":"docente","password":"…"}` | 200 `{"teacher":{"id":1,"username":"docente","full_name":"Docente"},"expires_at":"…"}` + Set-Cookie · 401 |
+| POST | `/auth/logout` | — | `{"ok":true}` |
+| GET | `/auth/me` | — | `{"teacher":{…}}` · 401 |
+
+Para crear docentes: `python backend/create_teacher.py USUARIO --name "Nombre"` pide la contraseña.
+Al arrancar, la API ejecuta `create_teacher.py --from-env`, que usa `TEACHER_USER` y `TEACHER_PASSWORD`
+(opcional `TEACHER_NAME`) y no hace nada si el docente ya existe. Las contraseñas se guardan con `hashlib.scrypt`.
+
+### Sesiones de clase (docente)
+
+| Método | Ruta | Body | Respuesta |
+|---|---|---|---|
+| GET | `/sessions?room=&course=&limit=` | — | `{"found":true,"count":1,"data":[{"session_id","room","course","started_at","ended_at",…}]}` |
+| POST | `/sessions` | `{"room":"a101","course":"CS5055 IoT","started_at":"2026-11-18T14:00:00Z"}` (`started_at` es opcional; por defecto, ahora) | 201 detalle + `"published":true` · 409 si ya hay una abierta en el aula · 422 sin curso |
+| GET | `/sessions/{id}` | — | `{"session_id":"a101-…","room":"a101","course":"CS5055 IoT","device":"web","started_at":"…","ended_at":null,"open":true,"attendance_count":12,"votes":{"ok":5,"hot":3,"cold":1}}` · 404 |
+| POST | `/sessions/{id}/close` | — | detalle con `open:false` · 409 si ya estaba cerrada |
+| DELETE | `/sessions/{id}` | — | `{"deleted":true,"session_id":"…","published":true\|null}` (borra la asistencia, los votos y el resumen) |
+| GET | `/sessions/{id}/votes` | — | `{"counts":{"ok":0,"hot":0,"cold":1},"count":1,"data":[{"student_code":"202310123","full_name":"Valeria Quispe","kind":"cold","created_at":"…"}]}` |
+
+Crear o cerrar una sesión sigue la misma autoridad que el botón del nodo de acceso: la fila en `sessions` y
+`room_runtime` (con `revision+1`), y después del commit se publica el retenido `classai/v1/{room}/session`
+(el usuario MQTT `classai-api` tiene permiso de escritura en ese tópico). Hay una sola sesión abierta por aula.
+
+### Alumno (app) — Bearer
+
+Se envía `Authorization: Bearer <access_token>`. El token dura 30 días, y en SQLite solo se guarda su SHA-256.
+
+| Método | Ruta | Body | Respuesta |
+|---|---|---|---|
+| POST | `/student/register` | `{"code":"202310123","full_name":"Valeria Quispe","password":"secreta1","nfc_token":"9F2C4A01B7E35D6688C1F0A2B4D6E8F0"}` | 201 `{"access_token":"…","token_type":"bearer","expires_at":"…","student":{"code":"202310123","full_name":"Valeria Quispe","phone_linked":true}}` · 409 si el código ya tiene cuenta · 422 |
+| POST | `/student/login` | `{"code":"202310123","password":"secreta1","nfc_token":"…"}` | 200, igual que register · 401 |
+| POST | `/student/logout` | — | `{"ok":true}` |
+| GET | `/student/me` | — | `{"student":{"code","full_name","phone_linked"}}` · 401 |
+| GET | `/student/classes` | — | `{"classes":[{"id":"a101-…","room":"a101","course":"CS5055 IoT","started_at":"…","ended":false,"attended":false,"attended_at":null,"my_vote":null}]}` (solo las abiertas) |
+| GET | `/student/classes/{id}` | — | lo mismo para una clase, más `"metrics":{"temp_c":24.1,"rh_pct":55,"noise_rel":0.2,"comfort":82,"state":"OK","presence":true}` (lectura de ≤15 s; `{}` si no hay o si la clase cerró) · 404 |
+| POST | `/student/classes/{id}/feedback` | `{"kind":"hot"}` (`ok`, `hot` o `cold`; también se aceptan `noisy` y `dark`) | `{"saved":true,"session_id":"…","kind":"hot","created_at":"…"}` · 409 si la clase ya terminó · 404 |
+
+- `password` debe tener al menos 6 caracteres. `code` debe cumplir `[A-Za-z0-9-]{1,32}`. Si el docente ya había
+  cargado ese código en el padrón, la cuenta lo reclama y conserva el nombre del padrón.
+- **Identificador HCE:** `nfc_token` son los 16 bytes que el teléfono responde a GET_CREDENTIAL (sección
+  APDU), en HEX (32 caracteres). Es exactamente el `credential.token` del evento `ATTENDANCE_RECORDED` con
+  `type: android_hce`. En register o login, el servidor lo vincula como credencial activa del alumno.
+  Quien tiene la contraseña y el teléfono manda: se revoca el teléfono anterior del alumno y cualquier
+  vínculo previo de ese token. Así, al pasar el celular por el nodo de acceso, la asistencia queda en `attendance`
+  con el `student_id` del alumno registrado. `nfc_token` es opcional; sin él, el alumno puede votar, pero
+  el nodo no lo reconoce.
+- Las tarjetas físicas (`nfc_card_uid`) se siguen enrolando con `POST /credentials` (X-API-Key).
+- Hay un voto por alumno y sesión (votar de nuevo lo reemplaza). El voto queda en `student_feedback`, ligado a
+  la sesión abierta, y no exige asistencia previa. No modifica el modelo de confort del docente.
