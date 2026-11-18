@@ -134,6 +134,11 @@ def test_session_crud_and_votes_of_registered_student(client):
     assert {(v["dimension"], v["value"]) for v in votes["dimension_data"]} == {("light", "low"), ("noise", "ok"), ("motion", "high")}
     detail = client.get(f"/sessions/{sid}").json()
     assert detail["attendance_count"] == 1 and detail["votes"]["cold"] == 1
+    # Una BD desplegada antes de student_votes sigue respondiendo (sin votos por dimensión).
+    with sqlite3.connect(client.database) as db:
+        db.execute("DROP TABLE student_votes")
+    assert student.get(f"/student/classes/{sid}", headers=bearer).json()["my_votes"] == {"temp": "low"}
+    assert client.get(f"/sessions/{sid}/votes").json()["dimension_data"] == []
 
     closed = client.post(f"/sessions/{sid}/close")
     assert closed.status_code == 200 and not closed.json()["open"]

@@ -47,8 +47,11 @@ KIND_TEMP = {v: k for k, v in TEMP_KIND.items()}
 
 def my_votes(db: sqlite3.Connection, session_id: str, student: int, temp_kind: Optional[str]) -> dict:
     votes = {"temp": KIND_TEMP[temp_kind]} if temp_kind in KIND_TEMP else {}
-    votes.update(db.execute("SELECT dimension, value FROM student_votes WHERE session_id=? AND student_id=?",
-                            (session_id, student)).fetchall())
+    try:
+        votes.update(db.execute("SELECT dimension, value FROM student_votes WHERE session_id=? AND student_id=?",
+                                (session_id, student)).fetchall())
+    except sqlite3.OperationalError:  # BD aún sin la tabla (schema.sql se aplica al arrancar la ingesta)
+        pass
     return votes
 
 

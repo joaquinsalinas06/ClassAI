@@ -73,8 +73,12 @@ def vote_counts(db: sqlite3.Connection, session_id: str) -> dict:
 def dimension_counts(db: sqlite3.Connection, session_id: str) -> dict:
     """Votos de luz, ruido, movimiento y humedad: {"light": {"low": 1, "ok": 0, "high": 2}, ...}."""
     counts = {d: {"low": 0, "ok": 0, "high": 0} for d in ("light", "noise", "motion", "humidity")}
-    for dimension, value, count in db.execute(
-            "SELECT dimension, value, COUNT(*) FROM student_votes WHERE session_id=? GROUP BY dimension, value", (session_id,)):
+    try:
+        rows = db.execute("SELECT dimension, value, COUNT(*) FROM student_votes WHERE session_id=? GROUP BY dimension, value",
+                          (session_id,)).fetchall()
+    except sqlite3.OperationalError:  # BD aún sin la tabla: el panel sigue funcionando con los votos clásicos
+        rows = []
+    for dimension, value, count in rows:
         counts[dimension][value] = count
     return counts
 
@@ -135,8 +139,10 @@ def delete_session(session_id: str) -> dict:
         was_open = row[1] is None
         if was_open:
             db.execute("UPDATE room_runtime SET revision=revision+1, session_id=NULL WHERE room=? AND session_id=?", (row[0], session_id))
-        for table in ("attendance", "student_feedback", "student_votes", "session_summaries"):
+        for table in ("attendance", "student_feedback", "session_summaries"):
             db.execute(f"DELETE FROM {table} WHERE session_id=?", (session_id,))
+        if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='student_votes'").fetchone():
+            db.execute("DELETE FROM student_votes WHERE session_id=?", (session_id,))
         db.execute("DELETE FROM sessions WHERE id=?", (session_id,))
         db.commit()
         state = multinode.session_state(db, row[0])
@@ -151,11 +157,14 @@ def session_votes(session_id: str) -> dict:
             "WHERE f.session_id=? ORDER BY f.created_at DESC",
             (session_id,),
         ).fetchall()
-        others = db.execute(
-            "SELECT s.code, s.full_name, v.dimension, v.value, v.created_at FROM student_votes v JOIN students s ON s.id=v.student_id "
-            "WHERE v.session_id=? ORDER BY v.created_at DESC",
-            (session_id,),
-        ).fetchall()
+        try:
+            others = db.execute(
+                "SELECT s.code, s.full_name, v.dimension, v.value, v.created_at FROM student_votes v JOIN students s ON s.id=v.student_id "
+                "WHERE v.session_id=? ORDER BY v.created_at DESC",
+                (session_id,),
+            ).fetchall()
+        except sqlite3.OperationalError:
+            others = []
         return {"counts": vote_counts(db, session_id), "count": len(rows),
                 "data": [dict(zip(("student_code", "full_name", "kind", "created_at"), row)) for row in rows],
                 "dimensions": dimension_counts(db, session_id),
