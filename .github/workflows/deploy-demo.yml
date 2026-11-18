@@ -32,14 +32,14 @@ jobs:
               set -eu
               cd /home/salinsuwu_gmail_com/ClassAI
               test -z "$(sudo -u salinsuwu_gmail_com git status --porcelain)"
-              sudo -u salinsuwu_gmail_com git fetch origin main
+              sudo -u salinsuwu_gmail_com git fetch origin refs/heads/main
               branch="$(sudo -u salinsuwu_gmail_com git branch --show-current)"
               if [ "$branch" != main ]; then
                 # Migración única desde la rama demo anterior; el árbol limpio ya se comprobó.
                 test "$branch" = codex/three-node-local-smoke
-                sudo -u salinsuwu_gmail_com git checkout -B main origin/main
+                sudo -u salinsuwu_gmail_com git checkout -B main FETCH_HEAD
               fi
-              sudo -u salinsuwu_gmail_com git merge --ff-only origin/main
+              sudo -u salinsuwu_gmail_com git merge --ff-only FETCH_HEAD
               sudo docker compose --env-file deploy/.env -f deploy/compose.yaml config --quiet
               sudo docker compose --env-file deploy/.env -f deploy/compose.yaml build api ingest web
               sudo docker compose --env-file deploy/.env -f deploy/compose.yaml up -d --wait --wait-timeout 120 api ingest web

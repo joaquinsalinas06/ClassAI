@@ -48,7 +48,9 @@ export function NewSessionButton({ onCreated }: { onCreated?: (id: string) => vo
         onSuccess: (session) => {
           setOpen(false);
           setCourse("");
-          toast({ tone: "ok", title: `Clase abierta en ${session.room.toUpperCase()}`, description: session.published === false ? "El nodo de acceso la recibirá al reconectar." : session.course ?? undefined });
+          toast(session.published === false
+            ? { tone: "alert", title: `Clase abierta en ${session.room.toUpperCase()}, sin aviso al nodo`, description: "No se pudo publicar en MQTT; el nodo de acceso no la verá hasta que se reinicie la ingesta." }
+            : { tone: "ok", title: `Clase abierta en ${session.room.toUpperCase()}`, description: session.course ?? undefined });
           onCreated?.(session.session_id);
         },
       },
