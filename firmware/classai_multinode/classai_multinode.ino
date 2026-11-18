@@ -22,6 +22,9 @@
 #ifndef LOCAL_COMFORT_OVERRIDE
 #define LOCAL_COMFORT_OVERRIDE 0
 #endif
+#ifndef AUTO_ARM
+#define AUTO_ARM 0
+#endif
 #ifndef CLASSAI_ROLE
 #error "Compile with CLASSAI_ROLE=1 (access), 2 (environment) or 3 (assistant)"
 #endif
@@ -404,6 +407,14 @@ void disarm(){
  digitalWrite(21,LOW);
 #endif
 }
+void arm(){
+ armed=true;
+#if CLASSAI_ROLE == 1
+ if(MATRIX_VALIDATED){matrixRegister(0x0f,0);matrixRegister(0x09,0);matrixRegister(0x0b,7);matrixRegister(0x0a,0);}
+#endif
+}
+// Serial noise/unknown commands disarm; with AUTO_ARM the node re-arms at once (re-initialising the matrix).
+void serialDisarm(){disarm();if(AUTO_ARM)arm();}
 void hardwareSetup(){
 #if CLASSAI_ROLE == 1
  digitalWrite(21,LOW);digitalWrite(26,LOW);pinMode(21,OUTPUT);pinMode(26,OUTPUT);pinMode(32,INPUT_PULLUP);pinMode(35,INPUT);if(ACCESS_LDR_VALIDATED){pinMode(34,INPUT);analogReadResolution(12);}digitalWrite(25,LOW);pinMode(25,OUTPUT);
@@ -503,6 +514,7 @@ void setup(){
 #endif
  mqtt.setServer(MQTT_HOST,MQTT_PORT);mqtt.setCallback(receive);mqtt.setBufferSize(1536);mqtt.setSocketTimeout(2);
  xTaskCreate(networkTask,"mqtt",8192,nullptr,1,nullptr);
+ if(AUTO_ARM){arm();Serial.println("ARMADO (auto)");}
 }
 void loop(){
 #if CLASSAI_ROLE == 1
@@ -545,9 +557,9 @@ void loop(){
  static char command[32];static unsigned used=0;static bool overflow=false;
  while(Serial.available()){
   char ch=Serial.read();if(ch=='\r')continue;
-  if(ch!='\n'){if(used+1<sizeof(command))command[used++]=ch;else {overflow=true;disarm();}continue;}
+  if(ch!='\n'){if(used+1<sizeof(command))command[used++]=ch;else {overflow=true;serialDisarm();}continue;}
   command[used]=0;used=0;
-  if(overflow){overflow=false;disarm();continue;}
+  if(overflow){overflow=false;serialDisarm();continue;}
   if(!strcmp(command,"status")){
 #if CLASSAI_ROLE == 1
    lock();bool inSession=sessionId[0]!=0;unlock();
@@ -566,12 +578,9 @@ void loop(){
    ledTestAt=millis();ledTestRunning=true;Serial.println("PRUEBA LED: verde y rojo alternados durante 6 segundos");
 #endif
   }else if(!strcmp(command,"arm")){
-   armed=true;Serial.println("ARMADO");
-#if CLASSAI_ROLE == 1
-   if(MATRIX_VALIDATED){matrixRegister(0x0f,0);matrixRegister(0x09,0);matrixRegister(0x0b,7);matrixRegister(0x0a,0);}
-#endif
+   arm();Serial.println("ARMADO");
   }else if(!strcmp(command,"format-outbox")&&!filesystemReady){lock();filesystemReady=LittleFS.format()&&LittleFS.begin(false);unlock();}
-  else disarm();
+  else serialDisarm();
  }
 #endif
  if(multinode::elapsed(millis(),lastSample,5000)){lastSample=millis();sample();}
