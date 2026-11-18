@@ -33,8 +33,9 @@ export function MetricTile({ metric, value, points, lines, config, live, stale, 
   const where = placement(value, band, meta.decimals);
   const delta = deltaOver(points, DELTA_WINDOW);
   const tone = where === "in" ? "ok" : where === "unknown" ? "neutral" : "alert";
-  const status = stale ? "Última lectura" : !band && meta.note && value != null ? meta.note : placementText(metric, where);
-  const multi = (lines?.length ?? 0) > 1;
+  const status = stale ? (value == null ? "Sin datos" : "Última lectura") : !band && meta.note && value != null ? meta.note : placementText(metric, where);
+  const drawn = lines?.filter((l) => l.points.length > 0) ?? [];
+  const multi = drawn.length > 1;
   const step = 10 ** -meta.decimals;
   const DeltaIcon = delta == null || Math.abs(delta) < step ? ArrowRight : delta > 0 ? ArrowUpRight : ArrowDownRight;
 
@@ -64,12 +65,12 @@ export function MetricTile({ metric, value, points, lines, config, live, stale, 
         />
         <span className="text-label text-muted">{meta.unit}</span>
       </div>
-      <Sparkline points={points} extras={multi ? lines : undefined} band={band} color={meta.color} minSpan={meta.minSpan} live={live && !stale} windowMs={WINDOW} />
+      <Sparkline points={points} extras={multi ? drawn : undefined} band={band} color={meta.color} minSpan={meta.minSpan} live={live && !stale} windowMs={WINDOW} />
       {lines && lines.length > 0 && (
         <ul className="-mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 text-caption text-muted" aria-label="Leyenda">
           {lines.map((l) => (
             <li key={l.role} className="flex items-center gap-1.5">
-              <span className="h-0.5 w-3 rounded-full" style={{ background: multi ? l.color : meta.color }} aria-hidden />
+              <span className="h-0.5 w-3 rounded-full" style={{ background: multi || l.points.length === 0 ? l.color : meta.color }} aria-hidden />
               {l.label}
               <span className="num text-fg-2">{formatMetric(metric, l.points[l.points.length - 1]?.v)}</span>
               {l.offline && <span className="rounded-sm bg-sunken px-1 text-[11px] text-faint">sin conexión</span>}

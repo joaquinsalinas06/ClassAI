@@ -15,6 +15,7 @@ import { ApiError, useFeedback } from "../lib/api";
 import { STATE_HINT, comfortState } from "../lib/comfort";
 import { formatDuration, formatNumber, formatRelative, formatTime, parseTime, withUnit } from "../lib/format";
 import type { Arrival } from "../lib/live";
+import { ZONE_LABEL, ZONE_ROLES } from "../lib/zones";
 import type { ComfortState, FeedbackKind, NodeSnapshot, TrendMetric } from "../lib/types";
 import { Badge, StateBadge } from "../ui/Badge";
 import { buttonClass } from "../ui/Button";
@@ -241,10 +242,13 @@ export function LiveRoom() {
     light: zones.light.at(-1)?.v, motion: zones.motion.at(-1)?.v,
   };
   const points = { ...state.points, light: zones.light, motion: zones.motion };
-  const lines = {
-    light: zones.lines.light.map((l) => ({ ...l, offline: nodeOffline(state.nodes, l.role, now) })),
-    motion: zones.lines.motion.map((l) => ({ ...l, offline: nodeOffline(state.nodes, l.role, now) })),
-  };
+  // Both zones always in the tile legends (with "sin conexión"), even before their first reading.
+  const legend = (kind: "light" | "motion") => ZONE_ROLES.map((role) => ({
+    ...(zones.lines[kind].find((l) => l.role === role) ?? { role, label: ZONE_LABEL[role][kind], color: ZONE_LABEL[role].color, points: [] }),
+    offline: nodeOffline(state.nodes, role, now),
+  }));
+  const tileLines = { light: legend("light"), motion: legend("motion") };
+  const lines = { light: tileLines.light.filter((l) => l.points.length > 0), motion: tileLines.motion.filter((l) => l.points.length > 0) };
 
   return (
     <div className="flex flex-col gap-5">
@@ -295,7 +299,7 @@ export function LiveRoom() {
               tileClass={tileSpan}
               readings={readings}
               points={points}
-              lines={lines}
+              lines={tileLines}
               config={config}
               live={!offline}
               stale={offline}

@@ -52,7 +52,8 @@ export function useLive(room: string | undefined) {
     queryKey: ["zones", room, session?.id ?? null],
     queryFn: () => api.roomZones(room!, zoneMinutes),
     enabled: !!room && !current.isPending,
-    staleTime: Infinity,
+    // Re-read every minute: the live buffer is capped, so the minute backfill keeps the whole window drawn.
+    refetchInterval: 60_000,
   });
   const zones = useMemo(() => buildZones(zonesQuery.data, state.zones), [zonesQuery.data, state.zones]);
 
