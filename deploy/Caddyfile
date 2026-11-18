@@ -5,8 +5,18 @@
             flush_interval -1
         }
     }
+    # APK de la app de alumnos (pública). Go no conoce .apk: se fija el tipo para que Android la instale.
+    @apk path *.apk
+    header @apk {
+        Content-Type application/vnd.android.package-archive
+        Content-Disposition attachment
+        Cache-Control "no-cache"
+    }
     handle {
         root * /srv
+        # /app es una ruta de la SPA, pero también existe la carpeta /srv/app (APK y QR): sin esto se serviría el directorio.
+        @spa path /app /app/
+        rewrite @spa /index.html
         try_files {path} /index.html
         file_server
     }

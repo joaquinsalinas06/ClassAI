@@ -56,4 +56,26 @@
     <color name="ds_chart_out">#14f06464</color>
     <color name="ds_chart_crosshair">#4a525c</color>
     <color name="ds_chart_compare">#6b747e</color>
+    <color name="ds_app_card_top">#f1f3f6</color>
+    <color name="ds_app_card_bottom">#c2c9d2</color>
+    <color name="ds_app_card_on">#12161b</color>
+    <color name="ds_app_card_chip_ok">#6ad99b</color>
+    <color name="ds_app_card_chip_warn">#f5c862</color>
+    <color name="ds_app_card_chip_off">#b0b8c1</color>
+    <color name="ds_app_card_shadow">#99000000</color>
+    <color name="ds_app_mood_cold">#2c63c9</color>
+    <color name="ds_app_mood_cold_deep">#173a7d</color>
+    <color name="ds_app_mood_ok">#6a4bc4</color>
+    <color name="ds_app_mood_ok_deep">#3b2a7c</color>
+    <color name="ds_app_mood_hot">#d4542c</color>
+    <color name="ds_app_mood_hot_deep">#8c2a16</color>
+    <color name="ds_app_on_mood">#ffffff</color>
+    <color name="ds_app_on_mood_soft">#d9ffffff</color>
+    <color name="ds_app_mood_glass">#26ffffff</color>
+    <color name="ds_app_kirby_ok_edge">#33251e</color>
+    <color name="ds_app_kirby_hot_edge">#8a2a1c</color>
+    <color name="ds_app_kirby_cold_edge">#3a6f98</color>
+    <color name="ds_app_scrim">#e60c0f13</color>
+    <color name="ds_app_glow_a">#333987e5</color>
+    <color name="ds_app_glow_b">#2a199e70</color>
 </resources>

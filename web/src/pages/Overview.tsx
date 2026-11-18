@@ -1,7 +1,7 @@
 import { useQueries } from "@tanstack/react-query";
 import { ArrowUpRight, CircleCheck, Clock, TriangleAlert, UsersRound, WifiOff, type LucideIcon } from "lucide-react";
-import { motion } from "motion/react";
-import { useMemo } from "react";
+import { motion, useReducedMotion } from "motion/react";
+import { useMemo, type CSSProperties } from "react";
 import { Link } from "react-router";
 import { ComfortBar } from "../charts/ComfortBar";
 import { ComfortRing } from "../charts/ComfortRing";
@@ -28,8 +28,9 @@ function RoomTile({ room, current, config, index, trend }: { room: Room; current
   const offline = room.status === "offline";
   const session = current?.session;
   const lastAt = t?.received_at ?? t?.ts;
+  const reduce = useReducedMotion();
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ ...SPRING.gentle, delay: index * 0.05 }}>
+    <motion.div initial={{ opacity: 0, transform: reduce ? "none" : "translateY(10px)" }} animate={{ opacity: 1, transform: "translateY(0px)" }} transition={{ ...SPRING.gentle, delay: index * 0.06 }}>
       <Link
         to={`/aula/${room.id}`}
         className="group flex h-full flex-col rounded-lg border border-line bg-surface shadow-xs transition-[border-color,box-shadow] duration-150 hover:border-line-strong hover:shadow-sm"
@@ -211,7 +212,7 @@ export function Overview() {
       )}
 
       <div className="mt-6 grid gap-5 lg:grid-cols-12">
-        <Card className="lg:col-span-7">
+        <Card className="ds-rise lg:col-span-7" style={{ "--i": 3 } as CSSProperties}>
           <CardHeader title="Alertas" description="Lo que requiere atención, primero lo más reciente" />
           {recent.isPending && rooms.isPending ? (
             <div className="space-y-3 p-4">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-10" />)}</div>
@@ -242,7 +243,7 @@ export function Overview() {
           )}
         </Card>
 
-        <Card className="lg:col-span-5">
+        <Card className="ds-rise lg:col-span-5" style={{ "--i": 4 } as CSSProperties}>
           <CardHeader title="Clases de hoy" description="Confort promedio de cada clase" actions={<Link to="/sesiones" className="text-label font-medium text-link hover:underline">Ver todas</Link>} />
           {recent.isPending ? (
             <div className="space-y-3 p-4">{Array.from({ length: 4 }, (_, i) => <Skeleton key={i} className="h-8" />)}</div>
@@ -295,7 +296,7 @@ function WeekHeatmap({ rooms, sessions, loading }: { rooms: Room[]; sessions?: S
     return map;
   }, [sessions]);
   return (
-    <Card className="mt-5">
+    <Card className="ds-rise mt-5" style={{ "--i": 5 } as CSSProperties}>
       <CardHeader title="Confort por día" description="Promedio de las clases de cada aula en las últimas dos semanas" />
       {loading ? (
         <div className="p-4"><Skeleton className="h-28" /></div>
@@ -313,12 +314,14 @@ function WeekHeatmap({ rooms, sessions, loading }: { rooms: Room[]; sessions?: S
               </tr>
             </thead>
             <tbody>
-              {rooms.map((r) => (
+              {rooms.map((r, ri) => (
                 <tr key={r.id}>
                   <th scope="row" className="truncate pr-2 text-left text-small font-medium text-fg-2">{r.name ?? r.id}</th>
-                  {days.map((d) => {
+                  {days.map((d, di) => {
                     const c = cells.get(`${r.id}|${limaDayKey(d)}`);
-                    if (!c) return <td key={d} className="h-9 rounded-sm bg-sunken/60" aria-label="Sin clases" />;
+                    // cells pop in column by column, like the two weeks filling up
+                    const order = { "--i": di + ri * 2 } as CSSProperties;
+                    if (!c) return <td key={d} className="ds-cell h-9 rounded-sm bg-sunken/60" style={order} aria-label="Sin clases" />;
                     const avg = c.sum / c.minutes;
                     const tone = comfortState({ ok_min: 80, regular_min: 60 }, avg);
                     const k = tone === "OK" ? "ok" : tone === "REGULAR" ? "regular" : "alert";
@@ -326,8 +329,8 @@ function WeekHeatmap({ rooms, sessions, loading }: { rooms: Room[]; sessions?: S
                       <Tooltip key={d} content={`${formatDate(d)} · ${c.count} ${c.count === 1 ? "clase" : "clases"} · ${c.alert ? `${formatDuration(c.alert)} en alerta` : "sin alertas"}`}>
                         <td
                           tabIndex={0}
-                          className="num h-9 rounded-sm border text-center text-caption font-semibold"
-                          style={{ background: `var(--ds-state-${k}-subtle)`, borderColor: `var(--ds-state-${k}-border)`, color: `var(--ds-state-${k}-text)` }}
+                          className="ds-cell num h-9 rounded-sm border text-center text-caption font-semibold"
+                          style={{ ...order, background: `var(--ds-state-${k}-subtle)`, borderColor: `var(--ds-state-${k}-border)`, color: `var(--ds-state-${k}-text)` }}
                         >
                           {formatNumber(avg)}
                         </td>

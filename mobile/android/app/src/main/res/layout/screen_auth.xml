@@ -1,0 +1,219 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/scroll"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:orientation="vertical"
+        android:paddingHorizontal="@dimen/ds_space_6"
+        android:paddingTop="@dimen/ds_space_10"
+        android:paddingBottom="@dimen/ds_space_8">
+
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="72dp"
+            android:layout_height="72dp"
+            android:contentDescription="@string/cd_logo"
+            android:elevation="10dp"
+            android:outlineProvider="background"
+            android:src="@drawable/avd_logo" />
+
+        <TextView
+            android:id="@+id/title"
+            style="@style/ClassAI.Title.Display"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_6"
+            android:gravity="center"
+            android:textSize="34sp" />
+
+        <TextView
+            android:id="@+id/subtitle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_3"
+            android:gravity="center"
+            android:text="@string/login_subtitle"
+            android:textColor="@color/ds_text_secondary"
+            android:textSize="15sp" />
+
+        <LinearLayout
+            android:id="@+id/form"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_8"
+            android:animateLayoutChanges="false"
+            android:background="@drawable/bg_card"
+            android:elevation="6dp"
+            android:orientation="vertical"
+            android:padding="@dimen/ds_space_5">
+
+            <!-- Selector Crear cuenta / Iniciar sesión con indicador deslizante -->
+            <FrameLayout
+                android:id="@+id/segment"
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:background="@drawable/bg_segment"
+                android:padding="4dp">
+
+                <View
+                    android:id="@+id/segmentThumb"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:background="@drawable/bg_segment_thumb"
+                    android:elevation="1dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:elevation="2dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/segRegister"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/figtree_semibold"
+                        android:gravity="center"
+                        android:text="@string/title_register"
+                        android:textSize="@dimen/ds_text_body_size" />
+
+                    <TextView
+                        android:id="@+id/segLogin"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:fontFamily="@font/figtree_semibold"
+                        android:gravity="center"
+                        android:text="@string/title_login"
+                        android:textSize="@dimen/ds_text_body_size" />
+                </LinearLayout>
+            </FrameLayout>
+
+            <TextView
+                android:id="@+id/formTitle"
+                style="@style/ClassAI.Title.Heading"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_5" />
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/codeLayout"
+                style="@style/ClassAI.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/field_code"
+                app:startIconDrawable="@drawable/ic_badge">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/code"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="username"
+                    android:fontFamily="@font/figtree_medium"
+                    android:imeOptions="actionNext"
+                    android:inputType="textVisiblePassword|textNoSuggestions"
+                    android:maxLength="32"
+                    android:singleLine="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/nameLayout"
+                style="@style/ClassAI.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/field_name"
+                app:startIconDrawable="@drawable/ic_person">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="name"
+                    android:imeOptions="actionNext"
+                    android:inputType="textPersonName|textCapWords"
+                    android:maxLength="80"
+                    android:singleLine="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/passLayout"
+                style="@style/ClassAI.Field"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="@string/field_password"
+                app:endIconMode="password_toggle"
+                app:startIconDrawable="@drawable/ic_lock">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/password"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:autofillHints="password"
+                    android:imeOptions="actionDone"
+                    android:inputType="textPassword"
+                    android:maxLength="72"
+                    android:singleLine="true" />
+            </com.google.android.material.textfield.TextInputLayout>
+
+            <LinearLayout
+                android:id="@+id/error"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_4"
+                android:accessibilityLiveRegion="polite"
+                android:background="@drawable/bg_error"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="@dimen/ds_space_3"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="@dimen/ds_icon_md"
+                    android:layout_height="@dimen/ds_icon_md"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_warning"
+                    app:tint="@color/ds_state_alert_text" />
+
+                <TextView
+                    android:id="@+id/errorText"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ds_space_2"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/figtree_medium"
+                    android:textColor="@color/ds_state_alert_text"
+                    android:textSize="@dimen/ds_text_body_size" />
+            </LinearLayout>
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/submit"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:layout_marginTop="@dimen/ds_space_5"
+                app:iconGravity="textStart" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/privacy"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/ds_space_5"
+            android:drawablePadding="10dp"
+            android:gravity="center_vertical"
+            android:paddingHorizontal="@dimen/ds_space_2"
+            android:text="@string/login_privacy"
+            android:textColor="@color/ds_text_muted"
+            android:textSize="@dimen/ds_text_caption_size"
+            app:drawableStartCompat="@drawable/ic_lock"
+            app:drawableTint="@color/ds_text_muted" />
+    </LinearLayout>
+</ScrollView>

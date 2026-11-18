@@ -5,7 +5,7 @@ from datetime import datetime, timezone
 from typing import Literal, Optional
 
 from fastapi import APIRouter, Header, HTTPException
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 from auth import STUDENT_TTL, connect, hash_password, issue_token, now, revoke_token, token_subject, verify_password
 from temperature_service import iso_utc, normalize_credential
@@ -29,7 +29,30 @@ class LoginIn(BaseModel):
 
 
 class VoteIn(BaseModel):
-    kind: Literal["ok", "hot", "cold", "noisy", "dark"]
+    """`kind` (temperatura, como siempre) o `dimension` + `value` para cualquier sensor del aula."""
+    kind: Optional[Literal["ok", "hot", "cold", "noisy", "dark"]] = None
+    dimension: Optional[Literal["temp", "light", "noise", "motion", "humidity"]] = None
+    value: Optional[Literal["low", "ok", "high"]] = None
+
+    @model_validator(mode="after")
+    def one_form(self):
+        if (self.kind is None) == (self.dimension is None or self.value is None):
+            raise ValueError("envía kind, o dimension y value")
+        return self
+
+
+TEMP_KIND = {"low": "cold", "ok": "ok", "high": "hot"}
+KIND_TEMP = {v: k for k, v in TEMP_KIND.items()}
+
+
+def my_votes(db: sqlite3.Connection, session_id: str, student: int, temp_kind: Optional[str]) -> dict:
+    votes = {"temp": KIND_TEMP[temp_kind]} if temp_kind in KIND_TEMP else {}
+    try:
+        votes.update(db.execute("SELECT dimension, value FROM student_votes WHERE session_id=? AND student_id=?",
+                                (session_id, student)).fetchall())
+    except sqlite3.OperationalError:  # BD aún sin la tabla (schema.sql se aplica al arrancar la ingesta)
+        pass
+    return votes
 
 
 def bearer(authorization: Optional[str]) -> Optional[str]:
@@ -145,7 +168,23 @@ def classes(authorization: Optional[str] = Header(default=None)) -> dict:
     with connect() as db:
         student = identity(db, authorization)
         rows = db.execute(CLASS_SQL + "WHERE s.ended_at IS NULL ORDER BY s.started_at DESC", {"student": student}).fetchall()
-        return {"classes": [class_row(row) for row in rows]}
+        result = [class_row(row) for row in rows]
+        for item in result:
+            item["metrics"] = live_metrics(db, item["room"])
+        return {"classes": result}
+
+
+@router.get("/history", summary="Últimas asistencias del alumno")
+def history(authorization: Optional[str] = Header(default=None)) -> dict:
+    with connect() as db:
+        student = identity(db, authorization)
+        rows = db.execute(
+            "SELECT s.id, s.room, s.course, s.started_at, a.recorded_at FROM attendance a "
+            "JOIN sessions s ON s.id=a.session_id WHERE a.student_id=? ORDER BY a.recorded_at DESC LIMIT 20",
+            (student,),
+        ).fetchall()
+        return {"history": [{"session_id": r[0], "room": r[1], "course": r[2], "started_at": r[3], "attended_at": r[4]}
+                            for r in rows]}
 
 
 def live_metrics(db: sqlite3.Connection, room: str) -> dict:
@@ -161,9 +200,39 @@ def live_metrics(db: sqlite3.Connection, room: str) -> dict:
             continue
         if not 0 <= age <= 15:
             continue
-        keys = ("temp_c", "rh_pct", "noise_rel", "light_rel", "comfort", "state") if role == "environment" else ("presence",) if role == "access" else ()
+        keys = ("temp_c", "rh_pct", "noise_rel", "light_rel", "comfort", "state", "fan_on", "fan_enabled", "fan_mode") \
+            if role == "environment" else ("presence",) if role == "access" else ()
         metrics.update({key: data[key] for key in keys if data.get(key) is not None})
+        # PIR por zona: el de acceso vigila la entrada y el de ambiente el interior.
+        zone = {"access": "entrance", "environment": "interior"}.get(role)
+        if zone and data.get("presence") is not None:
+            metrics.setdefault("zones", {})[zone] = data["presence"]
     return metrics
+
+
+def room_config(db: sqlite3.Connection, room: str) -> dict:
+    """Rangos objetivo vigentes del aula (último comfort_params o los de fábrica)."""
+    from tuner import factory_config
+    row = db.execute("SELECT payload FROM comfort_params WHERE room=? ORDER BY params_version DESC LIMIT 1", (room,)).fetchone()
+    cfg = json.loads(row[0]) if row else factory_config(room)
+    return {key: cfg.get(key) for key in ("temp_c", "rh_pct", "noise_rel_max", "ok_min", "regular_min")}
+
+
+def class_trend(db: sqlite3.Connection, room: str, started_at: str) -> list:
+    """Promedio por minuto de confort y temperatura desde el inicio (últimos 30 minutos)."""
+    try:
+        since = datetime.fromisoformat(started_at.replace("Z", "+00:00")).strftime("%Y-%m-%d %H:%M")
+    except (ValueError, AttributeError):
+        return []
+    rows = db.execute(
+        "SELECT minute_utc, metric, AVG(avg) FROM sensor_minutes WHERE room=? AND metric IN ('comfort','temp_c') "
+        "AND minute_utc>=? GROUP BY minute_utc, metric ORDER BY minute_utc DESC LIMIT 60",
+        (room, since),
+    ).fetchall()
+    points: dict = {}
+    for minute, metric, value in rows:
+        points.setdefault(minute, {"minute": minute.replace(" ", "T") + ":00Z"})[metric] = round(value, 2)
+    return sorted(points.values(), key=lambda p: p["minute"])[-30:]
 
 
 @router.get("/classes/{session_id}", summary="Detalle de una clase para el alumno")
@@ -175,6 +244,10 @@ def class_detail(session_id: str, authorization: Optional[str] = Header(default=
             raise HTTPException(404, "Clase no encontrada")
         result = class_row(row)
         result["metrics"] = live_metrics(db, result["room"]) if not result["ended"] else {}
+        result["my_votes"] = my_votes(db, session_id, student, result["my_vote"])
+        result["present_count"] = db.execute("SELECT COUNT(*) FROM attendance WHERE session_id=?", (session_id,)).fetchone()[0]
+        result["targets"] = room_config(db, result["room"])
+        result["trend"] = class_trend(db, result["room"], result["started_at"])
         return result
 
 
@@ -189,10 +262,20 @@ def vote(session_id: str, body: VoteIn, authorization: Optional[str] = Header(de
         if session[0] is not None:
             raise HTTPException(409, "La clase ya terminó")
         at = iso_utc(now())
-        db.execute(
-            "INSERT INTO student_feedback VALUES (?,?,?,?) ON CONFLICT(session_id,student_id) "
-            "DO UPDATE SET kind=excluded.kind, created_at=excluded.created_at",
-            (session_id, student, body.kind, at),
-        )
+        kind = body.kind or (TEMP_KIND[body.value] if body.dimension == "temp" else None)
+        if kind:
+            db.execute(
+                "INSERT INTO student_feedback VALUES (?,?,?,?) ON CONFLICT(session_id,student_id) "
+                "DO UPDATE SET kind=excluded.kind, created_at=excluded.created_at",
+                (session_id, student, kind, at),
+            )
+        else:
+            db.execute(
+                "INSERT INTO student_votes VALUES (?,?,?,?,?) ON CONFLICT(session_id,student_id,dimension) "
+                "DO UPDATE SET value=excluded.value, created_at=excluded.created_at",
+                (session_id, student, body.dimension, body.value, at),
+            )
         db.commit()
-        return {"saved": True, "session_id": session_id, "kind": body.kind, "created_at": at}
+        result = {"saved": True, "session_id": session_id, "created_at": at}
+        result.update({"kind": kind} if kind else {"dimension": body.dimension, "value": body.value})
+        return result

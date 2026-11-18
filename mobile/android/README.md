@@ -7,103 +7,38 @@ de 16 bytes. Protocolo: **APDU HCE v0.1** en `docs/contracts.md`. Sin red durant
 ## Generar el APK
 
 Requisitos: JDK 17+ y Android SDK con `platforms;android-36` y `build-tools;36.0.0`.
-La dirección de API se configura al compilar, nunca por el alumno:
+La URL del backend es `BuildConfig.CLASSAI_API_URL`; por defecto `https://classai.myschool.com.pe/api`.
+Para otro backend, `CLASSAI_API_URL` en el entorno o en `.env` (ver `.env.example`; emulador: `http://10.0.2.2:8000`).
+HTTP en claro solo se permite para `10.0.2.2` y `localhost`.
 
 ```sh
 cd mobile/android
-cp .env.example .env
-# Editar CLASSAI_API_URL en .env (sin comillas); este archivo está ignorado por Git.
-./gradlew testDebugUnitTest assembleDebug
-adb install -r app/build/outputs/apk/debug/app-debug.apk
+./gradlew --no-daemon testDebugUnitTest assembleRelease   # APK firmado con la clave debug
+adb install -r app/build/outputs/apk/release/app-release.apk
 ```
-
-`CLASSAI_API_URL` del entorno tiene prioridad sobre `.env`; el valor de desarrollo
-es `http://10.0.2.2:8000` (el localhost del ordenador visto por el emulador).
-Un teléfono físico necesita una API accesible por LAN o HTTPS. Cambiar esa dirección
-requiere recompilar el APK, sin mostrar configuración al alumno. Al actualizar
-a otra URL, el carnet queda pendiente y revalida el mismo token; no se borran sus datos. La URL no es un
-secreto; nunca incluir claves de administrador en ella. No se despliega un servidor
-con este build. AGP 9.1, Gradle wrapper 9.3.1, minSdk 26 y compile/target 36.
 
 ## Experiencia del alumno
 
-1. Primera apertura: **solo código universitario**. Teclado numérico, ceros iniciales
-   intactos, dígitos visibles y botón activo cuando el formato es válido. Se puede
-   enviar con el botón o la tecla Listo/Enter. El docente debe haber cargado el código
-   en el padrón. El nombre se obtiene de la respuesta del backend, no se pide otra vez.
-2. Vinculación: el token se genera localmente y se envía con el código. Mientras se
-   procesa no se duplican envíos. Si no hay conexión, se guarda el código y el carnet
-   queda **Pendiente de vincular**; se reintenta al volver a abrir, recuperar red o
-   pulsar Reintentar. Nunca se declara activo sin confirmación del servidor.
-3. Siguientes aperturas: se muestra el carnet guardado directamente. Una vinculación
-   activa no necesita Internet durante el tap, ni la Activity abierta. Los estados
-   NFC apagado, Sin NFC/Sin HCE y Pendiente siguen siendo explícitos.
-4. Tras leer la credencial: confirmación breve, vibración y hora en Últimas lecturas (memoria del proceso). La app
-   indica **Credencial leída**, no confirmación de asistencia en SQLite: el backend
-   sigue validando sesión/estudiante y puede rechazar una lectura.
-5. Menú secundario: Cambiar de estudiante pide confirmación, regenera la credencial y
-   vuelve al código. Para volver a vincular un teléfono distinto, el docente debe
-   revocar el anterior. **Ver detalles técnicos**, cerrado por defecto, muestra NFC/HCE reales,
-   vinculación, URL configurada, AID, credencial privada copiable y eventos APDU en memoria.
-   El botón de ajustes NFC permite configurar el teléfono. La URL sigue definiéndose
-   en `.env` al compilar; el alumno no necesita introducirla ni cambiarla.
+1. **Acceso**: código universitario + contraseña (+ nombre al crear la cuenta). Un 409 al registrar
+   lleva al login ("Ese código ya tiene cuenta"); un 401 posterior devuelve al acceso.
+   El token de sesión (30 días) queda en SharedPreferences privadas: al reabrir la app sigue dentro.
+2. **Inicio** (pestaña Inicio): saludo, carnet digital gris perla (estado NFC/HCE, ondas, brillo e inclinación),
+   la tarjeta del aula con Kirby (cambia según la temperatura), las clases abiertas y "Últimas lecturas"
+   (`GET /student/history`). Pull-to-refresh y refresco cada 5 s.
+3. **Aula**: encabezado "En vivo"; sin asistencia, la ilustración "Tu teléfono → Lector del aula" (refresco cada 2,5 s).
+   Al aparecer la asistencia: check animado, confeti y vibración. Debajo, el aula completa: medidor de confort con
+   tendencia, temperatura, humedad, ruido y luz, movimiento por zona (entrada e interior), presentes y ventilador.
+4. **Votar**: una tarjeta por sensor (temperatura, luz, ruido, movimiento, humedad) con Kirby, selector deslizable
+   low / bien / high y el resumen "Tus votos". Contra un backend anterior, solo la temperatura se guarda.
+5. En register y login se envía `nfc_token` (los 16 bytes que el teléfono responde a GET_CREDENTIAL, HEX)
+   para que el servidor vincule el teléfono; el tap en sí no usa red.
 
-La ilustración identifica **Tu teléfono → Lector del aula** con una pantalla NFC
-y base. Dos destellos suaves y ondas secuenciales animan la escena; el carnet entra
-con un fundido corto y una sola onda tenue, sin giro 3D. Una respuesta HCE válida muestra un confeti breve con los colores
-compartidos; el efecto respeta la opción de reducir animaciones y funciona
-también desde la pantalla de acceso, sin enrolamiento ni conexión MQTT. Todo usa Canvas/animación nativa. Se detienen cuando la vista no es visible
-y respetan la opción del sistema para reducir/desactivar animaciones. Login, carnet
-y confirmación usan los tokens de `design/tokens.json`; fuentes nativas como fallback
-sin descargas. Las credenciales y el perfil viven en SharedPreferences privadas con
-backup deshabilitado. El APK conserva ese perfil entre reinicios normales.
+Contrato HTTP: `docs/contracts.md`, sección "Alumno (app)". Sin iOS; el token HCE es estático
+(identificación, no autenticación fuerte). `requireDeviceUnlock=true`: el teléfono debe estar desbloqueado.
 
-Este acceso por código es **enrolamiento del prototipo**, no autenticación
-institucional ni login con Google. Google requeriría configurar OAuth y verificar
-sus tokens en el backend; no se incluye un botón ficticio.
-
-## Contrato de enrolamiento
-
-```http
-POST {API_URL}/mobile/enroll
-Content-Type: application/json; charset=utf-8
-
-{"student_code":"0012345","token":"<32 HEX mayúsculas>"}
-```
-
-Respuesta `200`: `student_code`, nombre canónico `full_name`, `credential_id` y
-`status: active`. `full_name` en la petición sigue siendo opcional para compatibilidad
-con versiones anteriores; el backend usa siempre el nombre del padrón.
-
-- Repetir código + token del mismo teléfono activo devuelve el mismo perfil/ID,
-  incluso si se perdió la primera respuesta. La operación se serializa en SQLite.
-- Otro teléfono activo para ese código devuelve `409`; código sin registrar `404`;
-  token inválido `400`. La app muestra una instrucción para el alumno/docente.
-- Sin red, respuesta incompleta/no válida o `5xx`: estado pendiente, reintentable.
-- El tap solo entrega el token opaco, sin código/nombre ni llamadas de red.
-
-Comprobaciones desde la raíz:
-
-```sh
-node design/build-tokens.mjs --check
-node --test design/*.test.mjs
-PYTHON_DOTENV_DISABLED=1 .venv/bin/python -m pytest backend -q
-PYTHON=.venv/bin/python scripts/ci/smoke.sh
-```
-
-## Depuración (solo builds debug)
-
-El emulador no tiene NFC. En builds debug:
-
-```sh
-# fuerza NFC/HCE disponibles en la UI y simula una lectura exitosa
-adb shell am start -n com.classai.mobile/.MainActivity --ez demo_nfc true --ez simulate_read true
-```
-
-La simulación solo se activa por ese intent explícito de depuración; mantener
-presionado el carnet no simula asistencia. Logcat: `adb logcat -s ClassAI`.
-Antes del tap real: NFC activo, teléfono **desbloqueado y con pantalla encendida**
-(`requireDeviceUnlock=true`); la app no necesita estar abierta ni tener Internet.
+Diseño: colores en `design/tokens.json` (`theme.*.app`), tipografía Figtree (OFL) en `res/font`, Kirby en
+`res/raw` (videos de `kirbycode/data` recortados a 640×480 y sin audio). Las animaciones respetan
+"Quitar animaciones" del sistema. En builds debug, `--ez demo_nfc true` simula un teléfono con NFC en el emulador.
 
 ## Protocolo (resumen)
 
@@ -138,12 +73,3 @@ Test de host: `g++ -std=c++17 -I firmware/classai_node firmware/classai_node/tes
 
 Identificación de asistencia, no autenticación fuerte: el token es estático y puede copiarse si
 alguien controla un lector. Sin iOS. PN532 está "Not Recommended for New Designs" (NXP).
-
-## Trazas privadas de laboratorio
-
-Con autorización del operador, compilar debug con `CLASSAI_LAB_DIAGNOSTICS=1`
-(acepta entorno o .env) muestra APDU RX/TX completas en detalles técnicos y
-logcat, incluida la credencial. El valor por defecto es 0; release nunca activa
-estas trazas. Los logs del laboratorio no se adjuntan a Git, issues ni PR.
-El toque sigue sin requerir Internet, MQTT ni enrolamiento confirmado para
-responder con el token local; eso no autoriza asistencia en el backend.

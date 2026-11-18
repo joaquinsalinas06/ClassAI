@@ -67,11 +67,11 @@ Restricciones conocidas: luz y presencia quedan bajo 3:1 sobre blanco y ámbar d
 
 | Rol | Familia | Notas |
 |---|---|---|
-| Todo | **Geist Variable** (`@fontsource-variable/geist`) | Cifras tabulares (`.num`) en datos y tablas |
+| Todo | **Figtree Variable** (OFL, `web/src/styles/fonts/`) | Cifras tabulares (`.num`) en datos y tablas |
 | Identificadores | **Geist Mono Variable** | Solo códigos de estudiante, `session_id`, tokens, teclas |
 
 Escala (px, tamaño/interlínea): hero 56/56 · display 40/44 · title 22/28 · heading 16/22 · metric 28/32 · body 14/20 · label 13/18 · small 13/18 · caption 12/16 · micro 11/14.
-Por qué Geist: numerales limpios y estrechos para tableros densos, buen soporte de español, variable (un archivo) y con mono hermana para identificadores.
+Por qué Figtree: es la letra de la app Android, así web y app se leen como una sola marca; variable (un archivo de 28 kB), español completo y cifras tabulares (`tnum`) para tableros densos. Geist Mono sigue para identificadores.
 
 ## Formato de números (es-PE, `America/Lima`)
 

@@ -1,0 +1,432 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.swiperefreshlayout.widget.SwipeRefreshLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/refresh"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false"
+            android:orientation="vertical"
+            android:paddingHorizontal="@dimen/ds_space_5"
+            android:paddingTop="@dimen/ds_space_3"
+            android:paddingBottom="@dimen/app_nav_clearance">
+
+            <!-- Saludo -->
+            <LinearLayout
+                android:id="@+id/header"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <com.classai.mobile.AvatarView
+                    android:id="@+id/headAvatar"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:importantForAccessibility="no" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ds_space_3"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/greeting"
+                        style="@style/ClassAI.Label"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content" />
+
+                    <TextView
+                        android:id="@+id/headName"
+                        style="@style/ClassAI.Title.Heading"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/logout"
+                    android:layout_width="@dimen/app_touch"
+                    android:layout_height="@dimen/app_touch"
+                    android:background="@drawable/bg_icon_button"
+                    android:contentDescription="@string/action_logout"
+                    android:src="@drawable/ic_logout"
+                    app:tint="@color/ds_text_secondary" />
+            </LinearLayout>
+
+            <!-- Carnet digital -->
+            <com.classai.mobile.IdCardView
+                android:id="@+id/idCard"
+                android:layout_width="match_parent"
+                android:layout_height="@dimen/app_card_height"
+                android:layout_marginTop="@dimen/ds_space_6"
+                android:focusable="true"
+                android:padding="@dimen/ds_space_5">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:importantForAccessibility="no"
+                            android:src="@drawable/ic_school"
+                            app:tint="@color/ds_app_card_on" />
+
+                        <TextView
+                            style="@style/ClassAI.CardText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="@dimen/ds_space_2"
+                            android:layout_weight="1"
+                            android:fontFamily="@font/figtree_medium"
+                            android:letterSpacing="0.06"
+                            android:text="@string/card_brand"
+                            android:textSize="@dimen/ds_text_label_size" />
+
+                        <LinearLayout
+                            android:id="@+id/chip"
+                            android:layout_width="wrap_content"
+                            android:layout_height="30dp"
+                            android:background="@drawable/bg_card_chip"
+                            android:gravity="center_vertical"
+                            android:orientation="horizontal"
+                            android:paddingHorizontal="12dp">
+
+                            <ImageView
+                                android:id="@+id/chipIcon"
+                                android:layout_width="16dp"
+                                android:layout_height="16dp"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_check_circle" />
+
+                            <TextView
+                                android:id="@+id/chipText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/ds_space_1_5"
+                                android:fontFamily="@font/figtree_semibold"
+                                android:textSize="@dimen/ds_text_label_size" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginEnd="72dp"
+                        android:gravity="center_vertical"
+                        android:orientation="horizontal">
+
+                        <com.classai.mobile.AvatarView
+                            android:id="@+id/avatar"
+                            android:layout_width="60dp"
+                            android:layout_height="60dp"
+                            android:contentDescription="@string/cd_avatar" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="14dp"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                style="@style/ClassAI.CardText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:alpha="0.7"
+                                android:fontFamily="@font/figtree_medium"
+                                android:letterSpacing="0.2"
+                                android:text="@string/card_student"
+                                android:textSize="@dimen/ds_text_micro_size" />
+
+                            <TextView
+                                android:id="@+id/cardName"
+                                style="@style/ClassAI.CardText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:ellipsize="end"
+                                android:fontFamily="@font/figtree_semibold"
+                                android:letterSpacing="-0.015"
+                                android:maxLines="2"
+                                android:textSize="@dimen/ds_text_title_size" />
+
+                            <TextView
+                                android:id="@+id/cardCode"
+                                style="@style/ClassAI.CardText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="@dimen/ds_space_0_5"
+                                android:alpha="0.8"
+                                android:fontFamily="@font/figtree_medium"
+                                android:letterSpacing="0.06"
+                                android:textSize="@dimen/ds_text_body_size" />
+                        </LinearLayout>
+                    </LinearLayout>
+                </LinearLayout>
+
+                <com.classai.mobile.WavesView
+                    android:id="@+id/waves"
+                    android:layout_width="96dp"
+                    android:layout_height="96dp"
+                    android:layout_gravity="bottom|end"
+                    android:layout_marginEnd="-20dp"
+                    android:layout_marginBottom="-20dp" />
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:layout_gravity="bottom|end"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_contactless"
+                    app:tint="@color/ds_app_card_on" />
+            </com.classai.mobile.IdCardView>
+
+            <TextView
+                android:id="@+id/hint"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/ds_space_5"
+                android:accessibilityLiveRegion="polite"
+                android:drawablePadding="@dimen/ds_space_2"
+                android:fontFamily="@font/figtree_medium"
+                android:gravity="center"
+                android:textColor="@color/ds_text_primary"
+                android:textSize="@dimen/ds_text_heading_size"
+                app:drawableTint="@color/ds_text_primary" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/nfcSettings"
+                style="@style/ClassAI.Button.Tonal"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center_horizontal"
+                android:layout_marginTop="@dimen/ds_space_2"
+                android:text="@string/action_nfc_settings"
+                android:visibility="gone"
+                app:icon="@drawable/ic_contactless" />
+
+            <!-- Héroe: el aula ahora, con Kirby -->
+            <FrameLayout
+                android:id="@+id/hero"
+                android:layout_width="match_parent"
+                android:layout_height="220dp"
+                android:layout_marginTop="@dimen/ds_space_8"
+                android:background="@drawable/bg_hero"
+                android:elevation="8dp">
+
+                <com.classai.mobile.KirbyView
+                    android:id="@+id/heroKirby"
+                    android:layout_width="260dp"
+                    android:layout_height="match_parent"
+                    android:layout_gravity="end" />
+
+                <View
+                    android:id="@+id/heroFade"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:orientation="vertical"
+                    android:padding="@dimen/ds_space_5">
+
+                    <TextView
+                        android:id="@+id/heroKicker"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="@drawable/bg_glass"
+                        android:drawablePadding="6dp"
+                        android:fontFamily="@font/figtree_medium"
+                        android:gravity="center_vertical"
+                        android:paddingHorizontal="10dp"
+                        android:paddingVertical="4dp"
+                        android:textColor="@color/ds_app_on_mood"
+                        android:textSize="@dimen/ds_text_caption_size" />
+
+                    <TextView
+                        android:id="@+id/heroTitle"
+                        style="@style/ClassAI.Title.Title"
+                        android:layout_width="180dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="@dimen/ds_space_3"
+                        android:textColor="@color/ds_app_on_mood"
+                        android:textSize="26sp" />
+
+                    <Space
+                        android:layout_width="0dp"
+                        android:layout_height="0dp"
+                        android:layout_weight="1" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="bottom"
+                        android:orientation="horizontal">
+
+                        <TextView
+                            android:id="@+id/heroBody"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:textColor="@color/ds_app_on_mood_soft"
+                            android:textSize="@dimen/ds_text_body_size" />
+
+                        <com.google.android.material.button.MaterialButton
+                            android:id="@+id/heroAction"
+                            android:layout_width="wrap_content"
+                            android:layout_height="44dp"
+                            android:layout_marginStart="@dimen/ds_space_3"
+                            android:paddingHorizontal="18dp"
+                            android:text="@string/action_view_room"
+                            android:textColor="@color/ds_app_card_on"
+                            android:textSize="@dimen/ds_text_body_size"
+                            app:backgroundTint="@color/ds_app_on_mood"
+                            app:icon="@drawable/ic_chevron"
+                            app:iconGravity="end"
+                            app:iconPadding="2dp"
+                            app:iconSize="18dp"
+                            app:iconTint="@color/ds_app_card_on" />
+                    </LinearLayout>
+                </LinearLayout>
+            </FrameLayout>
+
+            <!-- Clases abiertas -->
+            <LinearLayout
+                android:id="@+id/classesHead"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_8"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/ClassAI.Title.Heading"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="@string/classes_title" />
+
+                <TextView
+                    android:id="@+id/classesCount"
+                    style="@style/ClassAI.Chip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/message"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_3"
+                android:accessibilityLiveRegion="polite"
+                android:textColor="@color/ds_text_secondary"
+                android:textSize="@dimen/ds_text_body_size"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/classes"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:clipChildren="false"
+                android:orientation="vertical" />
+
+            <!-- Últimas lecturas -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_8"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="@dimen/ds_icon_lg"
+                    android:layout_height="@dimen/ds_icon_lg"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_history"
+                    app:tint="@color/ds_text_primary" />
+
+                <TextView
+                    style="@style/ClassAI.Title.Heading"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/ds_space_2"
+                    android:text="@string/reads_title" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/reads"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_3"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:id="@+id/readsEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="@dimen/ds_space_3"
+                android:background="@drawable/bg_card"
+                android:gravity="center_horizontal"
+                android:orientation="vertical"
+                android:paddingHorizontal="@dimen/ds_space_5"
+                android:paddingTop="@dimen/ds_space_6"
+                android:paddingBottom="@dimen/ds_space_6">
+
+                <com.classai.mobile.SignalView
+                    android:layout_width="match_parent"
+                    android:layout_height="150dp"
+                    android:importantForAccessibility="no" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/ds_space_4"
+                    android:fontFamily="@font/figtree_semibold"
+                    android:text="@string/reads_empty_title"
+                    android:textColor="@color/ds_text_primary"
+                    android:textSize="@dimen/ds_text_heading_size" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="@dimen/ds_space_1"
+                    android:gravity="center"
+                    android:lineSpacingMultiplier="1.3"
+                    android:text="@string/reads_empty_body"
+                    android:textColor="@color/ds_text_secondary"
+                    android:textSize="15sp" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+</androidx.swiperefreshlayout.widget.SwipeRefreshLayout>

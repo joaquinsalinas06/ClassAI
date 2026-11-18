@@ -98,13 +98,47 @@ def test_session_crud_and_votes_of_registered_student(client):
     database.close()
     assert student.get(f"/student/classes/{sid}", headers=bearer).json()["attended"] is True
 
+    # El alumno ve el aula completa: zonas PIR, ventilador, presentes, rangos y tendencia.
+    fresh = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+    minute = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M")
+    with sqlite3.connect(client.database) as db:
+        db.execute("INSERT OR REPLACE INTO node_state VALUES ('a101','a101-environment','environment','online',?,?,?)",
+                   (fresh, json.dumps({"temp_c": 24.5, "rh_pct": 52, "noise_rel": 0.08, "light_rel": 0.6, "comfort": 86,
+                                       "state": "OK", "presence": True, "fan_on": False, "fan_enabled": True}), fresh))
+        db.execute("INSERT OR REPLACE INTO node_state VALUES ('a101','a101-access','access','online',?,?,?)",
+                   (fresh, json.dumps({"presence": False, "comfort": None}), fresh))
+        db.execute("INSERT OR REPLACE INTO sensor_minutes VALUES ('a101','a101-environment','comfort',?,6,80,90,85)", (minute,))
+    live = student.get(f"/student/classes/{sid}", headers=bearer).json()
+    assert live["metrics"]["zones"] == {"entrance": False, "interior": True}
+    assert live["metrics"]["presence"] is False and live["metrics"]["fan_on"] is False
+    assert live["present_count"] == 1 and live["targets"]["temp_c"] == [21, 24]
+    assert live["trend"][-1]["comfort"] == 85
+    assert student.get("/student/classes", headers=bearer).json()["classes"][0]["metrics"]["comfort"] == 86
+    history = student.get("/student/history", headers=bearer).json()["history"]
+    assert [h["session_id"] for h in history] == [sid] and history[0]["course"] == "CS5055 IoT"
+    assert student.get("/student/history").status_code == 401
+
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "hot"}, headers=bearer).json()["saved"]
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "cold"}, headers=bearer).status_code == 200
     assert student.post(f"/student/classes/{sid}/feedback", json={"kind": "tibio"}, headers=bearer).status_code == 422
+    # Votos por dimensión: uno por sensor; temp sigue en el voto clásico.
+    for dimension, value in (("light", "low"), ("noise", "high"), ("noise", "ok"), ("motion", "high")):
+        assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": dimension, "value": value}, headers=bearer).json()["saved"]
+    assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": "light"}, headers=bearer).status_code == 422
+    assert student.post(f"/student/classes/{sid}/feedback", json={"dimension": "olor", "value": "ok"}, headers=bearer).status_code == 422
+    mine = student.get(f"/student/classes/{sid}", headers=bearer).json()["my_votes"]
+    assert mine == {"temp": "low", "light": "low", "noise": "ok", "motion": "high"}
     votes = client.get(f"/sessions/{sid}/votes").json()
     assert votes["counts"] == {"ok": 0, "hot": 0, "cold": 1} and votes["data"][0]["full_name"] == "Valeria Quispe"
+    assert votes["dimensions"]["noise"] == {"low": 0, "ok": 1, "high": 0} and votes["dimensions"]["humidity"]["ok"] == 0
+    assert {(v["dimension"], v["value"]) for v in votes["dimension_data"]} == {("light", "low"), ("noise", "ok"), ("motion", "high")}
     detail = client.get(f"/sessions/{sid}").json()
     assert detail["attendance_count"] == 1 and detail["votes"]["cold"] == 1
+    # Una BD desplegada antes de student_votes sigue respondiendo (sin votos por dimensión).
+    with sqlite3.connect(client.database) as db:
+        db.execute("DROP TABLE student_votes")
+    assert student.get(f"/student/classes/{sid}", headers=bearer).json()["my_votes"] == {"temp": "low"}
+    assert client.get(f"/sessions/{sid}/votes").json()["dimension_data"] == []
 
     closed = client.post(f"/sessions/{sid}/close")
     assert closed.status_code == 200 and not closed.json()["open"]

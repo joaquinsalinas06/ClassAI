@@ -1,5 +1,5 @@
 import { ChevronRight, ListFilter, X } from "lucide-react";
-import { useMemo } from "react";
+import { useMemo, type CSSProperties } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router";
 import { useApp } from "../app/context";
 import { ComfortBar } from "../charts/ComfortBar";
@@ -97,7 +97,7 @@ export function Sessions() {
         </div>
       </div>
 
-      <Card className={cn("overflow-hidden transition-opacity", sessions.isPlaceholderData && "opacity-60")}>
+      <Card className={cn("ds-rise overflow-hidden transition-opacity", sessions.isPlaceholderData && "opacity-60")} style={{ "--i": 1 } as CSSProperties}>
         {sessions.isPending ? (
           <div className="space-y-2 p-4">{Array.from({ length: 8 }, (_, i) => <Skeleton key={i} className="h-9" />)}</div>
         ) : sessions.isError ? (
@@ -127,11 +127,16 @@ export function Sessions() {
                 </tr>
               </thead>
               <tbody>
-                {rows.map((s) => {
+                {rows.map((s, i) => {
                   const href = `/sesiones/${encodeURIComponent(s.session_id)}`;
                   const live = !s.ended_at;
                   return (
-                    <tr key={s.session_id} onClick={() => navigate(href)} className="group cursor-pointer transition-colors hover:bg-hover/60">
+                    <tr
+                      key={s.session_id}
+                      onClick={() => navigate(href)}
+                      style={{ "--i": Math.min(i, 12) + 2 } as CSSProperties}
+                      className={cn("ds-rise group cursor-pointer transition-colors hover:bg-hover/60", live && "bg-info-subtle/50")}
+                    >
                       <Td>
                         <span className="text-fg">{formatDate(s.started_at)}</span>
                         <span className="num ml-2 text-muted">{formatTime(s.started_at)}{s.ended_at ? `–${formatTime(s.ended_at)}` : ""}</span>
@@ -140,7 +145,7 @@ export function Sessions() {
                         <Link to={href} onClick={(e) => e.stopPropagation()} className="font-medium text-fg hover:underline">{s.course ?? "Sin curso"}</Link>
                       </Td>
                       <Td>{s.room.toUpperCase()}</Td>
-                      <Td className="num text-right">{live ? <Badge size="sm" tone="info">En curso</Badge> : formatDuration(s.minutes)}</Td>
+                      <Td className="num text-right">{live ? <Badge size="sm" tone="info" icon={<span className="ds-pulse relative size-1.5 rounded-full bg-info" aria-hidden />}>En curso</Badge> : formatDuration(s.minutes)}</Td>
                       <Td className="num text-right">{s.attendance_count ?? "—"}</Td>
                       <Td className="num text-right">{s.temp_avg != null ? withUnit(formatNumber(s.temp_avg, 1), "°C") : "—"}</Td>
                       <Td><ComfortBar value={s.comfort_avg} state={s.comfort_avg != null ? comfortState(FACTORY_CONFIG, s.comfort_avg) : null} /></Td>
