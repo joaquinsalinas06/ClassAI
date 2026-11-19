@@ -19,3 +19,4 @@ static const char MQTT_ROOT_CA[] = "-----BEGIN CERTIFICATE-----\nREPLACE_WITH_CA
 #define FAN_DRIVER_L9110 0 // 1 uses L9110 (IA=GPIO26 PWM soft-start, IB=GPIO25 LOW) instead of relay
 #define LOCAL_COMFORT_OVERRIDE 0 // 1 overrides noise_rel_max and comfort weights locally on this node
 #define BUZZER_PASSIVE 0
+#define AUTO_ARM 0 // 1 arms at boot (same as the serial "arm" command) for standalone demo nodes
