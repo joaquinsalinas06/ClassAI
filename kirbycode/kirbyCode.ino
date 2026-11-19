@@ -117,6 +117,7 @@ static unsigned nextSeen = 0;
 static volatile bool attendancePending = false;
 static volatile time_t lastSpeakEpoch = 0;
 static volatile bool fanRequested = false; // loop() lo pide; networkTask publica
+static bool environmentFanOn = false;      // ultimo fan_on conocido del nodo de ambiente
 static char fanPendingId[33] = "";         // orden enviada que espera confirmacion
 static uint32_t fanSentAt = 0;
 
@@ -334,35 +335,42 @@ static void publishTelemetry() {
   publishOwn("telemetry", doc, false);
 }
 
-// Orden al nodo de ambiente, mismo formato que set_room_fan() de la API.
-static void publishFanOn() {
+// Orden al nodo de ambiente, mismo formato que set_room_fan() de la API (toggle on/off).
+static void publishFanToggle() {
   const time_t now = time(nullptr);
   if (now < 1700000000) { Serial.println("[FAN] sin hora NTP: orden no enviada"); return; }
+  lock();
+  const bool turnOff = environmentFanOn;
+  environmentFanOn = !turnOff;
+  unlock();
   char id[33];
   for (int i = 0; i < 4; i++) snprintf(id + 8 * i, 9, "%08lx", (unsigned long)esp_random());
   JsonDocument cmd;
   cmd["v"] = 1; cmd["room"] = ROOM_ID;
   char env[80]; snprintf(env, sizeof(env), "%s-environment", ROOM_ID);
   cmd["device"] = env;
-  cmd["mode"] = "on";
+  cmd["mode"] = turnOff ? "off" : "on";
   cmd["command_id"] = id;
   cmd["expires_at"] = (long long)now + 10;   // el nodo rechaza ordenes caducadas
   char topic[190];
   snprintf(topic, sizeof(topic), "%s/nodes/%s/fan/set", prefix, env);
   publishTo(topic, cmd, false);
   lock(); strlcpy(fanPendingId, id, sizeof(fanPendingId)); fanSentAt = millis(); unlock();
-  Serial.printf("[FAN] orden de encendido enviada (command_id %s)\n", id);
+  Serial.printf("[FAN] orden de %s enviada (command_id %s)\n", turnOff ? "apagado" : "encendido", id);
 }
 
 static void onSnapshot(JsonDocument& doc) {
   if (doc.isNull() || doc["v"] != 1 || strcmp(doc["room"] | "", ROOM_ID)) return;
   auto reading = doc["telemetry"];
+  if (reading["fan_on"].is<bool>()) environmentFanOn = reading["fan_on"].as<bool>();
   // Confirmacion de la orden del ventilador: el nodo devuelve el command_id aplicado.
   // Si no esta armado o RELAY_VALIDATED=0, el nodo devuelve el id pero con fan_mode "auto".
   if (fanPendingId[0] && !strcmp(reading["fan_command_id"] | "", fanPendingId)) {
     const char* fanMode = reading["fan_mode"] | "?";
     if (!strcmp(fanMode, "on") && reading["fan_on"] == true)
       Serial.println("[FAN] ventilador ENCENDIDO (confirmado por el nodo de ambiente, 5 min)");
+    else if (!strcmp(fanMode, "off") && reading["fan_on"] == false)
+      Serial.println("[FAN] ventilador APAGADO (confirmado por el nodo de ambiente, 5 min)");
     else
       Serial.printf("[FAN] orden recibida pero NO aplicada (fan_mode=%s fan_enabled=%s): "
                     "nodo sin 'arm', RELAY_VALIDATED 0 o DHT11 sin lectura\n",
@@ -474,7 +482,7 @@ void networkTask(void*) {
 
     if (fanRequested) {                       // orden de voz "ventilador"
       fanRequested = false;
-      if (networkUp) publishFanOn();
+      if (networkUp) publishFanToggle();
       else Serial.println("[FAN] sin conexion MQTT: orden no enviada (solo animacion)");
     }
     lock();
