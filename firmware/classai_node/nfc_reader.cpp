@@ -26,6 +26,7 @@
 static const uint8_t PIN_SCK = 18, PIN_MISO = 19, PIN_MOSI = 23, PIN_SS = 5;
 static const uint16_t POLL_TIMEOUT_MS = 250;  // respaldo; con retries=1 el PN532 responde antes
 static const uint8_t RELEASE_MISSES = 2;     // lecturas vacías seguidas = target retirado
+static const uint8_t FIELD_RETRIES = 8;      // intentos por sondeo: más tiempo de campo RF encendido
 
 static Adafruit_PN532 nfc(PIN_SS);
 static bool ready = false;
@@ -37,17 +38,23 @@ bool nfcBegin() {
   SPI.begin(PIN_SCK, PIN_MISO, PIN_MOSI, PIN_SS);
   nfc.begin();
   uint32_t ver = 0;
-  for (int i = 0; i < 3 && !ver; i++) ver = nfc.getFirmwareVersion();  // la 1.ª a veces falla tras el wakeup
-  if (!ver) {
-    Serial.println("[NFC] PN532 no encontrado (revisar DIP SPI y cableado)");
+  // la 1.ª a veces falla tras el wakeup; un PN532 responde IC=0x32 (una trama corrupta puede dar «0.6» y no es válida)
+  for (int i = 0; i < 3 && (ver >> 24) != 0x32; i++) ver = nfc.getFirmwareVersion();
+  static bool announced = false;  // el aviso sale en el arranque y tras recuperarse, no en cada reinicialización
+  if ((ver >> 24) != 0x32) {
+    if (announced) Serial.println("[NFC] PN532 no encontrado (revisar DIP SPI y cableado)");
+    announced = false;
     return ready = false;
   }
-  Serial.printf("[NFC] PN5%02X firmware %u.%u\n", (unsigned)(ver >> 24) & 0xFF,
-                (unsigned)(ver >> 16) & 0xFF, (unsigned)(ver >> 8) & 0xFF);
+  if (!announced) {
+    Serial.printf("[NFC] PN5%02X firmware %u.%u\n", (unsigned)(ver >> 24) & 0xFF,
+                  (unsigned)(ver >> 16) & 0xFF, (unsigned)(ver >> 8) & 0xFF);
+    announced = true;
+  }
   // Más reintentos = el campo RF permanece encendido más ms por sondeo, y Android HCE alcanza a activarse.
   // 17-nov con retries=10 y SIN resincronizar: SELECT 7/12 (con 1: 3/12) pero GET 0/7 por el desfase del chip.
   // 18-nov con retries=1 y resync: los primeros taps no se detectaban (silencio). Se prueba 8 con resync.
-  ready = nfc.SAMConfig() && nfc.setPassiveActivationRetries(0x08);
+  ready = nfc.SAMConfig() && nfc.setPassiveActivationRetries(FIELD_RETRIES);
   if (!ready) Serial.println("[NFC] fallo SAMConfig/RFConfiguration");
   return ready;
 }
@@ -57,6 +64,16 @@ bool nfcIsReady() { return ready; }
 // Tras un timeout el PN532 puede responder tarde y dejar una trama atrasada: el siguiente comando lee la respuesta del
 // anterior («unexpected response command») y todo falla hasta reiniciar (log 18-nov 17:54 y 18:21). Se reinicializa.
 static bool needResync = false;
+
+// Reinicialización ligera: comprobar el chip y reaplicar la configuración, sin el wakeup de begin() que dejaba ~1 s ciego
+// (19:11-19:13: «no encontrado» en cada reinicio periódico). Solo si el chip no responde se hace el arranque completo.
+static void nfcResync() {
+  if ((nfc.getFirmwareVersion() >> 24) == 0x32 && nfc.SAMConfig() && nfc.setPassiveActivationRetries(FIELD_RETRIES)) {
+    ready = true;
+    return;
+  }
+  nfcBegin();
+}
 
 static bool exchange(const uint8_t* apdu, uint8_t len, uint8_t* resp, uint8_t* respLen) {
   const bool ok = nfc.inDataExchange(const_cast<uint8_t*>(apdu), len, resp, respLen);
@@ -86,7 +103,7 @@ bool nfcPoll(NfcCredential& out) {
     if (millis() - lastTry < 100) return false;
     lastTry = millis();
     needResync = false;
-    nfcBegin();
+    nfcResync();
     return false;
   }
   // la librería copia uidLength bytes sin límite; 255 evita desbordes con tramas corruptas
@@ -96,6 +113,7 @@ bool nfcPoll(NfcCredential& out) {
 
   if (!present) {
     if (waitRelease && ++misses >= RELEASE_MISSES) waitRelease = false;  // teléfono retirado
+    // No se reinicializa en reposo: el 18-nov un reinicio cada 20 s provocó 8 errores y 7 «no encontrado» en 9 min.
     return false;
   }
   misses = 0;
@@ -103,6 +121,7 @@ bool nfcPoll(NfcCredential& out) {
   if (!readCredential(out)) return false;  // sin waitRelease: el próximo sondeo reintenta
 
   waitRelease = true;
+  needResync = true;  // estado limpio del PN532 para el siguiente tap
   if (!cooldown.allow(out.token, millis())) {
     Serial.printf("[NFC] %s repetido (<3 s), ignorado\n", out.type);
     return false;
