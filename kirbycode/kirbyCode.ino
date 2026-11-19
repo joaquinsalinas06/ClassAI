@@ -60,10 +60,10 @@
 #define MIN_PEAK 800          // volumen minimo para aceptar una palabra
 
 // --- Palabra de activacion y ordenes ---
-#define UMBRAL_HEY      0.85f // probabilidad minima de "hey kirby"
-#define HITS_HEY        2     // ventanas seguidas (cada 250 ms) que deben superar el umbral
-#define UMBRAL_67       0.80f // probabilidad minima de "sixseven" (solo tras "hey kirby")
-#define UMBRAL_FAN      0.80f // probabilidad minima de "ventilador" (solo tras "hey kirby")
+#define UMBRAL_HEY      0.94f // probabilidad minima de "hey kirby"
+#define HITS_HEY        1    // ventanas seguidas (cada 250 ms) que deben superar el umbral
+#define UMBRAL_67       0.94f // probabilidad minima de "sixseven" (solo tras "hey kirby")
+#define UMBRAL_FAN      0.94f // probabilidad minima de "ventilador" (solo tras "hey kirby")
 #define HITS_ORDEN      1     // ventanas seguidas para aceptar una orden
 #define LISTEN_MS       10000 // tiempo que Kirby espera la orden tras "hey kirby" (= video hey_kirby, 120 fotogramas a 12 fps)
 #define LISTEN_IGNORE_MS 1000 // la ventana de 1 s aun contiene "hey kirby": se ignora al inicio
