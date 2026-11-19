@@ -32,6 +32,24 @@ class Pn532PatchTest(unittest.TestCase):
         self.assertNotIn('nfc.inListPassiveTarget()', reader.read_text())
 
 
+class FastExchangeTest(unittest.TestCase):
+    SOURCE = ('bool Adafruit_PN532::inDataExchange() {\n'
+              '  if (!sendCommandCheckAck(pn532_packetbuffer, sendLength + 2, 1000)) {\n  }\n'
+              '  if (!waitready(1000)) {\n  }\n}\n'
+              'bool other() { waitready(1000); }\n')
+
+    def test_exchange_waits_are_shortened_only_there_and_idempotent(self):
+        result = patch.fast_exchange_source(self.SOURCE)
+        self.assertIn('sendLength + 2, 150)', result)
+        self.assertIn('waitready(300)', result)
+        self.assertIn('bool other() { waitready(1000); }', result)  # otras funciones no cambian
+        self.assertEqual(result, patch.fast_exchange_source(result))
+
+    def test_upstream_changes_fail_closed(self):
+        with self.assertRaises(ValueError):
+            patch.fast_exchange_source('bool Adafruit_PN532::inDataExchange() {\n}\n')
+
+
 class DiagnosticPatchTest(unittest.TestCase):
     def test_each_failure_gets_a_label_without_payload_dump(self):
         source = 'bool Adafruit_PN532::inDataExchange() {\n' + '  return false;\n' * 7 + '}\n'

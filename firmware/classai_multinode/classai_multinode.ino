@@ -288,10 +288,11 @@ void accessFeedback(){
  }
 }
 void pollAccess(){
- static bool ready=nfcBegin();nfcReady=ready;static uint32_t polled=0;
- if(ready&&multinode::elapsed(millis(),polled,60)){
+ static const bool booted=nfcBegin();(void)booted;static uint32_t polled=0;  // si el arranque falla, nfcPoll reintenta solo
+ if(multinode::elapsed(millis(),polled,60)){
   polled=millis();NfcCredential credential;
-  if(nfcPoll(credential)){
+  const bool got=nfcPoll(credential);nfcReady=nfcIsReady();
+  if(got){
    lock();JsonDocument event;common(event);
    bool saved=false;
    if(sessionId[0]){
